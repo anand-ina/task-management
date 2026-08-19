@@ -1,0 +1,34 @@
+name: samskar_taskmanager
+description: "Samskar Task Manager application with BLoC, Dio, SharedPreferences, Multi-language and Theme switching."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  flutter_bloc: ^8.1.3
+  dio: ^5.4.0
+  shared_preferences: ^2.2.2
+  equatable: ^2.0.5
+  connectivity_plus: ^6.0.3
+  google_fonts: ^6.1.0
+  intl: ^0.20.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+
