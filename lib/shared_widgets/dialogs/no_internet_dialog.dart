@@ -2,8 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/localization/app_strings.dart';
+import '../../core/utils/preferences_service.dart';
 import '../../modules/auth/bloc/auth_bloc.dart';
 import '../../modules/auth/bloc/auth_event.dart';
+import '../../modules/auth/screens/login_screen.dart';
 
 class NoInternetDialog extends StatelessWidget {
   final VoidCallback onRetry;
@@ -95,10 +97,18 @@ class _ForceLogoutNoInternetDialogState extends State<ForceLogoutNoInternetDialo
   }
 
   void _performForceLogout() {
-    if (Navigator.of(context).canPop()) {
+    final parentCtx = widget.parentContext;
+    PreferencesService().clearSession();
+    if (mounted && Navigator.of(context).canPop()) {
       Navigator.of(context).pop();
     }
-    widget.parentContext.read<AuthBloc>().add(LogoutRequestedEvent());
+    if (parentCtx.mounted) {
+      parentCtx.read<AuthBloc>().add(LogoutRequestedEvent());
+      Navigator.of(parentCtx, rootNavigator: true).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (route) => false,
+      );
+    }
   }
 
   @override

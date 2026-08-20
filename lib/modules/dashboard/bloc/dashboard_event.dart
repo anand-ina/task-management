@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../models/branch_model.dart';
 
 abstract class DashboardEvent extends Equatable {
   const DashboardEvent();
@@ -6,7 +7,19 @@ abstract class DashboardEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class FetchDashboardDataEvent extends DashboardEvent {}
+class FetchDashboardDataEvent extends DashboardEvent {
+  final int? branchId;
+  const FetchDashboardDataEvent({this.branchId});
+  @override
+  List<Object?> get props => [branchId];
+}
+
+class SelectBranchEvent extends DashboardEvent {
+  final BranchModel branch;
+  const SelectBranchEvent(this.branch);
+  @override
+  List<Object?> get props => [branch];
+}
 
 class AddTodoEvent extends DashboardEvent {
   final String text;

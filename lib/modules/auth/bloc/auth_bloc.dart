@@ -16,9 +16,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   Future<void> _onCheckAuthStatus(CheckAuthStatusEvent event, Emitter<AuthState> emit) async {
     emit(AuthLoadingState());
-    // Force session clear on app restart/refresh as requested
-    await _prefs.clearSession();
-    emit(UnauthenticatedState());
+    try {
+      final token = await _prefs.getToken();
+      if (token != null && token.isNotEmpty) {
+        final userProfile = await _authRepository.getMe();
+        emit(AuthenticatedState(userProfile: userProfile, token: token));
+      } else {
+        emit(UnauthenticatedState());
+      }
+    } catch (_) {
+      await _prefs.clearSession();
+      emit(UnauthenticatedState());
+    }
   }
 
   Future<void> _onLoginRequested(LoginRequestedEvent event, Emitter<AuthState> emit) async {
@@ -34,7 +43,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   Future<void> _onLogoutRequested(LogoutRequestedEvent event, Emitter<AuthState> emit) async {
     emit(AuthLoadingState());
-    await _authRepository.logout();
+    await _prefs.clearSession();
+    try {
+      await _authRepository.logout();
+    } catch (_) {}
     emit(UnauthenticatedState());
   }
 }

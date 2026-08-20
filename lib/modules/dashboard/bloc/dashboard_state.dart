@@ -20,6 +20,7 @@ class DashboardLoadedState extends DashboardState {
   final TeamData teamData;
   final NotificationsResponse notifications;
   final List<BranchModel> branches;
+  final BranchModel? selectedBranch;
   final List<TodoItem> todos;
 
   const DashboardLoadedState({
@@ -27,6 +28,7 @@ class DashboardLoadedState extends DashboardState {
     required this.teamData,
     required this.notifications,
     required this.branches,
+    this.selectedBranch,
     required this.todos,
   });
 
@@ -35,6 +37,7 @@ class DashboardLoadedState extends DashboardState {
     TeamData? teamData,
     NotificationsResponse? notifications,
     List<BranchModel>? branches,
+    BranchModel? selectedBranch,
     List<TodoItem>? todos,
   }) {
     return DashboardLoadedState(
@@ -42,12 +45,13 @@ class DashboardLoadedState extends DashboardState {
       teamData: teamData ?? this.teamData,
       notifications: notifications ?? this.notifications,
       branches: branches ?? this.branches,
+      selectedBranch: selectedBranch ?? this.selectedBranch,
       todos: todos ?? this.todos,
     );
   }
 
   @override
-  List<Object?> get props => [dashboardData, teamData, notifications, branches, todos];
+  List<Object?> get props => [dashboardData, teamData, notifications, branches, selectedBranch, todos];
 }
 
 class DashboardErrorState extends DashboardState {

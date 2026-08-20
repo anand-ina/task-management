@@ -243,6 +243,87 @@ class AppStringsTe extends AppStrings {
   String get langKannada => 'ಕನ್ನಡ (Kannada)';
 
   @override
+  String get toBeStarted => 'ప్రారంభించవలసినవి';
+  @override
+  String get workUnderway => 'పని జరుగుతోంది';
+  @override
+  String get needsAttention => 'శ్రద్ధ వహించాలి';
+  @override
+  String get notYetPickedUp => 'ఇంకా ప్రారంభించలేదు';
+  @override
+  String get closedWithoutCompletion => 'పూర్తికాకుండా మూసివేయబడింది';
+
+  @override
+  String get actionCenterTitle => 'యాక్షన్ సెంటర్';
+  @override
+  String get clickRowToOpen => 'తెరిచేందుకు రో పై క్లిక్ చేయండి';
+  @override
+  String get approvalsToReview => 'సమీక్షించాల్సిన ఆమోదాలు';
+  @override
+  String get overdueTasks => 'గడువు దాటిన టాస్క్‌లు';
+  @override
+  String get dueToday => 'ఈరోజు గడువు ఉన్నవి';
+  @override
+  String get emergencyHighOpen => 'అత్యవసరం + హై (ఓపెన్)';
+
+  @override
+  String get noMeetingsScheduled => 'ఈరోజు ఎలాంటి సమావేశాలు షెడ్యూల్ చేయబడలేదు.';
+
+  @override
+  String get myLoginActivityTitle => 'నా లాగిన్ కార్యకలాపాలు';
+  @override
+  String get loginsToday => 'ఈరోజు లాగిన్‌లు';
+  @override
+  String get loginsThisWeek => 'ఈ వారం లాగిన్‌లు';
+  @override
+  String get activeTodaySpan => 'ఈరోజు సమయం (మొదటినుండి లాస్ట్ వరకు)';
+  @override
+  String get activeThisWeekSpan => 'ఈ వారం క్రియాశీల సమయం';
+  @override
+  String get firstLoginToday => 'ఈరోజు మొదటి లాగిన్';
+  @override
+  String get activeDays => 'క్రియాశీల రోజులు';
+  @override
+  String get lastLoginLabel => 'చివరి లాగిన్';
+  @override
+  String get activeSpanNotice => '"క్రియాశీల" = మొదటి నుండి చివరి సైన్-ఇన్ వరకు సమయం.';
+
+  @override
+  String get overdueTasksByAgeTitle => 'వయస్సు ఆధారంగా గడువు దాటిన టాస్క్‌లు';
+  @override
+  String get overdueTasksByAgeSubtitle =>
+      'ఎంత ఆలస్యమయ్యాయో దాని ఆధారంగా టాస్క్‌ల సమూహం';
+  @override
+  String get days1To3 => '1–3 రోజులు';
+  @override
+  String get days4To7 => '4–7 రోజులు';
+  @override
+  String get days8To14 => '8–14 రోజులు';
+  @override
+  String get days15Plus => '15+ రోజులు';
+
+  @override
+  String get myTeam => 'నా టీమ్';
+  @override
+  String get membersLabel => 'సభ్యులు';
+  @override
+  String get teamWide => 'టీమ్ రకం';
+  @override
+  String get clickRowForDetails => 'వివరాల కోసం క్లిక్ చేయండి';
+  @override
+  String get recentActivityDetail => 'ఇటీవలి కార్యకలాపాల వివరాలు';
+  @override
+  String get viewTask => 'టాస్క్ చూడండి';
+  @override
+  String get branchLabel => 'బ్రాంచ్';
+  @override
+  String get dueLabel => 'గడువు';
+  @override
+  String get completedLabel => 'పూర్తయినది';
+  @override
+  String get clickGroupForMembers => 'సభ్యుల కోసం గ్రూప్‌పై క్లిక్ చేయండి';
+
+  @override
   String get noInternetTitle => 'ఇంటర్నెట్ కనెక్షన్ లేదు';
   @override
   String get noInternetMessage => 'దయచేసి మీ ఇంటర్నెట్ కనెక్షన్‌ను తనిఖీ చేసి మళ్లీ ప్రయత్నించండి.';
@@ -259,4 +340,526 @@ class AppStringsTe extends AppStrings {
   String get cancelButton => 'రద్దు చేయి';
   @override
   String get exitButton => 'నిష్క్రమించు';
+
+  @override
+  String get tasksDueTodayTitle => 'నేడు గడువు ఉన్న టాస్క్‌లు';
+  @override
+  String get showingRangeText => '1–10 ఆఫ్ 10 చూపుతోంది';
+  @override
+  String get sortByLabel => 'వరుస క్రమం';
+  @override
+  String get entryDateLabel => 'ఎంట్రీ తేదీ';
+  @override
+  String get branchLegendLabel => 'బ్రాంచ్ లెజెండ్';
+  @override
+  String get taskIdHeader => 'టాస్క్ ఐడి';
+  @override
+  String get descriptionHeader => 'వివరణ';
+  @override
+  String get branchHeader => 'బ్రాంచ్';
+  @override
+  String get priorityHeader => 'ప్రాధాన్యత';
+  @override
+  String get statusHeader => 'స్టేటస్';
+  @override
+  String get dueHeader => 'గడువు';
+  @override
+  String get assignedByLabel => 'కేటాయించిన వారు';
+  @override
+  String get categoryLabel => 'కేటగిరీ';
+  @override
+  String get locationLabel => 'లొకేషన్';
+  @override
+  String get assigneesLabel => 'అప్పగించిన సభ్యులు';
+  @override
+  String get activityLabel => 'కార్యకలాపాలు';
+  @override
+  String get closeButton => 'మూసివేయి';
+
+  @override
+  String get everyCampusDeptAtAGlance => 'ప్రతి క్యాంపస్ & డిపార్ట్‌మెంట్ వివరాలు ఒకే చోట';
+  @override
+  String get byBranchUnit => 'బ్రాంచ్ యూనిట్ వారీగా';
+  @override
+  String get searchBranchPlaceholder => 'బ్రాంచ్ శోధించండి...';
+  @override
+  String get clickRowOrFilterTopBar => 'వరుసపై క్లిక్ చేయండి లేదా ఫిల్టర్ చేయండి';
+  @override
+  String get analyticsTitle => 'విశ్లేషణలు';
+  @override
+  String get exportButton => 'ఎగుమతి';
+  @override
+  String get organizationWide => 'సంస్థ మొత్తం';
+  @override
+  String get trendsOverTime => 'సమయానుకూల పోకడలు — సృష్టించినవి వర్సెస్ పూర్తయినవి';
+  @override
+  String get weeklyBucket => 'వారానికొకసారి';
+  @override
+  String get monthlyBucket => 'నెలకు ఒకసారి';
+  @override
+  String get quarterlyBucket => 'త్రైమాసికం';
+  @override
+  String get yearlyBucket => 'సంవత్సరానికి';
+  @override
+  String get createdLegend => 'సృష్టించబడ్డాయి';
+  @override
+  String get completedLegend => 'పూర్తయ్యాయి';
+  @override
+  String get onTimeCompletionDueWindow => 'సమయానికి పూర్తి (గడువు విండో)';
+  @override
+  String get taskStatusDistribution => 'టాస్క్ స్థితి పంపిణీ';
+  @override
+  String get priorityLoadTitle => 'ప్రాధాన్యత లోడ్';
+  @override
+  String get completionByBranch => 'బ్రాంచ్ వారీగా పూర్తి';
+  @override
+  String get workloadByDeadlineOpenTasks => 'గడువు వారీగా పనిభారం (ఓపెన్ టాస్క్‌లు)';
+
+  @override
+  String get tasksInYourScope => 'మీ స్కోప్‌లోని టాస్క్‌లు';
+  @override
+  String get needsAction => 'చర్య అవసరం';
+  @override
+  String get newRecurring => 'కొత్త పునరావృత టాస్క్';
+  @override
+  String get bulkUpload => 'బల్క్ అప్‌లోడ్';
+  @override
+  String get allScope => 'అన్నీ';
+  @override
+  String get confidentialScope => 'రహస్య';
+  @override
+  String get generalScope => 'సాధారణ';
+  @override
+  String get searchTasksPlaceholder => 'టాస్క్‌లు శోధించండి...';
+  @override
+  String get allStatuses => 'అన్ని స్థితులు';
+  @override
+  String get allPriorities => 'అన్ని ప్రాధాన్యతలు';
+  @override
+  String get selectAllText => 'అన్నీ ఎంచుకోండి';
+
+  @override
+  String get tasksAssignedToOrCreatedByYou => 'మీకు కేటాయించబడిన లేదా మీరు సృష్టించిన టాస్క్‌లు';
+  @override
+  String get repeatingDutiesAutoGenerated => 'పునరావృత విధులు — షెడ్యూల్‌పై\n స్వయంచాలకంగా సృష్టించబడతాయి';
+  @override
+  String get dailyFrequency => 'రోజువారీ';
+  @override
+  String get weeklyFrequency => 'వారంవారీ';
+  @override
+  String get monthlyFrequency => 'నెలకు ఒకసారి';
+  @override
+  String get biMonthlyFrequency => 'రెండు నెలలకొకసారి';
+  @override
+  String get quarterlyFrequency => 'త్రైమాసికం';
+  @override
+  String get halfYearlyFrequency => 'అర్ధ-వార్షిక';
+  @override
+  String get yearlyFrequency => 'వార్షిక';
+  @override
+  String get othersFrequency => 'ఇతరములు';
+  @override
+  String get listView => 'జాబితా';
+  @override
+  String get boardView => 'బోర్డు';
+  @override
+  String get calendarView => 'క్యాలెండర్';
+
+  @override
+  String get staffWhoHaventCompletedMandatory => 'మీతో ఈ నెల నిర్బంధ 1:1 పూర్తి \nచేయని సిబ్బంది.';
+  @override
+  String get scheduleOneOnOne => '1:1 షెడ్యూల్ చేయండి';
+  @override
+  String get oneOnOnePendingBadge => '1:1 పెండింగ్‌లో ఉంది';
+  @override
+  String get meetingsYouOrganizeOrInvitedTo => 'మీరు నిర్వహించే లేదా ఆహ్వానించబడిన సమావేశాలు';
+  @override
+  String get previewReminder => 'జ్ఞాపిక ముందస్తు పరిదృశ్యం';
+  @override
+  String get initiatedByMe => 'నేను ప్రారంభించినవి';
+  @override
+  String get receivedByMe => 'నేను అందుకున్నవి';
+  @override
+  String get joinMarkAttended => 'చేరండి / హాజరైనట్లు గుర్తించండి';
+  @override
+  String get meetingHappened => 'సమావేశం జరిగింది';
+  @override
+  String get reminderText => 'జ్ఞాపిక';
+
+  @override
+  String get scheduleAMeetingTitle => 'సమావేశాన్ని షెడ్యూల్ చేయండి';
+  @override
+  String get meetingTitleLabel => 'శీర్షిక';
+  @override
+  String get meetingTitleHint => 'ఉదా., ఫీజు సమన్వయ సమీక్ష';
+  @override
+  String get mandatoryOneOnOneDirectorLabel => 'డైరెక్టర్‌తో తప్పనిసరి నెలవారీ 1:1 — డైరెక్టర్ ఆటోమేటిక్‌గా జోడించబడతారు; పూర్తయ్యాక దాన్ని పూర్తయినట్లు గుర్తించండి.';
+  @override
+  String get dateLabel => 'తేదీ';
+  @override
+  String get timeLabel => 'సమయం';
+  @override
+  String get durationLabel => 'వ్యవధి';
+  @override
+  String get inviteesAvailabilityHeader => 'ఆహ్వానితులు & అందుబాటు — ప్రతీ వారిని తప్పనిసరి లేదా ఐచ్ఛికంగా సెట్ చేయండి';
+  @override
+  String get sendRequestButton => 'అభ్యర్థన పంపండి';
+  @override
+  String get freeStatus => 'అందుబాటులో ఉన్నారు';
+  @override
+  String get busyStatus => 'బిజీగా ఉన్నారు';
+  @override
+  String get notificationsTitle => 'నోటిఫికేషన్లు';
+  @override
+  String get markAllAsRead => 'అన్నీ చదివినట్లు గుర్తించండి';
+  @override
+  String get noNotifications => 'నోటిఫికేషన్లు లేవు';
+  @override
+  String get previewRemindersButton => 'జ్ఞాపిక ప్రివ్యూ';
+  @override
+  String get meetingsOrganizeOrInvitedSubtitle => 'మీరు నిర్వహించే లేదా ఆహ్వానించబడిన సమావేశాలు · DSR/WSR/MSR స్లాట్‌లు ఆటో-యాడ్ చేయబడ్డాయి';
+  @override
+  String get joinMarkAttendedButton => 'చేరండి / హాజరైనట్లు గుర్తించండి';
+  @override
+  String get meetingHappenedButton => 'సమావేశం జరిగింది';
+  @override
+  String get reminderButton => 'జ్ఞాపిక';
+  @override
+  String get allTab => 'అన్నీ';
+  @override
+  String get meetingCalendarSubtitle => 'మీ సమావేశాలను & ఆటో నివేదిక స్లాట్‌లను బ్రౌజ్ చేయండి — రోజు, పని వారం, వారం లేదా నెల';
+  @override
+  String get todayButton => 'ఈరోజు';
+  @override
+  String get dayView => 'రోజు';
+  @override
+  String get workWeekView => 'పని వారం';
+  @override
+  String get weekView => 'వారం';
+  @override
+  String get monthView => 'నెల';
+
+  @override
+  String get eventsTitle => 'ఈవెంట్లు';
+  @override
+  String get eventsSubtitle => 'చెక్‌లిస్ట్‌లు మరియు పురోగతితో బహుళ-శాఖల ఈవెంట్‌లు';
+  @override
+  String get eventsCalendarTitle => 'ఈవెంట్ల క్యాలెండర్';
+  @override
+  String get eventsCalendarSubtitle => 'నెలల వారీగా అన్ని ప్రాంగణాల పాఠశాల ఈవెంట్‌లు';
+  @override
+  String get assignedToMeTab => 'నాకు కేటాయించినవి';
+  @override
+  String get eventsTab => 'ఈవెంట్లు';
+  @override
+  String get checklistLabel => 'చెక్‌లిస్ట్';
+
+  @override
+  String get reportsDashboardTitle => 'నివేదికల డాష్‌బోర్డ్';
+  @override
+  String get submittedTodayLabel => 'ఈరోజు సమర్పించినవి';
+  @override
+  String get totalReportsLabel => 'మొత్తం నివేదికలు';
+  @override
+  String get submittedLabel => 'సమర్పించినవి';
+  @override
+  String get draftLabel => 'డ్రాఫ్ట్';
+  @override
+  String get dailyDsrLabel => 'రోజువారీ (DSR)';
+  @override
+  String get weeklyWsrLabel => 'వారాంతపు (WSR)';
+  @override
+  String get monthlyMsrLabel => 'నెలవారీ (MSR)';
+  @override
+  String get dsrComplianceHeader => 'DSR కంప్లైయన్స్';
+  @override
+  String get dsrComplianceSubtitle => 'రోజువారీ నివేదిక సమర్పించినవారు vs మిస్ అయినవారు — చివరి 14 రోజులు';
+  @override
+  String get filedLabel => 'సమర్పించినవి';
+  @override
+  String get missedLabel => 'మిస్ అయినవి';
+
+  @override
+  String get todoHistoryTitle => 'చేయవలసినవి · హిస్టరీ';
+  @override
+  String get todoHistorySubtitle => 'మీ జాబితాలోని ప్రతిదాని యొక్క రోజువారీ నమోదు — పూర్తయినవి లేదా పెండింగ్‌లో ఉన్నవి.';
+  @override
+  String get doneCountBadge => 'పూర్తయింది';
+
+  @override
+  String get leaderboardTitle => 'లీడర్‌బోర్డ్ & కోచింగ్';
+  @override
+  String get leaderboardSubtitle => 'బాడ్జ్‌లు, స్ట్రీక్‌లు & రివార్డ్‌లు';
+  @override
+  String get teamLeaderboardHeader => 'టీమ్ లీడర్‌బోర్డ్';
+  @override
+  String get teamLeaderboardSubtitle => 'పూర్తయిన టాస్క్‌ల ఆధారంగా ర్యాంకింగ్స్';
+  @override
+  String get memberHeader => 'సభ్యుడు';
+  @override
+  String get departmentHeader => 'శాఖ';
+  @override
+  String get doneHeader => 'పూర్తయినవి';
+  @override
+  String get assignedHeader => 'కేటాయించినవి';
+  @override
+  String get overdueHeader => 'గడువు ముగిసినవి';
+  @override
+  String get pointsHeader => 'పాయింట్లు';
+  @override
+  String get myPointsLedgerHeader => 'నా పాయింట్ల వివరాలు';
+  @override
+  String get runningBalanceLabel => 'మొత్తం నిల్వ';
+  @override
+  String get reasonHeader => 'కారణం';
+  @override
+  String get changeHeader => 'మార్పు';
+  @override
+  String get balanceHeader => 'నిల్వ';
+  @override
+  String get achievementBadgesHeader => 'సాధన బాడ్జ్‌లు';
+
+  @override
+  String get teamPerformanceTitle => 'టీమ్ పనితీరు';
+  @override
+  String get teamPerformanceSubtitle => 'జట్లు మరియు సభ్యుల మధ్య సమగ్ర పనితీరు మ్యాట్రిక్స్';
+  @override
+  String get teamSizeLabel => 'టీమ్ పరిమాణం';
+  @override
+  String get assignmentsLabel => 'కేటాయింపులు';
+  @override
+  String get inProgressLabel => 'పురోగతిలో ఉన్నవి';
+  @override
+  String get toStartLabel => 'ప్రారంభించాల్సినవి';
+  @override
+  String get onTimeLabel => 'సమయానికి పూర్తయినవి';
+  @override
+  String get onTimeHeader => 'సమయానికి శాతము';
+  @override
+  String get workloadDeliveryHeader => 'పనిభారం & డెలివరీ';
+  @override
+  String get workloadDeliverySubtitle => 'ప్రతి సంఖ్య క్లిక్ చేయగలదు · కాలమ్ ఆధారంగా క్రమబద్ధీకరించండి';
+  @override
+  String get completionHeader => 'పూర్తి శాతము';
+  @override
+  String get dueTodayHeader => 'ఈరోజు గడువు';
+  @override
+  String get emgHighHeader => 'అత్యవసరం+హై';
+  @override
+  String get droppedHeader => 'వదిలేసినవి';
+  @override
+  String get avgDaysHeader => 'సగటు రోజులు';
+  @override
+  String get byDepartmentHeader => 'శాఖల వారీగా';
+  @override
+  String get byDepartmentSubtitle => 'మీ పరిధిలోని పూర్తి శాతం';
+
+  @override
+  String get finesRewardsTitle => 'జరిమానాలు & బహుమతులు';
+  @override
+  String get finesRewardsSubtitle => 'మీ బృందంలో పాయింట్లు, బహుమతులు మరియు జరిమానాలు';
+  @override
+  String get issueFineRewardLabel => '+ జరిమానా / బహుమతి జారీ';
+  @override
+  String get overviewTab => 'అవలోకనం';
+  @override
+  String get summaryTab => 'సారాంశం';
+  @override
+  String get auditTrailTab => 'ఆడిట్ ట్రాక్';
+  @override
+  String get samskarMerchandiseStoreHeader => 'సంస్కార్ మర్చండైజ్ స్టోర్';
+  @override
+  String get redeemButton => 'రిడీమ్';
+
+  @override
+  String get performanceSettingsTitle => 'పనితీరు సెట్టింగ్‌లు';
+  @override
+  String get performanceSettingsSubtitle => 'జరిమానా & బహుమతి విధి విధానాలు';
+  @override
+  String get directorOnlyBadge => 'డైరెక్టర్ మాత్రమే';
+  @override
+  String get finePolicyHeader => 'జరిమానా విధానం';
+  @override
+  String get finePolicySubtitle => 'టాస్క్ మరియు నివేదిక ఆలస్యాల కోసం';
+  @override
+  String get rewardPolicyHeader => 'బహుమతి విధానం';
+  @override
+  String get rewardPolicySubtitle => 'ముందస్తు పూర్తికి మరియు ప్రతిభకు పాయింట్లు';
+  @override
+  String get amountHeader => 'మొత్తం';
+  @override
+  String get addFineTypeButton => '+ జరిమానా రకం జోడించు';
+  @override
+  String get addRewardTypeButton => '+ బహుమతి రకం జోడించు';
+  @override
+  String get saveSettingsButton => 'సెట్టింగ్‌లు సేవ్ చేయండి';
+  @override
+  String get resetToDefaultsButton => 'డిఫాల్ట్‌లకు పునరుద్ధరించండి';
+
+  @override
+  String get staffTitle => 'సిబ్బంది';
+  @override
+  String get staffSubtitle => 'సిబ్బంది, పాత్రలు మరియు ప్రాప్యత నిర్వహణ';
+  @override
+  String get addStaffTitle => 'సిబ్బందిని జోడించండి';
+  @override
+  String get searchStaffPlaceholder => 'పేరు, ఈమెయిల్ ద్వారా వెతకండి...';
+  @override
+  String get staffTypeHeader => 'సిబ్బంది రకం';
+  @override
+  String get rbacRoleHeader => 'RBAC పాత్ర';
+  @override
+  String get firstNameLabel => 'మొదటి పేరు';
+  @override
+  String get lastNameLabel => 'చివరి పేరు';
+  @override
+  String get mobileLabel => 'మొబైల్';
+  @override
+  String get teachingOption => 'బోధన';
+  @override
+  String get nonTeachingOption => 'బోధనేతర';
+  @override
+  String get departmentLabel => 'శాఖ';
+  @override
+  String get responsibilitiesLabel => 'బాధ్యతలు';
+  @override
+  String get taskCreatorLabel => 'టాస్క్ సృష్టికర్త';
+  @override
+  String get confidentialAccessLabel => 'రహస్య టాస్క్ యాక్సెస్';
+  @override
+  String get createdStat => 'సృష్టించినవి';
+  @override
+  String get finesStat => 'జరిమానాలు';
+  @override
+  String get allOption => 'అన్నీ';
+
+  // Sūtra AI Strings
+  @override
+  String get sutraTitle => 'సూత్ర AI';
+  @override
+  String get sutraBadge => 'కమాండ్ సెంటర్';
+  @override
+  String get sutraSubtitle => 'అనుసంధాన దారం — టాస్క్‌లను ఆటో-డ్రాఫ్ట్ చేస్తుంది, మనిషి అవసరాన్ని గుర్తు చేస్తుంది.';
+  @override
+  String get askSutraHeader => 'సూత్రను అడగండి — వాయిస్ లేదా టెక్స్ట్ ద్వారా సృష్టించండి';
+  @override
+  String get askSutraPlaceholder => 'ఉదా: "రేపు సాయంత్రం 4 గంటలకు సమావేశాన్ని షెడ్యూల్ చేయండి"';
+  @override
+  String get interpretButton => 'విశ్లేషించు';
+  @override
+  String get pendingBadge => 'పెండింగ్: ';
+  @override
+  String get emergencyBadge => 'ఎమర్జెన్సీ: ';
+  @override
+  String get completedBadge => 'పూర్తయినవి: ';
+  @override
+  String get needsHumanBadge => 'మానవ ప్రమేయం: ';
+  @override
+  String get needsHumanTab => 'మానవ ప్రమేయం';
+  @override
+  String get activityFeedTab => 'యాక్టివిటీ ఫీడ్';
+  @override
+  String get composeTab => 'రచించు';
+  @override
+  String get activeTasksTab => 'యాక్టివ్ టాస్క్‌లు';
+  @override
+  String get composeHeader => 'సూత్రతో రచించండి';
+  @override
+  String get composePlaceholder => 'సాధారణ భాషలో అభ్యర్థనను టైప్ చేయండి...';
+  @override
+  String get suggestPriorityChip => '✦ ప్రాధాన్యతను సూచించండి';
+  @override
+  String get pickAssigneeChip => '✦ బాధ్యుడిని ఎంచుకోండి';
+  @override
+  String get setDueDateChip => '✦ గడువు తేదీని సెట్ చేయండి';
+  @override
+  String get createTaskButton => 'టాస్క్ సృష్టించండి';
+  @override
+  String get approveButton => 'ఆమోదించండి';
+  @override
+  String get assignButton => 'కేటాయించండి';
+  @override
+  String get reviewButton => 'సమీక్షించండి';
+  @override
+  String get trackingBadge => 'ట్రాకింగ్';
+
+  // My Preferences Strings
+  @override
+  String get myPreferencesTitle => 'నా ప్రాధాన్యతలు';
+  @override
+  String get myPreferencesSubtitle => 'మీరు ఏ నోటిఫికేషన్‌లను ఏ ఛానెల్‌ల ద్వారా పొందాలో నియంత్రించండి.';
+  @override
+  String get profileCardHeader => 'ప్రొఫైల్';
+  @override
+  String get yourPermissionsHeader => 'మీ అనుమతులు';
+  @override
+  String get dailyDigestHeader => 'డైలీ డైజెస్ట్';
+  @override
+  String get dailyDigestSubtitle => 'ప్రతి ఉదయం 8 గంటలకు ఒకే సారాంశ నోటిఫికేషన్ పొందండి.';
+  @override
+  String get taskOperationsHeader => 'టాస్క్ నిర్వహణ';
+  @override
+  String get meetingsEventsHeader => 'సమావేశాలు & ఈవెంట్‌లు';
+  @override
+  String get prefReportsHeader => 'నివేదికలు';
+  @override
+  String get notificationTypeHeader => 'నోటిఫికేషన్ రకం';
+  @override
+  String get inAppChannel => 'ఇన్-యాప్';
+  @override
+  String get emailChannel => 'ఈమెయిల్';
+  @override
+  String get smsChannel => 'SMS';
+  @override
+  String get whatsappChannel => 'వాట్సాప్';
+  @override
+  String get pushChannel => 'పుష్';
+
+  // My Profile & FAQ Strings
+  @override
+  String get myProfileTitle => 'నా ప్రొఫైల్';
+  @override
+  String get personalInfoSection => 'వ్యక్తిగత సమాచారం';
+  @override
+  String get performanceStatsSection => 'పనితీరు గణాంకాలు';
+  @override
+  String get fullNameLabel => 'పూర్తి పేరు';
+  @override
+  String get totalTasksStat => 'మొత్తం టాస్క్‌లు';
+  @override
+  String get completedStatLabel => 'పూర్తయినవి';
+  @override
+  String get overdueStatLabel => 'గడువు దాటినవి';
+  @override
+  String get currentStreakStat => 'ప్రస్తుత స్ట్రీక్';
+  @override
+  String get totalPointsStat => 'మొత్తం పాయింట్లు';
+  @override
+  String get onTimeRateStat => 'సమయపాలన రేటు';
+  @override
+  String get completionRateStat => 'పూర్తయిన రేటు';
+  @override
+  String get faqTitle => 'తరచుగా అడిగే ప్రశ్నలు (FAQ)';
+  @override
+  String get faqSubtitle => 'సంస్కార్ టాస్క్ మేనేజర్ గురించి తరచుగా అడిగే ప్రశ్నలు';
+  @override
+  String get faqQ1 => 'నేను టాస్క్‌ను ఎలా సృష్టించాలి?';
+  @override
+  String get faqA1 => 'All Tasks → New Task కి వెళ్లండి. శీర్షిక, వివరణ, ప్రాధాన్యత, బ్రాంచ్ మరియు బాధ్యులను నమోదు చేయండి.';
+  @override
+  String get faqQ2 => 'నేను నా స్వంత టాస్క్‌ను ఎందుకు పూర్తి చేయలేను?';
+  @override
+  String get faqA2 => 'బాధ్యులు టాస్క్‌ను Done గా మార్చుతారు. కేటాయించిన వ్యక్తి దాన్ని సమీక్షించి Completed గా మారుస్తారు.';
+  @override
+  String get faqQ3 => 'DSR / WSR / MSR రిమైండర్‌లు ఎప్పుడు పంపబడతాయి?';
+  @override
+  String get faqA3 => 'రోజూ సాయంత్రం 5:30 మరియు 5:45 గంటలకు రిమైండర్‌లు పంపబడతాయి.';
+  @override
+  String get faqQ4 => 'బ్రాంచ్ ఫిల్టర్ ఎలా పనిచేస్తుంది?';
+  @override
+  String get faqA4 => 'టాప్ బార్‌లో "All Branches" సెలెక్టర్ ద్వారా డ్యాష్‌బోర్డ్‌ను ఫిల్టర్ చేయవచ్చు.';
+  @override
+  String get faqQ5 => 'నేను థీమ్ లేదా భాషను ఎలా మార్చాలి?';
+  @override
+  String get faqA5 => 'అవతార్ మెనూ → Settings ని తెరవండి. లైట్ / డార్క్ / సిస్టమ్ మరియు ఇంగ్లీష్ / తెలుగు / హిందీ ఎంచుకోండి.';
 }

@@ -10,10 +10,13 @@ import 'modules/auth/bloc/auth_bloc.dart';
 import 'modules/auth/bloc/auth_event.dart';
 import 'modules/auth/bloc/auth_state.dart';
 import 'modules/auth/screens/login_screen.dart';
+
 import 'modules/dashboard/bloc/dashboard_bloc.dart';
-import 'modules/dashboard/screens/dashboard_screen.dart';
+import 'modules/approvals/bloc/approvals_bloc.dart';
 import 'modules/settings/bloc/language_cubit.dart';
 import 'shared_widgets/dialogs/no_internet_dialog.dart';
+
+import 'modules/auth/screens/splash_screen.dart';
 
 class AppNavigator {
   static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -78,6 +81,7 @@ class _MyAppState extends State<MyApp> {
           create: (context) => AuthBloc()..add(CheckAuthStatusEvent()),
         ),
         BlocProvider<DashboardBloc>(create: (context) => DashboardBloc()),
+        BlocProvider<ApprovalsBloc>(create: (context) => ApprovalsBloc()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeMode>(
         builder: (context, themeMode) {
@@ -101,22 +105,16 @@ class _MyAppState extends State<MyApp> {
                   GlobalWidgetsLocalizations.delegate,
                   GlobalCupertinoLocalizations.delegate,
                 ],
-                home: BlocBuilder<AuthBloc, AuthState>(
-                  builder: (context, authState) {
-                    if (authState is AuthenticatedState) {
-                      return const DashboardScreen();
-                    }
-                    if (authState is AuthLoadingState) {
-                      return const Scaffold(
-                        body: Center(
-                          child: CircularProgressIndicator(
-                            color: Color(0xFFB91C1C),
-                          ),
-                        ),
+                home: BlocListener<AuthBloc, AuthState>(
+                  listener: (context, state) {
+                    if (state is UnauthenticatedState) {
+                      AppNavigator.navigatorKey.currentState?.pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (_) => const LoginScreen()),
+                        (route) => false,
                       );
                     }
-                    return const LoginScreen();
                   },
+                  child: const SplashScreen(),
                 ),
               );
             },

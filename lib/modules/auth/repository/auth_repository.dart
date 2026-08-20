@@ -1,3 +1,4 @@
+import 'dart:convert';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/dio_client.dart';
 import '../../../core/utils/preferences_service.dart';
@@ -8,6 +9,17 @@ class AuthRepository {
   final DioClient _dioClient = DioClient();
   final PreferencesService _prefs = PreferencesService();
 
+  dynamic _safeParse(dynamic data) {
+    if (data is String) {
+      try {
+        return jsonDecode(data);
+      } catch (_) {
+        return null;
+      }
+    }
+    return data;
+  }
+
   Future<LoginResponse> login(String email, String password) async {
     final response = await _dioClient.dio.post(
       ApiConstants.login,
@@ -17,15 +29,21 @@ class AuthRepository {
       },
     );
 
-    final loginRes = LoginResponse.fromJson(response.data);
-    await _prefs.saveToken(loginRes.token);
+    final data = _safeParse(response.data);
+    final map = data is Map<String, dynamic> ? data : <String, dynamic>{};
+    final loginRes = LoginResponse.fromJson(map);
+    if (loginRes.token.isNotEmpty) {
+      await _prefs.saveToken(loginRes.token);
+    }
     return loginRes;
   }
 
   Future<UserProfile> getMe() async {
     final response = await _dioClient.dio.get(ApiConstants.me);
-    final userProfile = UserProfile.fromJson(response.data);
-    await _prefs.saveUserMe(response.data);
+    final data = _safeParse(response.data);
+    final map = data is Map<String, dynamic> ? data : <String, dynamic>{};
+    final userProfile = UserProfile.fromJson(map);
+    await _prefs.saveUserMe(map);
     return userProfile;
   }
 

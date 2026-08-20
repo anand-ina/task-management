@@ -1,0 +1,322 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../shared_widgets/app_bar/custom_app_bar.dart';
+import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../bloc/approvals_bloc.dart';
+import '../bloc/approvals_event.dart';
+import '../bloc/approvals_state.dart';
+import '../constants/approvals_const_strings.dart';
+import '../models/budget_approval_model.dart';
+
+class BudgetApprovalsScreen extends StatefulWidget {
+  const BudgetApprovalsScreen({super.key});
+
+  @override
+  State<BudgetApprovalsScreen> createState() => _BudgetApprovalsScreenState();
+}
+
+class _BudgetApprovalsScreenState extends State<BudgetApprovalsScreen> {
+  int _selectedTabIndex = 0; // 0: Received by Me, 1: Initiated by Me
+
+  @override
+  void initState() {
+    super.initState();
+    context.read<ApprovalsBloc>().add(FetchBudgetApprovalsDataEvent());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      drawer: const CustomLeftDrawer(currentRoute: '/approvals/budget'),
+      appBar: const CustomAppBar(),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          context.read<ApprovalsBloc>().add(FetchBudgetApprovalsDataEvent());
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header Title & Awaiting Badge
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const Text(
+                    ApprovalsConstStrings.approvalsHeader,
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  BlocBuilder<ApprovalsBloc, ApprovalsState>(
+                    builder: (context, state) {
+                      int awaitingCount = 0;
+                      if (state is ApprovalsLoadedState) {
+                        awaitingCount = state.budgetReceived
+                            .where((b) => b.status.toLowerCase() == 'pending')
+                            .length;
+                      }
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '$awaitingCount ${ApprovalsConstStrings.awaitingYou}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.white70 : Colors.black87,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                ApprovalsConstStrings.approvalsSubtitle,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: isDark ? Colors.white60 : Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Segmented Pill Tabs
+              BlocBuilder<ApprovalsBloc, ApprovalsState>(
+                builder: (context, state) {
+                  int receivedCount = 0;
+                  int initiatedCount = 0;
+                  if (state is ApprovalsLoadedState) {
+                    receivedCount = state.budgetReceived.length;
+                    initiatedCount = state.budgetInitiated.length;
+                  }
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    padding: const EdgeInsets.all(4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildTabButton(
+                          title: '${ApprovalsConstStrings.receivedByMe} ${receivedCount > 0 ? "($receivedCount)" : ""}',
+                          isSelected: _selectedTabIndex == 0,
+                          onTap: () => setState(() => _selectedTabIndex = 0),
+                        ),
+                        _buildTabButton(
+                          title: '${ApprovalsConstStrings.initiatedByMe} ${initiatedCount > 0 ? "($initiatedCount)" : ""}',
+                          isSelected: _selectedTabIndex == 1,
+                          onTap: () => setState(() => _selectedTabIndex = 1),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 20),
+
+              // Content Body
+              BlocBuilder<ApprovalsBloc, ApprovalsState>(
+                builder: (context, state) {
+                  if (state is ApprovalsLoadingState) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 40),
+                        child: CircularProgressIndicator(color: Color(0xFFB91C1C)),
+                      ),
+                    );
+                  }
+
+                  if (state is ApprovalsErrorState) {
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 40),
+                        child: Column(
+                          children: [
+                            Text(state.message),
+                            const SizedBox(height: 12),
+                            ElevatedButton(
+                              onPressed: () => context
+                                  .read<ApprovalsBloc>()
+                                  .add(FetchBudgetApprovalsDataEvent()),
+                              child: const Text('Retry'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+
+                  if (state is ApprovalsLoadedState) {
+                    final items = _selectedTabIndex == 0
+                        ? state.budgetReceived
+                        : state.budgetInitiated;
+
+                    if (items.isEmpty) {
+                      return _buildEmptyState();
+                    }
+
+                    return ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: items.length,
+                      separatorBuilder: (context, index) => const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        return _buildBudgetCard(items[index]);
+                      },
+                    );
+                  }
+
+                  return _buildEmptyState();
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTabButton({
+    required String title,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? (isDark ? const Color(0xFF0F172A) : const Color(0xFF0F172A))
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          title,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 60),
+        child: Column(
+          children: [
+            Icon(Icons.currency_rupee_rounded, size: 48, color: Colors.grey.shade400),
+            const SizedBox(height: 12),
+            Text(
+              ApprovalsConstStrings.noBudgetApprovals,
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBudgetCard(BudgetApprovalModel item) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isApproved = item.status.toLowerCase() == 'approved';
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              if (item.taskNo != null)
+                Text(
+                  item.taskNo!,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                decoration: BoxDecoration(
+                  color: isApproved ? const Color(0xFFDCFCE7) : const Color(0xFFFEF9C3),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  item.status,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: isApproved ? const Color(0xFF15803D) : const Color(0xFFA16207),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (item.title != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              item.title!,
+              style: TextStyle(
+                fontSize: 14,
+                color: isDark ? Colors.white70 : Colors.black87,
+              ),
+            ),
+          ],
+          if (item.amount != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              '₹ ${item.amount!.toStringAsFixed(2)}',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF16A34A),
+              ),
+            ),
+          ],
+          if (item.requestedBy != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              'requested by ${item.requestedBy}',
+              style: TextStyle(
+                fontSize: 12,
+                color: isDark ? Colors.white60 : Colors.grey.shade600,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}

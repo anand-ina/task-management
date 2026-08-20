@@ -1,3 +1,4 @@
+import 'dart:convert';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/dio_client.dart';
 import '../models/dashboard_stats.dart';
@@ -9,41 +10,75 @@ import '../models/todo_model.dart';
 class DashboardRepository {
   final DioClient _dioClient = DioClient();
 
+  dynamic _safeParse(dynamic data) {
+    if (data is String) {
+      try {
+        return jsonDecode(data);
+      } catch (_) {
+        return null;
+      }
+    }
+    return data;
+  }
+
   Future<NotificationsResponse> getNotifications() async {
     final response = await _dioClient.dio.get(ApiConstants.notifications);
-    return NotificationsResponse.fromJson(response.data);
+    final data = _safeParse(response.data);
+    if (data is Map<String, dynamic>) {
+      return NotificationsResponse.fromJson(data);
+    }
+    return NotificationsResponse.fromJson({});
   }
 
-  Future<DashboardData> getDashboardData() async {
-    final response = await _dioClient.dio.get(ApiConstants.dashboard);
-    return DashboardData.fromJson(response.data);
+  Future<DashboardData> getDashboardData({int? branchId}) async {
+    String url = ApiConstants.dashboard;
+    if (branchId != null && branchId > 0) {
+      url = '$url?branch_id=$branchId';
+    }
+    final response = await _dioClient.dio.get(url);
+    final data = _safeParse(response.data);
+    if (data is Map<String, dynamic>) {
+      return DashboardData.fromJson(data);
+    }
+    return DashboardData.fromJson({});
   }
 
-  Future<TeamData> getTeamData() async {
-    final response = await _dioClient.dio.get(ApiConstants.dashboardTeam);
-    return TeamData.fromJson(response.data);
+  Future<TeamData> getTeamData({int? branchId}) async {
+    String url = ApiConstants.dashboardTeam;
+    if (branchId != null && branchId > 0) {
+      url = '$url?branch_id=$branchId';
+    }
+    final response = await _dioClient.dio.get(url);
+    final data = _safeParse(response.data);
+    if (data is Map<String, dynamic>) {
+      return TeamData.fromJson(data);
+    }
+    return TeamData.fromJson({});
   }
 
   Future<List<TodoItem>> getTodos() async {
     final response = await _dioClient.dio.get(ApiConstants.todos);
-    if (response.data is List) {
-      return (response.data as List).map((e) => TodoItem.fromJson(e)).toList();
+    final data = _safeParse(response.data);
+    if (data is List) {
+      return data.map((e) => TodoItem.fromJson(e is Map<String, dynamic> ? e : {})).toList();
     }
     return [];
   }
 
   Future<List<BranchModel>> getBranches() async {
     final response = await _dioClient.dio.get(ApiConstants.branches);
-    if (response.data is List) {
-      return (response.data as List).map((e) => BranchModel.fromJson(e)).toList();
+    final data = _safeParse(response.data);
+    if (data is List) {
+      return data.map((e) => BranchModel.fromJson(e is Map<String, dynamic> ? e : {})).toList();
     }
     return [];
   }
 
   Future<List<dynamic>> getScheduleMy() async {
     final response = await _dioClient.dio.get(ApiConstants.scheduleMy);
-    if (response.data is List) {
-      return response.data as List;
+    final data = _safeParse(response.data);
+    if (data is List) {
+      return data;
     }
     return [];
   }

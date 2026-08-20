@@ -6,6 +6,7 @@ import '../../../shared_widgets/dialogs/no_internet_dialog.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
+import '../../dashboard/screens/dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -80,36 +81,38 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      // crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 50,
-                              height: 50,
-                              padding: const EdgeInsets.all(4),
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                              ),
-                              child: ClipOval(
-                                child: Image.asset(
-                                  'assets/images/samskar-crest.png',
-                                  fit: BoxFit.cover,
+                        Center(
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 250,
+                                height: 100,
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: Colors.transparent,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: ClipOval(
+                                  child: Image.asset(
+                                    'assets/images/circle-logo.png',
+                                    fit: BoxFit.cover,
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              s.appTitle,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
+                              const SizedBox(width: 12),
+                              Text(
+                                s.appTitle,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                         const SizedBox(height: 40),
                         const Text(
@@ -233,6 +236,32 @@ class _LoginScreenState extends State<LoginScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // App Logo Image at First
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 20),
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E293B) : Colors.transparent,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Image.asset(
+                'assets/images/logo.png',
+                height: 54,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Image.asset(
+                    'assets/images/circle-logo.png',
+                    height: 54,
+                    fit: BoxFit.contain,
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
         Text(
           s.welcomeBack,
           style: TextStyle(
@@ -251,7 +280,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: 24),
 
-        // QUICK LOGIN AS Section
+        // QUICK LOGIN AS Section (Maintained in 2 clean rows)
         Text(
           s.quickLoginAs,
           style: TextStyle(
@@ -263,18 +292,35 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: 10),
 
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            _buildQuickChip(s.directorVamsi, 'vamsi@samskar.edu', isHighlighted: true),
-            _buildQuickChip(s.principalMadhumathi, 'madhumathi@samskar.edu'),
-            _buildQuickChip(s.managerMurali, 'murali@samskar.edu'),
-            _buildQuickChip(s.managerSwapnika, 'swapnika@samskar.edu'),
-            _buildQuickChip(s.teamLeadNarasimha, 'narasimha@samskar.edu'),
-            _buildQuickChip(s.executiveAnamika, 'anamika@samskar.edu'),
-            _buildQuickChip(s.executiveGyapika, 'gyapika@samskar.edu'),
-          ],
+        // Row 1
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _buildQuickChip(s.directorVamsi, 'vamsi@samskar.edu', isHighlighted: true),
+              const SizedBox(width: 8),
+              _buildQuickChip(s.principalMadhumathi, 'madhumathi@samskar.edu'),
+              const SizedBox(width: 8),
+              _buildQuickChip(s.managerMurali, 'murali@samskar.edu'),
+              const SizedBox(width: 8),
+              _buildQuickChip(s.managerSwapnika, 'swapnika@samskar.edu'),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Row 2
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _buildQuickChip(s.teamLeadNarasimha, 'narasimha@samskar.edu'),
+              const SizedBox(width: 8),
+              _buildQuickChip(s.executiveAnamika, 'anamika@samskar.edu'),
+              const SizedBox(width: 8),
+              // _buildQuickChip(s.executiveGyapika, 'gyapika@samskar.edu'),
+              _buildQuickChip(s.executiveGyapika, 'sushma@samskar.edu '),
+            ],
+          ),
         ),
 
         const SizedBox(height: 24),
@@ -346,6 +392,11 @@ class _LoginScreenState extends State<LoginScreen> {
         // Sign In Button
         BlocConsumer<AuthBloc, AuthState>(
           listener: (context, state) {
+            if (state is AuthenticatedState) {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => const DashboardScreen()),
+              );
+            }
             if (state is AuthErrorState) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(

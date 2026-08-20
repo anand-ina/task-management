@@ -1,6 +1,30 @@
 import 'package:flutter/material.dart';
 import '../../core/localization/app_strings.dart';
+import '../../modules/meetings/screens/monthly_one_on_one_pending_screen.dart';
+import '../../modules/meetings/screens/my_scheduled_meetings_screen.dart';
+import '../../modules/organization/screens/organization_overview_screen.dart';
 import '../../modules/settings/screens/settings_screen.dart';
+import '../../modules/tasks/screens/all_tasks_screen.dart';
+import '../../modules/tasks/screens/my_tasks_screen.dart';
+import '../../modules/tasks/screens/recurring_tasks_screen.dart';
+import '../../modules/approvals/screens/task_approvals_screen.dart';
+import '../../modules/approvals/screens/escalations_screen.dart';
+import '../../modules/approvals/screens/meeting_approvals_screen.dart';
+import '../../modules/approvals/screens/budget_approvals_screen.dart';
+import '../../modules/meetings/screens/meeting_calendar_screen.dart';
+import '../../modules/events/screens/events_screen.dart';
+import '../../modules/events/screens/events_calendar_screen.dart';
+import '../../modules/reports/screens/reports_dashboard_screen.dart';
+import '../../modules/todos/screens/todo_history_screen.dart';
+import '../../modules/performance/screens/leaderboard_screen.dart';
+import '../../modules/performance/screens/team_performance_screen.dart';
+import '../../modules/fines/screens/fines_rewards_screen.dart';
+import '../../modules/fines/screens/performance_settings_screen.dart';
+import '../../modules/staff/screens/staff_screen.dart';
+import '../../modules/sutra/screens/sutra_ai_screen.dart';
+import '../../modules/preferences/screens/my_preferences_screen.dart';
+import '../../modules/profile/screens/my_profile_screen.dart';
+import '../../modules/faq/screens/faq_screen.dart';
 
 class CustomLeftDrawer extends StatelessWidget {
   final String currentRoute;
@@ -23,7 +47,7 @@ class CustomLeftDrawer extends StatelessWidget {
               child: Row(
                 children: [
                   Image.asset(
-                    'assets/images/samskar-crest.png',
+                    'assets/images/circle-logo.png',
                     width: 32,
                     height: 32,
                     errorBuilder: (context, error, stackTrace) => Container(
@@ -149,15 +173,15 @@ class CustomLeftDrawer extends StatelessWidget {
                     context,
                     icon: Icons.person_outline_rounded,
                     title: s.monthlyOneOnOnePending,
-                    isSelected: currentRoute == '/one-on-one',
-                    onTap: () => _navigate(context, '/one-on-one'),
+                    isSelected: currentRoute == '/one-on-one-pending' || currentRoute == '/one-on-one',
+                    onTap: () => _navigate(context, '/one-on-one-pending'),
                   ),
                   _buildNavItem(
                     context,
                     icon: Icons.access_time_rounded,
                     title: s.myScheduledMeetings,
-                    isSelected: currentRoute == '/meetings',
-                    onTap: () => _navigate(context, '/meetings'),
+                    isSelected: currentRoute == '/my-meetings' || currentRoute == '/meetings',
+                    onTap: () => _navigate(context, '/my-meetings'),
                   ),
                   _buildNavItem(
                     context,
@@ -242,15 +266,15 @@ class CustomLeftDrawer extends StatelessWidget {
                     context,
                     icon: Icons.diamond_outlined,
                     title: s.finesAndRewards,
-                    isSelected: currentRoute == '/fines',
-                    onTap: () => _navigate(context, '/fines'),
+                    isSelected: currentRoute == '/fines-rewards' || currentRoute == '/fines',
+                    onTap: () => _navigate(context, '/fines-rewards'),
                   ),
                   _buildNavItem(
                     context,
                     icon: Icons.settings_outlined,
                     title: s.settings,
-                    isSelected: currentRoute == '/perf-settings',
-                    onTap: () => _navigate(context, '/perf-settings'),
+                    isSelected: currentRoute == '/performance-settings' || currentRoute == '/perf-settings',
+                    onTap: () => _navigate(context, '/performance-settings'),
                   ),
                   const SizedBox(height: 12),
 
@@ -279,14 +303,8 @@ class CustomLeftDrawer extends StatelessWidget {
                     context,
                     icon: Icons.tune_rounded,
                     title: s.myPreferences,
-                    isSelected: currentRoute == '/preferences',
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const SettingsScreen()),
-                      );
-                    },
+                    isSelected: currentRoute == '/my-preferences' || currentRoute == '/preferences',
+                    onTap: () => _navigate(context, '/my-preferences'),
                   ),
                   const SizedBox(height: 20),
                 ],
@@ -400,6 +418,387 @@ class CustomLeftDrawer extends StatelessWidget {
   }
 
   void _navigate(BuildContext context, String route) {
-    Navigator.pop(context); // Close drawer
+    final navigator = Navigator.of(context);
+    final isDrawerOpen = Scaffold.maybeOf(context)?.isDrawerOpen ?? false;
+
+    if (route == '/preferences') {
+      if (currentRoute == '/preferences') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const SettingsScreen()),
+      );
+      return;
+    }
+
+    if (route == '/org-overview') {
+      if (currentRoute == '/org-overview') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const OrganizationOverviewScreen()),
+      );
+      return;
+    }
+
+    if (route == '/tasks') {
+      if (currentRoute == '/tasks') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const AllTasksScreen()),
+      );
+      return;
+    }
+
+    if (route == '/my-tasks') {
+      if (currentRoute == '/my-tasks') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const MyTasksScreen()),
+      );
+      return;
+    }
+
+    if (route == '/recurring') {
+      if (currentRoute == '/recurring') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const RecurringTasksScreen()),
+      );
+      return;
+    }
+
+    if (route == '/one-on-one-pending') {
+      if (currentRoute == '/one-on-one-pending') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const MonthlyOneOnOnePendingScreen()),
+      );
+      return;
+    }
+
+    if (route == '/my-meetings') {
+      if (currentRoute == '/my-meetings') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const MyScheduledMeetingsScreen()),
+      );
+      return;
+    }
+
+    if (route == '/meetings-calendar') {
+      if (currentRoute == '/meetings-calendar') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const MeetingCalendarScreen()),
+      );
+      return;
+    }
+
+    if (route == '/approvals/tasks') {
+      if (currentRoute == '/approvals/tasks') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const TaskApprovalsScreen()),
+      );
+      return;
+    }
+
+    if (route == '/approvals/escalations') {
+      if (currentRoute == '/approvals/escalations') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const EscalationsScreen()),
+      );
+      return;
+    }
+
+    if (route == '/approvals/meetings') {
+      if (currentRoute == '/approvals/meetings') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const MeetingApprovalsScreen()),
+      );
+      return;
+    }
+
+    if (route == '/approvals/budget') {
+      if (currentRoute == '/approvals/budget') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const BudgetApprovalsScreen()),
+      );
+      return;
+    }
+
+    if (route == '/events') {
+      if (currentRoute == '/events') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const EventsScreen()),
+      );
+      return;
+    }
+
+    if (route == '/events-calendar') {
+      if (currentRoute == '/events-calendar') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const EventsCalendarScreen()),
+      );
+      return;
+    }
+
+    if (route == '/reports-dashboard') {
+      if (currentRoute == '/reports-dashboard') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const ReportsDashboardScreen()),
+      );
+      return;
+    }
+
+    if (route == '/todo-history') {
+      if (currentRoute == '/todo-history') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const TodoHistoryScreen()),
+      );
+      return;
+    }
+
+    if (route == '/leaderboard') {
+      if (currentRoute == '/leaderboard') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const LeaderboardScreen()),
+      );
+      return;
+    }
+
+    if (route == '/team-performance') {
+      if (currentRoute == '/team-performance') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const TeamPerformanceScreen()),
+      );
+      return;
+    }
+
+    if (route == '/fines-rewards' || route == '/fines') {
+      if (currentRoute == '/fines-rewards' || currentRoute == '/fines') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const FinesRewardsScreen()),
+      );
+      return;
+    }
+
+    if (route == '/performance-settings' || route == '/perf-settings') {
+      if (currentRoute == '/performance-settings' || currentRoute == '/perf-settings') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const PerformanceSettingsScreen()),
+      );
+      return;
+    }
+
+    if (route == '/staff') {
+      if (currentRoute == '/staff') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const StaffScreen()),
+      );
+      return;
+    }
+
+    if (route == '/sutra') {
+      if (currentRoute == '/sutra') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const SutraAiScreen()),
+      );
+      return;
+    }
+
+    if (route == '/my-preferences' || route == '/preferences') {
+      if (currentRoute == '/my-preferences' || currentRoute == '/preferences') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const MyPreferencesScreen()),
+      );
+      return;
+    }
+
+    if (route == '/profile') {
+      if (currentRoute == '/profile') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const MyProfileScreen()),
+      );
+      return;
+    }
+
+    if (route == '/faq') {
+      if (currentRoute == '/faq') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const FaqScreen()),
+      );
+      return;
+    }
+
+    if (isDrawerOpen) {
+      navigator.pop();
+    }
+
+    if (navigator.canPop()) {
+      navigator.popUntil((r) => r.isFirst);
+    }
   }
 }

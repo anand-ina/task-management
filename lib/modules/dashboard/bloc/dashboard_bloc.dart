@@ -9,6 +9,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
 
   DashboardBloc() : super(DashboardInitialState()) {
     on<FetchDashboardDataEvent>(_onFetchDashboardData);
+    on<SelectBranchEvent>(_onSelectBranch);
     on<AddTodoEvent>(_onAddTodo);
     on<ToggleTodoEvent>(_onToggleTodo);
   }
@@ -20,8 +21,8 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     emit(DashboardLoadingState());
     try {
       final results = await Future.wait([
-        _repository.getDashboardData(),
-        _repository.getTeamData(),
+        _repository.getDashboardData(branchId: event.branchId),
+        _repository.getTeamData(branchId: event.branchId),
         _repository.getNotifications(),
         _repository.getBranches(),
         _repository.getTodos(),
@@ -51,6 +52,31 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       ));
     } catch (e) {
       emit(DashboardErrorState(message: e.toString()));
+    }
+  }
+
+  Future<void> _onSelectBranch(
+    SelectBranchEvent event,
+    Emitter<DashboardState> emit,
+  ) async {
+    if (state is DashboardLoadedState) {
+      final currentState = state as DashboardLoadedState;
+      emit(DashboardLoadingState());
+      try {
+        final targetBranchId = event.branch.isAll ? null : event.branch.id;
+        final results = await Future.wait([
+          _repository.getDashboardData(branchId: targetBranchId),
+          _repository.getTeamData(branchId: targetBranchId),
+        ]);
+
+        emit(currentState.copyWith(
+          dashboardData: results[0] as dynamic,
+          teamData: results[1] as dynamic,
+          selectedBranch: event.branch,
+        ));
+      } catch (e) {
+        emit(DashboardErrorState(message: e.toString()));
+      }
     }
   }
 
