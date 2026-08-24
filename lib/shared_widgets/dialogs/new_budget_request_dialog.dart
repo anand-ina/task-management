@@ -106,6 +106,7 @@ class _NewBudgetRequestDialogState extends State<NewBudgetRequestDialog> {
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: Container(
         width: 540,
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
         padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -136,189 +137,199 @@ class _NewBudgetRequestDialogState extends State<NewBudgetRequestDialog> {
               ],
             ),
             const Divider(),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
 
-            // Title * Input
-            Row(
-              children: const [
-                Text('Title ', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey)),
-                Text('*', style: TextStyle(fontSize: 11, color: Colors.red, fontWeight: FontWeight.bold)),
-              ],
-            ),
-            const SizedBox(height: 4),
-            TextField(
-              controller: _titleController,
-              style: const TextStyle(fontSize: 12),
-              decoration: InputDecoration(
-                hintText: 'What is the spend for?',
-                hintStyle: const TextStyle(fontSize: 12, color: Colors.grey),
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                filled: true,
-                fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-              ),
-            ),
-            const SizedBox(height: 14),
-
-            // Amount * and Currency Row
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: const [
-                          Text('Amount ', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey)),
-                          Text('*', style: TextStyle(fontSize: 11, color: Colors.red, fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      TextField(
-                        controller: _amountController,
-                        keyboardType: TextInputType.number,
-                        style: const TextStyle(fontSize: 12),
-                        decoration: InputDecoration(
-                          hintText: '0.00',
-                          hintStyle: const TextStyle(fontSize: 12, color: Colors.grey),
-                          isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                          filled: true,
-                          fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Column(
+            // Scrollable Form Content (Prevents Overflow & Keyboard hiding buttons)
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Currency', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey)),
+                    // Title * Input
+                    Row(
+                      children: const [
+                        Text('Title ', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey)),
+                        Text('*', style: TextStyle(fontSize: 11, color: Colors.red, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
                     const SizedBox(height: 4),
-                    Container(
-                      width: 100,
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _selectedCurrency,
-                          isDense: true,
-                          items: ['INR', 'USD', 'EUR'].map((c) {
-                            return DropdownMenuItem(value: c, child: Text(c, style: const TextStyle(fontSize: 12)));
-                          }).toList(),
-                          onChanged: (val) {
-                            if (val != null) setState(() => _selectedCurrency = val);
-                          },
-                        ),
+                    TextField(
+                      controller: _titleController,
+                      style: const TextStyle(fontSize: 12),
+                      decoration: InputDecoration(
+                        hintText: 'What is the spend for?',
+                        hintStyle: const TextStyle(fontSize: 12, color: Colors.grey),
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        filled: true,
+                        fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
                       ),
                     ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
+                    const SizedBox(height: 14),
 
-            // Category & Needed By Row
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Category', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey)),
-                      const SizedBox(height: 4),
-                      TextField(
-                        controller: _categoryController,
-                        style: const TextStyle(fontSize: 12),
-                        decoration: InputDecoration(
-                          hintText: 'Infrastructure, Events...',
-                          hintStyle: const TextStyle(fontSize: 12, color: Colors.grey),
-                          isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                          filled: true,
-                          fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Needed by', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey)),
-                      const SizedBox(height: 4),
-                      InkWell(
-                        onTap: () async {
-                          final picked = await showDatePicker(
-                            context: context,
-                            initialDate: _neededByDate,
-                            firstDate: DateTime.now(),
-                            lastDate: DateTime.now().add(const Duration(days: 365)),
-                          );
-                          if (picked != null) setState(() => _neededByDate = picked);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    // Amount * and Currency Row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                '${_neededByDate.day.toString().padLeft(2, '0')}/${_neededByDate.month.toString().padLeft(2, '0')}/${_neededByDate.year}',
-                                style: const TextStyle(fontSize: 12),
+                              Row(
+                                children: const [
+                                  Text('Amount ', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey)),
+                                  Text('*', style: TextStyle(fontSize: 11, color: Colors.red, fontWeight: FontWeight.bold)),
+                                ],
                               ),
-                              const Icon(Icons.calendar_month_rounded, size: 16, color: Colors.grey),
+                              const SizedBox(height: 4),
+                              TextField(
+                                controller: _amountController,
+                                keyboardType: TextInputType.number,
+                                style: const TextStyle(fontSize: 12),
+                                decoration: InputDecoration(
+                                  hintText: '0.00',
+                                  hintStyle: const TextStyle(fontSize: 12, color: Colors.grey),
+                                  isDense: true,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                  filled: true,
+                                  fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                                ),
+                              ),
                             ],
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Currency', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey)),
+                            const SizedBox(height: 4),
+                            Container(
+                              width: 100,
+                              padding: const EdgeInsets.symmetric(horizontal: 10),
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: _selectedCurrency,
+                                  isDense: true,
+                                  items: ['INR', 'USD', 'EUR'].map((c) {
+                                    return DropdownMenuItem(value: c, child: Text(c, style: const TextStyle(fontSize: 12)));
+                                  }).toList(),
+                                  onChanged: (val) {
+                                    if (val != null) setState(() => _selectedCurrency = val);
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
 
-            // Justification Text Area
-            const Text('Justification', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey)),
-            const SizedBox(height: 4),
-            TextField(
-              controller: _justificationController,
-              maxLines: 3,
-              style: const TextStyle(fontSize: 12),
-              decoration: InputDecoration(
-                hintText: 'Why is this needed?',
-                hintStyle: const TextStyle(fontSize: 12, color: Colors.grey),
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                filled: true,
-                fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                    // Category & Needed By Row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Category', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey)),
+                              const SizedBox(height: 4),
+                              TextField(
+                                controller: _categoryController,
+                                style: const TextStyle(fontSize: 12),
+                                decoration: InputDecoration(
+                                  hintText: 'Infrastructure, Events...',
+                                  hintStyle: const TextStyle(fontSize: 12, color: Colors.grey),
+                                  isDense: true,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                  filled: true,
+                                  fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Needed by', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey)),
+                              const SizedBox(height: 4),
+                              InkWell(
+                                onTap: () async {
+                                  final picked = await showDatePicker(
+                                    context: context,
+                                    initialDate: _neededByDate,
+                                    firstDate: DateTime.now(),
+                                    lastDate: DateTime.now().add(const Duration(days: 365)),
+                                  );
+                                  if (picked != null) setState(() => _neededByDate = picked);
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        '${_neededByDate.day.toString().padLeft(2, '0')}/${_neededByDate.month.toString().padLeft(2, '0')}/${_neededByDate.year}',
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
+                                      const Icon(Icons.calendar_month_rounded, size: 16, color: Colors.grey),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Justification Text Area
+                    const Text('Justification', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey)),
+                    const SizedBox(height: 4),
+                    TextField(
+                      controller: _justificationController,
+                      maxLines: 2,
+                      style: const TextStyle(fontSize: 12),
+                      decoration: InputDecoration(
+                        hintText: 'Why is this needed?',
+                        hintStyle: const TextStyle(fontSize: 12, color: Colors.grey),
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        filled: true,
+                        fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Budget requests are decided by the Director.',
+                      style: TextStyle(fontSize: 10, color: isDark ? Colors.grey[400] : const Color(0xFF64748B)),
+                    ),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 6),
-            Text(
-              'Budget requests are decided by the Director.',
-              style: TextStyle(fontSize: 10, color: isDark ? Colors.grey[400] : const Color(0xFF64748B)),
-            ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
             const Divider(),
             const SizedBox(height: 8),
 
-            // Footer Buttons
+            // Footer Action Buttons (Pinned & Always Visible)
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [

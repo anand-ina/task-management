@@ -5,6 +5,8 @@ import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/request_task_closure_dialog.dart';
 import '../../../shared_widgets/dialogs/task_detail_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../auth/bloc/auth_bloc.dart';
+import '../../auth/bloc/auth_state.dart';
 import '../bloc/approvals_bloc.dart';
 import '../bloc/approvals_event.dart';
 import '../bloc/approvals_state.dart';
@@ -30,6 +32,22 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final authState = context.watch<AuthBloc>().state;
+    bool isAcademicExecutive = false;
+    bool isTeamLead = false;
+    if (authState is AuthenticatedState) {
+      final role = authState.userProfile.role.toLowerCase();
+      final roleLabel = authState.userProfile.roleLabel.toLowerCase();
+      final email = authState.userProfile.email.toLowerCase();
+      if (role.contains('executive') || role.contains('ae') || roleLabel.contains('executive') || roleLabel.contains('ae') || email.contains('sushma')) {
+        isAcademicExecutive = true;
+      }
+      if (roleLabel.contains('team lead') || roleLabel.contains('tl') || role.contains('team_lead') || role.contains('tl')) {
+        isTeamLead = true;
+      }
+    }
+    bool isReadOnlyUser = isAcademicExecutive || isTeamLead;
 
     return Scaffold(
       drawer: const CustomLeftDrawer(currentRoute: '/approvals/tasks'),
@@ -108,41 +126,43 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Segmented Pill Tabs (Received by Me & Initiated by Me)
-              BlocBuilder<ApprovalsBloc, ApprovalsState>(
-                builder: (context, state) {
-                  int receivedCount = 0;
-                  int initiatedCount = 0;
-                  if (state is ApprovalsLoadedState) {
-                    receivedCount = state.taskApprovalsReceived.length;
-                    initiatedCount = state.taskApprovalsInitiated.length;
-                  }
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    padding: const EdgeInsets.all(4),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildTabButton(
-                          title: '${ApprovalsConstStrings.receivedByMe} ${receivedCount > 0 ? "($receivedCount)" : ""}'.trim(),
-                          isSelected: _selectedTabIndex == 0,
-                          onTap: () => setState(() => _selectedTabIndex = 0),
-                        ),
-                        const SizedBox(width: 4),
-                        _buildTabButton(
-                          title: '${ApprovalsConstStrings.initiatedByMe} ${initiatedCount > 0 ? "($initiatedCount)" : ""}'.trim(),
-                          isSelected: _selectedTabIndex == 1,
-                          onTap: () => setState(() => _selectedTabIndex = 1),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 20),
+              // Segmented Pill Tabs (Only visible when NOT Academic Executive)
+              if (!isAcademicExecutive) ...[
+                BlocBuilder<ApprovalsBloc, ApprovalsState>(
+                  builder: (context, state) {
+                    int receivedCount = 0;
+                    int initiatedCount = 0;
+                    if (state is ApprovalsLoadedState) {
+                      receivedCount = state.taskApprovalsReceived.length;
+                      initiatedCount = state.taskApprovalsInitiated.length;
+                    }
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      padding: const EdgeInsets.all(4),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildTabButton(
+                            title: '${ApprovalsConstStrings.receivedByMe} ${receivedCount > 0 ? "($receivedCount)" : ""}'.trim(),
+                            isSelected: _selectedTabIndex == 0,
+                            onTap: () => setState(() => _selectedTabIndex = 0),
+                          ),
+                          const SizedBox(width: 4),
+                          _buildTabButton(
+                            title: '${ApprovalsConstStrings.initiatedByMe} ${initiatedCount > 0 ? "($initiatedCount)" : ""}'.trim(),
+                            isSelected: _selectedTabIndex == 1,
+                            onTap: () => setState(() => _selectedTabIndex = 1),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 20),
+              ],
 
               // Content Body
               BlocBuilder<ApprovalsBloc, ApprovalsState>(
@@ -177,9 +197,11 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
                   }
 
                   if (state is ApprovalsLoadedState) {
-                    final items = _selectedTabIndex == 0
-                        ? state.taskApprovalsReceived
-                        : state.taskApprovalsInitiated;
+                    final items = isAcademicExecutive
+                        ? [...state.taskApprovalsReceived, ...state.taskApprovalsInitiated]
+                        : (_selectedTabIndex == 0
+                            ? state.taskApprovalsReceived
+                            : state.taskApprovalsInitiated);
 
                     if (items.isEmpty) {
                       return _buildEmptyState();
@@ -191,7 +213,7 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
                       itemCount: items.length,
                       separatorBuilder: (context, index) => const SizedBox(height: 12),
                       itemBuilder: (context, index) {
-                        return _buildTaskApprovalCard(items[index]);
+                        return _buildTaskApprovalCard(items[index], isAcademicExecutive);
                       },
                     );
                   }
@@ -258,7 +280,7 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
     );
   }
 
-  Widget _buildTaskApprovalCard(TaskApprovalModel item) {
+  Widget _buildTaskApprovalCard(TaskApprovalModel item, bool isAcademicExecutive) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isHighPriority = (item.priority ?? '').toLowerCase() == 'high';
 
@@ -325,6 +347,31 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
                             ),
                             const SizedBox(width: 6),
                           ],
+                          // Status Badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: item.status.toLowerCase() == 'approved'
+                                  ? const Color(0xFFDCFCE7)
+                                  : (item.status.toLowerCase() == 'rejected'
+                                      ? const Color(0xFFFEE2E2)
+                                      : const Color(0xFFFEF3C7)),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              item.status.toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: item.status.toLowerCase() == 'approved'
+                                    ? const Color(0xFF166534)
+                                    : (item.status.toLowerCase() == 'rejected'
+                                        ? const Color(0xFF991B1B)
+                                        : const Color(0xFF92400E)),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
@@ -385,22 +432,64 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
                       ],
                       const SizedBox(height: 12),
 
-                      // Action Buttons (View -> button for Academic Executive)
+                      // Action Buttons (Approve Closure, Reject & View -> only when NOT Academic Executive)
                       Row(
                         children: [
-                          InkWell(
-                            onTap: () => TaskDetailDialog.show(context, taskId: item.taskId ?? 0),
-                            child: Row(
-                              children: [
-                                Text(
-                                  'View →',
-                                  style: TextStyle(
-                                    fontSize: 12.5,
-                                    fontWeight: FontWeight.bold,
-                                    color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF1E3A8A),
+                          if (!isAcademicExecutive && _selectedTabIndex == 0) ...[
+                            InkWell(
+                              onTap: () {
+                                context.read<ApprovalsBloc>().add(
+                                      DecideApprovalEvent(id: item.id, decision: 'approve'),
+                                    );
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Task closure approved successfully!'),
+                                    backgroundColor: Colors.green,
                                   ),
+                                );
+                              },
+                              child: const Text(
+                                'Approve Closure',
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF16A34A),
                                 ),
-                              ],
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            InkWell(
+                              onTap: () {
+                                context.read<ApprovalsBloc>().add(
+                                      DecideApprovalEvent(id: item.id, decision: 'reject'),
+                                    );
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Task closure request rejected.'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              },
+                              child: const Text(
+                                'Reject',
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFFDC2626),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                          ],
+                          InkWell(
+                            onTap: () => TaskDetailDialog.show(context, taskId: item.taskId ?? 0, isReadOnly: isReadOnlyUser),
+                            child: Text(
+                              'View →',
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF1E3A8A),
+                              ),
                             ),
                           ),
                         ],

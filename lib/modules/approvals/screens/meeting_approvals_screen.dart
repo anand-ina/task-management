@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/schedule_meeting_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../auth/bloc/auth_bloc.dart';
+import '../../auth/bloc/auth_state.dart';
 import '../bloc/approvals_bloc.dart';
 import '../bloc/approvals_event.dart';
 import '../bloc/approvals_state.dart';
@@ -28,6 +30,17 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final authState = context.watch<AuthBloc>().state;
+    bool isAcademicExecutive = false;
+    if (authState is AuthenticatedState) {
+      final role = authState.userProfile.role.toLowerCase();
+      final roleLabel = authState.userProfile.roleLabel.toLowerCase();
+      final email = authState.userProfile.email.toLowerCase();
+      if (role.contains('executive') || role.contains('ae') || roleLabel.contains('executive') || roleLabel.contains('ae') || email.contains('sushma')) {
+        isAcademicExecutive = true;
+      }
+    }
 
     return Scaffold(
       drawer: const CustomLeftDrawer(currentRoute: '/approvals/meetings'),
@@ -81,7 +94,7 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
                           );
                         },
                       ),
-                      SizedBox(height: 10,),
+                      const SizedBox(height: 10),
                       ElevatedButton.icon(
                         onPressed: () => ScheduleMeetingDialog.show(context),
                         label: const Text('+ New Meeting', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
@@ -108,45 +121,47 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
               const SizedBox(height: 16),
 
               // Segmented Pill Tabs (Received by Me & Initiated by Me)
-              BlocBuilder<ApprovalsBloc, ApprovalsState>(
-                builder: (context, state) {
-                  int receivedCount = 0;
-                  int initiatedCount = 0;
-                  if (state is ApprovalsLoadedState) {
-                    final received = [
-                      ...state.meetings.where((m) => m.isOrganizer != true),
-                      ...state.meetingCompletionRequests,
-                    ];
-                    final initiated = state.meetings.where((m) => m.isOrganizer == true).toList();
-                    receivedCount = received.length;
-                    initiatedCount = initiated.length;
-                  }
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    padding: const EdgeInsets.all(4),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildTabButton(
-                          title: '${ApprovalsConstStrings.receivedByMe} ${receivedCount > 0 ? "($receivedCount)" : ""}'.trim(),
-                          isSelected: _selectedTabIndex == 0,
-                          onTap: () => setState(() => _selectedTabIndex = 0),
-                        ),
-                        const SizedBox(width: 4),
-                        _buildTabButton(
-                          title: '${ApprovalsConstStrings.initiatedByMe} ${initiatedCount > 0 ? "($initiatedCount)" : ""}'.trim(),
-                          isSelected: _selectedTabIndex == 1,
-                          onTap: () => setState(() => _selectedTabIndex = 1),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
+              if (!isAcademicExecutive) ...[
+                BlocBuilder<ApprovalsBloc, ApprovalsState>(
+                  builder: (context, state) {
+                    int receivedCount = 0;
+                    int initiatedCount = 0;
+                    if (state is ApprovalsLoadedState) {
+                      final received = [
+                        ...state.meetings.where((m) => m.isOrganizer != true),
+                        ...state.meetingCompletionRequests,
+                      ];
+                      final initiated = state.meetings.where((m) => m.isOrganizer == true).toList();
+                      receivedCount = received.length;
+                      initiatedCount = initiated.length;
+                    }
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      padding: const EdgeInsets.all(4),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildTabButton(
+                            title: '${ApprovalsConstStrings.receivedByMe} ${receivedCount > 0 ? "($receivedCount)" : ""}'.trim(),
+                            isSelected: _selectedTabIndex == 0,
+                            onTap: () => setState(() => _selectedTabIndex = 0),
+                          ),
+                          const SizedBox(width: 4),
+                          _buildTabButton(
+                            title: '${ApprovalsConstStrings.initiatedByMe} ${initiatedCount > 0 ? "($initiatedCount)" : ""}'.trim(),
+                            isSelected: _selectedTabIndex == 1,
+                            onTap: () => setState(() => _selectedTabIndex = 1),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+              ],
 
               // Content Body
               BlocBuilder<ApprovalsBloc, ApprovalsState>(
@@ -181,31 +196,29 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
                   }
 
                   if (state is ApprovalsLoadedState) {
-                    final allItems = [
-                      ...state.meetings,
-                      ...state.meetingCompletionRequests,
-                    ];
+                    final filtered = isAcademicExecutive
+                        ? [...state.meetings, ...state.meetingCompletionRequests]
+                        : (_selectedTabIndex == 0
+                            ? [
+                                ...state.meetings.where((m) => m.isOrganizer != true),
+                                ...state.meetingCompletionRequests,
+                              ]
+                            : state.meetings.where((m) => m.isOrganizer == true).toList());
 
-                    final filtered = _selectedTabIndex == 0
-                        ? [
-                            ...state.meetings.where((m) => m.isOrganizer != true),
-                            ...state.meetingCompletionRequests,
-                          ]
-                        : state.meetings.where((m) => m.isOrganizer == true).toList();
-
-                    final displayList = filtered.isNotEmpty ? filtered : allItems;
-
-                    if (displayList.isEmpty) {
-                      return _buildEmptyState();
+                    if (filtered.isEmpty) {
+                      final emptyMsg = _selectedTabIndex == 1
+                          ? 'You haven’t organized any meetings yet. 🎉'
+                          : 'No meeting approvals awaiting your decision. 🎉';
+                      return _buildEmptyState(message: emptyMsg);
                     }
 
                     return ListView.separated(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      itemCount: displayList.length,
+                      itemCount: filtered.length,
                       separatorBuilder: (context, index) => const SizedBox(height: 12),
                       itemBuilder: (context, index) {
-                        return _buildMeetingCard(displayList[index]);
+                        return _buildMeetingCard(filtered[index]);
                       },
                     );
                   }
@@ -272,7 +285,7 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState({String? message}) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 60),
@@ -281,7 +294,7 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
             Icon(Icons.calendar_today_outlined, size: 48, color: Colors.grey.shade400),
             const SizedBox(height: 12),
             Text(
-              ApprovalsConstStrings.noMeetingApprovals,
+              message ?? ApprovalsConstStrings.noMeetingApprovals,
               style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
             ),
           ],
@@ -375,44 +388,6 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
               ),
             ),
           ],
-          const SizedBox(height: 12),
-
-          // Action Links
-          Row(
-            children: [
-              InkWell(
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Meeting request accepted.')),
-                  );
-                },
-                child: Text(
-                  ApprovalsConstStrings.approve,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF0F172A),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              InkWell(
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Meeting request declined.')),
-                  );
-                },
-                child: Text(
-                  ApprovalsConstStrings.decline,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFFDC2626),
-                  ),
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );

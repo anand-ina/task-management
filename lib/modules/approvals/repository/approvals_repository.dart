@@ -111,4 +111,18 @@ class ApprovalsRepository {
     }
     return [];
   }
+
+  Future<bool> decideApproval(int id, String decision) async {
+    try {
+      final response = await _dioClient.dio.post(
+        '${ApiConstants.baseUrl}/approvals/$id/decide',
+        data: {'decision': decision},
+      );
+      debugPrint('[ApprovalsRepository] decideApproval URL: ${ApiConstants.baseUrl}/approvals/$id/decide, payload: {"decision": "$decision"}, response: ${response.data}');
+      return true;
+    } catch (e) {
+      debugPrint('[ApprovalsRepository] decideApproval error: $e');
+      return false;
+    }
+  }
 }

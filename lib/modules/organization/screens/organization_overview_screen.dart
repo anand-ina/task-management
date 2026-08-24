@@ -5,6 +5,7 @@ import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/dialogs/tasks_due_today_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../../shared_widgets/export_service.dart';
 import '../bloc/organization_bloc.dart';
 import '../bloc/organization_event.dart';
 import '../bloc/organization_state.dart';
@@ -121,13 +122,64 @@ class _OrganizationOverviewScreenState extends State<OrganizationOverviewScreen>
                               ),
                             ),
                             const Spacer(),
-                            OutlinedButton.icon(
-                              onPressed: () {},
-                              icon: const Icon(Icons.show_chart_rounded, size: 14),
-                              label: Text(s.exportButton, style: const TextStyle(fontSize: 11)),
-                              style: OutlinedButton.styleFrom(
+                            PopupMenuButton<String>(
+                              onSelected: (val) {
+                                if (val == 'csv') {
+                                  ExportService.exportOrgOverviewCsv(context: context, branchStats: data.branchUnitStats);
+                                } else if (val == 'excel') {
+                                  ExportService.exportOrgOverviewExcel(context: context, branchStats: data.branchUnitStats);
+                                } else if (val == 'pdf') {
+                                  ExportService.exportOrgOverviewPdf(context: context, branchStats: data.branchUnitStats);
+                                }
+                              },
+                              itemBuilder: (context) => [
+                                const PopupMenuItem(
+                                  value: 'csv',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.insert_drive_file_outlined, size: 16, color: Colors.blue),
+                                      SizedBox(width: 8),
+                                      Text('Export to CSV', style: TextStyle(fontSize: 12)),
+                                    ],
+                                  ),
+                                ),
+                                const PopupMenuItem(
+                                  value: 'excel',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.table_chart_outlined, size: 16, color: Colors.green),
+                                      SizedBox(width: 8),
+                                      Text('Export to Excel', style: TextStyle(fontSize: 12)),
+                                    ],
+                                  ),
+                                ),
+                                const PopupMenuItem(
+                                  value: 'pdf',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.picture_as_pdf_outlined, size: 16, color: Colors.red),
+                                      SizedBox(width: 8),
+                                      Text('Export to PDF', style: TextStyle(fontSize: 12)),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                              child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                visualDensity: VisualDensity.compact,
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: isDark ? Colors.white24 : Colors.black26),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.download_rounded, size: 14),
+                                    const SizedBox(width: 6),
+                                    Text(s.exportButton, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                    const SizedBox(width: 4),
+                                    const Icon(Icons.arrow_drop_down, size: 16),
+                                  ],
+                                ),
                               ),
                             ),
                             const SizedBox(width: 8),

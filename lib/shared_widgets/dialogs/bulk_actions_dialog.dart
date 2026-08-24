@@ -202,9 +202,9 @@ class _BulkActionsDialogState extends State<BulkActionsDialog> {
             Row(
               children: [
                 _buildActionButton('Change status', 'status'),
-                const SizedBox(width: 8),
+                const SizedBox(width: 3),
                 _buildActionButton('Set target date', 'due'),
-                const SizedBox(width: 8),
+                const SizedBox(width: 3),
                 _buildActionButton('Reassign', 'reassign'),
               ],
             ),

@@ -56,21 +56,36 @@ class ComplianceDayModel {
 }
 
 class ReportComplianceModel {
+  final String type;
+  final String nextDue;
+  final bool isDueToday;
+  final ComplianceDayModel? lastCycle;
   final List<ComplianceDayModel> days;
   final List<MissedUserModel> people;
 
   ReportComplianceModel({
+    this.type = 'dsr',
+    this.nextDue = '',
+    this.isDueToday = false,
+    this.lastCycle,
     required this.days,
     required this.people,
   });
 
   factory ReportComplianceModel.fromJson(Map<String, dynamic> json) {
+    final cyclesList = json['cycles'] ?? json['days'];
     return ReportComplianceModel(
-      days: json['days'] != null && json['days'] is List
-          ? (json['days'] as List).map((e) => ComplianceDayModel.fromJson(e)).toList()
+      type: json['type'] as String? ?? 'dsr',
+      nextDue: json['nextDue'] as String? ?? '',
+      isDueToday: json['isDueToday'] as bool? ?? false,
+      lastCycle: json['lastCycle'] != null && json['lastCycle'] is Map<String, dynamic>
+          ? ComplianceDayModel.fromJson(json['lastCycle'] as Map<String, dynamic>)
+          : null,
+      days: cyclesList != null && cyclesList is List
+          ? (cyclesList as List).map((e) => ComplianceDayModel.fromJson(e is Map<String, dynamic> ? e : {})).toList()
           : [],
       people: json['people'] != null && json['people'] is List
-          ? (json['people'] as List).map((e) => MissedUserModel.fromJson(e)).toList()
+          ? (json['people'] as List).map((e) => MissedUserModel.fromJson(e is Map<String, dynamic> ? e : {})).toList()
           : [],
     );
   }

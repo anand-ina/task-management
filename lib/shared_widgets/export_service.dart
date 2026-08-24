@@ -12,6 +12,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:share_plus/share_plus.dart';
+import '../modules/organization/models/organization_data_model.dart';
 import '../modules/tasks/models/task_model.dart';
 
 class ExportService {
@@ -414,6 +415,186 @@ class ExportService {
           SnackBar(content: Text('Export PDF failed: $e'), backgroundColor: Colors.red),
         );
       }
+    }
+  }
+
+  /// Export Organization Overview to CSV
+  static Future<void> exportOrgOverviewCsv({
+    required BuildContext context,
+    required List<BranchUnitStatModel> branchStats,
+  }) async {
+    try {
+      final List<List<dynamic>> rows = [
+        ['Branch', 'Code', 'Total', 'Completed', 'In Progress', 'To Start', 'Overdue', 'Completion %'],
+        ...branchStats.map((b) => [
+              b.branch.name,
+              b.branch.code,
+              b.stats.total,
+              b.stats.completed,
+              b.stats.inProgress,
+              b.stats.toBeStarted,
+              b.stats.overdue,
+              b.stats.completionRate,
+            ]),
+      ];
+
+      final csvData = Csv().encode(rows);
+      final bytes = Uint8List.fromList(utf8.encode(csvData));
+      final fileName = 'Organization_Overview_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.csv';
+
+      final targetPath = await _saveExportFile(
+        context: context,
+        defaultFileName: fileName,
+        bytes: bytes,
+        allowedExtensions: ['csv'],
+      );
+
+      if (targetPath != null && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Downloaded CSV: ${targetPath.split('/').last}'),
+            backgroundColor: const Color(0xFF16A34A),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('[ExportService] exportOrgOverviewCsv error: $e');
+    }
+  }
+
+  /// Export Organization Overview to Excel
+  static Future<void> exportOrgOverviewExcel({
+    required BuildContext context,
+    required List<BranchUnitStatModel> branchStats,
+  }) async {
+    try {
+      final excel = Excel.createExcel();
+      final Sheet sheet = excel['Organization Overview'];
+      excel.setDefaultSheet('Organization Overview');
+
+      final headers = ['Branch', 'Code', 'Total', 'Completed', 'In Progress', 'To Start', 'Overdue', 'Completion %'];
+      sheet.appendRow(headers.map((e) => TextCellValue(e)).toList());
+
+      for (final b in branchStats) {
+        sheet.appendRow([
+          TextCellValue(b.branch.name),
+          TextCellValue(b.branch.code),
+          IntCellValue(b.stats.total),
+          IntCellValue(b.stats.completed),
+          IntCellValue(b.stats.inProgress),
+          IntCellValue(b.stats.toBeStarted),
+          IntCellValue(b.stats.overdue),
+          IntCellValue(b.stats.completionRate),
+        ]);
+      }
+
+      final fileBytes = excel.save();
+      if (fileBytes != null) {
+        final fileName = 'Organization_Overview_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx';
+        final targetPath = await _saveExportFile(
+          context: context,
+          defaultFileName: fileName,
+          bytes: Uint8List.fromList(fileBytes),
+          allowedExtensions: ['xlsx'],
+        );
+
+        if (targetPath != null && context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Downloaded Excel: ${targetPath.split('/').last}'),
+              backgroundColor: const Color(0xFF16A34A),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('[ExportService] exportOrgOverviewExcel error: $e');
+    }
+  }
+
+  /// Export Organization Overview to PDF (Matching screenshot media_1787569774508.png)
+  static Future<void> exportOrgOverviewPdf({
+    required BuildContext context,
+    required List<BranchUnitStatModel> branchStats,
+  }) async {
+    try {
+      final pdf = pw.Document();
+      final nowStr = DateFormat('dd/MM/yyyy, HH:mm:ss').format(DateTime.now());
+
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4.landscape,
+          margin: const pw.EdgeInsets.all(24),
+          build: (pw.Context context) {
+            return [
+              pw.Text(
+                'Organization Overview',
+                style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold, color: PdfColor.fromHex('#0F172A')),
+              ),
+              pw.SizedBox(height: 3),
+              pw.Text(
+                '${branchStats.length} row(s) · exported $nowStr',
+                style: pw.TextStyle(fontSize: 9, color: PdfColor.fromHex('#64748B')),
+              ),
+              pw.SizedBox(height: 12),
+              pw.TableHelper.fromTextArray(
+                headers: [
+                  'Branch',
+                  'Code',
+                  'Total',
+                  'Completed',
+                  'In Progress',
+                  'To Start',
+                  'Overdue',
+                  'Completion %',
+                ],
+                data: branchStats.map((b) => [
+                  b.branch.name,
+                  b.branch.code,
+                  '${b.stats.total}',
+                  '${b.stats.completed}',
+                  '${b.stats.inProgress}',
+                  '${b.stats.toBeStarted}',
+                  '${b.stats.overdue}',
+                  '${b.stats.completionRate}',
+                ]).toList(),
+                border: pw.TableBorder.all(color: PdfColor.fromHex('#CBD5E1'), width: 0.5),
+                headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5, color: PdfColors.white),
+                headerDecoration: pw.BoxDecoration(color: PdfColor.fromHex('#0F2A4A')),
+                cellStyle: pw.TextStyle(fontSize: 8.5, color: PdfColor.fromHex('#0F172A')),
+                cellAlignment: pw.Alignment.centerLeft,
+                cellPadding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              ),
+            ];
+          },
+        ),
+      );
+
+      final pdfBytes = await pdf.save();
+      final fileName = 'Organization_Overview_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
+
+      final targetPath = await _saveExportFile(
+        context: context,
+        defaultFileName: fileName,
+        bytes: pdfBytes,
+        allowedExtensions: ['pdf'],
+      );
+
+      if (targetPath != null && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Downloaded PDF: ${targetPath.split('/').last}'),
+            backgroundColor: const Color(0xFF16A34A),
+          ),
+        );
+      }
+
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => pdfBytes,
+        name: fileName,
+      );
+    } catch (e, stack) {
+      debugPrint('[ExportService] exportOrgOverviewPdf error: $e\n$stack');
     }
   }
 }

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/dio_client.dart';
@@ -177,53 +178,85 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
     }
   }
 
-  void _showUploadFileDialog() {
-    final nameCtrl = TextEditingController(text: 'Cercle LOGO PDF.pdf');
+  Future<void> _showUploadFileDialog() async {
+    try {
+      dynamic result;
+      try {
+        result = await FilePicker.pickFiles(
+          type: FileType.any,
+          withData: true,
+          allowMultiple: true,
+        );
+      } catch (e) {
+        debugPrint('[CreateTaskDialog] pickFiles withData failed, trying standard pick: $e');
+        result = await FilePicker.pickFiles(
+          type: FileType.any,
+        );
+      }
+
+      List<dynamic> fileList = [];
+      if (result != null) {
+        if (result is List) {
+          fileList = result;
+        } else {
+          try {
+            final dynamic files = result.files;
+            if (files is List) {
+              fileList = files;
+            }
+          } catch (_) {}
+        }
+      }
+
+      if (fileList.isNotEmpty) {
+        setState(() {
+          for (final dynamic file in fileList) {
+            final String fileName = file.name?.toString() ?? 'attachment';
+            final int fileSize = file.size is int ? file.size as int : 0;
+            final ext = fileName.contains('.') ? fileName.split('.').last.toLowerCase() : '';
+            _attachments.add({
+              'filename': fileName,
+              'url': file.path?.toString() ?? '/uploads/${DateTime.now().millisecondsSinceEpoch}-$fileName',
+              'mime': _getMimeType(ext),
+              'size': fileSize,
+            });
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint('[CreateTaskDialog] File pick error: $e');
+      if (mounted) {
+        _showManualFileNameDialog();
+      }
+    }
+  }
+
+  void _showManualFileNameDialog() {
+    final nameCtrl = TextEditingController();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: const Text('Upload File Attachment', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+        title: const Text('Add File Attachment', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Filename', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 4),
+            const Text('Enter Attachment Name', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 6),
             TextField(
               controller: nameCtrl,
               style: const TextStyle(fontSize: 12),
               decoration: InputDecoration(
-                hintText: 'Enter file name',
+                hintText: 'e.g., Report.pdf or Screenshot.png',
                 isDense: true,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.blue.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue.shade200),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.cloud_upload_outlined, color: Colors.blue, size: 24),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Ready to upload file attachment (PDF, image, document)',
-                      style: TextStyle(fontSize: 11, color: Colors.blue),
-                    ),
-                  ),
-                ],
               ),
             ),
           ],
         ),
         actions: [
-          OutlinedButton(
+          TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel', style: TextStyle(fontSize: 11)),
           ),
@@ -235,22 +268,52 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
             onPressed: () {
               final fname = nameCtrl.text.trim();
               if (fname.isNotEmpty) {
+                final ext = fname.contains('.') ? fname.split('.').last.toLowerCase() : '';
                 setState(() {
                   _attachments.add({
                     'filename': fname,
                     'url': '/uploads/${DateTime.now().millisecondsSinceEpoch}-$fname',
-                    'mime': fname.endsWith('.pdf') ? 'application/pdf' : 'image/png',
-                    'size': 1383704,
+                    'mime': _getMimeType(ext),
+                    'size': 1024 * 250,
                   });
                 });
               }
               Navigator.pop(context);
             },
-            child: const Text('Upload File', style: TextStyle(fontSize: 11)),
+            child: const Text('Add Attachment', style: TextStyle(fontSize: 11)),
           ),
         ],
       ),
     );
+  }
+
+  String _getMimeType(String ext) {
+    switch (ext.toLowerCase()) {
+      case 'pdf':
+        return 'application/pdf';
+      case 'png':
+        return 'image/png';
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'doc':
+      case 'docx':
+        return 'application/msword';
+      case 'xls':
+      case 'xlsx':
+        return 'application/vnd.ms-excel';
+      case 'csv':
+        return 'text/csv';
+      default:
+        return 'application/octet-stream';
+    }
+  }
+
+  String _formatFileSize(int bytes) {
+    if (bytes <= 0) return '0 B';
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 
   @override
@@ -687,29 +750,32 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
                                   final initials = user['initials']?.toString() ?? 'US';
                                   final isSelected = _selectedAssigneeIds.contains(id);
 
-                                  return ListTile(
-                                    dense: true,
-                                    visualDensity: VisualDensity.compact,
-                                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-                                    leading: CircleAvatar(
-                                      radius: 12,
-                                      backgroundColor: _parseAvatarColor(user['avatar_color']?.toString()),
-                                      child: Text(
-                                        initials,
-                                        style: const TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.bold),
+                                  return Material(
+                                    color: Colors.transparent,
+                                    child: ListTile(
+                                      dense: true,
+                                      visualDensity: VisualDensity.compact,
+                                      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                                      leading: CircleAvatar(
+                                        radius: 12,
+                                        backgroundColor: _parseAvatarColor(user['avatar_color']?.toString()),
+                                        child: Text(
+                                          initials,
+                                          style: const TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.bold),
+                                        ),
                                       ),
+                                      title: Text(name, style: const TextStyle(fontSize: 11)),
+                                      selected: isSelected,
+                                      onTap: () {
+                                        setState(() {
+                                          if (isSelected) {
+                                            _selectedAssigneeIds.remove(id);
+                                          } else {
+                                            _selectedAssigneeIds.add(id);
+                                          }
+                                        });
+                                      },
                                     ),
-                                    title: Text(name, style: const TextStyle(fontSize: 11)),
-                                    selected: isSelected,
-                                    onTap: () {
-                                      setState(() {
-                                        if (isSelected) {
-                                          _selectedAssigneeIds.remove(id);
-                                        } else {
-                                          _selectedAssigneeIds.add(id);
-                                        }
-                                      });
-                                    },
                                   );
                                 },
                               ),
@@ -777,37 +843,76 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
                       ),
                       const SizedBox(height: 12),
 
-                      // Attachments Section with File Picker Dialog
+                      // Attachments Section with Inline Right-side Attachment Chips
                       const Text('Attachments (image, video, document — any file)', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                      const SizedBox(height: 4),
-                      OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                        ),
-                        icon: const Icon(Icons.attach_file, size: 14),
-                        label: const Text('Add files', style: TextStyle(fontSize: 11)),
-                        onPressed: _showUploadFileDialog,
-                      ),
-                      if (_attachments.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Column(
-                          children: _attachments.map((att) {
-                            return ListTile(
-                              dense: true,
-                              visualDensity: VisualDensity.compact,
-                              leading: const Icon(Icons.insert_drive_file_outlined, color: Colors.blue, size: 18),
-                              title: Text(att['filename']?.toString() ?? '', style: const TextStyle(fontSize: 11)),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.delete, size: 14, color: Colors.grey),
-                                onPressed: () {
-                                  setState(() => _attachments.remove(att));
-                                },
+                      const SizedBox(height: 6),
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            ),
+                            icon: const Icon(Icons.attach_file, size: 15),
+                            label: const Text('Add files', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                            onPressed: _showUploadFileDialog,
+                          ),
+                          ..._attachments.map((att) {
+                            final fname = att['filename']?.toString() ?? 'File';
+                            final ext = fname.contains('.') ? fname.split('.').last.toLowerCase() : '';
+                            
+                            IconData iconData = Icons.insert_drive_file_rounded;
+                            Color iconColor = Colors.blue;
+                            if (ext == 'pdf') {
+                              iconData = Icons.picture_as_pdf_rounded;
+                              iconColor = Colors.red;
+                            } else if (['png', 'jpg', 'jpeg', 'webp', 'gif'].contains(ext)) {
+                              iconData = Icons.image_rounded;
+                              iconColor = Colors.blue;
+                            } else if (['doc', 'docx', 'txt'].contains(ext)) {
+                              iconData = Icons.description_rounded;
+                              iconColor = Colors.indigo;
+                            } else if (['xls', 'xlsx', 'csv'].contains(ext)) {
+                              iconData = Icons.table_chart_rounded;
+                              iconColor = Colors.green;
+                            }
+
+                            return Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: isDark ? Colors.white24 : const Color(0xFFCBD5E1)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(iconData, color: iconColor, size: 15),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    fname,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  GestureDetector(
+                                    onTap: () {
+                                      setState(() => _attachments.remove(att));
+                                    },
+                                    child: const Icon(Icons.close_rounded, size: 14, color: Colors.grey),
+                                  ),
+                                ],
                               ),
                             );
-                          }).toList(),
-                        ),
-                      ],
+                          }),
+                        ],
+                      ),
                       const SizedBox(height: 12),
 
                       // TO-DO Checklist Section

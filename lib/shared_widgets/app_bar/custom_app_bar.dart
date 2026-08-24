@@ -54,9 +54,25 @@ class _CustomAppBarState extends State<CustomAppBar> {
         int unreadCount = 0;
 
         if (dashState is DashboardLoadedState) {
-          branches = dashState.branches;
-          selectedBranch = dashState.selectedBranch ?? (branches.isNotEmpty ? branches.first : null);
+          branches = List<BranchModel>.from(dashState.branches);
+          if (!branches.any((b) => b.isAll || b.id == 0 || b.name.toLowerCase().contains('all'))) {
+            branches.insert(0, BranchModel(id: 0, code: 'ALL', name: 'All Branches', isAll: true));
+          }
+          selectedBranch = dashState.selectedBranch;
+          if (selectedBranch != null) {
+            final matchIndex = branches.indexWhere((b) => b.id == selectedBranch?.id || b.code == selectedBranch?.code);
+            if (matchIndex != -1) {
+              selectedBranch = branches[matchIndex];
+            } else {
+              selectedBranch = branches.first;
+            }
+          } else {
+            selectedBranch = branches.first;
+          }
           unreadCount = dashState.notifications.unread;
+        } else {
+          branches = [BranchModel(id: 0, code: 'ALL', name: 'All Branches', isAll: true)];
+          selectedBranch = branches.first;
         }
 
         return AppBar(

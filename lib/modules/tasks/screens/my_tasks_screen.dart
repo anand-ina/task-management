@@ -13,6 +13,8 @@ import '../../../shared_widgets/dialogs/bulk_upload_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/dio_client.dart';
+import '../../auth/bloc/auth_bloc.dart';
+import '../../auth/bloc/auth_state.dart';
 import '../bloc/all_tasks_bloc.dart';
 import '../bloc/all_tasks_event.dart';
 import '../bloc/all_tasks_state.dart';
@@ -56,6 +58,17 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
   Widget build(BuildContext context) {
     final s = AppStrings.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final authState = context.watch<AuthBloc>().state;
+    bool isAcademicExecutive = false;
+    if (authState is AuthenticatedState) {
+      final role = authState.userProfile.role.toLowerCase();
+      final roleLabel = authState.userProfile.roleLabel.toLowerCase();
+      final email = authState.userProfile.email.toLowerCase();
+      if (role.contains('executive') || role.contains('ae') || roleLabel.contains('executive') || roleLabel.contains('ae') || email.contains('sushma')) {
+        isAcademicExecutive = true;
+      }
+    }
 
     return BlocProvider(
       create: (context) => AllTasksBloc()..add(FetchAllTasksEvent(scope: 'mine')),
@@ -239,26 +252,28 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
                                       visualDensity: VisualDensity.compact,
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
-                                  OutlinedButton.icon(
-                                    onPressed: () async {
-                                      final result = await BulkUploadDialog.show(context);
-                                      if (result == true && context.mounted) {
-                                        context.read<AllTasksBloc>().add(FetchAllTasksEvent(
-                                              scope: 'mine',
-                                              status: _selectedStatusFilter,
-                                              priority: _selectedPriorityFilter,
-                                              search: _searchQuery,
-                                            ));
-                                      }
-                                    },
-                                    icon: const Icon(Icons.upload_rounded, size: 14),
-                                    label: Text(s.bulkUpload, style: const TextStyle(fontSize: 11)),
-                                    style: OutlinedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                      visualDensity: VisualDensity.compact,
+                                  if (!isAcademicExecutive) ...[
+                                    const SizedBox(width: 8),
+                                    OutlinedButton.icon(
+                                      onPressed: () async {
+                                        final result = await BulkUploadDialog.show(context);
+                                        if (result == true && context.mounted) {
+                                          context.read<AllTasksBloc>().add(FetchAllTasksEvent(
+                                                scope: 'mine',
+                                                status: _selectedStatusFilter,
+                                                priority: _selectedPriorityFilter,
+                                                search: _searchQuery,
+                                              ));
+                                        }
+                                      },
+                                      icon: const Icon(Icons.upload_rounded, size: 14),
+                                      label: Text(s.bulkUpload, style: const TextStyle(fontSize: 11)),
+                                      style: OutlinedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                        visualDensity: VisualDensity.compact,
+                                      ),
                                     ),
-                                  ),
+                                  ],
                                 ],
                               ),
                             ),
@@ -290,7 +305,7 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
                                 },
                               ),
                               Text(
-                                '${s.selectAllText} (${items.isNotEmpty ? items.length : 221})',
+                                '${s.selectAllText} (${items.isNotEmpty ? items.length : 0})',
                                 style: const TextStyle(fontSize: 12, color: Colors.grey),
                               ),
                             ],

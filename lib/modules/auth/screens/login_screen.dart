@@ -192,21 +192,32 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
           ),
         ),
-        const SizedBox(height: 8),
-        // Row 2
+        const SizedBox(height: 12),
+
+        // TESTING LOGIN Section
+        Text(
+          'TESTING LOGIN',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.0,
+            color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
+          ),
+        ),
+        const SizedBox(height: 6),
+
+        // Horizontal Scrolling Test Logins Row
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-              _buildQuickChip(s.teamLeadNarasimha, 'narasimha@samskar.edu'),
+              _buildQuickChip('Test_AE-sushma', 'sushma@samskar.edu', isHighlighted: true),
               const SizedBox(width: 8),
-              _buildQuickChip(s.teamLeadAkash, 'akash@samskar.edu'),
+              _buildQuickChip('Test_TL-akash', 'akash@samskar.edu', isHighlighted: true),
               const SizedBox(width: 8),
-              _buildQuickChip('Executive (Gyapika)', 'gyapika@samskar.edu'),
+              _buildQuickChip('Test_Manager-sandeep', 'sandeep@samskar.edu', isHighlighted: true),
               const SizedBox(width: 8),
-              _buildQuickChip('Executive (anamika)', 'anamika@samskar.edu'),
-              const SizedBox(width: 8),
-              _buildQuickChip('Executive (Sushma)', 'sushma@samskar.edu'),
+              _buildQuickChip('Test_CH-charan', 'charan@samskar.edu', isHighlighted: true),
             ],
           ),
         ),

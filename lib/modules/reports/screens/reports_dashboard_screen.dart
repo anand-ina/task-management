@@ -4,9 +4,13 @@ import '../../../core/localization/app_strings.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../auth/bloc/auth_bloc.dart';
+import '../../auth/bloc/auth_state.dart';
 import '../bloc/reports_bloc.dart';
 import '../bloc/reports_event.dart';
 import '../bloc/reports_state.dart';
+import 'package:intl/intl.dart';
+import '../models/report_compliance_model.dart';
 import '../models/report_stats_model.dart';
 import '../models/status_report_model.dart';
 
@@ -19,11 +23,28 @@ class ReportsDashboardScreen extends StatefulWidget {
 
 class _ReportsDashboardScreenState extends State<ReportsDashboardScreen> {
   int _selectedFilterIndex = 0; // 0: All, 1: DSR, 2: WSR, 3: MSR
+  String _selectedComplianceType = 'dsr'; // 'dsr', 'wsr', 'msr'
 
   @override
   Widget build(BuildContext context) {
     final s = AppStrings.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final authState = context.watch<AuthBloc>().state;
+    bool isAcademicExecutive = false;
+    bool isTeamLead = false;
+    if (authState is AuthenticatedState) {
+      final role = authState.userProfile.role.toLowerCase();
+      final roleLabel = authState.userProfile.roleLabel.toLowerCase();
+      final email = authState.userProfile.email.toLowerCase();
+      if (role.contains('executive') || role.contains('ae') || roleLabel.contains('executive') || roleLabel.contains('ae') || email.contains('sushma')) {
+        isAcademicExecutive = true;
+      }
+      if (roleLabel.contains('team lead') || roleLabel.contains('tl') || role.contains('team_lead') || role.contains('tl')) {
+        isTeamLead = true;
+      }
+    }
+    bool hideCompliance = isAcademicExecutive || isTeamLead;
 
     return BlocProvider(
       create: (context) => ReportsBloc()..add(FetchReportsDashboardEvent()),
@@ -62,7 +83,7 @@ class _ReportsDashboardScreenState extends State<ReportsDashboardScreen> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Your DSR / WSR / MSR status reports at a glance.',
+                        s.reportsDashboardSubtitle,
                         style: TextStyle(
                           fontSize: 12,
                           color: isDark ? Colors.white60 : Colors.black54,
@@ -97,7 +118,13 @@ class _ReportsDashboardScreenState extends State<ReportsDashboardScreen> {
                         _buildSecondaryStatCards(context, s, state.data.stats),
                         const SizedBox(height: 24),
 
-                        // My Reports List Section (Replaces DSR Compliance)
+                        // Compliance Section (Hidden for Academic Executive & Team Lead)
+                        if (!hideCompliance && state.data.compliance.people.isNotEmpty) ...[
+                          _buildComplianceSection(context, s, state.data.compliance),
+                          const SizedBox(height: 24),
+                        ],
+
+                        // My Reports List Section
                         _buildMyReportsSection(context, s, state.data.reports),
                       ] else
                         const SizedBox.shrink(),
@@ -211,40 +238,50 @@ class _ReportsDashboardScreenState extends State<ReportsDashboardScreen> {
             final borderColor = item['borderColor'] as Color;
 
             return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1E293B) : Colors.white,
                 borderRadius: BorderRadius.circular(12),
-                border: Border(
-                  left: BorderSide(color: borderColor, width: 4),
-                  top: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-                  right: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-                  bottom: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-                ),
+                border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
               ),
-              child: Row(
-                children: [
-                  Icon(item['icon'] as IconData, size: 22, color: borderColor),
-                  const SizedBox(width: 12),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${item['value']}',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 4,
+                      color: borderColor,
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        child: Row(
+                          children: [
+                            Icon(item['icon'] as IconData, size: 22, color: borderColor),
+                            const SizedBox(width: 12),
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${item['value']}',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                  ),
+                                ),
+                                Text(
+                                  item['title'] as String,
+                                  style: TextStyle(fontSize: 11, color: isDark ? Colors.white60 : Colors.black54),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
-                      Text(
-                        item['title'] as String,
-                        style: TextStyle(fontSize: 11, color: isDark ? Colors.white60 : Colors.black54),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -288,7 +325,7 @@ class _ReportsDashboardScreenState extends State<ReportsDashboardScreen> {
         children: [
           // Sub-header Title
           Text(
-            'My Reports',
+            s.myReportsTitle,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -314,10 +351,10 @@ class _ReportsDashboardScreenState extends State<ReportsDashboardScreen> {
 
           // Reports List matching Image 1 mockup
           if (filtered.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(24),
+            Padding(
+              padding: const EdgeInsets.all(24),
               child: Center(
-                child: Text('No reports found.', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                child: Text(s.noReportsFound, style: const TextStyle(color: Colors.grey, fontSize: 12)),
               ),
             )
           else
@@ -400,13 +437,22 @@ class _ReportsDashboardScreenState extends State<ReportsDashboardScreen> {
                     color: isDark ? Colors.white : const Color(0xFF0F172A),
                   ),
                 ),
-                if (item.workCompleted != null && item.workCompleted!.isNotEmpty)
+                if (item.workCompleted != null && item.workCompleted!.isNotEmpty) ...[
                   Text(
                     item.workCompleted!,
                     style: TextStyle(fontSize: 11, color: isDark ? Colors.white60 : Colors.black54),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
+                ],
+                const SizedBox(height: 6),
+                LinearProgressIndicator(
+                  value: isSubmitted ? 1.0 : 0.4,
+                  backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                  color: isSubmitted ? const Color(0xFF16A34A) : const Color(0xFFD97706),
+                  minHeight: 4,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ],
             ),
           ),
@@ -431,5 +477,272 @@ class _ReportsDashboardScreenState extends State<ReportsDashboardScreen> {
         ],
       ),
     );
+  }
+  Widget _buildComplianceSection(BuildContext context, AppStrings s, ReportComplianceModel compliance) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                s.complianceTitle,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                s.complianceSubtitle,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: isDark ? Colors.white60 : Colors.black54,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Compliance Type Tabs (DSR, WSR, MSR)
+          Row(
+            children: [
+              _buildComplianceTab('DSR', 'dsr', context),
+              const SizedBox(width: 16),
+              _buildComplianceTab('WSR', 'wsr', context),
+              const SizedBox(width: 16),
+              _buildComplianceTab('MSR', 'msr', context),
+            ],
+          ),
+          const Divider(),
+          const SizedBox(height: 8),
+
+          // Info Banner matching Images 1 & 2
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF311B1B) : const Color(0xFFFFF5F5),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: isDark ? const Color(0xFF991B1B) : const Color(0xFFFECDD3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  s.noReportDueToday(_selectedComplianceType.toUpperCase(), _formatNextDue(compliance.nextDue)),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? const Color(0xFFFCA5A5) : const Color(0xFF991B1B),
+                  ),
+                ),
+                if (compliance.lastCycle != null) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Text(
+                        s.lastReportCycleInfo(
+                          _selectedComplianceType.toUpperCase(),
+                          _formatComplianceDay(compliance.lastCycle!.day, _selectedComplianceType),
+                          compliance.lastCycle!.filed,
+                          compliance.lastCycle!.missed,
+                        ),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isDark ? Colors.white70 : const Color(0xFF475569),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF475569) : const Color(0xFFE2E8F0),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          s.whoButton,
+                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          if (compliance.days.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Center(
+                child: Text(s.noComplianceDataAvailable, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+              ),
+            )
+          else
+            Column(
+              children: compliance.days.map((dayItem) {
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            _formatComplianceDay(dayItem.day, _selectedComplianceType),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : const Color(0xFF0F172A),
+                            ),
+                          ),
+                          Text(
+                            '${dayItem.filed} ${s.filedLabel} · ${dayItem.missed} ${s.missedLabel}    ${dayItem.rate.toInt()}%',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? Colors.white70 : const Color(0xFF475569),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: (dayItem.rate / 100).clamp(0.0, 1.0),
+                          backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                          color: dayItem.rate >= 80
+                              ? const Color(0xFF16A34A)
+                              : (dayItem.rate >= 50 ? const Color(0xFFD97706) : const Color(0xFFDC2626)),
+                          minHeight: 5,
+                        ),
+                      ),
+                      if (dayItem.missedUsers.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 4,
+                          children: dayItem.missedUsers.map((u) {
+                            return Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFE4E6),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  CircleAvatar(
+                                    radius: 8,
+                                    backgroundColor: const Color(0xFFE5484D),
+                                    child: Text(
+                                      u.initials.isNotEmpty ? u.initials : 'SM',
+                                      style: const TextStyle(fontSize: 7, color: Colors.white, fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    u.name,
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFFBE123C),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildComplianceTab(String label, String type, BuildContext context) {
+    final isSelected = _selectedComplianceType == type;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return GestureDetector(
+      onTap: () {
+        if (_selectedComplianceType != type) {
+          setState(() => _selectedComplianceType = type);
+          context.read<ReportsBloc>().add(FetchComplianceEvent(type));
+        }
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+              color: isSelected
+                  ? (isDark ? const Color(0xFF60A5FA) : const Color(0xFF1D4ED8))
+                  : (isDark ? Colors.white60 : Colors.grey),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Container(
+            height: 2,
+            width: 20,
+            color: isSelected
+                ? (isDark ? const Color(0xFF60A5FA) : const Color(0xFF1D4ED8))
+                : Colors.transparent,
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatComplianceDay(String dayStr, String type) {
+    try {
+      final dt = DateTime.parse(dayStr);
+      if (type.toLowerCase() == 'wsr') {
+        return 'Week of ${DateFormat('d MMM').format(dt)}';
+      } else if (type.toLowerCase() == 'msr') {
+        return DateFormat('MMMM yyyy').format(dt);
+      } else {
+        return DateFormat('EEE d MMM').format(dt);
+      }
+    } catch (_) {
+      return dayStr;
+    }
+  }
+
+  String _formatNextDue(String nextDueStr) {
+    if (nextDueStr.isEmpty) return '29 Aug 2026';
+    try {
+      final dt = DateTime.parse(nextDueStr);
+      return DateFormat('dd MMM yyyy').format(dt);
+    } catch (_) {
+      return nextDueStr;
+    }
   }
 }

@@ -33,5 +33,5 @@ class ApprovalsConstStrings {
   static const String noTaskApprovals = 'No task approvals found.';
   static const String noEscalations = 'No escalations found.';
   static const String noMeetingApprovals = 'No meeting approvals found.';
-  static const String noBudgetApprovals = 'No budget approvals found.';
+  static const String noBudgetApprovals = 'You haven’t raised any budget requests yet..';
 }

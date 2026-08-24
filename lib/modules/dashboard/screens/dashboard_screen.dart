@@ -17,7 +17,7 @@ import '../models/dashboard_stats.dart';
 import '../models/team_performance.dart';
 import '../models/recent_activity_model.dart';
 import '../models/login_group_model.dart';
-import '../../reports/screens/reports_dashboard_screen.dart';
+import '../../reports/screens/status_reports_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -976,7 +976,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const ReportsDashboardScreen()),
+                MaterialPageRoute(builder: (_) => const StatusReportsScreen()),
               );
             },
             child: Container(

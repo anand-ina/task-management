@@ -438,7 +438,7 @@ class AppStringsKn extends AppStrings {
   @override
   String get bulkUploadTasksTitle => 'ಕಾರ್ಯಗಳ ಬಲ್ಕ್ ಅಪ್‌ಲೋಡ್';
   @override
-  String get bulkUploadSubtitle => 'ಎಕ್ಸೆಲ್ ಅಥವಾ ಸಿಎಸ್‌ವಿ · ನೀವು ದೃಢೀಕರಿಸುವವರೆಗೆ ಏನನ್ನೂ ಉಳಿಸಲಾಗುವುದಿಲ್ಲ';
+  String get bulkUploadSubtitle => 'ಎಕ್ಸೆಲ್ ಅಥವಾ ಸಿಎಸ್‌ವಿ · ನೀವು ದೃಢೀಕರಿಸುವವರೆಗೆ \nಏನನ್ನೂ ಉಳಿಸಲಾಗುವುದಿಲ್ಲ';
   @override
   String get chooseAFile => 'ಫೈಲ್ ಆಯ್ಕೆಮಾಡಿ';
   @override
@@ -970,5 +970,28 @@ class AppStringsKn extends AppStrings {
   @override
   String get completionAwaitingApproval => 'ಪೂರ್ಣಗೊಳಿಸುವಿಕೆಯು ಅನುಮೋದನೆಗಾಗಿ ಕಾಯುತ್ತಿದೆ';
   @override
-  String get noFinesOrRewardsYet => 'ಇನ್ನೂ ಯಾವುದೇ ದಂಡಗಳು ಅಥವಾ ಬಹುಮಾನಗಳಿಲ್ಲ.';
+  String get noFinesOrRewardsYet => 'ಇನ್ನೂ ಯಾವುದೇ ದಂಡಗಳು లేదా ಬಹುಮಾನಗಳಿಲ್ಲ.';
+  @override
+  String get youHaveNotOrganizedAnyMeetingsYet => 'ನೀವು ಇನ್ನೂ ಯಾವುದೇ ಸಭೆಗಳನ್ನು ಆಯೋಜಿಸಿಲ್ಲ. 🎉';
+  @override
+  String get cancelReminderButton => 'ಜ್ಞಾಪನೆಯನ್ನು ರದ್ದುಗೊಳಿಸಿ';
+  @override
+  String get reportsDashboardSubtitle => 'ನಿಮ್ಮ DSR / WSR / MSR ಸ್ಥಿತಿ ವರದಿಗಳು ಒಂದು ನೋಟದಲ್ಲಿ.';
+  @override
+  String get myReportsTitle => 'ನನ್ನ ವರದಿಗಳು';
+  @override
+  String get noReportsFound => 'ಯಾವುದೇ ವರದಿಗಳು ಕಂಡುಬಂದಿಲ್ಲ.';
+  @override
+  String get complianceTitle => 'ಅನುಸರಣೆ';
+  @override
+  String get complianceSubtitle => 'ಚಕ್ರದ ಪ್ರಕಾರ ಯಾರು ತಮ್ಮ ವರದಿಯನ್ನು ಸಲ್ಲಿಸಿದ್ದಾರೆ ಮತ್ತು ಯಾರು ತಪ್ಪಿಸಿಕೊಂಡಿದ್ದಾರೆ';
+  @override
+  String get noComplianceDataAvailable => 'ಯಾವುದೇ ಅನುಸರಣೆ ಡೇಟಾ ಲಭ್ಯವಿಲ್ಲ.';
+  @override
+  String noReportDueToday(String type, String nextDue) => 'ಇಂದು ಯಾವುದೇ $type ಬಾಕಿ ಇಲ್ಲ. ಮುಂದಿನ $type $nextDue ರಂದು.';
+  @override
+  String lastReportCycleInfo(String type, String cycle, int filed, int missed) => 'ಕೊನೆಯ $type — $cycle: $filed ಪೂರ್ಣಗೊಂಡಿದೆ · $missed ತಪ್ಪಿಹೋಗಿದೆ';
+  @override
+  String get whoButton => 'ಯಾರು?';
+
 }

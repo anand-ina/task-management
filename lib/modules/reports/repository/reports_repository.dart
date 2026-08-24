@@ -1,6 +1,7 @@
 import 'dart:convert';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/dio_client.dart';
+import '../../../core/utils/preferences_service.dart';
 import '../models/pull_tasks_model.dart';
 import '../models/report_compliance_model.dart';
 import '../models/report_stats_model.dart';
@@ -72,11 +73,52 @@ class ReportsRepository {
   }
 
   Future<ReportsDashboardData> getReportsDashboardData() async {
+    final isAE = await PreferencesService().isAcademicExecutive();
+    if (isAE) {
+      try {
+        final response = await _dioClient.dio.get(ApiConstants.reports);
+        final data = _safeParse(response.data);
+        List<dynamic> reports = [];
+        if (data is List) {
+          reports = data;
+        }
+
+        int total = reports.length;
+        int submitted = reports.where((r) => r is Map && r['status'] == 'submitted').length;
+        int draft = reports.where((r) => r is Map && r['status'] == 'draft').length;
+        int dsr = reports.where((r) => r is Map && r['type'] == 'dsr').length;
+        int wsr = reports.where((r) => r is Map && r['type'] == 'wsr').length;
+        int msr = reports.where((r) => r is Map && r['type'] == 'msr').length;
+
+        ReportStatsModel stats = ReportStatsModel(
+          total: total,
+          submitted: submitted,
+          draft: draft,
+          submittedToday: submitted,
+          dsr: dsr,
+          wsr: wsr,
+          msr: msr,
+        );
+
+        return ReportsDashboardData(
+          reports: reports,
+          stats: stats,
+          compliance: ReportComplianceModel(days: [], people: []),
+        );
+      } catch (_) {
+        return ReportsDashboardData(
+          reports: [],
+          stats: ReportStatsModel(total: 0, submitted: 0, draft: 0, submittedToday: 0, dsr: 0, wsr: 0, msr: 0),
+          compliance: ReportComplianceModel(days: [], people: []),
+        );
+      }
+    }
+
     try {
       final results = await Future.wait([
         _dioClient.dio.get(ApiConstants.reports),
         _dioClient.dio.get(ApiConstants.reportsStats),
-        _dioClient.dio.get(ApiConstants.reportsCompliance, queryParameters: {'days': 14}),
+        _dioClient.dio.get(ApiConstants.reportsCompliance, queryParameters: {'type': 'dsr', 'count': 14}),
       ]);
 
       List<dynamic> reports = [];
@@ -114,5 +156,24 @@ class ReportsRepository {
         compliance: ReportComplianceModel(days: [], people: []),
       );
     }
+  }
+
+  Future<ReportComplianceModel> getCompliance({required String type, int count = 14}) async {
+    final isAE = await PreferencesService().isAcademicExecutive();
+    if (isAE) {
+      return ReportComplianceModel(type: type, days: [], people: []);
+    }
+
+    try {
+      final response = await _dioClient.dio.get(
+        ApiConstants.reportsCompliance,
+        queryParameters: {'type': type, 'count': count},
+      );
+      final data = _safeParse(response.data);
+      if (data is Map<String, dynamic>) {
+        return ReportComplianceModel.fromJson(data);
+      }
+    } catch (_) {}
+    return ReportComplianceModel(type: type, days: [], people: []);
   }
 }

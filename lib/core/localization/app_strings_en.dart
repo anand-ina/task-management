@@ -438,7 +438,7 @@ class AppStringsEn extends AppStrings {
   @override
   String get bulkUploadTasksTitle => 'Bulk upload tasks';
   @override
-  String get bulkUploadSubtitle => 'Excel or CSV · nothing is saved until you confirm';
+  String get bulkUploadSubtitle => 'Excel or CSV · nothing is \n saved until you confirm';
   @override
   String get chooseAFile => 'Choose a file';
   @override
@@ -627,7 +627,7 @@ class AppStringsEn extends AppStrings {
   @override
   String get dsrComplianceHeader => 'DSR Compliance';
   @override
-  String get dsrComplianceSubtitle => 'Who filed vs. missed their daily report — last 14 days (Sundays excluded)';
+  String get dsrComplianceSubtitle => 'Who filed vs. missed their daily report — \nlast 14 days (Sundays excluded)';
   @override
   String get filedLabel => 'filed';
   @override
@@ -971,4 +971,27 @@ class AppStringsEn extends AppStrings {
   String get completionAwaitingApproval => 'Completion awaiting approval';
   @override
   String get noFinesOrRewardsYet => 'No fines or rewards yet.';
+  @override
+  String get youHaveNotOrganizedAnyMeetingsYet => 'You haven’t organized any meetings yet. 🎉';
+  @override
+  String get cancelReminderButton => 'Cancel reminder';
+  @override
+  String get reportsDashboardSubtitle => 'Your DSR / WSR / MSR status reports at a glance.';
+  @override
+  String get myReportsTitle => 'My Reports';
+  @override
+  String get noReportsFound => 'No reports found.';
+  @override
+  String get complianceTitle => 'Compliance';
+  @override
+  String get complianceSubtitle => 'Who filed vs. missed their status \nreport, by cycle';
+  @override
+  String get noComplianceDataAvailable => 'No compliance data available.';
+  @override
+  String noReportDueToday(String type, String nextDue) => 'No $type due today. Next $type on $nextDue.';
+  @override
+  String lastReportCycleInfo(String type, String cycle, int filed, int missed) => 'Last $type — $cycle: $filed completed · $missed missed';
+  @override
+  String get whoButton => 'Who?';
+
 }

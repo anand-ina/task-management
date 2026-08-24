@@ -10,6 +10,7 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
       : repository = reportsRepository ?? ReportsRepository(),
         super(ReportsInitialState()) {
     on<FetchReportsDashboardEvent>(_onFetchReportsDashboard);
+    on<FetchComplianceEvent>(_onFetchCompliance);
   }
 
   Future<void> _onFetchReportsDashboard(
@@ -22,6 +23,24 @@ class ReportsBloc extends Bloc<ReportsEvent, ReportsState> {
       emit(ReportsDashboardLoadedState(data));
     } catch (e) {
       emit(ReportsErrorState(e.toString()));
+    }
+  }
+
+  Future<void> _onFetchCompliance(
+    FetchComplianceEvent event,
+    Emitter<ReportsState> emit,
+  ) async {
+    if (state is ReportsDashboardLoadedState) {
+      final currentData = (state as ReportsDashboardLoadedState).data;
+      try {
+        final newCompliance = await repository.getCompliance(type: event.type, count: 14);
+        final updatedData = ReportsDashboardData(
+          reports: currentData.reports,
+          stats: currentData.stats,
+          compliance: newCompliance,
+        );
+        emit(ReportsDashboardLoadedState(updatedData));
+      } catch (_) {}
     }
   }
 }

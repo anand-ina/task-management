@@ -307,14 +307,7 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
                   const SizedBox(width: 12),
                   Wrap(
                     spacing: 12,
-                    children: (_branches.isNotEmpty
-                            ? _branches
-                            : [
-                                BranchModel(id: 1, code: 'SS00', name: 'Head Office', isAll: true),
-                                BranchModel(id: 2, code: 'SS01', name: 'Moti Nagar & Sanath Nagar', isAll: false),
-                                BranchModel(id: 3, code: 'SS02', name: 'Peerzadiguda', isAll: false),
-                              ])
-                        .map((b) {
+                    children: _branches.map((b) {
                       return Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [

@@ -5,6 +5,8 @@ import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/raise_escalation_dialog.dart';
 import '../../../shared_widgets/dialogs/task_detail_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../auth/bloc/auth_bloc.dart';
+import '../../auth/bloc/auth_state.dart';
 import '../bloc/approvals_bloc.dart';
 import '../bloc/approvals_event.dart';
 import '../bloc/approvals_state.dart';
@@ -30,6 +32,22 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final authState = context.watch<AuthBloc>().state;
+    bool isAcademicExecutive = false;
+    bool isTeamLead = false;
+    if (authState is AuthenticatedState) {
+      final role = authState.userProfile.role.toLowerCase();
+      final roleLabel = authState.userProfile.roleLabel.toLowerCase();
+      final email = authState.userProfile.email.toLowerCase();
+      if (role.contains('executive') || role.contains('ae') || roleLabel.contains('executive') || roleLabel.contains('ae') || email.contains('sushma')) {
+        isAcademicExecutive = true;
+      }
+      if (roleLabel.contains('team lead') || roleLabel.contains('tl') || role.contains('team_lead') || role.contains('tl')) {
+        isTeamLead = true;
+      }
+    }
+    bool isReadOnlyUser = isAcademicExecutive || isTeamLead;
 
     return Scaffold(
       drawer: const CustomLeftDrawer(currentRoute: '/approvals/escalations'),
@@ -106,43 +124,45 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Segmented Pill Tabs (Received by Me & Initiated by Me)
-              BlocBuilder<ApprovalsBloc, ApprovalsState>(
-                builder: (context, state) {
-                  int receivedCount = 0;
-                  int initiatedCount = 0;
-                  if (state is ApprovalsLoadedState) {
-                    receivedCount = state.escalationsToReview.length;
-                    initiatedCount = state.escalations.length;
-                  }
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    padding: const EdgeInsets.all(4),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildTabButton(
-                          title: ApprovalsConstStrings.receivedByMe,
-                          badgeCount: receivedCount,
-                          isSelected: _selectedTabIndex == 0,
-                          onTap: () => setState(() => _selectedTabIndex = 0),
-                        ),
-                        const SizedBox(width: 4),
-                        _buildTabButton(
-                          title: ApprovalsConstStrings.initiatedByMe,
-                          badgeCount: initiatedCount,
-                          isSelected: _selectedTabIndex == 1,
-                          onTap: () => setState(() => _selectedTabIndex = 1),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
+              // Segmented Pill Tabs (Only visible when NOT Academic Executive)
+              if (!isAcademicExecutive) ...[
+                BlocBuilder<ApprovalsBloc, ApprovalsState>(
+                  builder: (context, state) {
+                    int receivedCount = 0;
+                    int initiatedCount = 0;
+                    if (state is ApprovalsLoadedState) {
+                      receivedCount = state.escalationsToReview.length;
+                      initiatedCount = state.escalations.length;
+                    }
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      padding: const EdgeInsets.all(4),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildTabButton(
+                            title: ApprovalsConstStrings.receivedByMe,
+                            badgeCount: receivedCount,
+                            isSelected: _selectedTabIndex == 0,
+                            onTap: () => setState(() => _selectedTabIndex = 0),
+                          ),
+                          const SizedBox(width: 4),
+                          _buildTabButton(
+                            title: ApprovalsConstStrings.initiatedByMe,
+                            badgeCount: initiatedCount,
+                            isSelected: _selectedTabIndex == 1,
+                            onTap: () => setState(() => _selectedTabIndex = 1),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+              ],
               BlocBuilder<ApprovalsBloc, ApprovalsState>(
                 builder: (context, state) {
                   if (state is ApprovalsLoadingState) {
@@ -175,9 +195,11 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                   }
 
                   if (state is ApprovalsLoadedState) {
-                    final items = _selectedTabIndex == 0
-                        ? state.escalationsToReview
-                        : state.escalations;
+                    final items = isAcademicExecutive
+                        ? [...state.escalationsToReview, ...state.escalations]
+                        : (_selectedTabIndex == 0
+                            ? state.escalationsToReview
+                            : state.escalations);
 
                     if (items.isEmpty) {
                       return _buildEmptyState();
@@ -189,7 +211,7 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                       itemCount: items.length,
                       separatorBuilder: (context, index) => const SizedBox(height: 12),
                       itemBuilder: (context, index) {
-                        return _buildEscalationCard(items[index]);
+                        return _buildEscalationCard(items[index], isAcademicExecutive);
                       },
                     );
                   }
@@ -274,7 +296,7 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
     );
   }
 
-  Widget _buildEscalationCard(EscalationModel item) {
+  Widget _buildEscalationCard(EscalationModel item, bool isAcademicExecutive) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final typeLabel = item.type == 'date_change'
@@ -376,7 +398,7 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                           ),
                           const Spacer(),
                           InkWell(
-                            onTap: () => TaskDetailDialog.show(context, taskId: item.taskId ?? 0),
+                            onTap: () => TaskDetailDialog.show(context, taskId: item.taskId ?? 0, isReadOnly: isReadOnlyUser),
                             child: Row(
                               children: [
                                 Text(
@@ -404,18 +426,18 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                           ),
                         ),
 
-                      // Reason Quote Box
+                      // Reason Box
                       if (item.reason != null && item.reason!.trim().isNotEmpty) ...[
                         const SizedBox(height: 10),
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
                             color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            item.reason!.trim(),
+                            '${item.reason}',
                             style: TextStyle(
                               fontSize: 12.5,
                               color: isDark ? Colors.white : Colors.black87,
@@ -425,40 +447,49 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                       ],
                       const SizedBox(height: 12),
 
-                      // Bottom Action Buttons: Resolve · Approve | Reject
+                      // Action Buttons (Resolve · Approve, Reject & View -> only when NOT Academic Executive)
                       Row(
                         children: [
-                          InkWell(
-                            onTap: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Escalation resolved & approved.')),
-                              );
-                            },
-                            child: Text(
-                              AppStrings.of(context).resolveApprove,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF0F172A),
+                          if (!isAcademicExecutive && _selectedTabIndex == 0) ...[
+                            InkWell(
+                              onTap: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Escalation resolved and approved.'),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
+                              },
+                              child: const Text(
+                                'Resolve · Approve',
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF16A34A),
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 16),
-                          InkWell(
-                            onTap: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Escalation rejected.')),
-                              );
-                            },
-                            child: Text(
-                              ApprovalsConstStrings.reject,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFFDC2626),
+                            const SizedBox(width: 16),
+                            InkWell(
+                              onTap: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Escalation request rejected.'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              },
+                              child: const Text(
+                                'Reject',
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFFDC2626),
+                                ),
                               ),
                             ),
-                          ),
+                            const SizedBox(width: 16),
+                          ],
                         ],
                       ),
                     ],

@@ -44,6 +44,7 @@ class AuthRepository {
     final map = data is Map<String, dynamic> ? data : <String, dynamic>{};
     final userProfile = UserProfile.fromJson(map);
     await _prefs.saveUserMe(map);
+    await _prefs.saveUserRole(userProfile.role, roleLabel: userProfile.roleLabel);
     return userProfile;
   }
 

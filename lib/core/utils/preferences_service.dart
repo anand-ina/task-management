@@ -61,10 +61,41 @@ class PreferencesService {
     return prefs.getString(_keyThemeMode) ?? 'light';
   }
 
+  static const String _keyUserRole = 'user_role';
+  static const String _keyUserRoleLabel = 'user_role_label';
+
+  // User Role
+  Future<void> saveUserRole(String role, {String? roleLabel}) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyUserRole, role);
+    if (roleLabel != null) {
+      await prefs.setString(_keyUserRoleLabel, roleLabel);
+    }
+  }
+
+  Future<String?> getUserRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keyUserRole);
+  }
+
+  Future<String?> getUserRoleLabel() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keyUserRoleLabel);
+  }
+
+  Future<bool> isAcademicExecutive() async {
+    final prefs = await SharedPreferences.getInstance();
+    final role = prefs.getString(_keyUserRole)?.toLowerCase() ?? '';
+    final roleLabel = prefs.getString(_keyUserRoleLabel)?.toLowerCase() ?? '';
+    return role.contains('executive') || role.contains('ae') || roleLabel.contains('executive') || roleLabel.contains('ae');
+  }
+
   // Clear session on Logout
   Future<void> clearSession() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_keyToken);
     await prefs.remove(_keyUserMe);
+    await prefs.remove(_keyUserRole);
+    await prefs.remove(_keyUserRoleLabel);
   }
 }

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -166,7 +167,7 @@ class BulkUploadDialog extends StatelessWidget {
         // File Dropzone Box
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
             borderRadius: BorderRadius.circular(12),
@@ -232,15 +233,15 @@ class BulkUploadDialog extends StatelessWidget {
             border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
           ),
           child: DataTable(
-            headingRowHeight: 36,
-            dataRowMinHeight: 40,
-            dataRowMaxHeight: 56,
+            headingRowHeight: 26,
+            dataRowMinHeight: 30,
+            dataRowMaxHeight: 46,
             columnSpacing: 24,
             horizontalMargin: 14,
             columns: [
-              DataColumn(label: Text(s.columnHeader, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey))),
-              DataColumn(label: Text(s.exampleHeader, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey))),
-              DataColumn(label: Text(s.notesHeader, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey))),
+              DataColumn(label: Text(s.columnHeader, style: const TextStyle(fontSize: 6, fontWeight: FontWeight.bold, color: Colors.grey))),
+              DataColumn(label: Text(s.exampleHeader, style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.grey))),
+              DataColumn(label: Text(s.notesHeader, style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.grey))),
             ],
             rows: columns.isNotEmpty
                 ? columns.map((col) {
@@ -250,19 +251,19 @@ class BulkUploadDialog extends StatelessWidget {
                         DataCell(Text(
                           col.header,
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 10,
                             fontWeight: FontWeight.bold,
                             color: isDark ? Colors.white : const Color(0xFF0F172A),
                           ),
                         )),
                         DataCell(Text(
                           col.example ?? '—',
-                          style: TextStyle(fontSize: 11, color: isDark ? Colors.white70 : const Color(0xFF334155)),
+                          style: TextStyle(fontSize: 9, color: isDark ? Colors.white70 : const Color(0xFF334155)),
                         )),
                         DataCell(Text(
                           col.note ?? '—',
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 9,
                             fontWeight: isRequired ? FontWeight.bold : FontWeight.normal,
                             color: isRequired ? Colors.red : (isDark ? Colors.white54 : Colors.grey.shade600),
                           ),
@@ -293,15 +294,7 @@ class BulkUploadDialog extends StatelessWidget {
 
   List<DataRow> _buildDefaultTemplateRows(AppStrings s, bool isDark) {
     final defaultCols = [
-      {'header': 'Task Entry Date', 'example': '18/08/2026', 'note': '—'},
-      {'header': 'Task No', 'example': '470/26', 'note': 'optional — generated when blank'},
-      {'header': 'Assigned By', 'example': 'Vamsi / BY SELF', 'note': '—'},
-      {'header': 'Task Description', 'example': 'Temporary ID cards for new students', 'note': 'required'},
-      {'header': 'School Branch', 'example': 'Moti Nagar', 'note': '—'},
-      {'header': 'Task Responsible Person', 'example': 'Gyapika · Ankima, Murali', 'note': 'required — the assignee(s); separate several with commas'},
-      {'header': 'Task Priority', 'example': 'Top Most ( Act Today )', 'note': '—'},
-      {'header': 'Target Date', 'example': '18/08/2026', 'note': '—'},
-      {'header': 'Task Status', 'example': 'In Progress - 75%', 'note': '—'},
+
     ];
 
     return defaultCols.map((col) {
@@ -444,28 +437,28 @@ class BulkUploadDialog extends StatelessWidget {
           children: [
             OutlinedButton(
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
               onPressed: () => Navigator.of(context).pop(),
               child: Text(s.cancelButton),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 2),
             OutlinedButton(
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
               onPressed: () => context.read<BulkTasksBloc>().add(ResetBulkUploadEvent()),
               child: Text(s.chooseAnotherFile),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 2),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF0F172A),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
               ),
               onPressed: () {
                 context.read<BulkTasksBloc>().add(CommitBulkTasksEvent(rows: preview.rows));
@@ -534,16 +527,65 @@ class BulkUploadDialog extends StatelessWidget {
         );
       }
 
-      if (result != null && result.files.isNotEmpty) {
-        final platformFile = result.files.first;
-        String? targetPath = platformFile.path;
+      List<dynamic> fileList = [];
+      if (result != null) {
+        if (result is List) {
+          fileList = result;
+        } else {
+          try {
+            final dynamic files = result.files;
+            if (files is List) {
+              fileList = files;
+            }
+          } catch (_) {}
+        }
+      }
 
-        // If path is null (e.g. Android URI scheme or cloud file picker), write bytes to temp file
-        if ((targetPath == null || targetPath.isEmpty) && platformFile.bytes != null) {
+      if (fileList.isNotEmpty) {
+        final dynamic platformFile = fileList.first;
+        
+        String? targetPath;
+        try {
+          targetPath = (platformFile as dynamic).path?.toString();
+        } catch (_) {}
+
+        String fileName = 'upload_temp.xlsx';
+        try {
+          final dynamic nameVal = (platformFile as dynamic).name;
+          if (nameVal != null && nameVal.toString().isNotEmpty) {
+            fileName = nameVal.toString();
+          }
+        } catch (_) {}
+
+        Uint8List? fileBytes;
+        try {
+          final dynamic bytesVal = (platformFile as dynamic).bytes;
+          if (bytesVal != null) {
+            if (bytesVal is Uint8List) {
+              fileBytes = bytesVal;
+            } else if (bytesVal is List<int>) {
+              fileBytes = Uint8List.fromList(bytesVal);
+            }
+          }
+        } catch (_) {}
+
+        // If bytes is null but path is present, read bytes from file path
+        if (fileBytes == null && targetPath != null && targetPath.isNotEmpty) {
+          try {
+            final f = File(targetPath);
+            if (await f.exists()) {
+              fileBytes = await f.readAsBytes();
+            }
+          } catch (e) {
+            debugPrint('[BulkUploadDialog] File.readAsBytes failed: $e');
+          }
+        }
+
+        // If path is null (e.g. Android URI scheme or content://), write bytes to temp file
+        if ((targetPath == null || targetPath.isEmpty) && fileBytes != null) {
           final tempDir = await getTemporaryDirectory();
-          final fileName = platformFile.name.isNotEmpty ? platformFile.name : 'upload_temp.xlsx';
           final tempFile = File('${tempDir.path}/$fileName');
-          await tempFile.writeAsBytes(platformFile.bytes!);
+          await tempFile.writeAsBytes(fileBytes);
           targetPath = tempFile.path;
         }
 

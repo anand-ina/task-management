@@ -438,7 +438,7 @@ class AppStringsHi extends AppStrings {
   @override
   String get bulkUploadTasksTitle => 'थोक अपलोड कार्य';
   @override
-  String get bulkUploadSubtitle => 'एक्सेल या सीएसवी · पुष्टि करने तक कुछ भी सहेजा नहीं जाएगा';
+  String get bulkUploadSubtitle => 'एक्सेल या सीएसवी · पुष्टि करने तक कुछ भी\n सहेजा नहीं जाएगा';
   @override
   String get chooseAFile => 'एक फ़ाइल चुनें';
   @override
@@ -971,4 +971,27 @@ class AppStringsHi extends AppStrings {
   String get completionAwaitingApproval => 'समाप्ति अनुमोदन की प्रतीक्षा में';
   @override
   String get noFinesOrRewardsYet => 'अभी तक कोई जुर्माना या पुरस्कार नहीं।';
+  @override
+  String get youHaveNotOrganizedAnyMeetingsYet => 'आपने अभी तक कोई बैठक आयोजित नहीं की है। 🎉';
+  @override
+  String get cancelReminderButton => 'रिमाइंडर रद्द करें';
+  @override
+  String get reportsDashboardSubtitle => 'आपके DSR / WSR / MSR स्थिति रिपोर्ट एक नज़र में।';
+  @override
+  String get myReportsTitle => 'मेरी रिपोर्ट';
+  @override
+  String get noReportsFound => 'कोई रिपोर्ट नहीं मिली।';
+  @override
+  String get complianceTitle => 'अनुपालन';
+  @override
+  String get complianceSubtitle => 'साइकिल के अनुसार किसने अपनी रिपोर्ट दायर की बनाम किसकी छूट गई';
+  @override
+  String get noComplianceDataAvailable => 'कोई अनुपालन डेटा उपलब्ध नहीं है।';
+  @override
+  String noReportDueToday(String type, String nextDue) => 'आज कोई $type देय नहीं है। अगला $type $nextDue को है।';
+  @override
+  String lastReportCycleInfo(String type, String cycle, int filed, int missed) => 'अंतिम $type — $cycle: $filed पूरा हुआ · $missed छूट गया';
+  @override
+  String get whoButton => 'कौन?';
+
 }

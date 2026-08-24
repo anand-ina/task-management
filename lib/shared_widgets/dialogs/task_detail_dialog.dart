@@ -1,29 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import '../../../core/constants/api_constants.dart';
 import '../../../core/localization/app_strings.dart';
-import '../../../core/network/dio_client.dart';
+import '../../../modules/auth/bloc/auth_bloc.dart';
+import '../../../modules/auth/bloc/auth_state.dart';
 import '../../../modules/tasks/models/task_model.dart';
 import '../../../modules/tasks/repository/task_repository.dart';
-import 'move_task_dialog.dart';
 import 'mark_done_dialog.dart';
-import 'raise_request_dialog.dart';
+import 'move_task_dialog.dart';
+import 'raise_escalation_dialog.dart';
+import 'reassign_task_dialog.dart';
+
 
 class TaskDetailDialog extends StatefulWidget {
   final int taskId;
   final TaskItemModel? initialTask;
+  final bool isReadOnly;
 
   const TaskDetailDialog({
     super.key,
     required this.taskId,
     this.initialTask,
+    this.isReadOnly = false,
   });
 
-  static Future<void> show(BuildContext context, {required int taskId, TaskItemModel? initialTask}) {
+  static Future<void> show(
+    BuildContext context, {
+    required int taskId,
+    TaskItemModel? initialTask,
+    bool isReadOnly = false,
+  }) {
     return showDialog(
       context: context,
       barrierDismissible: true,
-      builder: (context) => TaskDetailDialog(taskId: taskId, initialTask: initialTask),
+      builder: (context) => TaskDetailDialog(
+        taskId: taskId,
+        initialTask: initialTask,
+        isReadOnly: isReadOnly,
+      ),
     );
   }
 
@@ -38,58 +52,6 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
   bool _isLoading = true;
   TaskDetailModel? _detail;
   final List<Map<String, dynamic>> _postedComments = [];
-  bool _isPostingComment = false;
-
-  Future<void> _sendComment() async {
-    final text = _commentController.text.trim();
-    if (text.isEmpty) return;
-
-    setState(() => _isPostingComment = true);
-
-    try {
-      final res = await DioClient().dio.post(
-        '${ApiConstants.tasks}/${widget.taskId}/comments',
-        data: {'body': text, 'mentionIds': []},
-      );
-      final data = res.data;
-      if (mounted) {
-        if (data is List) {
-          setState(() {
-            _postedComments.addAll(data.cast<Map<String, dynamic>>());
-            _commentController.clear();
-          });
-        } else {
-          setState(() {
-            _postedComments.add({
-              'id': DateTime.now().millisecondsSinceEpoch,
-              'body': text,
-              'created_at': DateTime.now().toIso8601String(),
-              'name': 'Test_AE',
-              'initials': 'SA',
-              'avatar_color': '#8b5cf6',
-            });
-            _commentController.clear();
-          });
-        }
-      }
-    } catch (_) {
-      if (mounted) {
-        setState(() {
-          _postedComments.add({
-            'id': DateTime.now().millisecondsSinceEpoch,
-            'body': text,
-            'created_at': DateTime.now().toIso8601String(),
-            'name': 'Test_AE',
-            'initials': 'SA',
-            'avatar_color': '#8b5cf6',
-          });
-          _commentController.clear();
-        });
-      }
-    } finally {
-      if (mounted) setState(() => _isPostingComment = false);
-    }
-  }
 
   @override
   void initState() {
@@ -166,21 +128,35 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
     final s = AppStrings.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    final authState = context.watch<AuthBloc>().state;
+    bool isTeamLead = false;
+    if (authState is AuthenticatedState) {
+      final role = authState.userProfile.role.toLowerCase();
+      final roleLabel = authState.userProfile.roleLabel.toLowerCase();
+      if (roleLabel.contains('team lead') || roleLabel.contains('tl') || role.contains('team_lead') || role.contains('tl')) {
+        isTeamLead = true;
+      }
+    }
+
     final taskNo = _detail?.taskNo ?? widget.initialTask?.taskNo ?? 'Task';
     final title = _detail?.title ?? widget.initialTask?.title ?? '';
     final description = _detail?.description ?? widget.initialTask?.description ?? '';
     final priority = _detail?.priority ?? widget.initialTask?.priority ?? 'high';
     final status = _detail?.status ?? widget.initialTask?.status ?? 'to_be_started';
+    final progress = _detail?.progress ?? widget.initialTask?.progress ?? 0;
     final branchName = _detail?.branchName ?? widget.initialTask?.branchName ?? 'Head Office';
-    final assignedBy = _detail?.assignedByName ?? widget.initialTask?.assignedByName ?? 'Test_AE';
+    final assignedBy = _detail?.assignedByName ?? widget.initialTask?.assignedByName ?? 'Test_Manager';
+    final entryDate = _formatDateStr(_detail?.entryDate ?? widget.initialTask?.entryDate);
     final dueDate = _formatDateStr(_detail?.dueDate ?? widget.initialTask?.dueDate);
+    final completedDate = _formatDateStr(_detail?.completedDate ?? widget.initialTask?.completedDate);
+    final category = _detail?.category ?? widget.initialTask?.category ?? 'General';
     final assignees = _detail?.assignees ?? widget.initialTask?.assignees ?? [];
     final reviewNote = _detail?.reviewComment ?? widget.initialTask?.reviewComment;
     final attachments = _detail?.attachments ?? [];
     final timeline = _detail?.timeline ?? [];
 
     Color priorityColor = Colors.amber.shade800;
-    if (priority.toLowerCase().contains('emergency')) {
+    if (priority.toLowerCase().contains('emergency') || priority.toLowerCase().contains('high')) {
       priorityColor = Colors.red;
     } else if (priority.toLowerCase().contains('top')) {
       priorityColor = Colors.orange;
@@ -194,7 +170,7 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
       backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
       child: Container(
         constraints: const BoxConstraints(maxWidth: 580),
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(14),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -225,51 +201,35 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
               ),
               const SizedBox(height: 10),
 
-              // 2. Badges Row (Priority, Status, Branch)
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: priorityColor.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      priority[0].toUpperCase() + priority.substring(1),
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: priorityColor),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
+              // 2. Dynamic Metadata Box (Priority, Status, Branch, Category, Assigned By, Entry Date, Due Date, Completed)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                ),
+                child: Column(
+                  children: [
+                    Row(
                       children: [
-                        Container(width: 5, height: 5, decoration: const BoxDecoration(color: Colors.blue, shape: BoxShape.circle)),
-                        const SizedBox(width: 5),
-                        Text(
-                          _formatStatusLabel(status),
-                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blue),
-                        ),
+                        _buildMetaGridItem('Priority', priority[0].toUpperCase() + priority.substring(1), isDark, valueColor: priorityColor),
+                        _buildMetaGridItem('Status', '${_formatStatusLabel(status)}${progress > 0 ? " · $progress%" : ""}', isDark, valueColor: Colors.blue),
+                        _buildMetaGridItem('Branch', branchName, isDark),
+                        _buildMetaGridItem('Category', category, isDark),
                       ],
                     ),
-                  ),
-                  const SizedBox(width: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: isDark ? Colors.white12 : const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(6),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        _buildMetaGridItem('Assigned by', assignedBy, isDark),
+                        _buildMetaGridItem('Entry date', entryDate.isNotEmpty ? entryDate : '24 Aug 2026', isDark),
+                        _buildMetaGridItem('Due date', dueDate.isNotEmpty ? dueDate : '31 Aug 2026', isDark, valueColor: Colors.amber),
+                        _buildMetaGridItem('Completed', completedDate.isNotEmpty && completedDate != '—' ? completedDate : (status.toLowerCase() == 'completed' ? '24 Aug 2026' : '—'), isDark, valueColor: Colors.green),
+                      ],
                     ),
-                    child: Text(
-                      branchName,
-                      style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               const SizedBox(height: 14),
 
@@ -285,39 +245,37 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                 ),
                 const SizedBox(height: 16),
               ],
-
-              // 4. Assigned By & Due Date Row
-              Row(
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Assigned By', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
-                      const SizedBox(height: 2),
-                      Text(
-                        assignedBy,
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF0F172A)),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(width: 48),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Due', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
-                      const SizedBox(height: 2),
-                      Text(
-                        dueDate,
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.amber),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
               const SizedBox(height: 16),
 
               // 5. Assignees Section with Reassign Button
-              const Text('Assignees', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Assignees', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+                  if (!widget.isReadOnly) ...[
+                    InkWell(
+                      onTap: () async {
+                        final result = await ReassignTaskDialog.show(
+                          context,
+                          taskId: widget.taskId,
+                          currentAssignees: assignees,
+                        );
+                        if (result == true) {
+                          _fetchDetail();
+                        }
+                      },
+                      child: const Text(
+                        'Reassign',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2563EB),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
               const SizedBox(height: 6),
               Row(
                 children: [
@@ -351,17 +309,6 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                         ),
                       );
                     }).toList(),
-                  ),
-                  const SizedBox(width: 8),
-                  OutlinedButton.icon(
-                    onPressed: () {},
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      visualDensity: VisualDensity.compact,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                    ),
-                    icon: const Icon(Icons.refresh_rounded, size: 12),
-                    label: const Text('Reassign', style: TextStyle(fontSize: 10)),
                   ),
                 ],
               ),
@@ -575,19 +522,33 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0F172A),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  if (!widget.isReadOnly) ...[
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0F172A),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      onPressed: () {
+                        final txt = _commentController.text.trim();
+                        if (txt.isNotEmpty) {
+                          setState(() {
+                            _postedComments.add({
+                              'initials': 'SA',
+                              'name': 'Test_AE',
+                              'body': txt,
+                              'avatar_color': '#8b5cf6',
+                            });
+                            _commentController.clear();
+                          });
+                        }
+                      },
+                      child: const Text('Send', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                     ),
-                    onPressed: _isPostingComment ? null : _sendComment,
-                    child: _isPostingComment
-                        ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : const Text('Send', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                  ),
+                  ],
                 ],
               ),
 
@@ -596,77 +557,154 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
               const SizedBox(height: 12),
 
               // 10. Footer Action Buttons Bar
-              Row(
-                // mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  OutlinedButton.icon(
-                    onPressed: () async {
-                      final item = _detail ?? widget.initialTask;
-                      if (item != null) {
-                        final res = await MoveTaskDialog.show(context, task: item);
-                        if (res == true && mounted) {
-                          _fetchDetail();
-                        }
-                      }
-                    },
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              if (widget.isReadOnly) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        side: BorderSide(color: isDark ? Colors.white24 : Colors.black26),
+                      ),
+                      child: Text(s.closeButton, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                     ),
-                    icon: const Icon(Icons.show_chart_rounded, size: 10, color: Colors.redAccent),
-                    label: const Text('Update / Move', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ] else ...[
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () async {
+                          final taskItem = _detail ??
+                              widget.initialTask ??
+                              TaskItemModel(
+                                id: widget.taskId,
+                                taskNo: taskNo,
+                                fy: '2026-27',
+                                title: title,
+                                description: description,
+                                category: category,
+                                priority: priority,
+                                status: status,
+                                progress: progress,
+                                entryDate: entryDate,
+                                dueDate: dueDate,
+                                isConfidential: false,
+                                assignedByText: assignedBy,
+                                assignedByUserId: 1,
+                                assignedByName: assignedBy,
+                                branchId: 1,
+                                branchCode: 'SS00',
+                                branchName: branchName,
+                                assignees: assignees,
+                              );
+                          await MoveTaskDialog.show(context, task: taskItem);
+                        },
+                        icon: const Icon(Icons.trending_up_rounded, size: 14, color: Colors.blue),
+                        label: const Text('📈 Update / Move', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      OutlinedButton.icon(
+                        onPressed: () async {
+                          await RaiseEscalationDialog.show(context);
+                        },
+                        icon: const Icon(Icons.flag_outlined, size: 14, color: Colors.amber),
+                        label: const Text('⚑ Raise Request', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      if (!isTeamLead) ...[
+                        ElevatedButton.icon(
+                          onPressed: () async {
+                            final taskItem = _detail ??
+                                widget.initialTask ??
+                                TaskItemModel(
+                                  id: widget.taskId,
+                                  taskNo: taskNo,
+                                  fy: '2026-27',
+                                  title: title,
+                                  description: description,
+                                  category: category,
+                                  priority: priority,
+                                  status: status,
+                                  progress: progress,
+                                  entryDate: entryDate,
+                                  dueDate: dueDate,
+                                  isConfidential: false,
+                                  assignedByText: assignedBy,
+                                  assignedByUserId: 1,
+                                  assignedByName: assignedBy,
+                                  branchId: 1,
+                                  branchCode: 'SS00',
+                                  branchName: branchName,
+                                  assignees: assignees,
+                                );
+                            await MarkDoneDialog.show(context, task: taskItem);
+                          },
+                          icon: const Icon(Icons.check_circle_outline_rounded, size: 14),
+                          label: const Text('✓ Mark Done', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF16A34A),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      OutlinedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          side: BorderSide(color: isDark ? Colors.white24 : Colors.black26),
+                        ),
+                        child: Text(s.closeButton, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 1),
-                  OutlinedButton.icon(
-                    onPressed: () async {
-                      final item = _detail ?? widget.initialTask;
-                      if (item != null) {
-                        final res = await RaiseRequestDialog.show(context, task: item);
-                        if (res == true && mounted) {
-                          _fetchDetail();
-                        }
-                      }
-                    },
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    icon: const Icon(Icons.flag_rounded, size: 10, color: Colors.blueAccent),
-                    label: const Text('Raise Request', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
-                  ),
-                  const SizedBox(width: 2),
-                  OutlinedButton.icon(
-                    onPressed: () async {
-                      final item = _detail ?? widget.initialTask;
-                      if (item != null) {
-                        final res = await MarkDoneDialog.show(context, task: item);
-                        if (res == true && mounted) {
-                          _fetchDetail();
-                        }
-                      }
-                    },
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    icon: const Icon(Icons.check_rounded, size: 11, color: Colors.green),
-                    label: const Text('Mark Done', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.green)),
-                  ),
-                  const SizedBox(width: 6),
-                  OutlinedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      side: BorderSide(color: isDark ? Colors.white24 : Colors.black26),
-                    ),
-                    child: Text(s.closeButton, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildMetaGridItem(String label, String value, bool isDark, {Color? valueColor}) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.bold,
+              color: valueColor ?? (isDark ? Colors.white : const Color(0xFF0F172A)),
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }

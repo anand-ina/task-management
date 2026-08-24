@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/dio_client.dart';
@@ -41,19 +42,46 @@ class _MarkDoneDialogState extends State<MarkDoneDialog> {
   }
 
   Future<void> _pickAndUploadFile() async {
-    setState(() => _isUploading = true);
-    await Future.delayed(const Duration(milliseconds: 300));
-    final filename = 'Cercle LOGO PDF (${_uploadedAttachments.length + 1}).pdf';
-    if (mounted) {
-      setState(() {
-        _uploadedAttachments.add({
-          'filename': filename,
-          'url': '/uploads/${DateTime.now().millisecondsSinceEpoch}-37824.pdf-$filename',
-          'mime': 'application/pdf',
-          'size': 1383704,
-        });
-        _isUploading = false;
-      });
+    try {
+      final dynamic result = await FilePicker.pickFiles(
+        type: FileType.any,
+      );
+
+      if (result != null) {
+        final List<dynamic> fileList = result is List ? result : (result.files as List);
+        if (fileList.isNotEmpty) {
+          setState(() {
+            for (var file in fileList) {
+              String fileName = 'attachment';
+              try {
+                fileName = (file as dynamic).name?.toString() ?? 'attachment';
+              } catch (_) {}
+
+              String? path;
+              try {
+                path = (file as dynamic).path?.toString();
+              } catch (_) {}
+
+              int fileSize = 0;
+              try {
+                final dynamic bytes = (file as dynamic).bytes;
+                if (bytes != null && bytes is List) {
+                  fileSize = bytes.length;
+                }
+              } catch (_) {}
+
+              _uploadedAttachments.add({
+                'filename': fileName,
+                'url': path ?? '/uploads/${DateTime.now().millisecondsSinceEpoch}-$fileName',
+                'mime': 'application/octet-stream',
+                'size': fileSize,
+              });
+            }
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('[MarkDoneDialog] File pick error: $e');
     }
   }
 
