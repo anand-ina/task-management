@@ -63,126 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final isDesktop = constraints.maxWidth > 800;
 
-          if (isDesktop) {
-            return Row(
-              children: [
-                // Left Brand Banner
-                Expanded(
-                  flex: 5,
-                  child: Container(
-                    padding: const EdgeInsets.all(40),
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                    ),
-                    child: Column(
-                      // crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Center(
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 250,
-                                height: 100,
-                                padding: const EdgeInsets.all(4),
-                                decoration: const BoxDecoration(
-                                  color: Colors.transparent,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: ClipOval(
-                                  child: Image.asset(
-                                    'assets/images/circle-logo.png',
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                s.appTitle,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 40),
-                        const Text(
-                          'eduCore',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 42,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -1,
-                          ),
-                        ),
-                        const Text(
-                          'Task Management System · Samskar, The Life School',
-                          style: TextStyle(
-                            color: Colors.white60,
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(height: 36),
-
-                        // Features List
-                        _buildFeatureCard(
-                          'Smart Task Lifecycle',
-                          'Assign, acknowledge, progress & close with a full accountability chain',
-                        ),
-                        const SizedBox(height: 12),
-                        _buildFeatureCard(
-                          'Role-Based Dashboards',
-                          'Executive → Team Lead → Manager → Principal → Director, each scoped',
-                        ),
-                        const SizedBox(height: 12),
-                        _buildFeatureCard(
-                          'DSR · WSR · MSR',
-                          'Daily, weekly & monthly status reports with pull-from-tasks & lock',
-                        ),
-                        const SizedBox(height: 12),
-                        _buildFeatureCard(
-                          'Performance & Rewards',
-                          'Leaderboards, fines & rewards to drive accountability',
-                        ),
-
-                        const SizedBox(height: 40),
-                        const Text(
-                          'Powered by Navacle · Srivyn Platforms',
-                          style: TextStyle(color: Colors.white38, fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Right Sign In Panel
-                Expanded(
-                  flex: 6,
-                  child: Container(
-                    color: isDark ? const Color(0xFF090D16) : const Color(0xFFF8FAFC),
-                    padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 40),
-                    child: Center(
-                      child: SingleChildScrollView(
-                        child: SizedBox(
-                          width: 520,
-                          child: _buildLoginForm(context, s, isDark),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            );
-          } else {
             // Mobile / Tablet Layout
             return Container(
               color: isDark ? const Color(0xFF090D16) : const Color(0xFFF8FAFC),
@@ -194,7 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             );
           }
-        },
+
       ),
     );
   }
@@ -240,9 +121,9 @@ class _LoginScreenState extends State<LoginScreen> {
         Align(
           alignment: Alignment.centerLeft,
           child: Padding(
-            padding: const EdgeInsets.only(bottom: 20),
+            padding: const EdgeInsets.only(bottom: 3),
             child: Container(
-              padding: const EdgeInsets.all(6),
+              padding: const EdgeInsets.all(2),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1E293B) : Colors.transparent,
                 borderRadius: BorderRadius.circular(8),
@@ -254,7 +135,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 errorBuilder: (context, error, stackTrace) {
                   return Image.asset(
                     'assets/images/circle-logo.png',
-                    height: 54,
+                    height: 100,
                     fit: BoxFit.contain,
                   );
                 },
@@ -278,7 +159,7 @@ class _LoginScreenState extends State<LoginScreen> {
             color: isDark ? Colors.white60 : const Color(0xFF64748B),
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 10),
 
         // QUICK LOGIN AS Section (Maintained in 2 clean rows)
         Text(
@@ -301,9 +182,13 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(width: 8),
               _buildQuickChip(s.principalMadhumathi, 'madhumathi@samskar.edu'),
               const SizedBox(width: 8),
+              _buildQuickChip(s.centerHeadCharan, 'charan@samskar.edu'),
+              const SizedBox(width: 8),
               _buildQuickChip(s.managerMurali, 'murali@samskar.edu'),
               const SizedBox(width: 8),
               _buildQuickChip(s.managerSwapnika, 'swapnika@samskar.edu'),
+              const SizedBox(width: 8),
+              _buildQuickChip(s.managerSandeep, 'sandeep@samskar.edu'),
             ],
           ),
         ),
@@ -315,15 +200,18 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               _buildQuickChip(s.teamLeadNarasimha, 'narasimha@samskar.edu'),
               const SizedBox(width: 8),
-              _buildQuickChip(s.executiveAnamika, 'anamika@samskar.edu'),
+              _buildQuickChip(s.teamLeadAkash, 'akash@samskar.edu'),
               const SizedBox(width: 8),
-              // _buildQuickChip(s.executiveGyapika, 'gyapika@samskar.edu'),
-              _buildQuickChip(s.executiveGyapika, 'sushma@samskar.edu '),
+              _buildQuickChip('Executive (Gyapika)', 'gyapika@samskar.edu'),
+              const SizedBox(width: 8),
+              _buildQuickChip('Executive (anamika)', 'anamika@samskar.edu'),
+              const SizedBox(width: 8),
+              _buildQuickChip('Executive (Sushma)', 'sushma@samskar.edu'),
             ],
           ),
         ),
 
-        const SizedBox(height: 24),
+        const SizedBox(height: 10),
         Row(
           children: [
             Expanded(child: Divider(color: isDark ? Colors.white24 : Colors.black12)),
@@ -340,7 +228,7 @@ class _LoginScreenState extends State<LoginScreen> {
             Expanded(child: Divider(color: isDark ? Colors.white24 : Colors.black12)),
           ],
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 10),
 
         // Email Field
         Text(

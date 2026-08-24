@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
+import '../../../shared_widgets/dialogs/schedule_meeting_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
 import '../bloc/approvals_bloc.dart';
 import '../bloc/approvals_event.dart';
@@ -41,7 +42,7 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header Title & Awaiting Badge
+              // Header Title & + New Meeting Button
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -53,31 +54,47 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  BlocBuilder<ApprovalsBloc, ApprovalsState>(
-                    builder: (context, state) {
-                      int awaitingCount = 0;
-                      if (state is ApprovalsLoadedState) {
-                        awaitingCount = state.meetings
-                            .where((m) => m.status.toLowerCase() == 'pending')
-                            .length;
-                      }
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-                          borderRadius: BorderRadius.circular(12),
+                  Column(
+                    children: [
+                      BlocBuilder<ApprovalsBloc, ApprovalsState>(
+                        builder: (context, state) {
+                          int awaitingCount = 0;
+                          if (state is ApprovalsLoadedState) {
+                            awaitingCount = state.meetings
+                                .where((m) => m.status.toLowerCase() == 'pending')
+                                .length;
+                          }
+                          return Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '$awaitingCount ${ApprovalsConstStrings.awaitingYou}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: isDark ? Colors.white70 : Colors.black87,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      SizedBox(height: 10,),
+                      ElevatedButton.icon(
+                        onPressed: () => ScheduleMeetingDialog.show(context),
+                        label: const Text('+ New Meeting', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0F172A),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
-                        child: Text(
-                          '$awaitingCount ${ApprovalsConstStrings.awaitingYou}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.white70 : Colors.black87,
-                          ),
-                        ),
-                      );
-                    },
+                      ),
+                    ],
                   ),
+
                 ],
               ),
               const SizedBox(height: 6),
@@ -90,14 +107,19 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Segmented Pill Tabs
+              // Segmented Pill Tabs (Received by Me & Initiated by Me)
               BlocBuilder<ApprovalsBloc, ApprovalsState>(
                 builder: (context, state) {
                   int receivedCount = 0;
                   int initiatedCount = 0;
                   if (state is ApprovalsLoadedState) {
-                    receivedCount = state.meetings.where((m) => m.isOrganizer != true).length;
-                    initiatedCount = state.meetings.where((m) => m.isOrganizer == true).length;
+                    final received = [
+                      ...state.meetings.where((m) => m.isOrganizer != true),
+                      ...state.meetingCompletionRequests,
+                    ];
+                    final initiated = state.meetings.where((m) => m.isOrganizer == true).toList();
+                    receivedCount = received.length;
+                    initiatedCount = initiated.length;
                   }
                   return Container(
                     decoration: BoxDecoration(
@@ -109,12 +131,13 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         _buildTabButton(
-                          title: '${ApprovalsConstStrings.receivedByMe} ${receivedCount > 0 ? "($receivedCount)" : ""}',
+                          title: '${ApprovalsConstStrings.receivedByMe} ${receivedCount > 0 ? "($receivedCount)" : ""}'.trim(),
                           isSelected: _selectedTabIndex == 0,
                           onTap: () => setState(() => _selectedTabIndex = 0),
                         ),
+                        const SizedBox(width: 4),
                         _buildTabButton(
-                          title: '${ApprovalsConstStrings.initiatedByMe} ${initiatedCount > 0 ? "($initiatedCount)" : ""}',
+                          title: '${ApprovalsConstStrings.initiatedByMe} ${initiatedCount > 0 ? "($initiatedCount)" : ""}'.trim(),
                           isSelected: _selectedTabIndex == 1,
                           onTap: () => setState(() => _selectedTabIndex = 1),
                         ),
@@ -123,7 +146,7 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
                   );
                 },
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
 
               // Content Body
               BlocBuilder<ApprovalsBloc, ApprovalsState>(
@@ -158,15 +181,19 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
                   }
 
                   if (state is ApprovalsLoadedState) {
-                    final items = state.meetings.where((m) {
-                      if (_selectedTabIndex == 0) {
-                        return m.isOrganizer != true;
-                      } else {
-                        return m.isOrganizer == true;
-                      }
-                    }).toList();
+                    final allItems = [
+                      ...state.meetings,
+                      ...state.meetingCompletionRequests,
+                    ];
 
-                    final displayList = items.isNotEmpty ? items : state.meetings;
+                    final filtered = _selectedTabIndex == 0
+                        ? [
+                            ...state.meetings.where((m) => m.isOrganizer != true),
+                            ...state.meetingCompletionRequests,
+                          ]
+                        : state.meetings.where((m) => m.isOrganizer == true).toList();
+
+                    final displayList = filtered.isNotEmpty ? filtered : allItems;
 
                     if (displayList.isEmpty) {
                       return _buildEmptyState();
@@ -195,6 +222,7 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
 
   Widget _buildTabButton({
     required String title,
+    int badgeCount = 0,
     required bool isSelected,
     required VoidCallback onTap,
   }) {
@@ -202,20 +230,43 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
               ? (isDark ? const Color(0xFF0F172A) : const Color(0xFF0F172A))
               : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Text(
-          title,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-            color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+              ),
+            ),
+            if (badgeCount > 0) ...[
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: isSelected ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '$badgeCount',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: isSelected ? Colors.white : Colors.black87,
+                  ),
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );
@@ -241,7 +292,9 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
 
   Widget _buildMeetingCard(MeetingApprovalModel item) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isAccepted = (item.status.toLowerCase() == 'accepted' || item.status.toLowerCase() == 'scheduled');
+    final isAccepted = (item.status.toLowerCase() == 'accepted' ||
+        item.status.toLowerCase() == 'scheduled' ||
+        item.status.toLowerCase() == 'completed');
 
     return Container(
       decoration: BoxDecoration(
@@ -268,7 +321,7 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
             children: [
               Expanded(
                 child: Text(
-                  item.title,
+                  item.title.isNotEmpty ? item.title : 'Untitled Meeting',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -282,7 +335,7 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  isAccepted ? 'accepted' : 'pending',
+                  item.status.toLowerCase(),
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
@@ -296,7 +349,7 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
 
           // Date, Location, Organizer Metadata
           Text(
-            '${item.startsAt != null ? _formatDate(item.startsAt!) : ""} · ${item.location ?? "In person"}${item.organizer != null ? " · organized by ${item.organizer}" : ""}',
+            '${item.startsAt != null && item.startsAt!.isNotEmpty ? _formatDate(item.startsAt!) : ""}${item.location != null && item.location!.isNotEmpty ? " · ${item.location}" : " · In person"}${item.organizer != null && item.organizer!.isNotEmpty ? " · organized by ${item.organizer}" : ""}',
             style: TextStyle(
               fontSize: 12,
               color: isDark ? Colors.white60 : Colors.grey.shade600,
@@ -304,7 +357,7 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
           ),
 
           // Agenda / Note Box
-          if (item.agenda != null && item.agenda!.isNotEmpty) ...[
+          if (item.agenda != null && item.agenda!.trim().isNotEmpty) ...[
             const SizedBox(height: 10),
             Container(
               width: double.infinity,
@@ -314,7 +367,7 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                item.agenda!,
+                item.agenda!.trim(),
                 style: TextStyle(
                   fontSize: 12,
                   color: isDark ? Colors.white : Colors.black87,
@@ -322,6 +375,44 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
               ),
             ),
           ],
+          const SizedBox(height: 12),
+
+          // Action Links
+          Row(
+            children: [
+              InkWell(
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Meeting request accepted.')),
+                  );
+                },
+                child: Text(
+                  ApprovalsConstStrings.approve,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF0F172A),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              InkWell(
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Meeting request declined.')),
+                  );
+                },
+                child: Text(
+                  ApprovalsConstStrings.decline,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFDC2626),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );

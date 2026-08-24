@@ -76,11 +76,13 @@ class ApprovalsBloc extends Bloc<ApprovalsEvent, ApprovalsState> {
       final taskApprovalsReceived = await repository.getApprovals();
       final escalations = await repository.getEscalations();
       final meetings = await repository.getMeetings();
+      final meetingCompletionRequests = await repository.getMeetingCompletionRequests();
 
       emit(ApprovalsLoadedState(
         taskApprovalsReceived: taskApprovalsReceived,
         escalations: escalations,
         meetings: meetings,
+        meetingCompletionRequests: meetingCompletionRequests,
       ));
     } catch (e) {
       emit(ApprovalsErrorState(e.toString()));

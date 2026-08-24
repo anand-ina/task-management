@@ -13,10 +13,10 @@ class InviteeModel {
 
   factory InviteeModel.fromJson(Map<String, dynamic> json) {
     return InviteeModel(
-      name: json['name'] as String? ?? '',
-      response: json['response'] as String?,
-      required: json['required'] as bool?,
-      attended: json['attended'] as bool?,
+      name: json['name']?.toString() ?? '',
+      response: json['response']?.toString(),
+      required: json['required'] is bool ? json['required'] as bool : null,
+      attended: json['attended'] is bool ? json['attended'] as bool : null,
     );
   }
 
@@ -80,30 +80,52 @@ class MeetingApprovalModel {
   });
 
   factory MeetingApprovalModel.fromJson(Map<String, dynamic> json) {
+    String? parseString(dynamic val) {
+      if (val == null) return null;
+      if (val is Map) return val['name']?.toString() ?? val['title']?.toString();
+      return val.toString();
+    }
+
+    int parseId(dynamic val) {
+      if (val is int) return val;
+      if (val is double) return val.toInt();
+      if (val is String) return int.tryParse(val) ?? 0;
+      return 0;
+    }
+
+    bool? parseBool(dynamic val) {
+      if (val is bool) return val;
+      if (val is int) return val == 1;
+      if (val is String) return val.toLowerCase() == 'true' || val == '1';
+      return null;
+    }
+
     return MeetingApprovalModel(
-      id: json['id'] as int? ?? 0,
-      title: json['title'] as String? ?? '',
-      startsAt: json['starts_at'] as String?,
-      endsAt: json['ends_at'] as String?,
-      location: json['location'] as String?,
-      status: json['status'] as String? ?? 'scheduled',
-      agenda: json['agenda'] as String?,
-      isOneOnOne: json['is_one_on_one'] as bool?,
-      kind: json['kind'] as String?,
-      isOrganizer: json['is_organizer'] as bool?,
-      completionStatus: json['completion_status'] as String?,
-      completionNote: json['completion_note'] as String?,
-      completionDecisionNote: json['completion_decision_note'] as String?,
-      completionRequestedBy: json['completion_requested_by'] as String?,
-      completionDecidedBy: json['completion_decided_by'] as String?,
-      organizer: json['organizer'] as String?,
-      organizerId: json['organizer_id'] as int?,
-      branchName: json['branch_name'] as String?,
-      myResponse: json['my_response'] as String?,
-      myAttended: json['my_attended'] as bool?,
-      myRequired: json['my_required'] as bool?,
+      id: parseId(json['id']),
+      title: parseString(json['title']) ?? parseString(json['meeting_title']) ?? parseString(json['name']) ?? 'Untitled Meeting',
+      startsAt: parseString(json['starts_at']) ?? parseString(json['start_time']) ?? parseString(json['date']),
+      endsAt: parseString(json['ends_at']) ?? parseString(json['end_time']),
+      location: parseString(json['location']) ?? parseString(json['venue']),
+      status: parseString(json['status']) ?? parseString(json['meeting_status']) ?? 'scheduled',
+      agenda: parseString(json['agenda']) ?? parseString(json['description']) ?? parseString(json['note']),
+      isOneOnOne: parseBool(json['is_one_on_one']),
+      kind: parseString(json['kind']),
+      isOrganizer: parseBool(json['is_organizer']),
+      completionStatus: parseString(json['completion_status']),
+      completionNote: parseString(json['completion_note']),
+      completionDecisionNote: parseString(json['completion_decision_note']),
+      completionRequestedBy: parseString(json['completion_requested_by']),
+      completionDecidedBy: parseString(json['completion_decided_by']),
+      organizer: parseString(json['organizer']) ?? parseString(json['organizer_name']),
+      organizerId: json['organizer_id'] != null ? parseId(json['organizer_id']) : null,
+      branchName: parseString(json['branch_name']) ?? parseString(json['branch']),
+      myResponse: parseString(json['my_response']),
+      myAttended: parseBool(json['my_attended']),
+      myRequired: parseBool(json['my_required']),
       invitees: json['invitees'] != null && json['invitees'] is List
-          ? (json['invitees'] as List).map((e) => InviteeModel.fromJson(e)).toList()
+          ? (json['invitees'] as List)
+              .map((e) => InviteeModel.fromJson(e is Map<String, dynamic> ? e : {}))
+              .toList()
           : [],
     );
   }

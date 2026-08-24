@@ -17,6 +17,7 @@ import '../models/dashboard_stats.dart';
 import '../models/team_performance.dart';
 import '../models/recent_activity_model.dart';
 import '../models/login_group_model.dart';
+import '../../reports/screens/reports_dashboard_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -47,15 +48,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
     String roleName = 'DIRECTOR';
     String branchName = 'HEAD OFFICE';
 
+    bool isExecutive = false;
     if (authState is AuthenticatedState) {
       userName = authState.userProfile.name;
       roleName = authState.userProfile.role.toUpperCase();
       branchName = authState.userProfile.branch?.name ?? 'HEAD OFFICE';
+
+      final user = authState.userProfile;
+      if (user.email == 'sushma@samskar.edu' ||
+          user.roleLabel.toLowerCase().contains('executive') ||
+          user.role.toLowerCase().contains('executive')) {
+        isExecutive = true;
+      }
     }
 
     final dashState = context.watch<DashboardBloc>().state;
     if (dashState is DashboardLoadedState && dashState.selectedBranch != null) {
       branchName = dashState.selectedBranch!.name;
+    }
+
+    int openTodosCount = 0;
+    if (dashState is DashboardLoadedState) {
+      openTodosCount = dashState.todos.where((t) => !t.isCompleted).length;
     }
 
     return PopScope(
@@ -103,6 +117,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               final overdueByAge = state.dashboardData.overdueByAge;
               final myLogin = state.dashboardData.myLogin;
               final teamData = state.teamData;
+              final timeline = state.dashboardData.timeline;
 
               return RefreshIndicator(
                 onRefresh: () async {
@@ -113,7 +128,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-
                       // Header Banner Card
                       _buildHeaderBanner(
                         context,
@@ -126,6 +140,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         actionCenter: actionCenter,
                       ),
                       const SizedBox(height: 24),
+
+                      // Status Report Due Today Banner (If timeline is not empty)
+                      if (timeline.isNotEmpty)
+                        _buildStatusReportAlertCard(context, timeline.first),
 
                       // My Performance Section
                       Text(
@@ -209,14 +227,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   children: [
                                     Expanded(child: _buildActionCenterCard(context, s, actionCenter)),
                                     const SizedBox(width: 16),
-                                    Expanded(child: _buildScheduledMeetingsCard(context, s)),
+                                    Expanded(child: _buildScheduledMeetingsCard(context, s, timeline)),
                                   ],
                                 )
                               : Column(
                                   children: [
                                     _buildActionCenterCard(context, s, actionCenter),
                                     const SizedBox(height: 16),
-                                    _buildScheduledMeetingsCard(context, s),
+                                    _buildScheduledMeetingsCard(context, s, timeline),
                                   ],
                                 );
                         },
@@ -247,9 +265,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       const SizedBox(height: 24),
 
-                      // Team Section (Recent Activity & Team Analytics)
-                      _buildTeamSection(context, s, teamData),
-                      const SizedBox(height: 40),
+                      // Team Section (Only shown for non-executives)
+                      if (!isExecutive) ...[
+                        _buildTeamSection(context, s, teamData),
+                        const SizedBox(height: 40),
+                      ],
                     ],
                   ),
                 ),
@@ -269,27 +289,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
               onPressed: () => TodoTodayDialog.show(context),
               child: const Icon(Icons.calendar_month_rounded),
             ),
-            Positioned(
-              right: 0,
-              top: 0,
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: const BoxDecoration(
-                  color: Colors.red,
-                  shape: BoxShape.circle,
-                ),
-                constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                child: const Text(
-                  '2',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
+            if (openTodosCount > 0)
+              Positioned(
+                right: 0,
+                top: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
                   ),
-                  textAlign: TextAlign.center,
+                  constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                  child: Text(
+                    '$openTodosCount',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),
@@ -917,12 +938,76 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildScheduledMeetingsCard(BuildContext context, AppStrings s) {
-    final currentDateStr = DateFormat('EEE, d MMM').format(DateTime.now());
+  Widget _buildStatusReportAlertCard(BuildContext context, DashboardTimelineItem item) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFEFF6FF),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: isDark ? Colors.blue.shade900 : const Color(0xFFBFDBFE)),
+      ),
+      child: Row(
+        children: [
+          const Text('📝', style: TextStyle(fontSize: 16)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                style: TextStyle(
+                  fontSize: 13,
+                  color: isDark ? Colors.white : const Color(0xFF1E3A8A),
+                ),
+                children: [
+                  const TextSpan(
+                    text: 'Status report due today: ',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  TextSpan(
+                    text: '${item.title} · reminder 5:30 PM, deadline 6:00 PM',
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ReportsDashboardScreen()),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2563EB),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Text(
+                'File now →',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScheduledMeetingsCard(
+      BuildContext context, AppStrings s, List<DashboardTimelineItem> timeline) {
+    final currentDateStr = DateFormat('Thu d MMM').format(DateTime.now());
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Card(
       child: Container(
-        constraints: const BoxConstraints(minHeight: 200),
+        constraints: const BoxConstraints(minHeight: 180),
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -940,13 +1025,82 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 40),
-            Center(
-              child: Text(
-                s.noMeetingsScheduled,
-                style: const TextStyle(fontSize: 13, color: Colors.grey),
+            const SizedBox(height: 16),
+            if (timeline.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 30),
+                child: Center(
+                  child: Text(
+                    s.noMeetingsScheduled,
+                    style: const TextStyle(fontSize: 13, color: Colors.grey),
+                  ),
+                ),
+              )
+            else
+              Column(
+                children: timeline.map((item) {
+                  String timeStr = '17:30';
+                  try {
+                    final dt = DateTime.parse(item.at);
+                    timeStr = DateFormat('HH:mm').format(dt);
+                  } catch (_) {}
+
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          timeStr,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white70 : const Color(0xFF334155),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item.title,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                item.location,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF451A03) : const Color(0xFFFEF3C7),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            item.kind == 'report' ? 'Auto' : item.kind,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? const Color(0xFFFDE68A) : const Color(0xFFD97706),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
               ),
-            ),
           ],
         ),
       ),

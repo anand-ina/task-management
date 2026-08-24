@@ -2,14 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
-import '../../../shared_widgets/drawer/custom_left_drawer.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
+import '../../../shared_widgets/drawer/custom_left_drawer.dart';
 import '../bloc/preferences_bloc.dart';
 import '../bloc/preferences_event.dart';
 import '../bloc/preferences_state.dart';
+import '../models/notification_preferences_model.dart';
+import '../repository/preferences_repository.dart';
 
-class MyPreferencesScreen extends StatelessWidget {
+class MyPreferencesScreen extends StatefulWidget {
   const MyPreferencesScreen({super.key});
+
+  @override
+  State<MyPreferencesScreen> createState() => _MyPreferencesScreenState();
+}
+
+class _MyPreferencesScreenState extends State<MyPreferencesScreen> {
+  final PreferencesRepository _repository = PreferencesRepository();
+  bool _hasChanges = false;
+  bool _isSaving = false;
 
   @override
   Widget build(BuildContext context) {
@@ -67,28 +78,77 @@ class MyPreferencesScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Header Title & Subtitle
+                      // Header Title & Subtitle + Save Changes Button
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Icon(Icons.settings_outlined, size: 22, color: isDark ? Colors.white : const Color(0xFF0F172A)),
-                          const SizedBox(width: 8),
-                          Text(
-                            s.myPreferencesTitle,
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : const Color(0xFF0F172A),
-                            ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(Icons.settings_outlined, size: 22, color: isDark ? Colors.white : const Color(0xFF0F172A)),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    s.myPreferencesTitle,
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                s.myPreferencesSubtitle,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isDark ? Colors.grey[400] : const Color(0xFF64748B),
+                                ),
+                              ),
+                            ],
                           ),
+                          if (_hasChanges)
+                            ElevatedButton.icon(
+                              onPressed: _isSaving
+                                  ? null
+                                  : () async {
+                                      setState(() => _isSaving = true);
+                                      final payload = pref.toJson();
+                                      await _repository.saveNotificationPreferences(payload);
+                                      if (mounted) {
+                                        setState(() {
+                                          _isSaving = false;
+                                          _hasChanges = false;
+                                        });
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Preferences saved successfully!'),
+                                            backgroundColor: Colors.green,
+                                          ),
+                                        );
+                                      }
+                                    },
+                              icon: _isSaving
+                                  ? const SizedBox(
+                                      width: 14,
+                                      height: 14,
+                                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                    )
+                                  : const Icon(Icons.save_rounded, size: 16),
+                              label: Text(
+                                s.saveChanges,
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF16A34A),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                            ),
                         ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        s.myPreferencesSubtitle,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isDark ? Colors.grey[400] : const Color(0xFF64748B),
-                        ),
                       ),
                       const SizedBox(height: 20),
 
@@ -160,6 +220,7 @@ class MyPreferencesScreen extends StatelessWidget {
                               value: pref.dailyDigest,
                               activeTrackColor: Colors.green,
                               onChanged: (val) {
+                                setState(() => _hasChanges = true);
                                 context.read<PreferencesBloc>().add(ToggleDailyDigestEvent(val));
                               },
                             ),
@@ -343,7 +404,7 @@ class MyPreferencesScreen extends StatelessWidget {
     required String title,
     required String subtitle,
     required List<String> types,
-    required dynamic pref,
+    required NotificationPreferencesModel pref,
     required bool isDark,
   }) {
     return Container(
@@ -462,6 +523,7 @@ class MyPreferencesScreen extends StatelessWidget {
           value: val,
           activeTrackColor: Colors.green,
           onChanged: (newVal) {
+            setState(() => _hasChanges = true);
             context.read<PreferencesBloc>().add(
                   ToggleChannelEvent(notificationType: type, channel: channel, value: newVal),
                 );

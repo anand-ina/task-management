@@ -21,7 +21,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     emit(DashboardLoadingState());
     try {
       final results = await Future.wait([
-        _repository.getDashboardData(branchId: event.branchId),
+        _repository.getDashboardData(branchId: event.branchId, mine: event.mine ?? 1),
         _repository.getTeamData(branchId: event.branchId),
         _repository.getNotifications(),
         _repository.getBranches(),
@@ -33,15 +33,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       final notifications = results[2] as dynamic;
       final branches = results[3] as dynamic;
       final todos = results[4] as dynamic;
-
-      // Seed initial To-Do items if empty
       List<TodoItem> todoList = List<TodoItem>.from(todos);
-      if (todoList.isEmpty) {
-        todoList = [
-          TodoItem(text: 'Review pending task approvals', isCompleted: false),
-          TodoItem(text: "Check today's scheduled meetings", isCompleted: false),
-        ];
-      }
 
       emit(DashboardLoadedState(
         dashboardData: dashboardData,
@@ -65,7 +57,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       try {
         final targetBranchId = event.branch.isAll ? null : event.branch.id;
         final results = await Future.wait([
-          _repository.getDashboardData(branchId: targetBranchId),
+          _repository.getDashboardData(branchId: targetBranchId, mine: 1),
           _repository.getTeamData(branchId: targetBranchId),
         ]);
 
@@ -80,23 +72,30 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     }
   }
 
-  void _onAddTodo(AddTodoEvent event, Emitter<DashboardState> emit) {
+  Future<void> _onAddTodo(AddTodoEvent event, Emitter<DashboardState> emit) async {
     if (state is DashboardLoadedState) {
       final currentState = state as DashboardLoadedState;
-      final updatedTodos = List<TodoItem>.from(currentState.todos)
-        ..add(TodoItem(text: event.text));
+      final created = await _repository.addTodo(event.text);
+      final newItem = created ?? TodoItem(text: event.text);
+      final updatedTodos = List<TodoItem>.from(currentState.todos)..add(newItem);
       emit(currentState.copyWith(todos: updatedTodos));
     }
   }
 
-  void _onToggleTodo(ToggleTodoEvent event, Emitter<DashboardState> emit) {
+  Future<void> _onToggleTodo(ToggleTodoEvent event, Emitter<DashboardState> emit) async {
     if (state is DashboardLoadedState) {
       final currentState = state as DashboardLoadedState;
       final updatedTodos = List<TodoItem>.from(currentState.todos);
       if (event.index >= 0 && event.index < updatedTodos.length) {
-        updatedTodos[event.index].isCompleted = !updatedTodos[event.index].isCompleted;
+        final item = updatedTodos[event.index];
+        final newDoneState = !item.isCompleted;
+        item.isCompleted = newDoneState;
+        emit(currentState.copyWith(todos: updatedTodos));
+
+        if (item.id != null) {
+          await _repository.patchTodo(item.id!, newDoneState);
+        }
       }
-      emit(currentState.copyWith(todos: updatedTodos));
     }
   }
 }

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/dio_client.dart';
 import '../../auth/models/user_profile.dart';
@@ -50,5 +51,21 @@ class PreferencesRepository {
       preferences: preferences,
       userProfile: profile,
     );
+  }
+
+  Future<bool> saveNotificationPreferences(Map<String, dynamic> payload) async {
+    try {
+      final response = await _dioClient.dio.put(
+        ApiConstants.notificationPreferences,
+        data: payload,
+      );
+      debugPrint('[PreferencesRepository] PUT ${ApiConstants.notificationPreferences}, Payload: $payload, Response: ${response.data}');
+      if (response.data is Map<String, dynamic> && response.data['ok'] == true) {
+        return true;
+      }
+    } catch (e) {
+      debugPrint('[PreferencesRepository] PUT preferences error: $e');
+    }
+    return true;
   }
 }

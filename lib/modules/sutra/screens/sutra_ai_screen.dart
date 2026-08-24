@@ -7,6 +7,7 @@ import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../bloc/sutra_bloc.dart';
 import '../bloc/sutra_event.dart';
 import '../bloc/sutra_state.dart';
+import '../repository/sutra_repository.dart';
 
 class SutraAiScreen extends StatefulWidget {
   const SutraAiScreen({super.key});
@@ -19,6 +20,9 @@ class _SutraAiScreenState extends State<SutraAiScreen> {
   int _selectedTabIndex = 0; // 0 = Needs Human, 1 = Activity Feed, 2 = Compose, 3 = Active Tasks
   final TextEditingController _askSutraController = TextEditingController();
   final TextEditingController _composeController = TextEditingController();
+  final SutraRepository _sutraRepository = SutraRepository();
+  String? _interpretResultMessage;
+  bool _isInterpreting = false;
 
   @override
   void dispose() {
@@ -179,7 +183,19 @@ class _SutraAiScreenState extends State<SutraAiScreen> {
                                 ),
                                 const SizedBox(width: 8),
                                 ElevatedButton(
-                                  onPressed: () {},
+                                  onPressed: _isInterpreting
+                                      ? null
+                                      : () async {
+                                          if (_askSutraController.text.trim().isEmpty) return;
+                                          setState(() => _isInterpreting = true);
+                                          final res = await _sutraRepository.sendSutraCommand(_askSutraController.text);
+                                          if (mounted) {
+                                            setState(() {
+                                              _isInterpreting = false;
+                                              _interpretResultMessage = res['message']?.toString();
+                                            });
+                                          }
+                                        },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xFF0F172A),
                                     foregroundColor: Colors.white,
@@ -188,10 +204,34 @@ class _SutraAiScreenState extends State<SutraAiScreen> {
                                     ),
                                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                                   ),
-                                  child: Text(s.interpretButton, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                  child: _isInterpreting
+                                      ? const SizedBox(
+                                          width: 14,
+                                          height: 14,
+                                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                        )
+                                      : Text(s.interpretButton, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                                 ),
                               ],
                             ),
+                            if (_interpretResultMessage != null && _interpretResultMessage!.isNotEmpty) ...[
+                              const SizedBox(height: 12),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  _interpretResultMessage!,
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    color: isDark ? Colors.white70 : const Color(0xFF334155),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),

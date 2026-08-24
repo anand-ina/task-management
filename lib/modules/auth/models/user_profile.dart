@@ -59,10 +59,16 @@ class UserScope {
   });
 
   factory UserScope.fromJson(Map<String, dynamic> json) {
+    List<dynamic>? usersList;
+    if (json['visibleUsers'] is List) {
+      usersList = json['visibleUsers'] as List<dynamic>;
+    } else if (json['visibleUsers'] != null) {
+      usersList = [json['visibleUsers']];
+    }
     return UserScope(
       level: json['level'] as int? ?? 0,
       isAll: json['isAll'] as bool? ?? false,
-      visibleUsers: json['visibleUsers'] as List<dynamic>?,
+      visibleUsers: usersList,
     );
   }
 
@@ -112,10 +118,10 @@ class UserProfile {
       level: json['level'] as int? ?? 0,
       isTaskCreator: json['isTaskCreator'] as bool? ?? false,
       confidentialAccess: json['confidentialAccess'] as bool? ?? false,
-      branch: json['branch'] != null ? BranchInfo.fromJson(json['branch']) : null,
-      department: json['department'] != null ? DepartmentInfo.fromJson(json['department']) : null,
+      branch: json['branch'] is Map<String, dynamic> ? BranchInfo.fromJson(json['branch'] as Map<String, dynamic>) : null,
+      department: json['department'] is Map<String, dynamic> ? DepartmentInfo.fromJson(json['department'] as Map<String, dynamic>) : null,
       permissions: (json['permissions'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
-      scope: json['scope'] != null ? UserScope.fromJson(json['scope']) : null,
+      scope: json['scope'] is Map<String, dynamic> ? UserScope.fromJson(json['scope'] as Map<String, dynamic>) : null,
     );
   }
 

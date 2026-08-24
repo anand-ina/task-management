@@ -352,50 +352,24 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
                     child: CircularProgressIndicator(),
                   ),
                 )
+              else if (_items.isEmpty)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Text(
+                      'No tasks found.',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ),
+                )
               else
                 ListView.separated(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _items.isNotEmpty ? _items.length : 10,
+                  itemCount: _items.length,
                   separatorBuilder: (context, index) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
-                    final item = _items.isNotEmpty
-                        ? _items[index]
-                        : TaskItemModel(
-                            id: 567 + index,
-                            taskNo: '${476 - index}/26',
-                            fy: '2025-26',
-                            title: index == 0
-                                ? 'Procure Lab Equipment'
-                                : (index == 1
-                                    ? 'Update School Website Banners'
-                                    : (index == 2
-                                        ? 'Compile Student Grades'
-                                        : 'Task Item ${index + 1}')),
-                            description: 'Please review the requisition list and complete the assigned task before the deadline.',
-                            category: 'General',
-                            priority: widget.priority ?? (index == 0 ? 'high' : (index == 1 ? 'emergency' : 'medium')),
-                            status: index == 5 ? 'to_be_started' : 'completed',
-                            progress: index == 5 ? 0 : 100,
-                            entryDate: '2026-08-11T18:30:00.000Z',
-                            dueDate: '2026-08-18T18:30:00.000Z',
-                            isConfidential: false,
-                            assignedByText: 'Vamsi',
-                            assignedByUserId: 1,
-                            assignedByName: 'Vamsi',
-                            branchId: 2,
-                            branchCode: 'SS01',
-                            branchName: 'Moti Nagar & Sanath Nagar',
-                            assignees: [
-                              TaskAssigneeModel(
-                                id: 22,
-                                name: 'Narender',
-                                initials: 'NA',
-                                color: '#3866d6',
-                                active: true,
-                              )
-                            ],
-                          );
+                    final item = _items[index];
 
                     final isCompleted = item.status.toLowerCase().contains('completed');
                     Color priorityColor = Colors.amber.shade700;

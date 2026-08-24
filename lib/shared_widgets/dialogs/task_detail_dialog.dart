@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../../core/constants/api_constants.dart';
 import '../../../core/localization/app_strings.dart';
+import '../../../core/network/dio_client.dart';
 import '../../../modules/tasks/models/task_model.dart';
 import '../../../modules/tasks/repository/task_repository.dart';
+import 'move_task_dialog.dart';
+import 'mark_done_dialog.dart';
+import 'raise_request_dialog.dart';
 
 class TaskDetailDialog extends StatefulWidget {
   final int taskId;
@@ -28,13 +33,74 @@ class TaskDetailDialog extends StatefulWidget {
 
 class _TaskDetailDialogState extends State<TaskDetailDialog> {
   final TaskRepository _repository = TaskRepository();
+  final TextEditingController _commentController = TextEditingController();
+
   bool _isLoading = true;
   TaskDetailModel? _detail;
+  final List<Map<String, dynamic>> _postedComments = [];
+  bool _isPostingComment = false;
+
+  Future<void> _sendComment() async {
+    final text = _commentController.text.trim();
+    if (text.isEmpty) return;
+
+    setState(() => _isPostingComment = true);
+
+    try {
+      final res = await DioClient().dio.post(
+        '${ApiConstants.tasks}/${widget.taskId}/comments',
+        data: {'body': text, 'mentionIds': []},
+      );
+      final data = res.data;
+      if (mounted) {
+        if (data is List) {
+          setState(() {
+            _postedComments.addAll(data.cast<Map<String, dynamic>>());
+            _commentController.clear();
+          });
+        } else {
+          setState(() {
+            _postedComments.add({
+              'id': DateTime.now().millisecondsSinceEpoch,
+              'body': text,
+              'created_at': DateTime.now().toIso8601String(),
+              'name': 'Test_AE',
+              'initials': 'SA',
+              'avatar_color': '#8b5cf6',
+            });
+            _commentController.clear();
+          });
+        }
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _postedComments.add({
+            'id': DateTime.now().millisecondsSinceEpoch,
+            'body': text,
+            'created_at': DateTime.now().toIso8601String(),
+            'name': 'Test_AE',
+            'initials': 'SA',
+            'avatar_color': '#8b5cf6',
+          });
+          _commentController.clear();
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _isPostingComment = false);
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     _fetchDetail();
+  }
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchDetail() async {
@@ -59,29 +125,40 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
     if (dateStr == null || dateStr.isEmpty) return '—';
     try {
       final dt = DateTime.parse(dateStr).toLocal();
-      return DateFormat('d MMM yyyy').format(dt);
-    } catch (_) {
-      return dateStr;
-    }
-  }
-
-  String _formatDateTimeStr(String? dateStr) {
-    if (dateStr == null || dateStr.isEmpty) return '—';
-    try {
-      final dt = DateTime.parse(dateStr).toLocal();
-      return DateFormat('d MMM yyyy, HH:mm').format(dt);
+      return DateFormat('d MMM').format(dt);
     } catch (_) {
       return dateStr;
     }
   }
 
   Color _hexToColor(String? hex) {
-    if (hex == null || hex.isEmpty) return const Color(0xFF3866D6);
+    if (hex == null || hex.isEmpty) return const Color(0xFF8B5CF6);
     final cleanHex = hex.replaceFirst('#', '').replaceAll('0x', '');
     if (cleanHex.length == 6) {
       return Color(int.parse('FF$cleanHex', radix: 16));
     }
-    return const Color(0xFF3866D6);
+    return const Color(0xFF8B5CF6);
+  }
+
+  String _formatStatusLabel(String status) {
+    switch (status.toLowerCase()) {
+      case 'to_be_started':
+        return 'To be Started';
+      case 'in_progress':
+        return 'In Progress';
+      case 'blocked':
+        return 'Blocked';
+      case 'done':
+        return 'Done (review)';
+      case 'completed':
+        return 'Completed';
+      case 'scrapped':
+        return 'Scrapped';
+      case 'paused':
+        return 'Paused';
+      default:
+        return status;
+    }
   }
 
   @override
@@ -93,42 +170,37 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
     final title = _detail?.title ?? widget.initialTask?.title ?? '';
     final description = _detail?.description ?? widget.initialTask?.description ?? '';
     final priority = _detail?.priority ?? widget.initialTask?.priority ?? 'high';
-    final progress = _detail?.progress ?? widget.initialTask?.progress ?? 100;
-    final branchCode = _detail?.branchCode ?? widget.initialTask?.branchCode ?? 'SS01';
+    final status = _detail?.status ?? widget.initialTask?.status ?? 'to_be_started';
     final branchName = _detail?.branchName ?? widget.initialTask?.branchName ?? 'Head Office';
-    final assignedBy = _detail?.assignedByName ?? widget.initialTask?.assignedByName ?? 'Vamsi';
-    final entryDate = _formatDateStr(_detail?.entryDate ?? widget.initialTask?.entryDate);
+    final assignedBy = _detail?.assignedByName ?? widget.initialTask?.assignedByName ?? 'Test_AE';
     final dueDate = _formatDateStr(_detail?.dueDate ?? widget.initialTask?.dueDate);
-    final completedDate = _formatDateStr(_detail?.completedDate ?? widget.initialTask?.completedDate);
-    final category = _detail?.category ?? widget.initialTask?.category ?? 'General';
-    final location = _detail?.location ?? widget.initialTask?.location ?? '—';
     final assignees = _detail?.assignees ?? widget.initialTask?.assignees ?? [];
+    final reviewNote = _detail?.reviewComment ?? widget.initialTask?.reviewComment;
+    final attachments = _detail?.attachments ?? [];
+    final timeline = _detail?.timeline ?? [];
 
-    Color priorityColor = Colors.amber.shade700;
-    final pLower = priority.toLowerCase();
-    if (pLower.contains('emergency')) {
+    Color priorityColor = Colors.amber.shade800;
+    if (priority.toLowerCase().contains('emergency')) {
       priorityColor = Colors.red;
-    } else if (pLower.contains('top')) {
+    } else if (priority.toLowerCase().contains('top')) {
       priorityColor = Colors.orange;
-    } else if (pLower.contains('medium')) {
+    } else if (priority.toLowerCase().contains('medium')) {
       priorityColor = Colors.blue;
-    } else if (pLower.contains('low')) {
-      priorityColor = Colors.grey;
     }
 
     return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      backgroundColor: isDark ? const Color(0xFF131C2E) : Colors.white,
+      backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 680),
-        padding: const EdgeInsets.all(24),
+        constraints: const BoxConstraints(maxWidth: 580),
+        padding: const EdgeInsets.all(10),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Header Row
+              // 1. Header Row with Close Icon
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,179 +223,265 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
 
-              // Badges Row
+              // 2. Badges Row (Priority, Status, Branch)
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                     decoration: BoxDecoration(
                       color: priorityColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       priority[0].toUpperCase() + priority.substring(1),
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: priorityColor,
-                      ),
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: priorityColor),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                     decoration: BoxDecoration(
-                      color: Colors.green.withValues(alpha: 0.15),
+                      color: Colors.blue.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       children: [
-                        Container(
-                          width: 6,
-                          height: 6,
-                          decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
-                        ),
-                        const SizedBox(width: 6),
+                        Container(width: 5, height: 5, decoration: const BoxDecoration(color: Colors.blue, shape: BoxShape.circle)),
+                        const SizedBox(width: 5),
                         Text(
-                          'Completed - $progress%',
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green,
-                          ),
+                          _formatStatusLabel(status),
+                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blue),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
                       color: isDark ? Colors.white12 : const Color(0xFFF1F5F9),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      branchCode,
-                      style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.bold),
+                      branchName,
+                      style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
 
-              // Description Container Box
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05)),
-                ),
-                child: Text(
-                  description.isNotEmpty ? description : 'No description provided.',
+              // 3. Description Field
+              if (description.isNotEmpty) ...[
+                Text(
+                  description,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 12.5,
                     height: 1.4,
                     color: isDark ? Colors.white70 : const Color(0xFF334155),
                   ),
                 ),
-              ),
-              const SizedBox(height: 20),
+                const SizedBox(height: 16),
+              ],
 
-              // Grid Fields (3 Columns)
-              Wrap(
-                spacing: 24,
-                runSpacing: 16,
+              // 4. Assigned By & Due Date Row
+              Row(
                 children: [
-                  _buildGridItem(s.priorityHeader, priority[0].toUpperCase() + priority.substring(1), isDark: isDark),
-                  _buildGridItem(s.statusHeader, 'Completed - $progress%', isDark: isDark),
-                  _buildGridItem(s.branchHeader, branchName, isDark: isDark),
-                  _buildGridItem(s.assignedByLabel, assignedBy, isDark: isDark),
-                  _buildGridItem(s.entryDateLabel, entryDate, isDark: isDark),
-                  _buildGridItem(s.dueHeader, dueDate, isDark: isDark, isHighlight: true),
-                  _buildGridItem(s.completedLabel, completedDate, isDark: isDark),
-                  _buildGridItem(s.categoryLabel, category, isDark: isDark),
-                  _buildGridItem(s.locationLabel, location, isDark: isDark),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Assigned By', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+                      const SizedBox(height: 2),
+                      Text(
+                        assignedBy,
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF0F172A)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 48),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Due', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+                      const SizedBox(height: 2),
+                      Text(
+                        dueDate,
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.amber),
+                      ),
+                    ],
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
 
-              // Assignees Row
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              // 5. Assignees Section with Reassign Button
+              const Text('Assignees', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+              const SizedBox(height: 6),
+              Row(
                 children: [
-                  Text(
-                    s.assigneesLabel,
-                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 6),
                   Wrap(
                     spacing: 6,
                     children: assignees.map((a) {
                       final badgeColor = _hexToColor(a.color);
                       return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: badgeColor.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Text(
-                          a.name,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: badgeColor,
-                          ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircleAvatar(
+                              radius: 8,
+                              backgroundColor: badgeColor,
+                              child: Text(
+                                a.initials.isNotEmpty ? a.initials : 'U',
+                                style: const TextStyle(fontSize: 8, color: Colors.white, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              a.name,
+                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: badgeColor),
+                            ),
+                          ],
                         ),
                       );
                     }).toList(),
                   ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: () {},
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      visualDensity: VisualDensity.compact,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                    ),
+                    icon: const Icon(Icons.refresh_rounded, size: 12),
+                    label: const Text('Reassign', style: TextStyle(fontSize: 10)),
+                  ),
                 ],
               ),
-              const SizedBox(height: 20),
-              const Divider(),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
 
-              // Activity Timeline Section
-              Text(
-                s.activityLabel,
-                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 0.8),
-              ),
-              const SizedBox(height: 10),
+              // 6. Attachments Section (Dynamic)
+              if (attachments.isNotEmpty) ...[
+                const Text('Attachments', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: attachments.map((att) {
+                    final filename = att['filename']?.toString() ?? 'File';
+                    final contextTag = att['context']?.toString() ?? 'creation';
+                    final fileUrl = att['url']?.toString() ?? '';
+
+                    return InkWell(
+                      onTap: () {
+                        if (fileUrl.isNotEmpty) {
+                          final fullUrl = fileUrl.startsWith('http') ? fileUrl : 'https://dev-task-api.srivyn.in$fileUrl';
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Opening attachment: $fullUrl')),
+                          );
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: isDark ? Colors.white12 : Colors.grey.shade300),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.attach_file_rounded, size: 13, color: Colors.blue),
+                            const SizedBox(width: 4),
+                            Text(
+                              filename,
+                              style: const TextStyle(fontSize: 11, color: Colors.blue, fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: isDark ? Colors.white10 : Colors.grey.shade200,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                contextTag,
+                                style: const TextStyle(fontSize: 9, color: Colors.grey, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              // 7. Review Note Section (Dynamic if present)
+              if (reviewNote != null && reviewNote.isNotEmpty) ...[
+                const Text('Review note', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+                const SizedBox(height: 4),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: isDark ? Colors.white12 : Colors.grey.shade300),
+                  ),
+                  child: Text(
+                    reviewNote,
+                    style: TextStyle(fontSize: 11.5, color: isDark ? Colors.white70 : const Color(0xFF334155)),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              // 8. Dynamic Timeline Section
+              const Text('Timeline', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+              const SizedBox(height: 8),
 
               if (_isLoading)
                 const Center(child: Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator()))
-              else if (_detail?.timeline.isNotEmpty == true)
+              else if (timeline.isNotEmpty)
                 Column(
-                  children: _detail!.timeline.map((item) {
+                  children: timeline.map((item) {
                     return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.only(bottom: 6),
                       child: Row(
                         children: [
-                          Text(
-                            _formatDateTimeStr(item.createdAt),
-                            style: const TextStyle(fontSize: 11, color: Colors.grey),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: isDark ? Colors.white12 : const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              item.kind,
+                              style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Colors.grey),
+                            ),
                           ),
-                          const SizedBox(width: 16),
+                          const SizedBox(width: 8),
                           Expanded(
-                            child: RichText(
-                              text: TextSpan(
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: isDark ? Colors.white70 : const Color(0xFF334155),
-                                ),
-                                children: [
-                                  TextSpan(
-                                    text: '${item.actor} ',
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                  TextSpan(text: '· ${item.note}'),
-                                ],
+                            child: Text(
+                              item.note,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: isDark ? Colors.white70 : const Color(0xFF334155),
                               ),
                             ),
+                          ),
+                          Text(
+                            item.actor,
+                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey),
                           ),
                         ],
                       ),
@@ -331,87 +489,184 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                   }).toList(),
                 )
               else
-                Column(
-                  children: [
-                    _buildTimelineRow('12 Aug 2026, 14:35', 'Vamsi', 'Assigned to 1 member(s)', isDark: isDark),
-                    _buildTimelineRow('12 Aug 2026, 14:36', 'Narender', 'Status → done', isDark: isDark),
-                    _buildTimelineRow('12 Aug 2026, 14:36', 'Vamsi', 'Status → completed', isDark: isDark),
-                  ],
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 4),
+                  child: Text('No timeline activity logged yet.', style: TextStyle(fontSize: 11, color: Colors.grey)),
                 ),
 
-              const SizedBox(height: 24),
-              Align(
-                alignment: Alignment.centerRight,
-                child: OutlinedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    side: BorderSide(color: isDark ? Colors.white24 : Colors.black26),
-                  ),
-                  child: Text(s.closeButton),
+              const SizedBox(height: 16),
+
+              // 9. Comments Section
+              Text(
+                'Comments${_postedComments.isNotEmpty ? " (${_postedComments.length})" : ""}',
+                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey),
+              ),
+              const SizedBox(height: 6),
+
+              if (_postedComments.isNotEmpty)
+                Column(
+                  children: _postedComments.map((c) {
+                    final initials = c['initials']?.toString() ?? 'SA';
+                    final name = c['name']?.toString() ?? 'Test_AE';
+                    final body = c['body']?.toString() ?? '';
+                    final colorHex = c['avatar_color']?.toString() ?? '#8b5cf6';
+                    final dateStr = DateFormat('d MMM, HH:mm').format(DateTime.now());
+
+                    return Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: isDark ? Colors.white12 : Colors.grey.shade300),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 10,
+                                backgroundColor: _hexToColor(colorHex),
+                                child: Text(
+                                  initials,
+                                  style: const TextStyle(fontSize: 8, color: Colors.white, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(name, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                              const SizedBox(width: 8),
+                              Text(dateStr, style: const TextStyle(fontSize: 9.5, color: Colors.grey)),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(body, style: TextStyle(fontSize: 11.5, color: isDark ? Colors.white70 : const Color(0xFF334155))),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                )
+              else
+                Text(
+                  'No comments yet — start the conversation.',
+                  style: TextStyle(fontSize: 10, color: isDark ? Colors.grey[400] : const Color(0xFF64748B)),
                 ),
+              const SizedBox(height: 2),
+              Text(
+                'Type @ then a name to mention anyone — they get notified.',
+                style: TextStyle(fontSize: 9.5, color: isDark ? Colors.grey[500] : Colors.grey.shade500),
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _commentController,
+                      style: const TextStyle(fontSize: 11),
+                      decoration: InputDecoration(
+                        hintText: 'Write a comment... type @ to mention someone',
+                        hintStyle: const TextStyle(fontSize: 11, color: Colors.grey),
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        filled: true,
+                        fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0F172A),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    onPressed: _isPostingComment ? null : _sendComment,
+                    child: _isPostingComment
+                        ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : const Text('Send', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 20),
+              const Divider(),
+              const SizedBox(height: 12),
+
+              // 10. Footer Action Buttons Bar
+              Row(
+                // mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      final item = _detail ?? widget.initialTask;
+                      if (item != null) {
+                        final res = await MoveTaskDialog.show(context, task: item);
+                        if (res == true && mounted) {
+                          _fetchDetail();
+                        }
+                      }
+                    },
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    icon: const Icon(Icons.show_chart_rounded, size: 10, color: Colors.redAccent),
+                    label: const Text('Update / Move', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+                  ),
+                  const SizedBox(width: 1),
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      final item = _detail ?? widget.initialTask;
+                      if (item != null) {
+                        final res = await RaiseRequestDialog.show(context, task: item);
+                        if (res == true && mounted) {
+                          _fetchDetail();
+                        }
+                      }
+                    },
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    icon: const Icon(Icons.flag_rounded, size: 10, color: Colors.blueAccent),
+                    label: const Text('Raise Request', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+                  ),
+                  const SizedBox(width: 2),
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      final item = _detail ?? widget.initialTask;
+                      if (item != null) {
+                        final res = await MarkDoneDialog.show(context, task: item);
+                        if (res == true && mounted) {
+                          _fetchDetail();
+                        }
+                      }
+                    },
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    icon: const Icon(Icons.check_rounded, size: 11, color: Colors.green),
+                    label: const Text('Mark Done', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.green)),
+                  ),
+                  const SizedBox(width: 6),
+                  OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      side: BorderSide(color: isDark ? Colors.white24 : Colors.black26),
+                    ),
+                    child: Text(s.closeButton, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+                  ),
+                ],
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildGridItem(String label, String value, {required bool isDark, bool isHighlight = false}) {
-    return SizedBox(
-      width: 180,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: isHighlight ? FontWeight.bold : FontWeight.w600,
-              color: isHighlight
-                  ? Colors.red
-                  : (isDark ? Colors.white : const Color(0xFF0F172A)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTimelineRow(String timeStr, String actor, String note, {required bool isDark}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          Text(
-            timeStr,
-            style: const TextStyle(fontSize: 11, color: Colors.grey),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: RichText(
-              text: TextSpan(
-                style: TextStyle(
-                  fontSize: 12,
-                  color: isDark ? Colors.white70 : const Color(0xFF334155),
-                ),
-                children: [
-                  TextSpan(
-                    text: '$actor ',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  TextSpan(text: '· $note'),
-                ],
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/dio_client.dart';
 import '../models/task_approval_model.dart';
@@ -8,83 +9,106 @@ import '../models/budget_approval_model.dart';
 class ApprovalsRepository {
   final DioClient _dioClient = DioClient();
 
+  List<dynamic> _extractList(dynamic data) {
+    if (data is List) return data;
+    if (data is Map) {
+      final map = data as Map<String, dynamic>;
+      if (map['data'] is List) return map['data'] as List;
+      if (map['meetings'] is List) return map['meetings'] as List;
+      if (map['items'] is List) return map['items'] as List;
+      if (map['requests'] is List) return map['requests'] as List;
+      if (map['results'] is List) return map['results'] as List;
+    }
+    return [];
+  }
+
   Future<List<TaskApprovalModel>> getApprovals() async {
     try {
       final response = await _dioClient.dio.get(ApiConstants.approvals);
-      if (response.data is List) {
-        return (response.data as List).map((e) => TaskApprovalModel.fromJson(e)).toList();
-      }
-    } catch (_) {}
+      final rawList = _extractList(response.data);
+      return rawList.map((e) => TaskApprovalModel.fromJson(e is Map<String, dynamic> ? e : {})).toList();
+    } catch (e) {
+      debugPrint('[ApprovalsRepository] getApprovals error: $e');
+    }
     return [];
   }
 
   Future<List<TaskApprovalModel>> getApprovalsInitiated() async {
     try {
       final response = await _dioClient.dio.get(ApiConstants.approvalsInitiated);
-      if (response.data is List) {
-        return (response.data as List).map((e) => TaskApprovalModel.fromJson(e)).toList();
-      }
-    } catch (_) {}
+      final rawList = _extractList(response.data);
+      return rawList.map((e) => TaskApprovalModel.fromJson(e is Map<String, dynamic> ? e : {})).toList();
+    } catch (e) {
+      debugPrint('[ApprovalsRepository] getApprovalsInitiated error: $e');
+    }
     return [];
   }
 
   Future<List<EscalationModel>> getEscalationsToReview() async {
     try {
       final response = await _dioClient.dio.get(ApiConstants.escalationsToReview);
-      if (response.data is List) {
-        return (response.data as List).map((e) => EscalationModel.fromJson(e)).toList();
-      }
-    } catch (_) {}
+      final rawList = _extractList(response.data);
+      return rawList.map((e) => EscalationModel.fromJson(e is Map<String, dynamic> ? e : {})).toList();
+    } catch (e) {
+      debugPrint('[ApprovalsRepository] getEscalationsToReview error: $e');
+    }
     return [];
   }
 
   Future<List<EscalationModel>> getEscalations() async {
     try {
       final response = await _dioClient.dio.get(ApiConstants.escalations);
-      if (response.data is List) {
-        return (response.data as List).map((e) => EscalationModel.fromJson(e)).toList();
-      }
-    } catch (_) {}
+      final rawList = _extractList(response.data);
+      return rawList.map((e) => EscalationModel.fromJson(e is Map<String, dynamic> ? e : {})).toList();
+    } catch (e) {
+      debugPrint('[ApprovalsRepository] getEscalations error: $e');
+    }
     return [];
   }
 
   Future<List<MeetingApprovalModel>> getMeetings() async {
     try {
       final response = await _dioClient.dio.get(ApiConstants.meetings);
-      if (response.data is List) {
-        return (response.data as List).map((e) => MeetingApprovalModel.fromJson(e)).toList();
-      }
-    } catch (_) {}
+      debugPrint('[ApprovalsRepository] getMeetings response: ${response.data}');
+      final rawList = _extractList(response.data);
+      return rawList.map((e) => MeetingApprovalModel.fromJson(e is Map<String, dynamic> ? e : {})).toList();
+    } catch (e, stack) {
+      debugPrint('[ApprovalsRepository] getMeetings error: $e\n$stack');
+    }
     return [];
   }
 
   Future<List<MeetingApprovalModel>> getMeetingCompletionRequests() async {
     try {
       final response = await _dioClient.dio.get(ApiConstants.meetingCompletionRequests);
-      if (response.data is List) {
-        return (response.data as List).map((e) => MeetingApprovalModel.fromJson(e)).toList();
-      }
-    } catch (_) {}
+      debugPrint('[ApprovalsRepository] getMeetingCompletionRequests response: ${response.data}');
+      final rawList = _extractList(response.data);
+      return rawList.map((e) => MeetingApprovalModel.fromJson(e is Map<String, dynamic> ? e : {})).toList();
+    } catch (e, stack) {
+      debugPrint('[ApprovalsRepository] getMeetingCompletionRequests error: $e\n$stack');
+    }
     return [];
   }
 
   Future<List<BudgetApprovalModel>> getBudgetReceived() async {
     try {
       final response = await _dioClient.dio.get(ApiConstants.budgetReceived);
-      if (response.data is List) {
-        return (response.data as List).map((e) => BudgetApprovalModel.fromJson(e)).toList();
-      }
-    } catch (_) {}
+      final rawList = _extractList(response.data);
+      return rawList.map((e) => BudgetApprovalModel.fromJson(e is Map<String, dynamic> ? e : {})).toList();
+    } catch (e) {
+      debugPrint('[ApprovalsRepository] getBudgetReceived error: $e');
+    }
     return [];
   }
 
   Future<List<BudgetApprovalModel>> getBudgetInitiated() async {
     try {
       final response = await _dioClient.dio.get(ApiConstants.budgetInitiated);
-      if (response.data is List) {
-        return (response.data as List).map((e) => BudgetApprovalModel.fromJson(e)).toList();
-      }
-    } catch (_) {}
+      final rawList = _extractList(response.data);
+      return rawList.map((e) => BudgetApprovalModel.fromJson(e is Map<String, dynamic> ? e : {})).toList();
+    } catch (e) {
+      debugPrint('[ApprovalsRepository] getBudgetInitiated error: $e');
+    }
     return [];
   }
 }

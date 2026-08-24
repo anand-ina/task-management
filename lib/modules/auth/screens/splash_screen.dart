@@ -79,27 +79,30 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
               children: [
                 const Spacer(),
                 // App Logo
-                Image.asset(
-                  'assets/images/logo.png',
-                  width: 220,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      width: 100,
-                      height: 100,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFB91C1C),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.task_alt, color: Colors.white, size: 50),
-                    );
-                  },
+                ClipOval(
+                  child: Image.asset(
+                    'assets/images/circle-logo.png',
+                    width: 200,
+                     height: 200,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: 100,
+                        height: 100,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFB91C1C),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.task_alt, color: Colors.white, size: 50),
+                      );
+                    },
+                  ),
                 ),
                 const SizedBox(height: 24),
-                const CircularProgressIndicator(
-                  color: Color(0xFFB91C1C),
-                  strokeWidth: 2.5,
-                ),
+                // const CircularProgressIndicator(
+                //   color: Color(0xFFB91C1C),
+                //   strokeWidth: 2.5,
+                // ),
                 const Spacer(),
 
                 // Samskar Crest Icon & Footer

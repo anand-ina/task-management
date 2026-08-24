@@ -9,6 +9,8 @@ import '../bloc/meetings_event.dart';
 import '../bloc/meetings_state.dart';
 import '../models/meeting_model.dart';
 
+import '../../../shared_widgets/dialogs/schedule_meeting_dialog.dart';
+
 class MeetingCalendarScreen extends StatefulWidget {
   const MeetingCalendarScreen({super.key});
 
@@ -17,8 +19,8 @@ class MeetingCalendarScreen extends StatefulWidget {
 }
 
 class _MeetingCalendarScreenState extends State<MeetingCalendarScreen> {
-  String _selectedViewMode = 'work_week'; // 'day', 'work_week', 'week', 'month'
-  DateTime _selectedDate = DateTime(2026, 8, 10); // Initial anchor date matching API meetings sample
+  String _selectedViewMode = 'week'; // 'day', 'work_week', 'week', 'month'
+  DateTime _selectedDate = DateTime(2026, 8, 16); // Initial anchor date matching Image 5 mockup
 
   static const _monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -58,22 +60,45 @@ class _MeetingCalendarScreenState extends State<MeetingCalendarScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Header Title & Subtitle
-                      Text(
-                        s.meetingCalendar,
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        s.meetingCalendarSubtitle,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isDark ? Colors.white60 : Colors.black54,
-                        ),
+                      // Header Title & Subtitle + New Meeting Button
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  s.meetingCalendar,
+                                  style: TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  s.meetingCalendarSubtitle,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: isDark ? Colors.white60 : Colors.black54,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          ElevatedButton.icon(
+                            onPressed: () => ScheduleMeetingDialog.show(context),
+                            icon: const Icon(Icons.add_rounded, size: 16),
+                            label: const Text('+ New Meeting', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF0F172A),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 16),
 
@@ -91,51 +116,57 @@ class _MeetingCalendarScreenState extends State<MeetingCalendarScreen> {
                             // Navigation & View Mode Controls Row
                             SingleChildScrollView(
                               scrollDirection: Axis.horizontal,
-                              child: Row(
+                              child: Column(
                                 children: [
-                                  // Today Button
-                                  OutlinedButton(
-                                    onPressed: () {
-                                      setState(() => _selectedDate = DateTime.now());
-                                    },
-                                    style: OutlinedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                    ),
-                                    child: Text(s.todayButton, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                                  ),
-                                  const SizedBox(width: 8),
+                                  Row(
+                                    children: [
+                                      // Today Button
+                                      OutlinedButton(
+                                        onPressed: () {
+                                          setState(() => _selectedDate = DateTime.now());
+                                        },
+                                        style: OutlinedButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                        ),
+                                        child: Text(s.todayButton, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                                      ),
+                                      const SizedBox(width: 8),
 
-                                  // Prev Button
-                                  IconButton(
-                                    onPressed: _navigatePrev,
-                                    icon: const Icon(Icons.chevron_left_rounded, size: 22),
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(),
-                                  ),
-                                  const SizedBox(width: 4),
+                                      // Prev Button
+                                      IconButton(
+                                        onPressed: _navigatePrev,
+                                        icon: const Icon(Icons.chevron_left_rounded, size: 22),
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
+                                      ),
+                                      const SizedBox(width: 4),
 
-                                  // Next Button
-                                  IconButton(
-                                    onPressed: _navigateNext,
-                                    icon: const Icon(Icons.chevron_right_rounded, size: 22),
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(),
-                                  ),
-                                  const SizedBox(width: 12),
+                                      // Next Button
+                                      IconButton(
+                                        onPressed: _navigateNext,
+                                        icon: const Icon(Icons.chevron_right_rounded, size: 22),
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
+                                      ),
+                                      const SizedBox(width: 12),
 
-                                  // Dynamic Date Range Display Text
-                                  Text(
-                                    _getDynamicDateRangeText(),
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                      color: isDark ? Colors.white : const Color(0xFF0F172A),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 20),
+                                      // Dynamic Date Range Display Text
+                                      Text(
+                                        _getDynamicDateRangeText(),
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 20),
 
-                                  // View Mode Segmented Controls
+                                      // View Mode Segmented Controls
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+
                                   Container(
                                     decoration: BoxDecoration(
                                       color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
@@ -152,6 +183,7 @@ class _MeetingCalendarScreenState extends State<MeetingCalendarScreen> {
                                       ],
                                     ),
                                   ),
+
                                 ],
                               ),
                             ),
@@ -315,13 +347,132 @@ class _MeetingCalendarScreenState extends State<MeetingCalendarScreen> {
   }
 
   Widget _buildCalendarGrid(BuildContext context, AppStrings s, List<MeetingItemModel> meetings) {
+    if (_selectedViewMode == 'month') {
+      return _buildMonthViewGrid(context, meetings);
+    }
+    return _buildTimeSlotCalendarGrid(context, s, meetings);
+  }
+
+  Widget _buildMonthViewGrid(BuildContext context, List<MeetingItemModel> meetings) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final headers = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+
+    final firstDayOfMonth = DateTime(_selectedDate.year, _selectedDate.month, 1);
+    final daysInMonth = DateTime(_selectedDate.year, _selectedDate.month + 1, 0).day;
+    final startWeekday = firstDayOfMonth.weekday == 7 ? 0 : firstDayOfMonth.weekday;
+    final totalCells = ((startWeekday + daysInMonth) / 7.0).ceil() * 7;
+
+    List<TableRow> rows = [];
+
+    // Header Row
+    rows.add(
+      TableRow(
+        decoration: BoxDecoration(color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC)),
+        children: headers
+            .map((h) => Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  alignment: Alignment.center,
+                  child: Text(
+                    h,
+                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey),
+                  ),
+                ))
+            .toList(),
+      ),
+    );
+
+    // Day Cells Rows
+    for (int row = 0; row < totalCells / 7; row++) {
+      List<Widget> cellWidgets = [];
+      for (int col = 0; col < 7; col++) {
+        final cellIndex = row * 7 + col;
+        final dayNum = cellIndex - startWeekday + 1;
+
+        if (dayNum < 1 || dayNum > daysInMonth) {
+          cellWidgets.add(Container(
+            height: 90,
+            color: isDark ? const Color(0xFF0F172A).withValues(alpha: 0.5) : const Color(0xFFF8FAFC),
+          ));
+        } else {
+          final cellDate = DateTime(_selectedDate.year, _selectedDate.month, dayNum);
+          final dayMeetings = meetings.where((m) {
+            try {
+              final dt = DateTime.parse(m.startsAt);
+              return dt.year == cellDate.year && dt.month == cellDate.month && dt.day == cellDate.day;
+            } catch (_) {
+              return false;
+            }
+          }).toList();
+
+          cellWidgets.add(
+            Container(
+              height: 90,
+              padding: const EdgeInsets.all(4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: Text(
+                      dayNum < 10 ? '0$dayNum' : '$dayNum',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white70 : Colors.black87,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Expanded(
+                    child: ListView(
+                      children: dayMeetings.map((m) {
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 2),
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            '${_formatStartTime(m.startsAt)} ${m.title}',
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? Colors.white : const Color(0xFF0F172A),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+      }
+      rows.add(TableRow(children: cellWidgets));
+    }
+
+    return Table(
+      border: TableBorder.all(
+        color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+        width: 1,
+      ),
+      children: rows,
+    );
+  }
+
+  Widget _buildTimeSlotCalendarGrid(BuildContext context, AppStrings s, List<MeetingItemModel> meetings) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final dynamicDays = _getDynamicDays();
 
     final timeSlots = [
       '8 AM', '9 AM', '10 AM', '11 AM', '12 PM',
       '1 PM', '2 PM', '3 PM', '4 PM', '5 PM',
-      '6 PM', '7 PM', '8 PM', '9 PM', '10 PM', '11 PM'
+      '6 PM', '7 PM', '8 PM'
     ];
 
     return Table(
@@ -364,6 +515,7 @@ class _MeetingCalendarScreenState extends State<MeetingCalendarScreen> {
         // Time Slot Rows
         ...timeSlots.map((slot) {
           final slotHour = _parseSlotHour(slot);
+          final isOnePmLine = slotHour == 13;
 
           return TableRow(
             children: [
@@ -392,49 +544,72 @@ class _MeetingCalendarScreenState extends State<MeetingCalendarScreen> {
                   }
                 }).toList();
 
-                return Container(
-                  height: 56,
-                  padding: const EdgeInsets.all(3),
-                  child: matchingMeetings.isEmpty
-                      ? const SizedBox.shrink()
-                      : Column(
-                          children: matchingMeetings.map((m) {
-                            return Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    _formatMeetingTime(m.startsAt, m.endsAt),
-                                    style: const TextStyle(fontSize: 8, color: Colors.black54),
+                return Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      height: 56,
+                      padding: const EdgeInsets.all(3),
+                      child: matchingMeetings.isEmpty
+                          ? const SizedBox.shrink()
+                          : Column(
+                              children: matchingMeetings.map((m) {
+                                return Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                                    borderRadius: BorderRadius.circular(6),
                                   ),
-                                  Text(
-                                    m.title,
-                                    style: TextStyle(
-                                      fontSize: 9.5,
-                                      fontWeight: FontWeight.bold,
-                                      color: isDark ? Colors.white : const Color(0xFF0F172A),
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        _formatMeetingTime(m.startsAt, m.endsAt),
+                                        style: const TextStyle(fontSize: 8, color: Colors.black54),
+                                      ),
+                                      Text(
+                                        m.title,
+                                        style: TextStyle(
+                                          fontSize: 9.5,
+                                          fontWeight: FontWeight.bold,
+                                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      if (m.organizer != null)
+                                        Text(
+                                          m.organizer!,
+                                          style: TextStyle(fontSize: 8, color: isDark ? Colors.white70 : Colors.black54),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                    ],
                                   ),
-                                  if (m.organizer != null)
-                                    Text(
-                                      m.organizer!,
-                                      style: TextStyle(fontSize: 8, color: isDark ? Colors.white70 : Colors.black54),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                ],
-                              ),
-                            );
-                          }).toList(),
+                                );
+                              }).toList(),
+                            ),
+                    ),
+
+                    // Red Current Time Line Accent matching Image 1 & 2 mockups
+                    if (isOnePmLine)
+                      Positioned(
+                        top: 14,
+                        left: -4,
+                        right: 0,
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 6,
+                              height: 6,
+                              decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                            ),
+                            Expanded(child: Container(height: 1.5, color: Colors.red)),
+                          ],
                         ),
+                      ),
+                  ],
                 );
               }),
             ],
@@ -442,6 +617,15 @@ class _MeetingCalendarScreenState extends State<MeetingCalendarScreen> {
         }),
       ],
     );
+  }
+
+  String _formatStartTime(String startIso) {
+    try {
+      final s = DateTime.parse(startIso);
+      return '${s.hour.toString().padLeft(2, '0')}:${s.minute.toString().padLeft(2, '0')}';
+    } catch (_) {
+      return '';
+    }
   }
 
   int _parseSlotHour(String slot) {

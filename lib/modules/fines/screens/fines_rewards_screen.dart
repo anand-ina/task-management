@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
-import '../../../shared_widgets/dialogs/issue_fine_reward_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
 import '../bloc/fines_bloc.dart';
 import '../bloc/fines_event.dart';
@@ -70,35 +69,20 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
                               Text(
                                 s.finesRewardsSubtitle,
                                 style: TextStyle(
-                                  fontSize: 12,
+                                  fontSize: 10,
                                   color: isDark ? Colors.white54 : Colors.black54,
                                 ),
                               ),
                             ],
                           ),
-                          ElevatedButton.icon(
-                            onPressed: () => IssueFineRewardDialog.show(context),
-                            icon: const Icon(Icons.add, size: 16),
-                            label: Text(s.issueFineRewardLabel, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF0F172A),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                            ),
-                          ),
                         ],
                       ),
                       const SizedBox(height: 20),
 
-                      // Segmented Tabs Header
+                      // Segmented Tabs Header (Overview Tab only)
                       Row(
                         children: [
                           _buildTabButton(0, s.overviewTab),
-                          const SizedBox(width: 16),
-                          _buildTabButton(1, s.summaryTab),
-                          const SizedBox(width: 16),
-                          _buildTabButton(2, s.auditTrailTab),
                         ],
                       ),
                       const SizedBox(height: 16),
@@ -131,10 +115,10 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
                         const SizedBox(height: 30),
 
                         // Empty State / History List
-                        const Center(
+                        Center(
                           child: Padding(
-                            padding: EdgeInsets.all(40),
-                            child: Text('No fines or rewards yet.', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                            padding: const EdgeInsets.all(40),
+                            child: Text(s.noFinesOrRewardsYet, style: const TextStyle(color: Colors.grey, fontSize: 13)),
                           ),
                         ),
                       ] else
@@ -183,14 +167,22 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
   Widget _buildPolicyGrid(BuildContext context, AppStrings s, FinesOverviewData data) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final policies = [
-      {'title': 'Late task closure', 'amount': '₹50.00', 'isFine': true},
-      {'title': 'Missed DSR', 'amount': '₹25.00', 'isFine': true},
-      {'title': 'Overdue > 3 days', 'amount': '₹100.00', 'isFine': true},
-      {'title': 'Early completion', 'amount': '₹50.00', 'isFine': false},
-      {'title': 'Top performer', 'amount': '₹150.00', 'isFine': false},
-      {'title': 'Zero overdue (month)', 'amount': '₹200.00', 'isFine': false},
-    ];
+    final policies = data.fineTypes.isNotEmpty
+        ? data.fineTypes
+            .map((ft) => {
+                  'title': ft.label,
+                  'amount': '₹${ft.amount}',
+                  'isFine': ft.kind.toLowerCase() == 'fine',
+                })
+            .toList()
+        : [
+            {'title': 'Late task closure', 'amount': '₹50.00', 'isFine': true},
+            {'title': 'Missed DSR', 'amount': '₹25.00', 'isFine': true},
+            {'title': 'Overdue > 3 days', 'amount': '₹100.00', 'isFine': true},
+            {'title': 'Early completion', 'amount': '₹50.00', 'isFine': false},
+            {'title': 'Top performer', 'amount': '₹150.00', 'isFine': false},
+            {'title': 'Zero overdue (month)', 'amount': '₹200.00', 'isFine': false},
+          ];
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -212,59 +204,71 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
             final accentColor = isFine ? const Color(0xFFDC2626) : const Color(0xFF16A34A);
 
             return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1E293B) : Colors.white,
                 borderRadius: BorderRadius.circular(10),
-                border: Border(
-                  left: BorderSide(color: accentColor, width: 4),
-                  top: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-                  right: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-                  bottom: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                border: Border.all(
+                  color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
                 ),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        p['title'] as String,
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 4,
+                      color: accentColor,
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  p['title'] as String,
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  p['amount'] as String,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: accentColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                isFine ? 'Fine' : 'Reward',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? Colors.white70 : Colors.grey.shade700,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        p['amount'] as String,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: accentColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Text(
-                      isFine ? 'Fine' : 'Reward',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white70 : Colors.grey.shade700,
-                      ),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           },

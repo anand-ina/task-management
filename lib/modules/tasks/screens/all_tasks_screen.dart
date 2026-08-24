@@ -4,6 +4,9 @@ import '../../../core/localization/app_strings.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/dialogs/new_recurring_task_dialog.dart';
+import '../../../shared_widgets/export_service.dart';
+import '../../../shared_widgets/dialogs/bulk_upload_dialog.dart';
+import '../../../shared_widgets/dialogs/create_task_dialog.dart';
 import '../../../shared_widgets/dialogs/task_detail_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
 import '../bloc/all_tasks_bloc.dart';
@@ -137,51 +140,113 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
                         const SizedBox(height: 16),
 
                         // Action Buttons Bar
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            OutlinedButton.icon(
-                              onPressed: () {},
-                              icon: const Icon(Icons.show_chart_rounded, size: 12),
-                              label: Text(s.exportButton, style: const TextStyle(fontSize: 9)),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                                visualDensity: VisualDensity.compact,
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              PopupMenuButton<String>(
+                                onSelected: (val) {
+                                  if (val == 'csv') {
+                                    ExportService.exportCsv(context, items, s.allTasks);
+                                  } else if (val == 'excel') {
+                                    ExportService.exportExcel(context, items, s.allTasks);
+                                  } else if (val == 'pdf') {
+                                    ExportService.exportPdf(context, items, s.allTasks);
+                                  }
+                                },
+                                itemBuilder: (context) => [
+                                  PopupMenuItem(
+                                    value: 'csv',
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.table_chart_outlined, size: 16, color: Colors.teal),
+                                        const SizedBox(width: 8),
+                                        Text(s.exportCsv, style: const TextStyle(fontSize: 12)),
+                                      ],
+                                    ),
+                                  ),
+                                  PopupMenuItem(
+                                    value: 'excel',
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.grid_on_outlined, size: 16, color: Colors.green),
+                                        const SizedBox(width: 8),
+                                        Text(s.exportExcel, style: const TextStyle(fontSize: 12)),
+                                      ],
+                                    ),
+                                  ),
+                                  PopupMenuItem(
+                                    value: 'pdf',
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.picture_as_pdf_outlined, size: 16, color: Colors.red),
+                                        const SizedBox(width: 8),
+                                        Text(s.exportPdf, style: const TextStyle(fontSize: 12)),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: isDark ? Colors.white24 : Colors.black12),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.show_chart_rounded, size: 12),
+                                      const SizedBox(width: 3),
+                                      Text(s.exportButton, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                                      const Icon(Icons.arrow_drop_down, size: 14),
+                                    ],
+                                  ),
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 3),
-                            OutlinedButton.icon(
-                              onPressed: () => NewRecurringTaskDialog.show(context),
-                              icon: const Icon(Icons.autorenew_rounded, size: 12),
-                              label: Text(s.newRecurring, style: const TextStyle(fontSize: 9)),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                                visualDensity: VisualDensity.compact,
+                              const SizedBox(width: 3),
+                              OutlinedButton.icon(
+                                onPressed: () => NewRecurringTaskDialog.show(context),
+                                icon: const Icon(Icons.autorenew_rounded, size: 12),
+                                label: Text(s.newRecurring, style: const TextStyle(fontSize: 9)),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                                  visualDensity: VisualDensity.compact,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 3),
-                            ElevatedButton.icon(
-                              onPressed: () {},
-                              icon: const Icon(Icons.add_rounded, size: 12),
-                              label: Text(s.newTask, style: const TextStyle(fontSize: 9)),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF0F172A),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                                visualDensity: VisualDensity.compact,
+                              const SizedBox(width: 3),
+                              ElevatedButton.icon(
+                                onPressed: () => CreateTaskDialog.show(context),
+                                icon: const Icon(Icons.add_rounded, size: 12),
+                                label: Text(s.newTask, style: const TextStyle(fontSize: 9)),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF0F172A),
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                                  visualDensity: VisualDensity.compact,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 2),
-                            OutlinedButton.icon(
-                              onPressed: () {},
-                              icon: const Icon(Icons.upload_rounded, size: 12),
-                              label: Text(s.bulkUpload, style: const TextStyle(fontSize:9)),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 4),
-                                visualDensity: VisualDensity.compact,
+                              const SizedBox(width: 2),
+                              OutlinedButton.icon(
+                                onPressed: () async {
+                                  final result = await BulkUploadDialog.show(context);
+                                  if (result == true && context.mounted) {
+                                    context.read<AllTasksBloc>().add(FetchAllTasksEvent(
+                                          scope: _selectedScope,
+                                          status: _selectedStatusFilter,
+                                          priority: _selectedPriorityFilter,
+                                          search: _searchQuery,
+                                        ));
+                                  }
+                                },
+                                icon: const Icon(Icons.upload_rounded, size: 12),
+                                label: Text(s.bulkUpload, style: const TextStyle(fontSize: 9)),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 4),
+                                  visualDensity: VisualDensity.compact,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                         const SizedBox(height: 16),
 

@@ -15,6 +15,8 @@ import '../../modules/meetings/screens/meeting_calendar_screen.dart';
 import '../../modules/events/screens/events_screen.dart';
 import '../../modules/events/screens/events_calendar_screen.dart';
 import '../../modules/reports/screens/reports_dashboard_screen.dart';
+import '../../modules/reports/screens/status_reports_screen.dart';
+import '../../modules/todos/screens/today_screen.dart';
 import '../../modules/todos/screens/todo_history_screen.dart';
 import '../../modules/performance/screens/leaderboard_screen.dart';
 import '../../modules/performance/screens/team_performance_screen.dart';
@@ -23,6 +25,9 @@ import '../../modules/fines/screens/performance_settings_screen.dart';
 import '../../modules/staff/screens/staff_screen.dart';
 import '../../modules/sutra/screens/sutra_ai_screen.dart';
 import '../../modules/preferences/screens/my_preferences_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../modules/auth/bloc/auth_bloc.dart';
+import '../../modules/auth/bloc/auth_state.dart';
 import '../../modules/profile/screens/my_profile_screen.dart';
 import '../../modules/faq/screens/faq_screen.dart';
 
@@ -36,6 +41,49 @@ class CustomLeftDrawer extends StatelessWidget {
     final s = AppStrings.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    final authState = context.watch<AuthBloc>().state;
+    bool isExecutive = false;
+    bool isTeamLead = false;
+    bool isManager = false;
+    bool isPrincipal = false;
+    String roleTitle = s.directorRole;
+    String roleScope = s.directorBadgeScope;
+
+    if (authState is AuthenticatedState) {
+      final user = authState.userProfile;
+      final roleLower = user.role.toLowerCase();
+      final roleLabelLower = user.roleLabel.toLowerCase();
+
+      if (user.email == 'sushma@samskar.edu' ||
+          roleLabelLower.contains('executive') ||
+          roleLower.contains('executive')) {
+        isExecutive = true;
+        roleTitle = 'Academic Executive';
+        roleScope = 'Operational scope — your own tasks & reports.';
+      } else if (roleLabelLower.contains('manager') ||
+          roleLower.contains('manager')) {
+        isManager = true;
+        roleTitle = 'Manager';
+        roleScope = 'Operational scope — your own tasks & reports.';
+      } else if (roleLabelLower.contains('principal') ||
+          roleLabelLower.contains('center head') ||
+          roleLower.contains('principal') ||
+          roleLower.contains('center_head')) {
+        isPrincipal = true;
+        roleTitle = 'Center Head / Principal';
+        roleScope = 'Team scope — 24 people in view.';
+      } else if (roleLabelLower.contains('lead') ||
+          roleLower.contains('lead') ||
+          roleLower.contains('tl') ||
+          user.email.contains('tl')) {
+        isTeamLead = true;
+        roleTitle = 'Team Lead';
+        roleScope = 'Team scope — 23 people in view.';
+      } else {
+        roleTitle = user.roleLabel.isNotEmpty ? user.roleLabel : s.directorRole;
+      }
+    }
+
     return Drawer(
       backgroundColor: isDark ? const Color(0xFF0D1424) : Colors.white,
       child: SafeArea(
@@ -46,18 +94,20 @@ class CustomLeftDrawer extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
               child: Row(
                 children: [
-                  Image.asset(
-                    'assets/images/circle-logo.png',
-                    width: 32,
-                    height: 32,
-                    errorBuilder: (context, error, stackTrace) => Container(
+                  ClipOval(
+                    child: Image.asset(
+                      'assets/images/circle-logo.png',
                       width: 32,
                       height: 32,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFB91C1C),
-                        shape: BoxShape.circle,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        width: 32,
+                        height: 32,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFB91C1C),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.school, color: Colors.white, size: 20),
                       ),
-                      child: const Icon(Icons.school, color: Colors.white, size: 20),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -93,6 +143,7 @@ class CustomLeftDrawer extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 children: [
+                  // DASHBOARD
                   _buildNavItem(
                     context,
                     icon: Icons.grid_view_rounded,
@@ -100,24 +151,26 @@ class CustomLeftDrawer extends StatelessWidget {
                     isSelected: currentRoute == '/dashboard',
                     onTap: () => _navigate(context, '/dashboard'),
                   ),
-                  _buildNavItem(
-                    context,
-                    icon: Icons.table_chart_outlined,
-                    title: s.organizationOverview,
-                    isSelected: currentRoute == '/org-overview',
-                    onTap: () => _navigate(context, '/org-overview'),
-                  ),
+                  if (isPrincipal || (!isExecutive && !isManager && !isTeamLead))
+                    _buildNavItem(
+                      context,
+                      icon: Icons.table_chart_outlined,
+                      title: s.organizationOverview,
+                      isSelected: currentRoute == '/org-overview',
+                      onTap: () => _navigate(context, '/org-overview'),
+                    ),
                   const SizedBox(height: 12),
 
                   // TASKS
                   _buildSectionHeader(context, s.tasksHeader),
-                  _buildNavItem(
-                    context,
-                    icon: Icons.check_circle_outline,
-                    title: s.allTasks,
-                    isSelected: currentRoute == '/tasks',
-                    onTap: () => _navigate(context, '/tasks'),
-                  ),
+                  if (!isExecutive && !isManager && !isTeamLead && !isPrincipal)
+                    _buildNavItem(
+                      context,
+                      icon: Icons.check_circle_outline,
+                      title: s.allTasks,
+                      isSelected: currentRoute == '/tasks',
+                      onTap: () => _navigate(context, '/tasks'),
+                    ),
                   _buildNavItem(
                     context,
                     icon: Icons.check_box_outlined,
@@ -169,13 +222,14 @@ class CustomLeftDrawer extends StatelessWidget {
 
                   // MEETINGS
                   _buildSectionHeader(context, s.meetingsHeader),
-                  _buildNavItem(
-                    context,
-                    icon: Icons.person_outline_rounded,
-                    title: s.monthlyOneOnOnePending,
-                    isSelected: currentRoute == '/one-on-one-pending' || currentRoute == '/one-on-one',
-                    onTap: () => _navigate(context, '/one-on-one-pending'),
-                  ),
+                  if (!isExecutive && !isManager && !isTeamLead && !isPrincipal)
+                    _buildNavItem(
+                      context,
+                      icon: Icons.person_outline_rounded,
+                      title: s.monthlyOneOnOnePending,
+                      isSelected: currentRoute == '/one-on-one-pending' || currentRoute == '/one-on-one',
+                      onTap: () => _navigate(context, '/one-on-one-pending'),
+                    ),
                   _buildNavItem(
                     context,
                     icon: Icons.access_time_rounded,
@@ -255,13 +309,14 @@ class CustomLeftDrawer extends StatelessWidget {
                     isSelected: currentRoute == '/leaderboard',
                     onTap: () => _navigate(context, '/leaderboard'),
                   ),
-                  _buildNavItem(
-                    context,
-                    icon: Icons.people_alt_outlined,
-                    title: s.teamPerformance,
-                    isSelected: currentRoute == '/team-performance',
-                    onTap: () => _navigate(context, '/team-performance'),
-                  ),
+                  if (!isExecutive)
+                    _buildNavItem(
+                      context,
+                      icon: Icons.people_alt_outlined,
+                      title: s.teamPerformance,
+                      isSelected: currentRoute == '/team-performance',
+                      onTap: () => _navigate(context, '/team-performance'),
+                    ),
                   _buildNavItem(
                     context,
                     icon: Icons.diamond_outlined,
@@ -269,25 +324,28 @@ class CustomLeftDrawer extends StatelessWidget {
                     isSelected: currentRoute == '/fines-rewards' || currentRoute == '/fines',
                     onTap: () => _navigate(context, '/fines-rewards'),
                   ),
-                  _buildNavItem(
-                    context,
-                    icon: Icons.settings_outlined,
-                    title: s.settings,
-                    isSelected: currentRoute == '/performance-settings' || currentRoute == '/perf-settings',
-                    onTap: () => _navigate(context, '/performance-settings'),
-                  ),
+                  if (!isExecutive && !isTeamLead && !isManager && !isPrincipal)
+                    _buildNavItem(
+                      context,
+                      icon: Icons.settings_outlined,
+                      title: s.settings,
+                      isSelected: currentRoute == '/performance-settings' || currentRoute == '/perf-settings',
+                      onTap: () => _navigate(context, '/performance-settings'),
+                    ),
                   const SizedBox(height: 12),
 
-                  // ORGANIZATION
-                  _buildSectionHeader(context, s.organizationHeader),
-                  _buildNavItem(
-                    context,
-                    icon: Icons.people_outline_rounded,
-                    title: s.staff,
-                    isSelected: currentRoute == '/staff',
-                    onTap: () => _navigate(context, '/staff'),
-                  ),
-                  const SizedBox(height: 12),
+                  // ORGANIZATION (Only for directors)
+                  if (!isExecutive && !isTeamLead && !isManager && !isPrincipal) ...[
+                    _buildSectionHeader(context, s.organizationHeader),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.people_outline_rounded,
+                      title: s.staff,
+                      isSelected: currentRoute == '/staff',
+                      onTap: () => _navigate(context, '/staff'),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
 
                   // AI & SETTINGS
                   _buildSectionHeader(context, s.aiAndSettingsHeader),
@@ -311,7 +369,7 @@ class CustomLeftDrawer extends StatelessWidget {
               ),
             ),
 
-            // Director Footer Badge
+            // Role Footer Badge
             Container(
               padding: const EdgeInsets.all(12),
               margin: const EdgeInsets.all(12),
@@ -328,14 +386,14 @@ class CustomLeftDrawer extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          s.directorRole,
+                          roleTitle,
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         Text(
-                          s.directorBadgeScope,
+                          roleScope,
                           style: TextStyle(
                             fontSize: 10,
                             color: isDark ? Colors.white60 : Colors.black54,
@@ -628,6 +686,21 @@ class CustomLeftDrawer extends StatelessWidget {
       return;
     }
 
+    if (route == '/reports') {
+      if (currentRoute == '/reports') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const StatusReportsScreen()),
+      );
+      return;
+    }
+
     if (route == '/reports-dashboard') {
       if (currentRoute == '/reports-dashboard') {
         if (isDrawerOpen) navigator.pop();
@@ -639,6 +712,21 @@ class CustomLeftDrawer extends StatelessWidget {
       }
       navigator.push(
         MaterialPageRoute(builder: (context) => const ReportsDashboardScreen()),
+      );
+      return;
+    }
+
+    if (route == '/todo') {
+      if (currentRoute == '/todo') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const TodayScreen()),
       );
       return;
     }

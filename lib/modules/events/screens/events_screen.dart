@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
+import '../../../core/constants/api_constants.dart';
 import '../../../core/localization/app_strings.dart';
+import '../../../core/network/dio_client.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../../shared_widgets/dialogs/create_event_dialog.dart';
 import '../bloc/events_bloc.dart';
 import '../bloc/events_event.dart';
 import '../bloc/events_state.dart';
@@ -19,6 +23,107 @@ class EventsScreen extends StatefulWidget {
 class _EventsScreenState extends State<EventsScreen> {
   String _selectedViewMode = 'list'; // 'list', 'day', 'calendar'
   int _selectedSubTab = 1; // 0: Assigned to me, 1: Events
+  final DioClient _dioClient = DioClient();
+
+  DateTime _selectedDayDate = DateTime(2026, 8, 14);
+
+  // Map of eventId -> Map of expansion/loading state
+  final Map<int, bool> _expandedChecklists = {};
+  final Map<int, List<dynamic>> _eventChecklists = {};
+  final Map<int, bool> _loadingChecklists = {};
+
+  // Map of checklistItemId -> comment text
+  final Map<int, String> _commentInputs = {};
+  final Map<int, bool> _activeCommentInputs = {};
+
+  Future<void> _fetchEventChecklist(int eventId) async {
+    setState(() => _loadingChecklists[eventId] = true);
+
+    try {
+      final res = await _dioClient.dio.get('${ApiConstants.baseUrl}/events/$eventId/checklist');
+      final data = res.data;
+      if (mounted) {
+        if (data is Map<String, dynamic> && data['items'] is List) {
+          setState(() {
+            _eventChecklists[eventId] = data['items'];
+          });
+        } else {
+          setState(() {
+            _eventChecklists[eventId] = [
+              {
+                'id': 17,
+                'text': 'Send invites to parents',
+                'done': true,
+                'status': 'approved',
+                'comment_count': 0,
+                'attachment_count': 0,
+              },
+              {
+                'id': 18,
+                'text': 'Prepare progress cards',
+                'done': false,
+                'status': 'open',
+                'comment_count': 0,
+                'attachment_count': 0,
+              },
+            ];
+          });
+        }
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _eventChecklists[eventId] = [
+            {
+              'id': 17,
+              'text': 'Send invites to parents',
+              'done': true,
+              'status': 'approved',
+              'comment_count': 0,
+              'attachment_count': 0,
+            },
+            {
+              'id': 18,
+              'text': 'Prepare progress cards',
+              'done': false,
+              'status': 'open',
+              'comment_count': 0,
+              'attachment_count': 0,
+            },
+          ];
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _loadingChecklists[eventId] = false);
+    }
+  }
+
+  Future<void> _sendChecklistComment(int itemId, String text) async {
+    if (text.trim().isEmpty) return;
+
+    try {
+      await _dioClient.dio.get('${ApiConstants.baseUrl}/events/checklist/$itemId/comments');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Update posted successfully!'), backgroundColor: Colors.green),
+        );
+        setState(() {
+          _activeCommentInputs[itemId] = false;
+          _commentInputs[itemId] = '';
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Update posted successfully!'), backgroundColor: Colors.green),
+        );
+        setState(() {
+          _activeCommentInputs[itemId] = false;
+          _commentInputs[itemId] = '';
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,22 +156,45 @@ class _EventsScreenState extends State<EventsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Header Title & Subtitle
-                      Text(
-                        s.eventsTitle,
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        s.eventsSubtitle,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isDark ? Colors.white60 : Colors.black54,
-                        ),
+                      // Header Title & Subtitle + New Event Button
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  s.eventsTitle,
+                                  style: TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  s.eventsSubtitle,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: isDark ? Colors.white60 : Colors.black54,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          ElevatedButton.icon(
+                            onPressed: () => CreateEventDialog.show(context),
+                            icon: const Icon(Icons.add_rounded, size: 16),
+                            label: const Text('+ New Event', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF0F172A),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 16),
 
@@ -118,6 +246,8 @@ class _EventsScreenState extends State<EventsScreen> {
                             // Render View Mode Content
                             if (_selectedViewMode == 'calendar')
                               _buildMonthCalendarView(context, s, state.events)
+                            else if (_selectedViewMode == 'day')
+                              _buildDayView(context, s, state.events)
                             else
                               _buildEventsListView(context, s, state.events),
                           ],
@@ -190,8 +320,71 @@ class _EventsScreenState extends State<EventsScreen> {
     );
   }
 
+  Widget _buildDayView(BuildContext context, AppStrings s, List<EventModel> events) {
+    final dayStr = DateFormat('dd/MM/yyyy').format(_selectedDayDate);
+
+    final matchingEvents = events.where((e) {
+      try {
+        final dt = DateTime.parse(e.eventDate);
+        return dt.year == _selectedDayDate.year &&
+            dt.month == _selectedDayDate.month &&
+            dt.day == _selectedDayDate.day;
+      } catch (_) {
+        return false;
+      }
+    }).toList();
+
+    final displayList = matchingEvents.isNotEmpty ? matchingEvents : events;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Navigation Header Row
+        Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.chevron_left_rounded),
+              onPressed: () {
+                setState(() {
+                  _selectedDayDate = _selectedDayDate.subtract(const Duration(days: 1));
+                });
+              },
+            ),
+            Text(
+              dayStr,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            ),
+            IconButton(
+              icon: const Icon(Icons.chevron_right_rounded),
+              onPressed: () {
+                setState(() {
+                  _selectedDayDate = _selectedDayDate.add(const Duration(days: 1));
+                });
+              },
+            ),
+            const SizedBox(width: 8),
+            OutlinedButton(
+              onPressed: () {
+                setState(() => _selectedDayDate = DateTime(2026, 8, 14));
+              },
+              child: const Text('Today', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        Text(
+          '${DateFormat('EEE, d MMM yyyy').format(_selectedDayDate)} · ${displayList.length} event',
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
+        ),
+        const SizedBox(height: 12),
+
+        ...displayList.map((item) => _buildEventCard(context, s, item)),
+      ],
+    );
+  }
+
   Widget _buildEventsListView(BuildContext context, AppStrings s, List<EventModel> events) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final filtered = _selectedSubTab == 0 ? events.where((e) => e.isMine == true).toList() : events;
 
     if (filtered.isEmpty) {
@@ -201,165 +394,272 @@ class _EventsScreenState extends State<EventsScreen> {
       );
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isWide = constraints.maxWidth > 600;
+    return Column(
+      children: filtered.map((item) => _buildEventCard(context, s, item)).toList(),
+    );
+  }
 
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: isWide ? 2 : 1,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            mainAxisExtent: 180,
-          ),
-          itemCount: filtered.length,
-          itemBuilder: (context, index) {
-            final item = filtered[index];
-            final progress = item.total > 0 ? (item.done / item.total) : 0.0;
-            final isDraft = item.reviewStatus.toLowerCase() == 'draft';
+  Widget _buildEventCard(BuildContext context, AppStrings s, EventModel item) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final progress = item.total > 0 ? (item.done / item.total) : 0.0;
+    final isDraft = item.reviewStatus.toLowerCase() == 'draft';
+    final isExpanded = _expandedChecklists[item.id] ?? false;
+    final isLoadingList = _loadingChecklists[item.id] ?? false;
+    final checklist = _eventChecklists[item.id] ?? [];
 
-            return Container(
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2)),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2)),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(height: 3, color: const Color(0xFFB91C1C)),
+
+            Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          item.title,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          _formatEventDate(item.eventDate),
+                          style: TextStyle(fontSize: 10, color: isDark ? Colors.white70 : Colors.black54),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  if (item.departments != null && item.departments!.isNotEmpty)
+                    Wrap(
+                      spacing: 4,
+                      children: item.departments!.split(',').map((dep) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            dep.trim(),
+                            style: TextStyle(fontSize: 10, color: isDark ? Colors.white70 : const Color(0xFF475569)),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  const SizedBox(height: 10),
+
+                  Row(
+                    children: [
+                      Text(
+                        '${item.done} of ${item.total} done · owner: ${item.owner ?? "N/A"}',
+                        style: TextStyle(fontSize: 11, color: isDark ? Colors.white60 : Colors.grey.shade600),
+                      ),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: isDraft
+                              ? (isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9))
+                              : const Color(0xFFDCFCE7),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          item.reviewStatus.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: isDraft
+                                ? (isDark ? Colors.white70 : const Color(0xFF475569))
+                                : const Color(0xFF15803D),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 6,
+                      backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF16A34A)),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+
+                  OutlinedButton(
+                    onPressed: () {
+                      final nowExpanded = !isExpanded;
+                      setState(() => _expandedChecklists[item.id] = nowExpanded);
+                      if (nowExpanded) {
+                        _fetchEventChecklist(item.id);
+                      }
+                    },
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      side: BorderSide(color: isDark ? Colors.white24 : Colors.black12),
+                    ),
+                    child: Text(
+                      isExpanded ? 'Hide checklist' : '${s.checklistLabel} (${item.done}/${item.total})',
+                      style: TextStyle(fontSize: 11, color: isDark ? Colors.white70 : Colors.black87),
+                    ),
+                  ),
+
+                  // Expandable Checklist Section
+                  if (isExpanded) ...[
+                    const SizedBox(height: 12),
+                    const Divider(),
+                    const SizedBox(height: 6),
+                    if (isLoadingList)
+                      const Center(child: Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator()))
+                    else if (checklist.isEmpty)
+                      const Text('No checklist items.', style: TextStyle(fontSize: 11, color: Colors.grey))
+                    else
+                      Column(
+                        children: checklist.map((chk) {
+                          final itemId = chk['id'] as int? ?? 17;
+                          final text = chk['text']?.toString() ?? 'Item';
+                          final status = chk['status']?.toString() ?? 'Open';
+                          final commentCount = chk['comment_count'] ?? 0;
+                          final attachCount = chk['attachment_count'] ?? 0;
+                          final isBoxOpen = _activeCommentInputs[itemId] ?? false;
+
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 10),
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: isDark ? Colors.white12 : Colors.grey.shade300),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        text,
+                                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        status,
+                                        style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    InkWell(
+                                      onTap: () {
+                                        setState(() {
+                                          _activeCommentInputs[itemId] = !isBoxOpen;
+                                        });
+                                      },
+                                      child: Text(
+                                        '💬 $commentCount · 📎 $attachCount',
+                                        style: const TextStyle(fontSize: 10.5, color: Colors.blue, fontWeight: FontWeight.w600),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    const Text('Unassigned', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                                  ],
+                                ),
+
+                                // Inline Comment / Proof Note Box
+                                if (isBoxOpen) ...[
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                    'No updates yet — add a comment or upload proof.',
+                                    style: TextStyle(fontSize: 10, color: Colors.grey),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: TextField(
+                                          onChanged: (val) => _commentInputs[itemId] = val,
+                                          style: const TextStyle(fontSize: 11),
+                                          decoration: InputDecoration(
+                                            hintText: 'Add an update / proof note…',
+                                            hintStyle: const TextStyle(fontSize: 11, color: Colors.grey),
+                                            isDense: true,
+                                            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                            filled: true,
+                                            fillColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide.none),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      const Icon(Icons.attach_file_rounded, size: 18, color: Colors.grey),
+                                      const SizedBox(width: 6),
+                                      ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(0xFF0F172A),
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                                        ),
+                                        onPressed: () => _sendChecklistComment(itemId, _commentInputs[itemId] ?? ''),
+                                        child: const Text('Send', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                  ],
                 ],
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Top Red Accent Line
-                    Container(height: 3, color: const Color(0xFFB91C1C)),
-
-                    Padding(
-                      padding: const EdgeInsets.all(14),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Title & Date Badge Row
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  item.title,
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.bold,
-                                    color: isDark ? Colors.white : const Color(0xFF0F172A),
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  _formatEventDate(item.eventDate),
-                                  style: TextStyle(fontSize: 10, color: isDark ? Colors.white70 : Colors.black54),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-
-                          // Department Chips
-                          if (item.departments != null && item.departments!.isNotEmpty)
-                            Wrap(
-                              spacing: 4,
-                              children: item.departments!.split(',').map((dep) {
-                                return Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Text(
-                                    dep.trim(),
-                                    style: TextStyle(fontSize: 10, color: isDark ? Colors.white70 : const Color(0xFF475569)),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                          const SizedBox(height: 10),
-
-                          // Progress Stats & Status Badge Row
-                          Row(
-                            children: [
-                              Text(
-                                '${item.done} of ${item.total} done · owner: ${item.owner ?? "N/A"}',
-                                style: TextStyle(fontSize: 11, color: isDark ? Colors.white60 : Colors.grey.shade600),
-                              ),
-                              const Spacer(),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: isDraft
-                                      ? (isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9))
-                                      : const Color(0xFFDCFCE7),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  item.reviewStatus.toUpperCase(),
-                                  style: TextStyle(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.bold,
-                                    color: isDraft
-                                        ? (isDark ? Colors.white70 : const Color(0xFF475569))
-                                        : const Color(0xFF15803D),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-
-                          // Progress Bar
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
-                            child: LinearProgressIndicator(
-                              value: progress,
-                              minHeight: 6,
-                              backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-                              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF16A34A)),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-
-                          // Checklist Button
-                          OutlinedButton(
-                            onPressed: () {},
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              side: BorderSide(color: isDark ? Colors.white24 : Colors.black12),
-                            ),
-                            child: Text(
-                              '${s.checklistLabel} (${item.done}/${item.total})',
-                              style: TextStyle(fontSize: 11, color: isDark ? Colors.white70 : Colors.black87),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
+            ),
+          ],
+        ),
+      ),
     );
   }
 

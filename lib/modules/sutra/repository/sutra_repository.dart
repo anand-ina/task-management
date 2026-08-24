@@ -60,4 +60,21 @@ class SutraRepository {
       activeTasks: activeTasks,
     );
   }
+
+  Future<Map<String, dynamic>> sendSutraCommand(String text) async {
+    try {
+      final response = await _dioClient.dio.post(
+        ApiConstants.sutraCommand,
+        data: {'text': text},
+      );
+      final res = _safeParse(response.data);
+      if (res is Map<String, dynamic>) {
+        return res;
+      }
+    } catch (_) {}
+    return {
+      'kind': 'unknown',
+      'message': "I couldn't understand that. Try e.g. “Schedule a meeting with Swapnika and Narasimha tomorrow 4pm”.",
+    };
+  }
 }

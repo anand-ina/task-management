@@ -43,6 +43,9 @@ abstract class AppStrings {
   String get teamLeadNarasimha;
   String get executiveAnamika;
   String get executiveGyapika;
+  String get teamLeadAkash;
+  String get managerSandeep;
+  String get centerHeadCharan;
 
   // Navigation Drawer Headers & Items
   String get dashboard;
@@ -265,6 +268,30 @@ abstract class AppStrings {
   String get needsAction;
   String get newRecurring;
   String get bulkUpload;
+  String get exportCsv;
+  String get exportExcel;
+  String get exportPdf;
+  String get bulkUploadTasksTitle;
+  String get bulkUploadSubtitle;
+  String get chooseAFile;
+  String get acceptedFormats;
+  String get columnsImporterReads;
+  String get columnHeader;
+  String get exampleHeader;
+  String get notesHeader;
+  String get rowsFound;
+  String get willImport;
+  String get skippedCount;
+  String get headerRowLabel;
+  String get previewTitle;
+  String get rowHeader;
+  String get taskHeader;
+  String get assignedToHeader;
+  String get targetHeader;
+  String get noteHeader;
+  String get chooseAnotherFile;
+  String importTasksCount(int count);
+  String bulkImportSuccess(int count, String taskNos);
   String get allScope;
   String get confidentialScope;
   String get generalScope;
@@ -504,4 +531,33 @@ abstract class AppStrings {
   String get faqA4;
   String get faqQ5;
   String get faqA5;
+
+  // Status Reports
+  String get myStatusReports;
+  String get myStatusReportsSubtitle;
+  String get newReportButton;
+  String get newStatusReport;
+  String get dailyDsr;
+  String get weeklyWsr;
+  String get monthlyMsr;
+  String get reportTypeLabel;
+  String get periodDateLabel;
+  String get periodDateHint;
+  String get autoFillBannerNote;
+  String get workCompletedLabel;
+  String get workInProgressLabel;
+  String get pendingTasksLabel;
+  String get challengesBlockersLabel;
+  String get lockedContactDirector;
+  String get enterDetailsPlaceholder;
+  String get saveDraft;
+  String get submitButton;
+  String get noClosureRequestsAwaiting;
+  String get targetDateChange;
+  String get resolveApprove;
+  String get saveChanges;
+  String get autoStatusReportSlotsToday;
+  String get dsrTimeSlot;
+  String get completionAwaitingApproval;
+  String get noFinesOrRewardsYet;
 }

@@ -34,6 +34,12 @@ class AppStringsEn extends AppStrings {
   String get executiveAnamika => 'Anamika (Executive)';
   @override
   String get executiveGyapika => 'Gyapika (Executive)';
+  @override
+  String get teamLeadAkash => 'Akash (Team Lead)';
+  @override
+  String get managerSandeep => 'Sandeep (Manager)';
+  @override
+  String get centerHeadCharan => 'Charan (Center Head / Principal)';
 
   @override
   String get dashboard => 'Dashboard';
@@ -424,6 +430,54 @@ class AppStringsEn extends AppStrings {
   @override
   String get bulkUpload => 'Bulk Upload';
   @override
+  String get exportCsv => 'Export CSV';
+  @override
+  String get exportExcel => 'Export Excel';
+  @override
+  String get exportPdf => 'Export PDF';
+  @override
+  String get bulkUploadTasksTitle => 'Bulk upload tasks';
+  @override
+  String get bulkUploadSubtitle => 'Excel or CSV · nothing is saved until you confirm';
+  @override
+  String get chooseAFile => 'Choose a file';
+  @override
+  String get acceptedFormats => 'Accepted: .xlsx, .xls, .csv';
+  @override
+  String get columnsImporterReads => 'COLUMNS THE IMPORTER READS';
+  @override
+  String get columnHeader => 'COLUMN HEADER';
+  @override
+  String get exampleHeader => 'EXAMPLE';
+  @override
+  String get notesHeader => 'NOTES';
+  @override
+  String get rowsFound => 'Rows found';
+  @override
+  String get willImport => 'Will import';
+  @override
+  String get skippedCount => 'Skipped';
+  @override
+  String get headerRowLabel => 'Header row';
+  @override
+  String get previewTitle => 'PREVIEW';
+  @override
+  String get rowHeader => 'ROW';
+  @override
+  String get taskHeader => 'TASK';
+  @override
+  String get assignedToHeader => 'ASSIGNED TO';
+  @override
+  String get targetHeader => 'TARGET';
+  @override
+  String get noteHeader => 'NOTE';
+  @override
+  String get chooseAnotherFile => 'Choose another file';
+  @override
+  String importTasksCount(int count) => 'Import $count task${count == 1 ? '' : 's'}';
+  @override
+  String bulkImportSuccess(int count, String taskNos) => 'Successfully imported $count task(s): $taskNos';
+  @override
   String get allScope => 'All';
   @override
   String get confidentialScope => 'Confidential';
@@ -787,7 +841,7 @@ class AppStringsEn extends AppStrings {
   @override
   String get myPreferencesTitle => 'My Preferences';
   @override
-  String get myPreferencesSubtitle => 'Control which notifications you receive and through which channels.';
+  String get myPreferencesSubtitle => 'Control which notifications you receive \nand through which channels.';
   @override
   String get profileCardHeader => 'PROFILE';
   @override
@@ -862,4 +916,59 @@ class AppStringsEn extends AppStrings {
   String get faqQ5 => 'How do I change theme or language?';
   @override
   String get faqA5 => 'Open the avatar menu → Settings. Choose Light / Dark / System, and English / తెలుగు / हिन्दी.';
+
+  @override
+  String get myStatusReports => 'My Status Reports';
+  @override
+  String get myStatusReportsSubtitle => 'Daily, weekly and monthly reports you have submitted';
+  @override
+  String get newReportButton => '+ New Report';
+  @override
+  String get newStatusReport => 'New Status Report';
+  @override
+  String get dailyDsr => 'Daily (DSR)';
+  @override
+  String get weeklyWsr => 'Weekly (WSR)';
+  @override
+  String get monthlyMsr => 'Monthly (MSR)';
+  @override
+  String get reportTypeLabel => 'Report Type';
+  @override
+  String get periodDateLabel => 'Period Date';
+  @override
+  String get periodDateHint => 'The day this report covers. Locked at 9:00 PM.';
+  @override
+  String get autoFillBannerNote => 'line auto-filled from your tasks and locked. You can only add more lines below each section — pulled lines can\'t be edited or removed.';
+  @override
+  String get workCompletedLabel => 'Work Completed *';
+  @override
+  String get workInProgressLabel => 'Work in Progress';
+  @override
+  String get pendingTasksLabel => 'Pending Tasks';
+  @override
+  String get challengesBlockersLabel => 'Challenges / Blockers';
+  @override
+  String get lockedContactDirector => 'Locked — contact Director/Principal to unlock';
+  @override
+  String get enterDetailsPlaceholder => 'Enter details...';
+  @override
+  String get saveDraft => 'Save Draft';
+  @override
+  String get submitButton => 'Submit';
+  @override
+  String get noClosureRequestsAwaiting => 'No closure requests awaiting your decision. 🎉';
+  @override
+  String get targetDateChange => 'Target-date change';
+  @override
+  String get resolveApprove => 'Resolve · Approve';
+  @override
+  String get saveChanges => 'Save changes';
+  @override
+  String get autoStatusReportSlotsToday => 'Auto status-report slots today: ';
+  @override
+  String get dsrTimeSlot => 'DSR · 5:30 PM';
+  @override
+  String get completionAwaitingApproval => 'Completion awaiting approval';
+  @override
+  String get noFinesOrRewardsYet => 'No fines or rewards yet.';
 }

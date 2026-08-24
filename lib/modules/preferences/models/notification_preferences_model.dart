@@ -56,4 +56,15 @@ class NotificationPreferencesModel {
       dailyDigest: json['dailyDigest'] == true || json['daily_digest'] == true,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> chJson = {};
+    channels.forEach((key, val) {
+      chJson[key] = val.toJson();
+    });
+    return {
+      'channels': chJson,
+      'dailyDigest': dailyDigest,
+    };
+  }
 }

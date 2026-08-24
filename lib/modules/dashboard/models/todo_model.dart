@@ -12,8 +12,8 @@ class TodoItem {
   factory TodoItem.fromJson(Map<String, dynamic> json) {
     return TodoItem(
       id: json['id'] as int?,
-      text: json['title'] as String? ?? json['text'] as String? ?? '',
-      isCompleted: json['is_completed'] as bool? ?? json['completed'] as bool? ?? false,
+      text: json['text'] as String? ?? json['title'] as String? ?? '',
+      isCompleted: json['done'] as bool? ?? json['is_completed'] as bool? ?? json['completed'] as bool? ?? false,
     );
   }
 

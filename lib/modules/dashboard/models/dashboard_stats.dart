@@ -45,23 +45,23 @@ class DashboardStats {
     final lowVal = json['low'] as int?;
 
     return DashboardStats(
-      total: json['total'] as int? ?? 624,
-      completed: json['completed'] as int? ?? 390,
-      inProgress: json['in_progress'] as int? ?? 122,
-      toBeStarted: json['to_be_started'] as int? ?? 100,
-      dropped: json['dropped'] as int? ?? 10,
-      hold: json['hold'] as int? ?? 2,
-      postponed: json['postponed'] as int? ?? 2,
-      scrapped: json['scrapped'] as int? ?? 6,
-      overdue: json['overdue'] as int? ?? 52,
-      dueToday: json['due_today'] as int? ?? 1,
-      emergency: (emergencyVal != null && emergencyVal > 0) ? emergencyVal : 59,
-      topMost: (topMostVal != null && topMostVal > 0) ? topMostVal : 131,
-      high: (highVal != null && highVal > 0) ? highVal : 283,
-      medium: (mediumVal != null && mediumVal > 0) ? mediumVal : 145,
+      total: json['total'] as int? ?? 0,
+      completed: json['completed'] as int? ?? 0,
+      inProgress: json['in_progress'] as int? ?? 0,
+      toBeStarted: json['to_be_started'] as int? ?? 0,
+      dropped: json['dropped'] as int? ?? 0,
+      hold: json['hold'] as int? ?? 0,
+      postponed: json['postponed'] as int? ?? 0,
+      scrapped: json['scrapped'] as int? ?? 0,
+      overdue: json['overdue'] as int? ?? 0,
+      dueToday: json['due_today'] as int? ?? 0,
+      emergency: (emergencyVal != null && emergencyVal > 0) ? emergencyVal : 0,
+      topMost: (topMostVal != null && topMostVal > 0) ? topMostVal : 0,
+      high: (highVal != null && highVal > 0) ? highVal : 0,
+      medium: (mediumVal != null && mediumVal > 0) ? mediumVal : 0,
       low: (lowVal != null && lowVal > 0) ? lowVal : 6,
-      emergencyHighOpen: json['emergency_high_open'] as int? ?? 166,
-      completionRate: json['completionRate'] as int? ?? 63,
+      emergencyHighOpen: json['emergency_high_open'] as int? ?? 0,
+      completionRate: json['completionRate'] as int? ?? 0,
     );
   }
 }
@@ -83,11 +83,11 @@ class DashboardActionCenter {
 
   factory DashboardActionCenter.fromJson(Map<String, dynamic> json) {
     return DashboardActionCenter(
-      approvals: json['approvals'] as int? ?? 12,
-      reviews: json['reviews'] as int? ?? 5,
-      overdue: json['overdue'] as int? ?? 52,
-      dueToday: json['due_today'] as int? ?? 1,
-      emergencyHigh: json['emergency_high'] as int? ?? 166,
+      approvals: json['approvals'] as int? ?? 0,
+      reviews: json['reviews'] as int? ?? 0,
+      overdue: json['overdue'] as int? ?? 0,
+      dueToday: json['due_today'] as int? ?? 0,
+      emergencyHigh: json['emergency_high'] as int? ?? 0,
     );
   }
 }
@@ -109,11 +109,11 @@ class DashboardPerformance {
 
   factory DashboardPerformance.fromJson(Map<String, dynamic> json) {
     return DashboardPerformance(
-      day: json['day'] as int? ?? 90,
-      week: json['week'] as int? ?? 48,
-      month: json['month'] as int? ?? 49,
-      quarter: json['quarter'] as int? ?? 56,
-      year: json['year'] as int? ?? 63,
+      day: json['day'] as int? ?? 0,
+      week: json['week'] as int? ?? 0,
+      month: json['month'] as int? ?? 0,
+      quarter: json['quarter'] as int? ?? 0,
+      year: json['year'] as int? ?? 0,
     );
   }
 }
@@ -135,11 +135,11 @@ class DashboardByDeadline {
 
   factory DashboardByDeadline.fromJson(Map<String, dynamic> json) {
     return DashboardByDeadline(
-      actNow: json['act_now'] as int? ?? 52,
-      today: json['today'] as int? ?? 1,
-      thisWeek: json['this_week'] as int? ?? 5,
+      actNow: json['act_now'] as int? ?? 0,
+      today: json['today'] as int? ?? 0,
+      thisWeek: json['this_week'] as int? ?? 0,
       thisMonth: json['this_month'] as int? ?? 0,
-      later: json['later'] as int? ?? 23,
+      later: json['later'] as int? ?? 0,
     );
   }
 }
@@ -159,10 +159,10 @@ class DashboardOverdueByAge {
 
   factory DashboardOverdueByAge.fromJson(Map<String, dynamic> json) {
     return DashboardOverdueByAge(
-      d1_3: json['d1_3'] as int? ?? 6,
-      d4_7: json['d4_7'] as int? ?? 1,
-      d8_14: json['d8_14'] as int? ?? 4,
-      d15p: json['d15p'] as int? ?? 41,
+      d1_3: json['d1_3'] as int? ?? 0,
+      d4_7: json['d4_7'] as int? ?? 0,
+      d8_14: json['d8_14'] as int? ?? 0,
+      d15p: json['d15p'] as int? ?? 0,
     );
   }
 }
@@ -188,13 +188,13 @@ class DashboardMyLogin {
 
   factory DashboardMyLogin.fromJson(Map<String, dynamic> json) {
     return DashboardMyLogin(
-      today: json['today'] as int? ?? 1,
-      thisWeek: json['this_week'] as int? ?? 5,
-      lastLogin: json['last_login'] as String? ?? '2:45 PM',
-      firstToday: json['first_today'] as String? ?? '9:15 AM',
-      spanTodaySec: json['span_today_sec'] as int? ?? 19800,
-      activeDaysWeek: json['active_days_week'] as int? ?? 5,
-      spanWeekSec: json['span_week_sec'] as int? ?? 99000,
+      today: json['today'] as int? ?? 0,
+      thisWeek: json['this_week'] as int? ?? 0,
+      lastLogin: json['last_login'] as String? ?? '0:00 PM',
+      firstToday: json['first_today'] as String? ?? '0:00 AM',
+      spanTodaySec: json['span_today_sec'] as int? ?? 0,
+      activeDaysWeek: json['active_days_week'] as int? ?? 0,
+      spanWeekSec: json['span_week_sec'] as int? ?? 0,
     );
   }
 
@@ -211,6 +211,32 @@ class DashboardMyLogin {
   }
 }
 
+class DashboardTimelineItem {
+  final String title;
+  final String at;
+  final String location;
+  final String kind;
+  final bool submitted;
+
+  DashboardTimelineItem({
+    required this.title,
+    required this.at,
+    required this.location,
+    required this.kind,
+    required this.submitted,
+  });
+
+  factory DashboardTimelineItem.fromJson(Map<String, dynamic> json) {
+    return DashboardTimelineItem(
+      title: json['title'] as String? ?? '',
+      at: json['at'] as String? ?? '',
+      location: json['location'] as String? ?? '',
+      kind: json['kind'] as String? ?? '',
+      submitted: json['submitted'] as bool? ?? false,
+    );
+  }
+}
+
 class DashboardData {
   final DashboardStats stats;
   final DashboardPerformance performance;
@@ -218,6 +244,7 @@ class DashboardData {
   final DashboardByDeadline byDeadline;
   final DashboardOverdueByAge overdueByAge;
   final DashboardMyLogin myLogin;
+  final List<DashboardTimelineItem> timeline;
 
   DashboardData({
     required this.stats,
@@ -226,6 +253,7 @@ class DashboardData {
     required this.byDeadline,
     required this.overdueByAge,
     required this.myLogin,
+    this.timeline = const [],
   });
 
   factory DashboardData.fromJson(Map<String, dynamic> json) {
@@ -234,6 +262,11 @@ class DashboardData {
       root = json['data'] as Map<String, dynamic>;
     }
 
+    final timelineList = (root['timeline'] as List<dynamic>?)
+            ?.map((e) => DashboardTimelineItem.fromJson(e as Map<String, dynamic>))
+            .toList() ??
+        [];
+
     return DashboardData(
       stats: DashboardStats.fromJson(root['stats'] is Map<String, dynamic> ? root['stats'] : root),
       performance: DashboardPerformance.fromJson(root['performance'] is Map<String, dynamic> ? root['performance'] : {}),
@@ -241,6 +274,7 @@ class DashboardData {
       byDeadline: DashboardByDeadline.fromJson(root['byDeadline'] is Map<String, dynamic> ? root['byDeadline'] : {}),
       overdueByAge: DashboardOverdueByAge.fromJson(root['overdueByAge'] is Map<String, dynamic> ? root['overdueByAge'] : {}),
       myLogin: DashboardMyLogin.fromJson(root['myLogin'] is Map<String, dynamic> ? root['myLogin'] : {}),
+      timeline: timelineList,
     );
   }
 }

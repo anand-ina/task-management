@@ -6,7 +6,7 @@ class ApprovalsConstStrings {
   static const String budgetApprovalsTitle = 'Budget Approvals';
 
   // Subtitles & Headers
-  static const String approvalsHeader = 'Approvals';
+  static const String approvalsHeader = 'Requests & Approvals';
   static const String approvalsSubtitle =
       'Every approval you need to handle — task closures, change requests, meeting invites, budget spend — in one place.';
 

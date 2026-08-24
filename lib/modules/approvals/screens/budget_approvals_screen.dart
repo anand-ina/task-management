@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
+import '../../../shared_widgets/dialogs/new_budget_request_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
 import '../bloc/approvals_bloc.dart';
 import '../bloc/approvals_event.dart';
@@ -41,54 +42,37 @@ class _BudgetApprovalsScreenState extends State<BudgetApprovalsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header Title & Awaiting Badge
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const Text(
-                    ApprovalsConstStrings.approvalsHeader,
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  BlocBuilder<ApprovalsBloc, ApprovalsState>(
-                    builder: (context, state) {
-                      int awaitingCount = 0;
-                      if (state is ApprovalsLoadedState) {
-                        awaitingCount = state.budgetReceived
-                            .where((b) => b.status.toLowerCase() == 'pending')
-                            .length;
-                      }
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          '$awaitingCount ${ApprovalsConstStrings.awaitingYou}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.white70 : Colors.black87,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
+              // Header Title
+              const Text(
+                'Requests & Approvals',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               Text(
-                ApprovalsConstStrings.approvalsSubtitle,
+                'Requests you have raised — closures, change requests, meeting invites and budget spend.',
                 style: TextStyle(
                   fontSize: 13,
                   color: isDark ? Colors.white60 : Colors.black54,
                 ),
               ),
               const SizedBox(height: 16),
+
+              // + New budget request Button
+              ElevatedButton.icon(
+                onPressed: () => NewBudgetRequestDialog.show(context),
+                icon: const Icon(Icons.add_rounded, size: 16),
+                label: const Text('+ New budget request', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0F172A),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+              const SizedBox(height: 20),
 
               // Segmented Pill Tabs
               BlocBuilder<ApprovalsBloc, ApprovalsState>(

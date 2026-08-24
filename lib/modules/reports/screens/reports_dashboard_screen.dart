@@ -7,8 +7,8 @@ import '../../../shared_widgets/drawer/custom_left_drawer.dart';
 import '../bloc/reports_bloc.dart';
 import '../bloc/reports_event.dart';
 import '../bloc/reports_state.dart';
-import '../models/report_compliance_model.dart';
 import '../models/report_stats_model.dart';
+import '../models/status_report_model.dart';
 
 class ReportsDashboardScreen extends StatefulWidget {
   const ReportsDashboardScreen({super.key});
@@ -18,7 +18,7 @@ class ReportsDashboardScreen extends StatefulWidget {
 }
 
 class _ReportsDashboardScreenState extends State<ReportsDashboardScreen> {
-  final Set<String> _expandedDayKeys = {};
+  int _selectedFilterIndex = 0; // 0: All, 1: DSR, 2: WSR, 3: MSR
 
   @override
   Widget build(BuildContext context) {
@@ -51,13 +51,21 @@ class _ReportsDashboardScreenState extends State<ReportsDashboardScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Title
+                      // Header Title & Subtitle
                       Text(
                         s.reportsDashboardTitle,
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                           color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Your DSR / WSR / MSR status reports at a glance.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? Colors.white60 : Colors.black54,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -81,16 +89,16 @@ class _ReportsDashboardScreenState extends State<ReportsDashboardScreen> {
                           ),
                         )
                       else if (state is ReportsDashboardLoadedState) ...[
-                        // Top Summary Stat Cards Grid
+                        // Top Summary Stat Cards Grid (Submitted Today, Total Reports, Submitted, Draft)
                         _buildTopStatCards(context, s, state.data.stats),
                         const SizedBox(height: 16),
 
-                        // Secondary Stat Cards Row
+                        // Secondary Stat Cards Row (Daily DSR, Weekly WSR, Monthly MSR)
                         _buildSecondaryStatCards(context, s, state.data.stats),
                         const SizedBox(height: 24),
 
-                        // DSR Compliance Section
-                        _buildDsrComplianceSection(context, s, state.data.compliance),
+                        // My Reports List Section (Replaces DSR Compliance)
+                        _buildMyReportsSection(context, s, state.data.reports),
                       ] else
                         const SizedBox.shrink(),
                       const SizedBox(height: 40),
@@ -109,10 +117,10 @@ class _ReportsDashboardScreenState extends State<ReportsDashboardScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final cards = [
-      {'title': s.submittedTodayLabel, 'value': stats.submittedToday, 'icon': Icons.stars_rounded, 'color': Colors.red},
-      {'title': s.totalReportsLabel, 'value': stats.total, 'icon': Icons.description_outlined, 'color': Colors.grey},
-      {'title': s.submittedLabel, 'value': stats.submitted, 'icon': Icons.check_circle_outline_rounded, 'color': Colors.green},
-      {'title': s.draftLabel, 'value': stats.draft, 'icon': Icons.edit_note_rounded, 'color': Colors.grey},
+      {'title': s.submittedTodayLabel, 'value': stats.submittedToday, 'icon': Icons.mark_email_read_outlined, 'color': const Color(0xFF2563EB)},
+      {'title': s.totalReportsLabel, 'value': stats.total, 'icon': Icons.calendar_month_outlined, 'color': Colors.grey.shade600},
+      {'title': s.submittedLabel, 'value': stats.submitted, 'icon': Icons.check_rounded, 'color': const Color(0xFF0F172A)},
+      {'title': s.draftLabel, 'value': stats.draft, 'icon': Icons.edit_outlined, 'color': Colors.grey.shade600},
     ];
 
     return LayoutBuilder(
@@ -141,7 +149,7 @@ class _ReportsDashboardScreenState extends State<ReportsDashboardScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(c['icon'] as IconData, size: 24, color: c['color'] as Color),
+                  Icon(c['icon'] as IconData, size: 22, color: c['color'] as Color),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
@@ -178,9 +186,9 @@ class _ReportsDashboardScreenState extends State<ReportsDashboardScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final items = [
-      {'title': s.dailyDsrLabel, 'value': stats.dsr, 'icon': Icons.light_mode_outlined, 'color': Colors.amber},
-      {'title': s.weeklyWsrLabel, 'value': stats.wsr, 'icon': Icons.calendar_month_outlined, 'color': Colors.blue},
-      {'title': s.monthlyMsrLabel, 'value': stats.msr, 'icon': Icons.calendar_today_outlined, 'color': Colors.red},
+      {'title': s.dailyDsrLabel, 'value': stats.dsr, 'icon': Icons.wb_sunny_outlined, 'borderColor': const Color(0xFFD97706)},
+      {'title': s.weeklyWsrLabel, 'value': stats.wsr, 'icon': Icons.calendar_month_outlined, 'borderColor': const Color(0xFF2563EB)},
+      {'title': s.monthlyMsrLabel, 'value': stats.msr, 'icon': Icons.calendar_today_outlined, 'borderColor': const Color(0xFFDC2626)},
     ];
 
     return LayoutBuilder(
@@ -200,16 +208,23 @@ class _ReportsDashboardScreenState extends State<ReportsDashboardScreen> {
           itemCount: items.length,
           itemBuilder: (context, index) {
             final item = items[index];
+            final borderColor = item['borderColor'] as Color;
+
             return Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1E293B) : Colors.white,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                border: Border(
+                  left: BorderSide(color: borderColor, width: 4),
+                  top: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                  right: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                  bottom: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                ),
               ),
               child: Row(
                 children: [
-                  Icon(item['icon'] as IconData, size: 22, color: item['color'] as Color),
+                  Icon(item['icon'] as IconData, size: 22, color: borderColor),
                   const SizedBox(width: 12),
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -238,196 +253,183 @@ class _ReportsDashboardScreenState extends State<ReportsDashboardScreen> {
     );
   }
 
-  Widget _buildDsrComplianceSection(BuildContext context, AppStrings s, ReportComplianceModel compliance) {
+  Widget _buildMyReportsSection(BuildContext context, AppStrings s, List<dynamic> reportsRaw) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Section Title & Subtitle
-        Row(
-          children: [
-            Text(
-              s.dsrComplianceHeader,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : const Color(0xFF0F172A),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                s.dsrComplianceSubtitle,
-                style: TextStyle(fontSize: 11, color: isDark ? Colors.white.withValues(alpha: 0.5) : Colors.black45),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
+    // Parse reports into StatusReportItemModel list
+    List<StatusReportItemModel> reports = [];
+    for (var r in reportsRaw) {
+      if (r is StatusReportItemModel) {
+        reports.add(r);
+      } else if (r is Map<String, dynamic>) {
+        reports.add(StatusReportItemModel.fromJson(r));
+      }
+    }
 
-        // Compliance Days List
-        if (compliance.days.isEmpty)
-          const Padding(
-            padding: EdgeInsets.all(30),
-            child: Center(child: Text('No compliance data available.', style: TextStyle(color: Colors.grey))),
-          )
-        else
-          Container(
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-            ),
-            child: ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: compliance.days.length,
-              separatorBuilder: (context, index) => Divider(height: 1, color: isDark ? Colors.white12 : const Color(0xFFF1F5F9)),
-              itemBuilder: (context, index) {
-                final dayItem = compliance.days[index];
-                final isExpanded = _expandedDayKeys.contains(dayItem.day);
+    // Filter based on selected tab index
+    List<StatusReportItemModel> filtered = reports;
+    if (_selectedFilterIndex == 1) {
+      filtered = reports.where((r) => r.type.toLowerCase() == 'dsr').toList();
+    } else if (_selectedFilterIndex == 2) {
+      filtered = reports.where((r) => r.type.toLowerCase() == 'wsr').toList();
+    } else if (_selectedFilterIndex == 3) {
+      filtered = reports.where((r) => r.type.toLowerCase() == 'msr').toList();
+    }
 
-                return Column(
-                  children: [
-                    InkWell(
-                      onTap: () {
-                        setState(() {
-                          if (isExpanded) {
-                            _expandedDayKeys.remove(dayItem.day);
-                          } else {
-                            _expandedDayKeys.add(dayItem.day);
-                          }
-                        });
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                        child: Row(
-                          children: [
-                            // Day formatted text e.g. Thu 20 Aug
-                            SizedBox(
-                              width: 100,
-                              child: Text(
-                                _formatComplianceDay(dayItem.day),
-                                style: TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.white : const Color(0xFF0F172A),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-
-                            // Progress Bar
-                            Expanded(
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(4),
-                                child: LinearProgressIndicator(
-                                  value: dayItem.rate / 100.0,
-                                  minHeight: 8,
-                                  backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-                                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF16A34A)),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-
-                            // Stats text e.g. 0 filed · 26 missed 0%
-                            Text(
-                              '${dayItem.filed} ${s.filedLabel} · ${dayItem.missed} ${s.missedLabel}   ${dayItem.rate.toInt()}%',
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                color: isDark ? Colors.white70 : Colors.black87,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-
-                            // Expand Arrow
-                            Icon(
-                              isExpanded ? Icons.arrow_drop_up_rounded : Icons.arrow_drop_down_rounded,
-                              color: Colors.grey,
-                              size: 20,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    // Expanded Missed Users Chips Section
-                    if (isExpanded && dayItem.missedUsers.isNotEmpty)
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(12),
-                        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                        child: Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: dayItem.missedUsers.map((user) {
-                            return Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: isDark ? const Color(0xFF1E293B) : const Color(0xFFFEE2E2),
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: isDark ? const Color(0xFF991B1B) : const Color(0xFFFCA5A5),
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  CircleAvatar(
-                                    radius: 10,
-                                    backgroundColor: _hexToColor(user.avatarColor),
-                                    child: Text(
-                                      user.initials,
-                                      style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    '${user.name} · ${user.department}',
-                                    style: TextStyle(
-                                      fontSize: 10.5,
-                                      color: isDark ? const Color(0xFFFCA5A5) : const Color(0xFF991B1B),
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-                  ],
-                );
-              },
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Sub-header Title
+          Text(
+            'My Reports',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : const Color(0xFF0F172A),
             ),
           ),
-      ],
+          const SizedBox(height: 12),
+
+          // Tabs Row (All, DSR, WSR, MSR)
+          Row(
+            children: [
+              _buildFilterTab('All', 0),
+              const SizedBox(width: 16),
+              _buildFilterTab('DSR', 1),
+              const SizedBox(width: 16),
+              _buildFilterTab('WSR', 2),
+              const SizedBox(width: 16),
+              _buildFilterTab('MSR', 3),
+            ],
+          ),
+          const Divider(),
+          const SizedBox(height: 8),
+
+          // Reports List matching Image 1 mockup
+          if (filtered.isEmpty)
+            const Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(
+                child: Text('No reports found.', style: TextStyle(color: Colors.grey, fontSize: 12)),
+              ),
+            )
+          else
+            Column(
+              children: filtered.map((r) => _buildReportItemRow(context, s, r)).toList(),
+            ),
+        ],
+      ),
     );
   }
 
-  String _formatComplianceDay(String dateStr) {
-    try {
-      final dt = DateTime.parse(dateStr);
-      const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      return '${weekdays[dt.weekday - 1]} ${dt.day.toString().padLeft(2, '0')} ${months[dt.month - 1]}';
-    } catch (_) {
-      return dateStr;
-    }
+  Widget _buildFilterTab(String label, int index) {
+    final isSelected = _selectedFilterIndex == index;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return GestureDetector(
+      onTap: () => setState(() => _selectedFilterIndex = index),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+              color: isSelected
+                  ? (isDark ? const Color(0xFFF87171) : const Color(0xFFB91C1C))
+                  : (isDark ? Colors.white60 : Colors.grey),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Container(
+            height: 2,
+            width: 30,
+            color: isSelected ? (isDark ? const Color(0xFFF87171) : const Color(0xFFB91C1C)) : Colors.transparent,
+          ),
+        ],
+      ),
+    );
   }
 
-  Color _hexToColor(String? hex) {
-    if (hex == null || hex.trim().isEmpty) return const Color(0xFFD98A04);
-    try {
-      String cleanHex = hex.replaceAll('#', '').replaceAll('0x', '').trim();
-      if (cleanHex.length == 6) cleanHex = 'FF$cleanHex';
-      return Color(int.parse(cleanHex, radix: 16));
-    } catch (_) {
-      return const Color(0xFFD98A04);
-    }
+  Widget _buildReportItemRow(BuildContext context, AppStrings s, StatusReportItemModel item) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isSubmitted = item.status.toLowerCase() == 'submitted';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
+        children: [
+          // Red Badge (DSR / WSR / MSR)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFFB91C1C),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              item.type.toUpperCase(),
+              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+            ),
+          ),
+          const SizedBox(width: 12),
+
+          // Title & Subtitle
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.title ?? (item.workCompleted ?? 'Report'),
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  ),
+                ),
+                if (item.workCompleted != null && item.workCompleted!.isNotEmpty)
+                  Text(
+                    item.workCompleted!,
+                    style: TextStyle(fontSize: 11, color: isDark ? Colors.white60 : Colors.black54),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+              ],
+            ),
+          ),
+
+          // Right Status Pill (Draft amber or Submitted 🔒 green)
+          Row(
+            children: [
+              Text(
+                isSubmitted ? 'Submitted' : 'Draft',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: isSubmitted ? const Color(0xFF16A34A) : const Color(0xFFD97706),
+                ),
+              ),
+              if (item.isLocked) ...[
+                const SizedBox(width: 4),
+                const Icon(Icons.lock_outline_rounded, size: 12, color: Color(0xFF16A34A)),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }

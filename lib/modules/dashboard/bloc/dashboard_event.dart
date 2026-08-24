@@ -9,9 +9,10 @@ abstract class DashboardEvent extends Equatable {
 
 class FetchDashboardDataEvent extends DashboardEvent {
   final int? branchId;
-  const FetchDashboardDataEvent({this.branchId});
+  final int? mine;
+  const FetchDashboardDataEvent({this.branchId, this.mine = 1});
   @override
-  List<Object?> get props => [branchId];
+  List<Object?> get props => [branchId, mine];
 }
 
 class SelectBranchEvent extends DashboardEvent {

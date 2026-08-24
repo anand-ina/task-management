@@ -34,6 +34,12 @@ class AppStringsTe extends AppStrings {
   String get executiveAnamika => 'అనామిక (ఎగ్జిక్యూటివ్)';
   @override
   String get executiveGyapika => 'జ్ఞాపిక (ఎగ్జిక్యూటివ్)';
+  @override
+  String get teamLeadAkash => 'ఆకాష్ (టీమ్ లీడ్)';
+  @override
+  String get managerSandeep => 'సందీప్ (మేనేజర్)';
+  @override
+  String get centerHeadCharan => 'చరణ్ (సెంటర్ హెడ్ / ప్రిన్సిపాల్)';
 
   @override
   String get dashboard => 'డాష్‌బోర్డ్';
@@ -423,6 +429,54 @@ class AppStringsTe extends AppStrings {
   String get newRecurring => 'కొత్త పునరావృత టాస్క్';
   @override
   String get bulkUpload => 'బల్క్ అప్‌లోడ్';
+  @override
+  String get exportCsv => 'CSV ఎగుమతి';
+  @override
+  String get exportExcel => 'Excel ఎగుమతి';
+  @override
+  String get exportPdf => 'PDF ఎగుమతి';
+  @override
+  String get bulkUploadTasksTitle => 'టాస్క్‌ల బల్క్ అప్‌లోడ్';
+  @override
+  String get bulkUploadSubtitle => 'ఎక్సెల్ లేదా సీఎస్వీ · మీరు నిర్ధారించే వరకు ఏదీ సేవ్ చేయబడదు';
+  @override
+  String get chooseAFile => 'ఫైల్‌ను ఎంచుకోండి';
+  @override
+  String get acceptedFormats => 'అనుమతించబడినవి: .xlsx, .xls, .csv';
+  @override
+  String get columnsImporterReads => 'ఇంపార్టర్ చదివే నిలువు వరుసలు';
+  @override
+  String get columnHeader => 'కాలమ్ హెడర్';
+  @override
+  String get exampleHeader => 'ఉదాహరణ';
+  @override
+  String get notesHeader => 'గమనికలు';
+  @override
+  String get rowsFound => 'కనుగొనబడిన వరుసలు';
+  @override
+  String get willImport => 'ఇంపార్ట్ అయ్యేవి';
+  @override
+  String get skippedCount => 'వదిలేసినవి';
+  @override
+  String get headerRowLabel => 'హెడర్ వరుస';
+  @override
+  String get previewTitle => 'ముందస్తు వీక్షణ (ప్రివ్యూ)';
+  @override
+  String get rowHeader => 'వరుస';
+  @override
+  String get taskHeader => 'టాస్క్';
+  @override
+  String get assignedToHeader => 'కేటాయించిన వారు';
+  @override
+  String get targetHeader => 'లక్ష్య తేది';
+  @override
+  String get noteHeader => 'గమనిక';
+  @override
+  String get chooseAnotherFile => 'మరొక ఫైల్‌ను ఎంచుకోండి';
+  @override
+  String importTasksCount(int count) => '$count టాస్క్‌ను దిగుమతి చేయండి';
+  @override
+  String bulkImportSuccess(int count, String taskNos) => '$count టాస్క్‌లు విజయవంతంగా దిగుమతి చేయబడ్డాయి: $taskNos';
   @override
   String get allScope => 'అన్నీ';
   @override
@@ -862,4 +916,59 @@ class AppStringsTe extends AppStrings {
   String get faqQ5 => 'నేను థీమ్ లేదా భాషను ఎలా మార్చాలి?';
   @override
   String get faqA5 => 'అవతార్ మెనూ → Settings ని తెరవండి. లైట్ / డార్క్ / సిస్టమ్ మరియు ఇంగ్లీష్ / తెలుగు / హిందీ ఎంచుకోండి.';
+
+  @override
+  String get myStatusReports => 'నా స్టేటస్ నివేదికలు';
+  @override
+  String get myStatusReportsSubtitle => 'మీరు సమర్పించిన దినచర్య, వారపు మరియు నెలవారీ నివేదికలు';
+  @override
+  String get newReportButton => '+ కొత్త నివేదిక';
+  @override
+  String get newStatusReport => 'కొత్త స్టేటస్ నివేదిక';
+  @override
+  String get dailyDsr => 'దినచర్య (DSR)';
+  @override
+  String get weeklyWsr => 'వారపు (WSR)';
+  @override
+  String get monthlyMsr => 'నెలవారీ (MSR)';
+  @override
+  String get reportTypeLabel => 'నివేదిక రకం';
+  @override
+  String get periodDateLabel => 'కాలపరిమితి తేదీ';
+  @override
+  String get periodDateHint => 'ఈ నివేదిక కవర్ చేసే రోజు. రాత్రి 9:00 గంటలకు లాక్ చేయబడుతుంది.';
+  @override
+  String get autoFillBannerNote => 'లైన్ మీ టాస్క్‌ల నుండి ఆటో-ఫిల్ చేయబడింది మరియు లాక్ చేయబడింది. మీరు ప్రతి విభాగం కింద మరిన్ని లైన్‌లను మాత్రమే జోడించగలరు.';
+  @override
+  String get workCompletedLabel => 'పూర్తయిన పని *';
+  @override
+  String get workInProgressLabel => 'జరుగుతున్న పని';
+  @override
+  String get pendingTasksLabel => 'పెండింగ్ టాస్క్‌లు';
+  @override
+  String get challengesBlockersLabel => 'సవాళ్లు / అడ్డంకులు';
+  @override
+  String get lockedContactDirector => 'లాక్ చేయబడింది — అన్‌లాక్ చేయడానికి డైరెక్టర్/ప్రిన్సిపాల్‌ని సంప్రదించండి';
+  @override
+  String get enterDetailsPlaceholder => 'వివరాలను నమోదు చేయండి...';
+  @override
+  String get saveDraft => 'డ్రాఫ్ట్‌ను సేవ్ చేయండి';
+  @override
+  String get submitButton => 'సమర్పించండి';
+  @override
+  String get noClosureRequestsAwaiting => 'మీ నిర్ణయం కోసం ఏ ముగింపు అభ్యర్థనలు వేచి లేవు. 🎉';
+  @override
+  String get targetDateChange => 'లక్ష్య తేదీ మార్పు';
+  @override
+  String get resolveApprove => 'పరిష్కరించండి · ఆమోదించండి';
+  @override
+  String get saveChanges => 'మార్పులను సేవ్ చేయండి';
+  @override
+  String get autoStatusReportSlotsToday => 'ఈ రోజు ఆటో స్టేటస్-రిపోర్ట్ స్లాట్‌లు: ';
+  @override
+  String get dsrTimeSlot => 'DSR · 5:30 PM';
+  @override
+  String get completionAwaitingApproval => 'పూర్తయిన నమోదు ఆమోదం కోసం వేచి ఉంది';
+  @override
+  String get noFinesOrRewardsYet => 'ఇంతవరకు జరిమానాలు లేదా రివార్డ్‌లు లేవు.';
 }

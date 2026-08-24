@@ -34,6 +34,12 @@ class AppStringsKn extends AppStrings {
   String get executiveAnamika => 'ಅನಾಮಿಕಾ (ಎಕ್ಸಿಕ್ಯೂಟಿವ್)';
   @override
   String get executiveGyapika => 'ಜ್ಞಾಪಿಕಾ (ಎಕ್ಸಿಕ್ಯೂಟಿವ್)';
+  @override
+  String get teamLeadAkash => 'ಆಕಾಶ್ (ಟೀಮ್‌ ಲೀಡ್)';
+  @override
+  String get managerSandeep => 'ಸಂದೀಪ್ (ಮ್ಯಾನೇಜರ್)';
+  @override
+  String get centerHeadCharan => 'ಚರಣ್ (ಸೆಂಟರ್ ಹೆಡ್ / ಪ್ರಿನ್ಸಿಪಾಲ್)';
 
   @override
   String get dashboard => 'ಡ್ಯಾಶ್‌ಬೋರ್ಡ್';
@@ -423,6 +429,54 @@ class AppStringsKn extends AppStrings {
   String get newRecurring => 'ಹೊಸ ಮರುಕಳಿಸುವ ಕಾರ್ಯ';
   @override
   String get bulkUpload => 'ಬಲ್ಕ್ ಅಪ್‌ಲೋಡ್';
+  @override
+  String get exportCsv => 'CSV ರಫ್ತು';
+  @override
+  String get exportExcel => 'Excel ರಫ್ತು';
+  @override
+  String get exportPdf => 'PDF ರಫ್ತು';
+  @override
+  String get bulkUploadTasksTitle => 'ಕಾರ್ಯಗಳ ಬಲ್ಕ್ ಅಪ್‌ಲೋಡ್';
+  @override
+  String get bulkUploadSubtitle => 'ಎಕ್ಸೆಲ್ ಅಥವಾ ಸಿಎಸ್‌ವಿ · ನೀವು ದೃಢೀಕರಿಸುವವರೆಗೆ ಏನನ್ನೂ ಉಳಿಸಲಾಗುವುದಿಲ್ಲ';
+  @override
+  String get chooseAFile => 'ಫೈಲ್ ಆಯ್ಕೆಮಾಡಿ';
+  @override
+  String get acceptedFormats => 'ಅಂಗೀಕರಿಸಲಾಗಿದೆ: .xlsx, .xls, .csv';
+  @override
+  String get columnsImporterReads => 'ಇಂಪೋರ್ಟರ್ ಓದುವ ಕಾಲಮ್‌ಗಳು';
+  @override
+  String get columnHeader => 'ಕಾಲಮ್ ಹೆಡರ್';
+  @override
+  String get exampleHeader => 'ಉದಾಹರಣೆ';
+  @override
+  String get notesHeader => 'ಟಿಪ್ಪಣಿಗಳು';
+  @override
+  String get rowsFound => 'ಕಂಡುಬಂದ ಸಾಲುಗಳು';
+  @override
+  String get willImport => 'ಆಮದು ಮಾಡಲಾಗುತ್ತದೆ';
+  @override
+  String get skippedCount => 'ಸ್ಕಿಪ್ ಮಾಡಲಾಗಿದೆ';
+  @override
+  String get headerRowLabel => 'ಹೆಡರ್ ಸಾಲು';
+  @override
+  String get previewTitle => 'ಮುನ್ನೋಟ';
+  @override
+  String get rowHeader => 'ಸಾಲು';
+  @override
+  String get taskHeader => 'ಕಾರ್ಯ';
+  @override
+  String get assignedToHeader => 'ನಿಯೋಜಿಸಲಾಗಿದೆ';
+  @override
+  String get targetHeader => 'ಗುರಿ ದಿನಾಂಕ';
+  @override
+  String get noteHeader => 'ಟಿಪ್ಪಣಿ';
+  @override
+  String get chooseAnotherFile => 'ಮತ್ತೊಂದು ಫೈಲ್ ಆಯ್ಕೆಮಾಡಿ';
+  @override
+  String importTasksCount(int count) => '$count ಕಾರ್ಯವನ್ನು ಆಮದು ಮಾಡಿ';
+  @override
+  String bulkImportSuccess(int count, String taskNos) => '$count ಕಾರ್ಯಗಳನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಆಮದು ಮಾಡಿಕೊಳ್ಳಲಾಗಿದೆ: $taskNos';
   @override
   String get allScope => 'ಎಲ್ಲವೂ';
   @override
@@ -862,4 +916,59 @@ class AppStringsKn extends AppStrings {
   String get faqQ5 => 'ನಾನು ಥೀಮ್ ಅಥವಾ ಭಾಷೆಯನ್ನು ಹೇಗೆ ಬದಲಾಯಿಸುವುದು?';
   @override
   String get faqA5 => 'ಅವತಾರ್ ಮೆನು → Settings ತೆರೆಯಿರಿ. ಲೈಟ್ / ಡಾರ್ಕ್ / ಸಿಸ್ಟಮ್ ಆಯ್ಕೆಮಾಡಿ.';
+
+  @override
+  String get myStatusReports => 'ನನ್ನ ಸ್ಥಿತಿ ವರದಿಗಳು';
+  @override
+  String get myStatusReportsSubtitle => 'ನೀವು ಸಲ್ಲಿಸಿದ ದೈನಂದಿನ, ಸಾಪ್ತಾಹಿಕ ಮತ್ತು ಮಾಸಿಕ ವರದಿಗಳು';
+  @override
+  String get newReportButton => '+ ಹೊಸ ವರದಿ';
+  @override
+  String get newStatusReport => 'ಹೊಸ ಸ್ಥಿತಿ ವರದಿ';
+  @override
+  String get dailyDsr => 'ದೈನಂದಿನ (DSR)';
+  @override
+  String get weeklyWsr => 'ಸಾಪ್ತಾಹಿಕ (WSR)';
+  @override
+  String get monthlyMsr => 'ಮಾಸಿಕ (MSR)';
+  @override
+  String get reportTypeLabel => 'ವರದಿ ಪ್ರಕಾರ';
+  @override
+  String get periodDateLabel => 'ಅವಧಿ ದಿನಾಂಕ';
+  @override
+  String get periodDateHint => 'ಈ ವರದಿ ಕವರ್ ಮಾಡುವ ದಿನ. ರಾತ್ರಿ 9:00 ಕ್ಕೆ ಲಾಕ್ ಆಗುತ್ತದೆ.';
+  @override
+  String get autoFillBannerNote => 'ಸಾಲನ್ನು ನಿಮ್ಮ ಕಾರ್ಯಗಳಿಂದ ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಭರ್ತಿ ಮಾಡಲಾಗಿದೆ ಮತ್ತು ಲಾಕ್ ಮಾಡಲಾಗಿದೆ.';
+  @override
+  String get workCompletedLabel => 'ಪೂರ್ಣಗೊಂಡ ಕೆಲಸ *';
+  @override
+  String get workInProgressLabel => 'ಪ್ರಗತಿಯಲ್ಲಿರುವ ಕೆಲಸ';
+  @override
+  String get pendingTasksLabel => 'ಬಾಕಿ ಇರುವ ಕಾರ್ಯಗಳು';
+  @override
+  String get challengesBlockersLabel => 'ಸವಾಲುಗಳು / ಅಡೆತಡೆಗಳು';
+  @override
+  String get lockedContactDirector => 'ಲಾಕ್ ಆಗಿದೆ — ಅನ್‌ಲಾಕ್ ಮಾಡಲು ನಿರ್ದೇಶಕರು/ಪ್ರಾಂಶುಪಾಲರನ್ನು ಸಂಪರ್ಕಿಸಿ';
+  @override
+  String get enterDetailsPlaceholder => 'ವಿವರಗಳನ್ನು ನಮೂದಿಸಿ...';
+  @override
+  String get saveDraft => 'ಖರಡನ್ನು ಉಳಿಸಿ';
+  @override
+  String get submitButton => 'ಸಲ್ಲಿಸಿ';
+  @override
+  String get noClosureRequestsAwaiting => 'ನಿಮ್ಮ ನಿರ್ಧಾರಕ್ಕಾಗಿ ಯಾವುದೇ ಮುಕ್ತಾಯದ ವಿನಂತಿಗಳು ಕಾಯುತ್ತಿಲ್ಲ. 🎉';
+  @override
+  String get targetDateChange => 'ಗುರಿ ದಿನಾಂಕ మార్పు';
+  @override
+  String get resolveApprove => 'ಪರಿಹರಿಸಿ · ಅನುಮೋದಿಸಿ';
+  @override
+  String get saveChanges => 'ಬದಲಾವಣೆಗಳನ್ನು ಉಳಿಸಿ';
+  @override
+  String get autoStatusReportSlotsToday => 'ಇಂದು ಸ್ವಯಂ ಸ್ಥಿತಿ-ವರದಿ ಸ್ಲಾಟ್‌ಗಳು: ';
+  @override
+  String get dsrTimeSlot => 'DSR · 5:30 PM';
+  @override
+  String get completionAwaitingApproval => 'ಪೂರ್ಣಗೊಳಿಸುವಿಕೆಯು ಅನುಮೋದನೆಗಾಗಿ ಕಾಯುತ್ತಿದೆ';
+  @override
+  String get noFinesOrRewardsYet => 'ಇನ್ನೂ ಯಾವುದೇ ದಂಡಗಳು ಅಥವಾ ಬಹುಮಾನಗಳಿಲ್ಲ.';
 }

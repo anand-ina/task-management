@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/localization/app_strings.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
+import '../../../shared_widgets/dialogs/request_task_closure_dialog.dart';
+import '../../../shared_widgets/dialogs/task_detail_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
 import '../bloc/approvals_bloc.dart';
 import '../bloc/approvals_event.dart';
@@ -41,7 +44,7 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header Title & Awaiting Badge
+              // Header Title & + Request task closure Button
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -53,31 +56,46 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  BlocBuilder<ApprovalsBloc, ApprovalsState>(
-                    builder: (context, state) {
-                      int awaitingCount = 0;
-                      if (state is ApprovalsLoadedState) {
-                        awaitingCount = state.taskApprovalsReceived
-                            .where((e) => e.status.toLowerCase() == 'pending')
-                            .length;
-                      }
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-                          borderRadius: BorderRadius.circular(12),
+                  Column(
+                    children: [
+                      BlocBuilder<ApprovalsBloc, ApprovalsState>(
+                        builder: (context, state) {
+                          int awaitingCount = 0;
+                          if (state is ApprovalsLoadedState) {
+                            awaitingCount = state.taskApprovalsReceived
+                                .where((e) => e.status.toLowerCase() == 'pending')
+                                .length;
+                          }
+                          return Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '$awaitingCount ${ApprovalsConstStrings.awaitingYou}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: isDark ? Colors.white70 : Colors.black87,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                       ElevatedButton.icon(
+                        onPressed: () => RequestTaskClosureDialog.show(context),
+                        label: const Text('+ Request task closure', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0F172A),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
-                        child: Text(
-                          '$awaitingCount ${ApprovalsConstStrings.awaitingYou}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.white70 : Colors.black87,
-                          ),
-                        ),
-                      );
-                    },
+                      ),
+                    ],
                   ),
+
                 ],
               ),
               const SizedBox(height: 6),
@@ -90,7 +108,7 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Segmented Pill Tabs
+              // Segmented Pill Tabs (Received by Me & Initiated by Me)
               BlocBuilder<ApprovalsBloc, ApprovalsState>(
                 builder: (context, state) {
                   int receivedCount = 0;
@@ -109,12 +127,13 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         _buildTabButton(
-                          title: '${ApprovalsConstStrings.receivedByMe} ${receivedCount > 0 ? "($receivedCount)" : "0"}',
+                          title: '${ApprovalsConstStrings.receivedByMe} ${receivedCount > 0 ? "($receivedCount)" : ""}'.trim(),
                           isSelected: _selectedTabIndex == 0,
                           onTap: () => setState(() => _selectedTabIndex = 0),
                         ),
+                        const SizedBox(width: 4),
                         _buildTabButton(
-                          title: '${ApprovalsConstStrings.initiatedByMe} ${initiatedCount > 0 ? "($initiatedCount)" : ""}',
+                          title: '${ApprovalsConstStrings.initiatedByMe} ${initiatedCount > 0 ? "($initiatedCount)" : ""}'.trim(),
                           isSelected: _selectedTabIndex == 1,
                           onTap: () => setState(() => _selectedTabIndex = 1),
                         ),
@@ -216,16 +235,22 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
   }
 
   Widget _buildEmptyState() {
+    final s = AppStrings.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 60),
         child: Column(
           children: [
-            Icon(Icons.assignment_turned_in_outlined, size: 48, color: Colors.grey.shade400),
+            const Text('🎉', style: TextStyle(fontSize: 40)),
             const SizedBox(height: 12),
             Text(
-              ApprovalsConstStrings.noTaskApprovals,
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+              s.noClosureRequestsAwaiting,
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -360,30 +385,22 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
                       ],
                       const SizedBox(height: 12),
 
-                      // Action Buttons
+                      // Action Buttons (View -> button for Academic Executive)
                       Row(
                         children: [
-                          GestureDetector(
-                            onTap: () {},
-                            child: Text(
-                              ApprovalsConstStrings.approveClosure,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF1E3A8A),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          GestureDetector(
-                            onTap: () {},
-                            child: const Text(
-                              ApprovalsConstStrings.reject,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFFDC2626),
-                              ),
+                          InkWell(
+                            onTap: () => TaskDetailDialog.show(context, taskId: item.taskId ?? 0),
+                            child: Row(
+                              children: [
+                                Text(
+                                  'View →',
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF1E3A8A),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],

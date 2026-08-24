@@ -171,118 +171,103 @@ class _StaffScreenState extends State<StaffScreen> {
   Widget _buildFiltersBar(BuildContext context, AppStrings s, StaffOverviewData data) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isWide = constraints.maxWidth > 700;
+    final searchBox = SizedBox(
+      width: 240,
+      height: 38,
+      child: TextField(
+        controller: _searchController,
+        onChanged: (val) => setState(() {}),
+        style: const TextStyle(fontSize: 12),
+        decoration: InputDecoration(
+          hintText: s.searchStaffPlaceholder,
+          hintStyle: const TextStyle(fontSize: 12),
+          prefixIcon: const Icon(Icons.search, size: 16),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+          isDense: true,
+          filled: true,
+          fillColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      ),
+    );
 
-        final searchBox = SizedBox(
-          width: isWide ? 220 : double.infinity,
-          height: 38,
-          child: TextField(
-            controller: _searchController,
-            onChanged: (val) => setState(() {}),
-            style: const TextStyle(fontSize: 12),
-            decoration: InputDecoration(
-              hintText: s.searchStaffPlaceholder,
-              hintStyle: const TextStyle(fontSize: 12),
-              prefixIcon: const Icon(Icons.search, size: 16),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            ),
+    Widget buildDropdown<T>({
+      required T? value,
+      required String hint,
+      required List<DropdownMenuItem<T?>> items,
+      required ValueChanged<T?> onChanged,
+    }) {
+      return Container(
+        height: 38,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<T?>(
+            value: value,
+            isDense: true,
+            hint: Text(hint, style: const TextStyle(fontSize: 12)),
+            items: items,
+            onChanged: onChanged,
           ),
-        );
+        ),
+      );
+    }
 
-        final deptDropdown = Container(
-          height: 38,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        searchBox,
+        buildDropdown<int?>(
+          value: _selectedDepartmentIdFilter,
+          hint: s.departmentLabel,
+          items: [
+            DropdownMenuItem<int?>(value: null, child: Text(s.allOption, style: const TextStyle(fontSize: 12))),
+            ...data.departments.map((d) => DropdownMenuItem<int?>(value: d.id, child: Text(d.name, style: const TextStyle(fontSize: 12)))),
+          ],
+          onChanged: (val) => setState(() => _selectedDepartmentIdFilter = val),
+        ),
+        buildDropdown<String?>(
+          value: _selectedStaffTypeFilter,
+          hint: s.staffTypeHeader,
+          items: [
+            DropdownMenuItem<String?>(value: null, child: Text(s.allOption, style: const TextStyle(fontSize: 12))),
+            DropdownMenuItem<String?>(value: 'teaching', child: Text(s.teachingOption, style: const TextStyle(fontSize: 12))),
+            DropdownMenuItem<String?>(value: 'non_teaching', child: Text(s.nonTeachingOption, style: const TextStyle(fontSize: 12))),
+          ],
+          onChanged: (val) => setState(() => _selectedStaffTypeFilter = val),
+        ),
+        buildDropdown<int?>(
+          value: _selectedRoleFilter,
+          hint: s.rbacRoleHeader,
+          items: [
+            DropdownMenuItem<int?>(value: null, child: Text(s.allOption, style: const TextStyle(fontSize: 12))),
+            ...data.roles.map((r) => DropdownMenuItem<int?>(value: r.id, child: Text(r.label.isNotEmpty ? r.label : r.name, style: const TextStyle(fontSize: 12)))),
+          ],
+          onChanged: (val) => setState(() => _selectedRoleFilter = val),
+        ),
+        if (_searchController.text.isNotEmpty ||
+            _selectedDepartmentIdFilter != null ||
+            _selectedStaffTypeFilter != null ||
+            _selectedRoleFilter != null)
+          TextButton.icon(
+            onPressed: () {
+              setState(() {
+                _searchController.clear();
+                _selectedDepartmentIdFilter = null;
+                _selectedStaffTypeFilter = null;
+                _selectedRoleFilter = null;
+              });
+            },
+            icon: const Icon(Icons.refresh, size: 14),
+            label: const Text('Reset', style: TextStyle(fontSize: 12)),
           ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<int?>(
-              value: _selectedDepartmentIdFilter,
-              hint: Text(s.departmentLabel, style: const TextStyle(fontSize: 12)),
-              items: [
-                DropdownMenuItem<int?>(value: null, child: Text(s.allOption, style: const TextStyle(fontSize: 12))),
-                ...data.departments.map((d) => DropdownMenuItem<int?>(value: d.id, child: Text(d.name, style: const TextStyle(fontSize: 12)))),
-              ],
-              onChanged: (val) => setState(() => _selectedDepartmentIdFilter = val),
-            ),
-          ),
-        );
-
-        final typeDropdown = Container(
-          height: 38,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String?>(
-              value: _selectedStaffTypeFilter,
-              hint: Text(s.staffTypeHeader, style: const TextStyle(fontSize: 12)),
-              items: [
-                DropdownMenuItem<String?>(value: null, child: Text(s.allOption, style: const TextStyle(fontSize: 12))),
-                DropdownMenuItem<String?>(value: 'teaching', child: Text(s.teachingOption, style: const TextStyle(fontSize: 12))),
-                DropdownMenuItem<String?>(value: 'non_teaching', child: Text(s.nonTeachingOption, style: const TextStyle(fontSize: 12))),
-              ],
-              onChanged: (val) => setState(() => _selectedStaffTypeFilter = val),
-            ),
-          ),
-        );
-
-        final roleDropdown = Container(
-          height: 38,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<int?>(
-              value: _selectedRoleFilter,
-              hint: Text(s.rbacRoleHeader, style: const TextStyle(fontSize: 12)),
-              items: [
-                DropdownMenuItem<int?>(value: null, child: Text(s.allOption, style: const TextStyle(fontSize: 12))),
-                ...data.roles.map((r) => DropdownMenuItem<int?>(value: r.id, child: Text(r.label.isNotEmpty ? r.label : r.name, style: const TextStyle(fontSize: 12)))),
-              ],
-              onChanged: (val) => setState(() => _selectedRoleFilter = val),
-            ),
-          ),
-        );
-
-        if (isWide) {
-          return Row(
-            children: [
-              searchBox,
-              const SizedBox(width: 10),
-              deptDropdown,
-              const SizedBox(width: 10),
-              typeDropdown,
-              const SizedBox(width: 10),
-              roleDropdown,
-            ],
-          );
-        } else {
-          return Column(
-            children: [
-              searchBox,
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(child: deptDropdown),
-                  const SizedBox(width: 8),
-                  Expanded(child: typeDropdown),
-                  const SizedBox(width: 8),
-                  Expanded(child: roleDropdown),
-                ],
-              ),
-            ],
-          );
-        }
-      },
+      ],
     );
   }
 

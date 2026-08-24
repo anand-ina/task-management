@@ -10,15 +10,21 @@ class ApiConstants {
   static const String dashboard = '$baseUrl/dashboard';
   static const String dashboardTeam = '$baseUrl/dashboard/team';
   static const String todos = '$baseUrl/todos';
+  static const String todosToday = '$baseUrl/todos/today';
   static const String branches = '$baseUrl/lookups/branches';
   static const String assignees = '$baseUrl/lookups/assignees';
   static const String enums = '$baseUrl/lookups/enums';
   static const String scheduleMy = '$baseUrl/schedule/my';
   static const String tasks = '$baseUrl/tasks';
+  static const String tasksBulk = '$baseUrl/tasks/bulk';
+  static const String bulkTasksTemplate = '$baseUrl/bulk/tasks/template';
+  static const String bulkTasksPreview = '$baseUrl/bulk/tasks/preview';
+  static const String bulkTasksCommit = '$baseUrl/bulk/tasks/commit';
   static const String recurring = '$baseUrl/recurring';
   static const String oneOnOnePending = '$baseUrl/meetings/one-on-one/pending';
   static const String meetings = '$baseUrl/meetings';
   static const String meetingsAvailability = '$baseUrl/meetings/availability';
+  static const String sutraCommand = '$baseUrl/sutra/command';
 
   // Approvals & Escalations Endpoints
   static const String approvals = '$baseUrl/approvals';

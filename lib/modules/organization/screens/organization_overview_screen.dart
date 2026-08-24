@@ -10,6 +10,7 @@ import '../bloc/organization_event.dart';
 import '../bloc/organization_state.dart';
 import '../models/organization_data_model.dart';
 import '../models/trends_model.dart';
+import '../../dashboard/models/dashboard_stats.dart';
 
 class OrganizationOverviewScreen extends StatefulWidget {
   const OrganizationOverviewScreen({super.key});
@@ -638,6 +639,32 @@ class _OrganizationOverviewScreenState extends State<OrganizationOverviewScreen>
   Widget _buildOnTimeCompletionCard(BuildContext context, AppStrings s, dynamic performance) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    int dayVal = 90;
+    int weekVal = 48;
+    int monthVal = 49;
+    int quarterVal = 56;
+    int yearVal = 63;
+
+    if (performance is DashboardPerformance) {
+      dayVal = performance.day ?? 90;
+      weekVal = performance.week ?? 48;
+      monthVal = performance.month ?? 49;
+      quarterVal = performance.quarter ?? 56;
+      yearVal = performance.year ?? 63;
+    } else if (performance is Map<String, dynamic>) {
+      dayVal = (performance['day'] as int?) ?? 90;
+      weekVal = (performance['week'] as int?) ?? 48;
+      monthVal = (performance['month'] as int?) ?? 49;
+      quarterVal = (performance['quarter'] as int?) ?? 56;
+      yearVal = (performance['year'] as int?) ?? 63;
+    }
+
+    Color getColor(int val) {
+      if (val >= 75) return const Color(0xFF16A34A);
+      if (val >= 50) return const Color(0xFFD97706);
+      return const Color(0xFFDC2626);
+    }
+
     return Card(
       elevation: 1,
       shape: RoundedRectangleBorder(
@@ -657,11 +684,11 @@ class _OrganizationOverviewScreenState extends State<OrganizationOverviewScreen>
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildRingGauge(context, '90%', s.today, const Color(0xFF16A34A), 0.90),
-                _buildRingGauge(context, '48%', 'This Week', const Color(0xFFDC2626), 0.48),
-                _buildRingGauge(context, '49%', 'This Month', const Color(0xFFDC2626), 0.49),
-                _buildRingGauge(context, '56%', 'Quarter', const Color(0xFFD97706), 0.56),
-                _buildRingGauge(context, '63%', 'FY', const Color(0xFFD97706), 0.63),
+                _buildRingGauge(context, '$dayVal%', s.today, getColor(dayVal), (dayVal / 100.0).clamp(0.0, 1.0)),
+                _buildRingGauge(context, '$weekVal%', 'This Week', getColor(weekVal), (weekVal / 100.0).clamp(0.0, 1.0)),
+                _buildRingGauge(context, '$monthVal%', 'This Month', getColor(monthVal), (monthVal / 100.0).clamp(0.0, 1.0)),
+                _buildRingGauge(context, '$quarterVal%', 'Quarter', getColor(quarterVal), (quarterVal / 100.0).clamp(0.0, 1.0)),
+                _buildRingGauge(context, '$yearVal%', 'FY', getColor(yearVal), (yearVal / 100.0).clamp(0.0, 1.0)),
               ],
             ),
           ],

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/api_constants.dart';
 import '../../core/localization/app_strings.dart';
+import '../../core/network/dio_client.dart';
 import '../../modules/dashboard/models/branch_model.dart';
 import '../../modules/tasks/models/lookup_models.dart';
 import '../../modules/tasks/repository/all_tasks_repository.dart';
@@ -38,6 +40,64 @@ class _NewRecurringTaskDialogState extends State<NewRecurringTaskDialog> {
 
   final Set<LookupAssigneeModel> _selectedUsers = {};
   String _userSearchQuery = '';
+  bool _isCreating = false;
+
+  Future<void> _submitRecurringTask() async {
+    final title = _titleController.text.trim();
+    if (title.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Task Title * is required')),
+      );
+      return;
+    }
+
+    setState(() => _isCreating = true);
+
+    try {
+      final hourStr = _selectedTime.hour.toString().padLeft(2, '0');
+      final minStr = _selectedTime.minute.toString().padLeft(2, '0');
+      final timeStr = '$hourStr:$minStr';
+
+      final assignee = _selectedUsers.isNotEmpty ? _selectedUsers.first : null;
+
+      final payload = {
+        'title': title,
+        'branchId': _selectedBranch?.id ?? 1,
+        'frequency': _selectedFrequency.toLowerCase(),
+        'recurTime': timeStr,
+        'weekday': 1,
+        'monthday': 1,
+        'assigneeId': assignee?.id ?? 30,
+        'assigneeText': assignee?.name ?? 'test_TL',
+        'remarks': _remarksController.text.isNotEmpty ? _remarksController.text : 'no',
+      };
+
+      await DioClient().dio.post(
+        '${ApiConstants.baseUrl}/recurring',
+        data: payload,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Recurring task created successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context, true);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isCreating = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to create recurring task: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -414,13 +474,10 @@ class _NewRecurringTaskDialogState extends State<NewRecurringTaskDialog> {
                           ),
                           const SizedBox(width: 12),
                           ElevatedButton.icon(
-                            onPressed: () {
-                              Navigator.pop(context);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Recurring Task created successfully!')),
-                              );
-                            },
-                            icon: const Icon(Icons.check_rounded, size: 14),
+                            onPressed: _isCreating ? null : _submitRecurringTask,
+                            icon: _isCreating
+                                ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                : const Icon(Icons.check_rounded, size: 14),
                             label: const Text('Create Recurring'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF0F172A),
