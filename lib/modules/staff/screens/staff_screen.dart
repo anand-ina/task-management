@@ -227,7 +227,7 @@ class _StaffScreenState extends State<StaffScreen> {
           value: _selectedDepartmentIdFilter,
           hint: s.departmentLabel,
           items: [
-            DropdownMenuItem<int?>(value: null, child: Text(s.allOption, style: const TextStyle(fontSize: 12))),
+            DropdownMenuItem<int?>(value: null, child: Text('Department', style: const TextStyle(fontSize: 12))),
             ...data.departments.map((d) => DropdownMenuItem<int?>(value: d.id, child: Text(d.name, style: const TextStyle(fontSize: 12)))),
           ],
           onChanged: (val) => setState(() => _selectedDepartmentIdFilter = val),
@@ -236,7 +236,7 @@ class _StaffScreenState extends State<StaffScreen> {
           value: _selectedStaffTypeFilter,
           hint: s.staffTypeHeader,
           items: [
-            DropdownMenuItem<String?>(value: null, child: Text(s.allOption, style: const TextStyle(fontSize: 12))),
+            DropdownMenuItem<String?>(value: null, child: Text('Staff Type', style: const TextStyle(fontSize: 12))),
             DropdownMenuItem<String?>(value: 'teaching', child: Text(s.teachingOption, style: const TextStyle(fontSize: 12))),
             DropdownMenuItem<String?>(value: 'non_teaching', child: Text(s.nonTeachingOption, style: const TextStyle(fontSize: 12))),
           ],
@@ -246,7 +246,7 @@ class _StaffScreenState extends State<StaffScreen> {
           value: _selectedRoleFilter,
           hint: s.rbacRoleHeader,
           items: [
-            DropdownMenuItem<int?>(value: null, child: Text(s.allOption, style: const TextStyle(fontSize: 12))),
+            DropdownMenuItem<int?>(value: null, child: Text('Role', style: const TextStyle(fontSize: 12))),
             ...data.roles.map((r) => DropdownMenuItem<int?>(value: r.id, child: Text(r.label.isNotEmpty ? r.label : r.name, style: const TextStyle(fontSize: 12)))),
           ],
           onChanged: (val) => setState(() => _selectedRoleFilter = val),

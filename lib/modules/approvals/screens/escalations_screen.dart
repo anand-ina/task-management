@@ -211,7 +211,7 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                       itemCount: items.length,
                       separatorBuilder: (context, index) => const SizedBox(height: 12),
                       itemBuilder: (context, index) {
-                        return _buildEscalationCard(items[index], isAcademicExecutive);
+                        return _buildEscalationCard(items[index], isAcademicExecutive, isReadOnlyUser);
                       },
                     );
                   }
@@ -296,7 +296,7 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
     );
   }
 
-  Widget _buildEscalationCard(EscalationModel item, bool isAcademicExecutive) {
+  Widget _buildEscalationCard(EscalationModel item, bool isAcademicExecutive, bool isReadOnlyUser) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final typeLabel = item.type == 'date_change'

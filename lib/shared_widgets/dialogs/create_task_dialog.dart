@@ -180,111 +180,44 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
 
   Future<void> _showUploadFileDialog() async {
     try {
-      dynamic result;
-      try {
-        result = await FilePicker.pickFiles(
-          type: FileType.any,
-          withData: true,
-          allowMultiple: true,
-        );
-      } catch (e) {
-        debugPrint('[CreateTaskDialog] pickFiles withData failed, trying standard pick: $e');
-        result = await FilePicker.pickFiles(
-          type: FileType.any,
-        );
-      }
+      final dynamic result = await FilePicker.pickFiles(
+        type: FileType.any,
+      );
 
-      List<dynamic> fileList = [];
       if (result != null) {
-        if (result is List) {
-          fileList = result;
-        } else {
-          try {
-            final dynamic files = result.files;
-            if (files is List) {
-              fileList = files;
-            }
-          } catch (_) {}
-        }
-      }
+        final List<dynamic> fileList = result is List ? result : (result.files as List);
+        if (fileList.isNotEmpty) {
+          setState(() {
+            for (final dynamic file in fileList) {
+              String fileName = 'attachment';
+              try {
+                fileName = (file as dynamic).name?.toString() ?? 'attachment';
+              } catch (_) {}
 
-      if (fileList.isNotEmpty) {
-        setState(() {
-          for (final dynamic file in fileList) {
-            final String fileName = file.name?.toString() ?? 'attachment';
-            final int fileSize = file.size is int ? file.size as int : 0;
-            final ext = fileName.contains('.') ? fileName.split('.').last.toLowerCase() : '';
-            _attachments.add({
-              'filename': fileName,
-              'url': file.path?.toString() ?? '/uploads/${DateTime.now().millisecondsSinceEpoch}-$fileName',
-              'mime': _getMimeType(ext),
-              'size': fileSize,
-            });
-          }
-        });
+              String? path;
+              try {
+                path = (file as dynamic).path?.toString();
+              } catch (_) {}
+
+              int fileSize = 0;
+              try {
+                fileSize = (file as dynamic).size is int ? (file as dynamic).size as int : 0;
+              } catch (_) {}
+
+              final ext = fileName.contains('.') ? fileName.split('.').last.toLowerCase() : '';
+              _attachments.add({
+                'filename': fileName,
+                'url': path ?? '/uploads/${DateTime.now().millisecondsSinceEpoch}-$fileName',
+                'mime': _getMimeType(ext),
+                'size': fileSize,
+              });
+            }
+          });
+        }
       }
     } catch (e) {
       debugPrint('[CreateTaskDialog] File pick error: $e');
-      if (mounted) {
-        _showManualFileNameDialog();
-      }
     }
-  }
-
-  void _showManualFileNameDialog() {
-    final nameCtrl = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: const Text('Add File Attachment', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Enter Attachment Name', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 6),
-            TextField(
-              controller: nameCtrl,
-              style: const TextStyle(fontSize: 12),
-              decoration: InputDecoration(
-                hintText: 'e.g., Report.pdf or Screenshot.png',
-                isDense: true,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(fontSize: 11)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF0F172A),
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () {
-              final fname = nameCtrl.text.trim();
-              if (fname.isNotEmpty) {
-                final ext = fname.contains('.') ? fname.split('.').last.toLowerCase() : '';
-                setState(() {
-                  _attachments.add({
-                    'filename': fname,
-                    'url': '/uploads/${DateTime.now().millisecondsSinceEpoch}-$fname',
-                    'mime': _getMimeType(ext),
-                    'size': 1024 * 250,
-                  });
-                });
-              }
-              Navigator.pop(context);
-            },
-            child: const Text('Add Attachment', style: TextStyle(fontSize: 11)),
-          ),
-        ],
-      ),
-    );
   }
 
   String _getMimeType(String ext) {
@@ -843,7 +776,7 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
                       ),
                       const SizedBox(height: 12),
 
-                      // Attachments Section with Inline Right-side Attachment Chips
+                      // Attachments Section with Inline Right-side Attachment Chips & File Names Display
                       const Text('Attachments (image, video, document — any file)', style: TextStyle(fontSize: 10, color: Colors.grey)),
                       const SizedBox(height: 6),
                       Wrap(
@@ -863,7 +796,9 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
                           ..._attachments.map((att) {
                             final fname = att['filename']?.toString() ?? 'File';
                             final ext = fname.contains('.') ? fname.split('.').last.toLowerCase() : '';
-                            
+                            final size = att['size'] is int ? att['size'] as int : 0;
+                            final sizeText = _formatFileSize(size);
+
                             IconData iconData = Icons.insert_drive_file_rounded;
                             Color iconColor = Colors.blue;
                             if (ext == 'pdf') {
@@ -893,7 +828,7 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
                                   Icon(iconData, color: iconColor, size: 15),
                                   const SizedBox(width: 6),
                                   Text(
-                                    fname,
+                                    sizeText.isNotEmpty ? '$fname ($sizeText)' : fname,
                                     style: TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.bold,
@@ -913,6 +848,25 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
                           }),
                         ],
                       ),
+                      if (_attachments.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            const Icon(Icons.check_circle_outline, size: 14, color: Color(0xFF16A34A)),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                'Attached (${_attachments.length}): ${_attachments.map((e) => e['filename']).join(', ')}',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF16A34A),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                       const SizedBox(height: 12),
 
                       // TO-DO Checklist Section

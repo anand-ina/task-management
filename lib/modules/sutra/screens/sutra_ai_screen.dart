@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../../../core/localization/app_strings.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
@@ -23,6 +24,139 @@ class _SutraAiScreenState extends State<SutraAiScreen> {
   final SutraRepository _sutraRepository = SutraRepository();
   String? _interpretResultMessage;
   bool _isInterpreting = false;
+
+  late stt.SpeechToText _speech;
+  bool _isListening = false;
+  bool _speechEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _speech = stt.SpeechToText();
+    _initSpeech();
+  }
+
+  void _initSpeech() async {
+    try {
+      _speechEnabled = await _speech.initialize(
+        onError: (val) {
+          if (mounted) setState(() => _isListening = false);
+        },
+        onStatus: (val) {
+          if (val == 'done' || val == 'notListening') {
+            if (mounted) setState(() => _isListening = false);
+          }
+        },
+      );
+    } catch (_) {
+      _speechEnabled = false;
+    }
+  }
+
+  void _toggleListening() async {
+    if (_isListening) {
+      setState(() => _isListening = false);
+      await _speech.stop();
+      return;
+    }
+
+    if (!_speechEnabled) {
+      try {
+        _speechEnabled = await _speech.initialize(
+          onError: (val) {
+            if (mounted) setState(() => _isListening = false);
+          },
+          onStatus: (val) {
+            if (val == 'done' || val == 'notListening') {
+              if (mounted) setState(() => _isListening = false);
+            }
+          },
+        );
+      } catch (_) {
+        _speechEnabled = false;
+      }
+    }
+
+    if (_speechEnabled) {
+      setState(() => _isListening = true);
+      await _speech.listen(
+        onResult: (result) {
+          if (mounted) {
+            setState(() {
+              _askSutraController.text = result.recognizedWords;
+              _askSutraController.selection = TextSelection.fromPosition(
+                TextPosition(offset: _askSutraController.text.length),
+              );
+            });
+          }
+        },
+      );
+    } else {
+      _showDictationFallbackDialog();
+    }
+  }
+
+  void _showDictationFallbackDialog() {
+    final controller = TextEditingController(text: _askSutraController.text);
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          title: Row(
+            children: const [
+              Icon(Icons.mic_rounded, color: Colors.red),
+              SizedBox(width: 8),
+              Text('Voice Dictation', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Enter or dictate your command for Sutra AI:',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                maxLines: 3,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: 'e.g. Show pending tasks for my team...',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0F172A),
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                if (mounted) {
+                  setState(() {
+                    _askSutraController.text = controller.text;
+                    _askSutraController.selection = TextSelection.fromPosition(
+                      TextPosition(offset: _askSutraController.text.length),
+                    );
+                  });
+                }
+                Navigator.of(ctx).pop();
+              },
+              child: const Text('Insert Text'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   void dispose() {
@@ -175,11 +309,12 @@ class _SutraAiScreenState extends State<SutraAiScreen> {
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
                                 IconButton(
-                                  onPressed: () {},
+                                  onPressed: _toggleListening,
                                   icon: Icon(
-                                    Icons.mic_none_rounded,
-                                    color: isDark ? Colors.grey[400] : const Color(0xFF64748B),
+                                    _isListening ? Icons.mic_rounded : Icons.mic_none_rounded,
+                                    color: _isListening ? Colors.red : (isDark ? Colors.grey[400] : const Color(0xFF64748B)),
                                   ),
+                                  tooltip: _isListening ? 'Listening... Tap to stop' : 'Record voice to text',
                                 ),
                                 const SizedBox(width: 8),
                                 ElevatedButton(

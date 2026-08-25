@@ -85,8 +85,7 @@ class _EventsCalendarScreenState extends State<EventsCalendarScreen> {
                           ),
                           ElevatedButton.icon(
                             onPressed: () => CreateEventDialog.show(context),
-                            icon: const Icon(Icons.add_rounded, size: 16),
-                            label: const Text('+ New Event', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                             label: const Text('+ New Event', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF0F172A),
                               foregroundColor: Colors.white,

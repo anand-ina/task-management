@@ -213,7 +213,7 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
                       itemCount: items.length,
                       separatorBuilder: (context, index) => const SizedBox(height: 12),
                       itemBuilder: (context, index) {
-                        return _buildTaskApprovalCard(items[index], isAcademicExecutive);
+                        return _buildTaskApprovalCard(items[index], isAcademicExecutive, isReadOnlyUser);
                       },
                     );
                   }
@@ -280,7 +280,7 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
     );
   }
 
-  Widget _buildTaskApprovalCard(TaskApprovalModel item, bool isAcademicExecutive) {
+  Widget _buildTaskApprovalCard(TaskApprovalModel item, bool isAcademicExecutive, bool isReadOnlyUser) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isHighPriority = (item.priority ?? '').toLowerCase() == 'high';
 

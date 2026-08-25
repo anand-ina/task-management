@@ -117,8 +117,20 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
 
               if (state is AllTasksLoadedState) {
                 final response = state.response;
-                final items = response.items;
+                final rawItems = response.items;
                 final total = response.total;
+
+                final items = rawItems.where((item) {
+                  if (_selectedScope == 'confidential') {
+                    return item.isConfidential ||
+                        item.category.toLowerCase().contains('confidential') ||
+                        item.title.toLowerCase().contains('confidential');
+                  } else if (_selectedScope == 'general') {
+                    return !item.isConfidential &&
+                        !item.category.toLowerCase().contains('confidential');
+                  }
+                  return true;
+                }).toList();
 
                 return RefreshIndicator(
                   onRefresh: () async {
@@ -168,14 +180,15 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(
-                                mainAxisSize: MainAxisSize.min,
+                                // mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  _buildViewButton(Icons.menu_rounded, s.listView, 'list'),
-                                  _buildViewButton(Icons.grid_view_rounded, s.boardView, 'board'),
+                                  _buildViewButton(Icons.menu_rounded, s.listView, 'list'),Spacer(),
+                                  _buildViewButton(Icons.grid_view_rounded, s.boardView, 'board'),Spacer(),
                                   _buildViewButton(Icons.calendar_today_rounded, s.calendarView, 'calendar'),
                                 ],
                               ),
                             ),
+                            SizedBox(height: 10,),
                             // const Spacer(),
                             SingleChildScrollView(
                               scrollDirection: Axis.horizontal,
@@ -357,7 +370,7 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
       onTap: () => setState(() => _selectedView = key),
       borderRadius: BorderRadius.circular(6),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected ? (isDark ? const Color(0xFF1E293B) : Colors.white) : Colors.transparent,
           borderRadius: BorderRadius.circular(6),
@@ -365,12 +378,12 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
         ),
         child: Row(
           children: [
-            Icon(icon, size: 13, color: isSelected ? const Color(0xFF0F172A) : Colors.grey),
+            Icon(icon, size: 16, color: isSelected ? const Color(0xFF0F172A) : Colors.grey),
             const SizedBox(width: 4),
             Text(
               label,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 13,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                 color: isSelected ? (isDark ? Colors.white : const Color(0xFF0F172A)) : Colors.grey,
               ),
@@ -473,34 +486,36 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
               _buildScopeButton('All', 'all'),
               _buildScopeButton('Confidential', 'confidential'),
               _buildScopeButton('General', 'general'),
+              SizedBox(width: 10,),
+              SizedBox(
+                width: 130,
+                height: 36,
+                child: TextField(
+                  onChanged: (val) {
+                    _searchQuery = val;
+                    context.read<AllTasksBloc>().add(FetchAllTasksEvent(
+                      scope: 'mine',
+                      status: _selectedStatusFilter,
+                      priority: _selectedPriorityFilter,
+                      search: _searchQuery,
+                    ));
+                  },
+                  decoration: InputDecoration(
+                    hintText: s.searchTasksPlaceholder,
+                    hintStyle: const TextStyle(fontSize: 11, color: Colors.grey),
+                    prefixIcon: const Icon(Icons.search, size: 14, color: Colors.grey),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  style: const TextStyle(fontSize: 11),
+                ),
+              ),
             ],
           ),
         ),
 
         // Search Input Box
-        SizedBox(
-          width: 200,
-          height: 36,
-          child: TextField(
-            onChanged: (val) {
-              _searchQuery = val;
-              context.read<AllTasksBloc>().add(FetchAllTasksEvent(
-                    scope: 'mine',
-                    status: _selectedStatusFilter,
-                    priority: _selectedPriorityFilter,
-                    search: _searchQuery,
-                  ));
-            },
-            decoration: InputDecoration(
-              hintText: s.searchTasksPlaceholder,
-              hintStyle: const TextStyle(fontSize: 11, color: Colors.grey),
-              prefixIcon: const Icon(Icons.search, size: 14, color: Colors.grey),
-              contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            style: const TextStyle(fontSize: 11),
-          ),
-        ),
+
 
         // Status Dropdown
         Container(
@@ -1086,19 +1101,73 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
             },
           ),
           const SizedBox(width: 3),
-          OutlinedButton.icon(
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-              visualDensity: VisualDensity.compact,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            icon: const Icon(Icons.north_east_rounded, size: 12),
-            label: const Text('Export selected', style: TextStyle(fontSize: 11)),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Exporting $selectedCount selected task(s)...')),
-              );
+          PopupMenuButton<String>(
+            onSelected: (val) {
+              final selectedTasks = items.where((task) => _selectedTaskIds.contains(task.id)).toList();
+              if (selectedTasks.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('No selected tasks to export.')),
+                );
+                return;
+              }
+              final exportTitle = '${s.myTasks}_Selected';
+              if (val == 'csv') {
+                ExportService.exportCsv(context, selectedTasks, exportTitle);
+              } else if (val == 'excel') {
+                ExportService.exportExcel(context, selectedTasks, exportTitle);
+              } else if (val == 'pdf') {
+                ExportService.exportPdf(context, selectedTasks, exportTitle);
+              }
             },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'csv',
+                child: Row(
+                  children: [
+                    const Icon(Icons.table_chart_outlined, size: 16, color: Colors.teal),
+                    const SizedBox(width: 8),
+                    Text(s.exportCsv),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'excel',
+                child: Row(
+                  children: [
+                    const Icon(Icons.description_outlined, size: 16, color: Colors.green),
+                    const SizedBox(width: 8),
+                    Text(s.exportExcel),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'pdf',
+                child: Row(
+                  children: [
+                    const Icon(Icons.picture_as_pdf_outlined, size: 16, color: Colors.red),
+                    const SizedBox(width: 8),
+                    Text(s.exportPdf),
+                  ],
+                ),
+              ),
+            ],
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+              decoration: BoxDecoration(
+                border: Border.all(color: isDark ? Colors.white38 : Colors.grey.shade400),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(Icons.north_east_rounded, size: 12),
+                  SizedBox(width: 3),
+                  Text('Export selected', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600)),
+                  SizedBox(width: 2),
+                  Icon(Icons.arrow_drop_down, size: 14),
+                ],
+              ),
+            ),
           ),
           const Spacer(),
           TextButton(

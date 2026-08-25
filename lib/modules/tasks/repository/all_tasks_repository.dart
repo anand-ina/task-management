@@ -32,7 +32,7 @@ class AllTasksRepository {
 
   Future<TasksResponseModel> getAllTasks({
     String scope = 'all',
-    int limit = 10,
+    int limit = 20,
     int offset = 0,
     String? status,
     String? priority,

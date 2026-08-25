@@ -29,20 +29,28 @@ class ExportService {
     final prefs = await SharedPreferences.getInstance();
     String? savedDir = prefs.getString(_prefKeyExportDir);
 
-    // If a saved directory exists and is valid, write directly to it
+    // 1. If a saved directory exists, try writing directly to it
     if (savedDir != null && savedDir.isNotEmpty) {
-      final dir = Directory(savedDir);
-      if (await dir.exists()) {
-        final filePath = '${dir.path}/$defaultFileName';
-        final file = File(filePath);
-        await file.parent.create(recursive: true);
-        await file.writeAsBytes(bytes);
-        return filePath;
+      try {
+        final dir = Directory(savedDir);
+        if (await dir.exists()) {
+          final filePath = '${dir.path}/$defaultFileName';
+          final file = File(filePath);
+          await file.parent.create(recursive: true);
+          await file.writeAsBytes(bytes);
+          return filePath;
+        }
+      } catch (e) {
+        debugPrint('[ExportService] Saved export directory failed ($savedDir): $e. Clearing saved directory.');
+        await prefs.remove(_prefKeyExportDir);
+        savedDir = null;
       }
     }
 
-    // First time: Prompt user to choose location/directory
+    // 2. Prompt user to choose location/directory via FilePicker
     String? targetPath;
+    bool writtenByPicker = false;
+
     try {
       final dynamic rawPath = await FilePicker.saveFile(
         dialogTitle: 'Select Save Location',
@@ -52,10 +60,19 @@ class ExportService {
         allowedExtensions: allowedExtensions,
       );
       if (rawPath != null) {
-        targetPath = rawPath is Uri ? rawPath.path : rawPath.toString();
+        final strPath = rawPath is Uri ? rawPath.path : rawPath.toString();
+        if (strPath.isNotEmpty) {
+          targetPath = strPath;
+          try {
+            final checkFile = File(targetPath);
+            if (await checkFile.exists() && (await checkFile.length()) > 0) {
+              writtenByPicker = true;
+            }
+          } catch (_) {}
+        }
       }
     } catch (e) {
-      debugPrint('[ExportService] FilePicker.saveFile fallback: $e');
+      debugPrint('[ExportService] FilePicker.saveFile error: $e');
     }
 
     if (targetPath == null || targetPath.isEmpty) {
@@ -68,36 +85,47 @@ class ExportService {
           savedDir = chosenDir;
         }
       } catch (e) {
-        debugPrint('[ExportService] FilePicker.getDirectoryPath fallback: $e');
+        debugPrint('[ExportService] FilePicker.getDirectoryPath error: $e');
       }
-    } else {
-      savedDir = File(targetPath).parent.path;
     }
 
-    // Default fallback if user cancels
-    if (targetPath == null || targetPath.isEmpty) {
-      Directory? defaultDir;
+    // 3. Attempt write to chosen target path
+    if (targetPath != null && targetPath.isNotEmpty) {
       try {
-        defaultDir = await getDownloadsDirectory() ?? await getApplicationDocumentsDirectory();
+        if (!writtenByPicker) {
+          final file = File(targetPath);
+          await file.parent.create(recursive: true);
+          await file.writeAsBytes(bytes);
+        }
+        
+        final parentPath = File(targetPath).parent.path;
+        if (parentPath.isNotEmpty) {
+          await prefs.setString(_prefKeyExportDir, parentPath);
+        }
+        return targetPath;
+      } catch (e) {
+        debugPrint('[ExportService] Could not write to chosen targetPath ($targetPath): $e. Trying fallback.');
+      }
+    }
+
+    // 4. Safe Fallback: App Documents / Temporary Directory (guaranteed writable without special permissions)
+    try {
+      Directory defaultDir;
+      try {
+        defaultDir = await getApplicationDocumentsDirectory();
       } catch (_) {
         defaultDir = await getTemporaryDirectory();
       }
-      targetPath = '${defaultDir.path}/$defaultFileName';
-      savedDir = defaultDir.path;
+      final fallbackPath = '${defaultDir.path}/$defaultFileName';
+      final file = File(fallbackPath);
+      await file.parent.create(recursive: true);
+      await file.writeAsBytes(bytes);
+      debugPrint('[ExportService] File saved via fallback path: $fallbackPath');
+      return fallbackPath;
+    } catch (e) {
+      debugPrint('[ExportService] Fallback export failed: $e');
+      rethrow;
     }
-
-    // Write file to target path
-    final file = File(targetPath);
-    await file.parent.create(recursive: true);
-    await file.writeAsBytes(bytes);
-
-    // Save directory preference for future exports
-    if (savedDir != null && savedDir.isNotEmpty) {
-      await prefs.setString(_prefKeyExportDir, savedDir);
-      debugPrint('[ExportService] Saved export folder preference: $savedDir');
-    }
-
-    return targetPath;
   }
 
   static Future<void> exportCsv(BuildContext context, List<TaskItemModel> tasks, String title) async {

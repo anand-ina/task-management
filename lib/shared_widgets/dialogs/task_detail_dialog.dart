@@ -130,11 +130,16 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
 
     final authState = context.watch<AuthBloc>().state;
     bool isTeamLead = false;
+    bool isAcademicExecutive = false;
     if (authState is AuthenticatedState) {
       final role = authState.userProfile.role.toLowerCase();
       final roleLabel = authState.userProfile.roleLabel.toLowerCase();
+      final email = authState.userProfile.email.toLowerCase();
       if (roleLabel.contains('team lead') || roleLabel.contains('tl') || role.contains('team_lead') || role.contains('tl')) {
         isTeamLead = true;
+      }
+      if (role.contains('executive') || role.contains('ae') || roleLabel.contains('executive') || roleLabel.contains('ae') || email.contains('sushma')) {
+        isAcademicExecutive = true;
       }
     }
 
@@ -252,7 +257,7 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text('Assignees', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
-                  if (!widget.isReadOnly) ...[
+                  if (!widget.isReadOnly && !isAcademicExecutive) ...[
                     InkWell(
                       onTap: () async {
                         final result = await ReassignTaskDialog.show(

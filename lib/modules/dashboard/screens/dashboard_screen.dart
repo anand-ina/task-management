@@ -18,6 +18,7 @@ import '../models/team_performance.dart';
 import '../models/recent_activity_model.dart';
 import '../models/login_group_model.dart';
 import '../../reports/screens/status_reports_screen.dart';
+import '../../performance/screens/team_performance_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -34,7 +35,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<DashboardBloc>().add(FetchDashboardDataEvent());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authState = context.read<AuthBloc>().state;
+      int? mineVal;
+      if (authState is AuthenticatedState) {
+        final user = authState.userProfile;
+        final role = user.role.toLowerCase();
+        final roleLabel = user.roleLabel.toLowerCase();
+        if (!role.contains('director') && !roleLabel.contains('director') && !user.email.contains('vamsi')) {
+          mineVal = 1;
+        }
+      }
+      context.read<DashboardBloc>().add(FetchDashboardDataEvent(mine: mineVal));
+    });
   }
 
   @override
@@ -49,15 +62,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
     String branchName = 'HEAD OFFICE';
 
     bool isExecutive = false;
+    bool isDirector = false;
     if (authState is AuthenticatedState) {
       userName = authState.userProfile.name;
       roleName = authState.userProfile.role.toUpperCase();
       branchName = authState.userProfile.branch?.name ?? 'HEAD OFFICE';
 
       final user = authState.userProfile;
+      final role = user.role.toLowerCase();
+      final roleLabel = user.roleLabel.toLowerCase();
+      if (role.contains('director') || roleLabel.contains('director') || user.email.contains('vamsi')) {
+        isDirector = true;
+      }
       if (user.email == 'sushma@samskar.edu' ||
-          user.roleLabel.toLowerCase().contains('executive') ||
-          user.role.toLowerCase().contains('executive')) {
+          roleLabel.contains('executive') ||
+          role.contains('executive')) {
         isExecutive = true;
       }
     }
@@ -101,7 +120,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: () {
-                        context.read<DashboardBloc>().add(FetchDashboardDataEvent());
+                        context.read<DashboardBloc>().add(FetchDashboardDataEvent(mine: isDirector ? null : 1));
                       },
                       child: Text(s.retryButton),
                     ),
@@ -121,7 +140,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               return RefreshIndicator(
                 onRefresh: () async {
-                  context.read<DashboardBloc>().add(FetchDashboardDataEvent());
+                  context.read<DashboardBloc>().add(FetchDashboardDataEvent(mine: isDirector ? null : 1));
                 },
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(12),
@@ -862,7 +881,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            _buildActionCenterRow(s.approvalsToReview, '${actionCenter.approvals}', 0.1, Colors.orange),
+            _buildActionCenterRow(
+              s.approvalsToReview,
+              '${actionCenter.approvals}',
+              0.1,
+              Colors.orange,
+              onTap: () => TasksDueTodayDialog.show(
+                context,
+                customTitle: s.approvalsToReview,
+                badgeColor: Colors.orange,
+              ),
+            ),
             const SizedBox(height: 12),
             _buildActionCenterRow(
               s.overdueTasks,
@@ -1434,7 +1463,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.8),
                 ),
                 OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: () {
+                    TasksDueTodayDialog.show(
+                      context,
+                      customTitle: '${act.taskNo} · ${act.title}',
+                      searchQuery: act.taskNo,
+                      badgeColor: Colors.blue,
+                    );
+                  },
                   icon: const Icon(Icons.open_in_new, size: 12),
                   label: Text(s.viewTask, style: const TextStyle(fontSize: 11)),
                   style: OutlinedButton.styleFrom(
@@ -1549,14 +1585,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  s.teamPerformance.toUpperCase(),
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.8),
-                ),
-              ],
+            InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const TeamPerformanceScreen()),
+                );
+              },
+              borderRadius: BorderRadius.circular(6),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    s.teamPerformance.toUpperCase(),
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.8),
+                  ),
+                  const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Colors.grey),
+                ],
+              ),
             ),
             const SizedBox(height: 12),
             if (members.isEmpty)
@@ -1574,64 +1620,76 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   final m = members[index];
                   final rate = m.assigned > 0 ? ((m.done / m.assigned) * 100).round() : 0;
 
-                  return Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 14,
-                        backgroundColor: _hexToColor(m.avatarColor),
-                        child: Text(
-                          m.initials,
-                          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              m.name,
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  return InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const TeamPerformanceScreen()),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(8),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 14,
+                            backgroundColor: _hexToColor(m.avatarColor),
+                            child: Text(
+                              m.initials,
+                              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                             ),
-                            const SizedBox(height: 2),
-                            Row(
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  '${m.done} done',
-                                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.teal),
+                                  m.name,
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                                 ),
-                                Text(
-                                  ' / ${m.assigned} assigned',
-                                  style: const TextStyle(fontSize: 10, color: Colors.grey),
+                                const SizedBox(height: 2),
+                                Row(
+                                  children: [
+                                    Text(
+                                      '${m.done} done',
+                                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.teal),
+                                    ),
+                                    Text(
+                                      ' / ${m.assigned} assigned',
+                                      style: const TextStyle(fontSize: 10, color: Colors.grey),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                LinearProgressIndicator(
+                                  value: m.assigned > 0 ? (m.done / m.assigned).clamp(0.0, 1.0) : 0.0,
+                                  backgroundColor: Colors.grey.shade200,
+                                  color: Colors.teal,
+                                  minHeight: 4,
+                                  borderRadius: BorderRadius.circular(4),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 4),
-                            LinearProgressIndicator(
-                              value: m.assigned > 0 ? (m.done / m.assigned).clamp(0.0, 1.0) : 0.0,
-                              backgroundColor: Colors.grey.shade200,
-                              color: Colors.teal,
-                              minHeight: 4,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            '$rate%',
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.green),
                           ),
-                          Text(
-                            '${m.onTime}% on time',
-                            style: const TextStyle(fontSize: 10, color: Colors.grey),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                '$rate%',
+                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.green),
+                              ),
+                              Text(
+                                '${m.onTime}% on time',
+                                style: const TextStyle(fontSize: 10, color: Colors.grey),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
+                    ),
                   );
                 },
               ),

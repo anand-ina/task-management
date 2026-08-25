@@ -275,38 +275,48 @@ class _RaiseEscalationDialogState extends State<RaiseEscalationDialog> {
                     const SizedBox(height: 4),
                     if (_isLoadingRecipients)
                       const Center(child: Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator()))
-                    else
-                      DropdownButtonFormField<String>(
-                        initialValue: _selectedEscalateTo,
-                        isDense: true,
-                        isExpanded: true,
-                        decoration: InputDecoration(
-                          isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                          filled: true,
-                          fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-                        ),
-                        items: [
-                          const DropdownMenuItem<String>(
-                            value: '30',
-                            child: Text('Assigner (immediate authority)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
-                          ),
-                          ..._recipients.map((rec) {
-                            final id = rec['id']?.toString() ?? '1';
+                    else Builder(
+                      builder: (context) {
+                        final Map<String, String> escalateOptions = {
+                          '30': 'Assigner (immediate authority)',
+                        };
+                        for (final rec in _recipients) {
+                          final id = rec['id']?.toString() ?? '';
+                          if (id.isNotEmpty) {
                             final name = rec['name']?.toString() ?? 'User';
                             final role = rec['role']?.toString() ?? '';
                             final label = role.isNotEmpty ? '$name ($role)' : name;
+                            escalateOptions[id] = label;
+                          }
+                        }
+
+                        final selectedValue = escalateOptions.containsKey(_selectedEscalateTo)
+                            ? _selectedEscalateTo
+                            : escalateOptions.keys.first;
+
+                        return DropdownButtonFormField<String>(
+                          value: selectedValue,
+                          isDense: true,
+                          isExpanded: true,
+                          decoration: InputDecoration(
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            filled: true,
+                            fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                          ),
+                          items: escalateOptions.entries.map((e) {
                             return DropdownMenuItem<String>(
-                              value: id,
-                              child: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+                              value: e.key,
+                              child: Text(e.value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
                             );
-                          }),
-                        ],
-                        onChanged: (val) {
-                          if (val != null) setState(() => _selectedEscalateTo = val);
-                        },
-                      ),
+                          }).toList(),
+                          onChanged: (val) {
+                            if (val != null) setState(() => _selectedEscalateTo = val);
+                          },
+                        );
+                      },
+                    ),
                     const SizedBox(height: 4),
                     Text(
                       'Pick someone higher to raise over your immediate authority.',

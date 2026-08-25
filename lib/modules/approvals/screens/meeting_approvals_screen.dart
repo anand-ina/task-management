@@ -197,7 +197,7 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
 
                   if (state is ApprovalsLoadedState) {
                     final filtered = isAcademicExecutive
-                        ? [...state.meetings, ...state.meetingCompletionRequests]
+                        ? state.meetings.where((m) => m.isOrganizer == true).toList()
                         : (_selectedTabIndex == 0
                             ? [
                                 ...state.meetings.where((m) => m.isOrganizer != true),

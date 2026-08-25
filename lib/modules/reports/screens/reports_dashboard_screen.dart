@@ -559,7 +559,7 @@ class _ReportsDashboardScreenState extends State<ReportsDashboardScreen> {
                           compliance.lastCycle!.missed,
                         ),
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 8,
                           color: isDark ? Colors.white70 : const Color(0xFF475569),
                         ),
                       ),

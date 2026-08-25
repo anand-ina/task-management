@@ -22,6 +22,9 @@ class AllTasksScreen extends StatefulWidget {
 }
 
 class _AllTasksScreenState extends State<AllTasksScreen> {
+  late final AllTasksBloc _allTasksBloc;
+  final ScrollController _scrollController = ScrollController();
+  bool _isLoadingMore = false;
   String _selectedScope = 'all';
   String _selectedStatusFilter = 'all';
   String _selectedPriorityFilter = 'all';
@@ -48,12 +51,51 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
   };
 
   @override
+  void initState() {
+    super.initState();
+    _allTasksBloc = AllTasksBloc()..add(FetchAllTasksEvent(scope: 'all', limit: 10, offset: 0));
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    _allTasksBloc.close();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      final blocState = _allTasksBloc.state;
+      if (blocState is AllTasksLoadedState && !_isLoadingMore) {
+        final rawItems = blocState.response.items;
+        final total = blocState.response.total;
+        if (rawItems.length < total) {
+          setState(() {
+            _isLoadingMore = true;
+          });
+          _allTasksBloc.add(FetchAllTasksEvent(
+                scope: _selectedScope,
+                status: _selectedStatusFilter,
+                priority: _selectedPriorityFilter,
+                search: _searchQuery,
+                limit: 10,
+                offset: rawItems.length,
+              ));
+        }
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final s = AppStrings.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return BlocProvider(
-      create: (context) => AllTasksBloc()..add(FetchAllTasksEvent(scope: 'all')),
+    return BlocProvider.value(
+      value: _allTasksBloc,
       child: PopScope(
         canPop: false,
         onPopInvokedWithResult: (didPop, result) async {
@@ -99,8 +141,22 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
 
               if (state is AllTasksLoadedState) {
                 final response = state.response;
-                final items = response.items;
+                final rawItems = response.items;
                 final total = response.total;
+
+                final items = rawItems.where((item) {
+                  if (_selectedScope == 'confidential') {
+                    return item.isConfidential ||
+                        item.category.toLowerCase().contains('confidential') ||
+                        item.title.toLowerCase().contains('confidential');
+                  } else if (_selectedScope == 'general') {
+                    return !item.isConfidential &&
+                        !item.category.toLowerCase().contains('confidential');
+                  }
+                  return true;
+                }).toList();
+
+                _isLoadingMore = false;
 
                 return RefreshIndicator(
                   onRefresh: () async {
@@ -109,9 +165,12 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
                           status: _selectedStatusFilter,
                           priority: _selectedPriorityFilter,
                           search: _searchQuery,
+                          limit: 10,
+                          offset: 0,
                         ));
                   },
                   child: SingleChildScrollView(
+                    controller: _scrollController,
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -285,7 +344,7 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
                               child: Text('No tasks found in scope', style: TextStyle(color: Colors.grey)),
                             ),
                           )
-                        else
+                        else ...[
                           ListView.builder(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
@@ -295,6 +354,25 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
                               return _buildTaskCardItem(context, s, item);
                             },
                           ),
+                          if (rawItems.length < total || _isLoadingMore)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 20),
+                              child: Center(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF2563EB)),
+                                    ),
+                                    SizedBox(width: 10),
+                                    Text('Loading next 10 tasks...', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                                  ],
+                                ),
+                              ),
+                            ),
+                        ],
                         const SizedBox(height: 40),
                       ],
                     ),

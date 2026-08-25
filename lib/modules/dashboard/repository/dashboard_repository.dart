@@ -85,10 +85,14 @@ class DashboardRepository {
       final response = await _dioClient.dio.get(ApiConstants.branches);
       final data = _safeParse(response.data);
       if (data is List) {
-        return data.map((e) => BranchModel.fromJson(e is Map<String, dynamic> ? e : {})).toList();
+        final list = data.map((e) => BranchModel.fromJson(e is Map<String, dynamic> ? e : {})).toList();
+        if (!list.any((b) => b.id == 0 || b.code == 'ALL')) {
+          list.insert(0, BranchModel(id: 0, code: 'ALL', name: 'All Branches', isAll: true));
+        }
+        return list;
       }
     } catch (_) {}
-    return [];
+    return [BranchModel(id: 0, code: 'ALL', name: 'All Branches', isAll: true)];
   }
 
   Future<List<dynamic>> getScheduleMy() async {

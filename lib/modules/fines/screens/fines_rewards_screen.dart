@@ -5,6 +5,8 @@ import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
 import '../../../shared_widgets/dialogs/issue_fine_reward_dialog.dart';
+import '../../auth/bloc/auth_bloc.dart';
+import '../../auth/bloc/auth_state.dart';
 import '../bloc/fines_bloc.dart';
 import '../bloc/fines_event.dart';
 import '../bloc/fines_state.dart';
@@ -24,6 +26,17 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
   Widget build(BuildContext context) {
     final s = AppStrings.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final authState = context.watch<AuthBloc>().state;
+    bool isAcademicExecutive = false;
+    if (authState is AuthenticatedState) {
+      final role = authState.userProfile.role.toLowerCase();
+      final roleLabel = authState.userProfile.roleLabel.toLowerCase();
+      final email = authState.userProfile.email.toLowerCase();
+      if (role.contains('executive') || role.contains('ae') || roleLabel.contains('executive') || roleLabel.contains('ae') || email.contains('sushma')) {
+        isAcademicExecutive = true;
+      }
+    }
 
     return BlocProvider(
       create: (context) => FinesBloc()..add(FetchFinesEvent()),
@@ -76,16 +89,17 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
                               ),
                             ],
                           ),
-                          ElevatedButton(
-                            onPressed: () => IssueFineRewardDialog.show(context),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF0F172A),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          if (!isAcademicExecutive)
+                            ElevatedButton(
+                              onPressed: () => IssueFineRewardDialog.show(context),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF0F172A),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                              child: const Text('+ Issue Fine / Reward', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                             ),
-                            child: const Text('+ Issue Fine / Reward', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                          ),
                         ],
                       ),
                       const SizedBox(height: 20),

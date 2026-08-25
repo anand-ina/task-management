@@ -13,6 +13,7 @@ class TasksDueTodayDialog extends StatefulWidget {
   final bool? overdue;
   final String? overdueAge;
   final String? status;
+  final String? searchQuery;
   final Color? badgeColor;
 
   const TasksDueTodayDialog({
@@ -23,6 +24,7 @@ class TasksDueTodayDialog extends StatefulWidget {
     this.overdue,
     this.overdueAge,
     this.status,
+    this.searchQuery,
     this.badgeColor,
   });
 
@@ -34,6 +36,7 @@ class TasksDueTodayDialog extends StatefulWidget {
     bool? overdue,
     String? overdueAge,
     String? status,
+    String? searchQuery,
     Color? badgeColor,
   }) {
     return showDialog(
@@ -46,6 +49,7 @@ class TasksDueTodayDialog extends StatefulWidget {
         overdue: overdue,
         overdueAge: overdueAge,
         status: status,
+        searchQuery: searchQuery,
         badgeColor: badgeColor,
       ),
     );
@@ -100,6 +104,7 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
           overdue: widget.overdue,
           overdueAge: widget.overdueAge,
           status: widget.status,
+          search: widget.searchQuery,
           limit: 50,
           offset: 0,
         ),
@@ -139,6 +144,7 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
         overdue: widget.overdue,
         overdueAge: widget.overdueAge,
         status: widget.status,
+        search: widget.searchQuery,
         limit: 50,
         offset: _items.length,
       );
@@ -194,21 +200,37 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
             children: [
               // Header Row
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        dialogTitle,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          maxWidth: 250,
+                        ),
+                        child: Text(
+                          dialogTitle,
+                          maxLines: 5,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF0F172A),
+                          ),
                         ),
                       ),
+
                       const SizedBox(width: 10),
+
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: colorBadge.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(12),
@@ -224,9 +246,13 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
                       ),
                     ],
                   ),
+
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close_rounded, size: 20),
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      size: 20,
+                    ),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   ),
@@ -387,7 +413,12 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
                       ),
                       child: InkWell(
                         onTap: () {
-                          TaskDetailDialog.show(context, taskId: item.id, initialTask: item);
+                          TaskDetailDialog.show(
+                            context,
+                            taskId: item.id,
+                            initialTask: item,
+                            isReadOnly: true,
+                          );
                         },
                         borderRadius: BorderRadius.circular(12),
                         child: Padding(

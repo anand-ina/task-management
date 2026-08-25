@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../models/branch_model.dart';
 import '../models/todo_model.dart';
 import '../repository/dashboard_repository.dart';
 import 'dashboard_event.dart';
@@ -21,7 +22,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     emit(DashboardLoadingState());
     try {
       final results = await Future.wait([
-        _repository.getDashboardData(branchId: event.branchId, mine: event.mine ?? 1),
+        _repository.getDashboardData(branchId: event.branchId, mine: event.mine),
         _repository.getTeamData(branchId: event.branchId),
         _repository.getNotifications(),
         _repository.getBranches(),
@@ -31,15 +32,21 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       final dashboardData = results[0] as dynamic;
       final teamData = results[1] as dynamic;
       final notifications = results[2] as dynamic;
-      final branches = results[3] as dynamic;
+      final branchesRes = results[3] as List<BranchModel>;
       final todos = results[4] as dynamic;
       List<TodoItem> todoList = List<TodoItem>.from(todos);
+
+      List<BranchModel> branchList = List<BranchModel>.from(branchesRes);
+      if (!branchList.any((b) => b.isAll || b.id == 0 || b.name.toLowerCase().contains('all'))) {
+        branchList.insert(0, BranchModel(id: 0, code: 'ALL', name: 'All Branches', isAll: true));
+      }
 
       emit(DashboardLoadedState(
         dashboardData: dashboardData,
         teamData: teamData,
         notifications: notifications,
-        branches: branches,
+        branches: branchList,
+        selectedBranch: branchList.isNotEmpty ? branchList.first : null,
         todos: todoList,
       ));
     } catch (e) {
@@ -57,7 +64,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       try {
         final targetBranchId = event.branch.isAll ? null : event.branch.id;
         final results = await Future.wait([
-          _repository.getDashboardData(branchId: targetBranchId, mine: 1),
+          _repository.getDashboardData(branchId: targetBranchId, mine: event.branch.isAll ? null : 1),
           _repository.getTeamData(branchId: targetBranchId),
         ]);
 

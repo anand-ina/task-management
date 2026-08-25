@@ -130,6 +130,7 @@ class _RequestTaskClosureDialogState extends State<RequestTaskClosureDialog> {
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: Container(
         width: 520,
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
         padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -156,96 +157,105 @@ class _RequestTaskClosureDialogState extends State<RequestTaskClosureDialog> {
             const Divider(),
             const SizedBox(height: 12),
 
-            // Alert Info Card
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: isDark ? Colors.white12 : Colors.grey.shade300),
-              ),
-              child: Text(
-                'You can\'t close a task yourself — it goes to the task creator, who reviews and completes it.',
-                style: TextStyle(
-                  fontSize: 11.5,
-                  color: isDark ? Colors.white70 : const Color(0xFF475569),
-                  height: 1.4,
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-
-            // Task * Dropdown
-            Row(
-              children: const [
-                Text('Task ', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey)),
-                Text('*', style: TextStyle(fontSize: 11, color: Colors.red, fontWeight: FontWeight.bold)),
-              ],
-            ),
-            const SizedBox(height: 4),
-            if (_isLoadingTasks)
-              const Center(child: Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator()))
-            else if (_myTasks.isEmpty)
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Text('No open tasks available', style: TextStyle(fontSize: 11, color: Colors.grey)),
-              )
-            else
-              DropdownButtonFormField<TaskItemModel>(
-                value: _selectedTask,
-                isDense: true,
-                isExpanded: true,
-                decoration: InputDecoration(
-                  isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  filled: true,
-                  fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-                ),
-                items: _myTasks.map((task) {
-                  return DropdownMenuItem<TaskItemModel>(
-                    value: task,
-                    child: Text(
-                      '${task.taskNo} — ${task.title}',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-                      overflow: TextOverflow.ellipsis,
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Alert Info Card
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: isDark ? Colors.white12 : Colors.grey.shade300),
+                      ),
+                      child: Text(
+                        'You can\'t close a task yourself — it goes to the task creator, who reviews and completes it.',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: isDark ? Colors.white70 : const Color(0xFF475569),
+                          height: 1.4,
+                        ),
+                      ),
                     ),
-                  );
-                }).toList(),
-                onChanged: (val) {
-                  if (val != null) setState(() => _selectedTask = val);
-                },
-              ),
-            const SizedBox(height: 14),
+                    const SizedBox(height: 14),
 
-            // Completion comment * Text Field
-            Row(
-              children: const [
-                Text('Completion comment ', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey)),
-                Text('*', style: TextStyle(fontSize: 11, color: Colors.red, fontWeight: FontWeight.bold)),
-              ],
-            ),
-            const SizedBox(height: 4),
-            TextField(
-              controller: _commentController,
-              maxLines: 3,
-              style: const TextStyle(fontSize: 11),
-              decoration: InputDecoration(
-                hintText: 'What did you complete? Anything the reviewer should know?',
-                hintStyle: const TextStyle(fontSize: 11, color: Colors.grey),
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                filled: true,
-                fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                    // Task * Dropdown
+                    Row(
+                      children: const [
+                        Text('Task ', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey)),
+                        Text('*', style: TextStyle(fontSize: 11, color: Colors.red, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    if (_isLoadingTasks)
+                      const Center(child: Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator()))
+                    else if (_myTasks.isEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text('No open tasks available', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                      )
+                    else
+                      DropdownButtonFormField<TaskItemModel>(
+                        value: _selectedTask,
+                        isDense: true,
+                        isExpanded: true,
+                        decoration: InputDecoration(
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          filled: true,
+                          fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                        ),
+                        items: _myTasks.map((task) {
+                          return DropdownMenuItem<TaskItemModel>(
+                            value: task,
+                            child: Text(
+                              '${task.taskNo} — ${task.title}',
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          if (val != null) setState(() => _selectedTask = val);
+                        },
+                      ),
+                    const SizedBox(height: 14),
+
+                    // Completion comment * Text Field
+                    Row(
+                      children: const [
+                        Text('Completion comment ', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey)),
+                        Text('*', style: TextStyle(fontSize: 11, color: Colors.red, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    TextField(
+                      controller: _commentController,
+                      maxLines: 3,
+                      style: const TextStyle(fontSize: 11),
+                      decoration: InputDecoration(
+                        hintText: 'What did you complete? Anything the reviewer should know?',
+                        hintStyle: const TextStyle(fontSize: 11, color: Colors.grey),
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        filled: true,
+                        fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
             const Divider(),
             const SizedBox(height: 8),
 

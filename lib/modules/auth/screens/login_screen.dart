@@ -119,7 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
       children: [
         // App Logo Image at First
         Align(
-          alignment: Alignment.centerLeft,
+          alignment: Alignment.center,
           child: Padding(
             padding: const EdgeInsets.only(bottom: 3),
             child: Container(
@@ -129,13 +129,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Image.asset(
-                'assets/images/logo.png',
-                height: 54,
+                'assets/images/circle-logo.png',
+                height: 150,
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) {
                   return Image.asset(
                     'assets/images/circle-logo.png',
-                    height: 100,
+                    height: 240,
                     fit: BoxFit.contain,
                   );
                 },
@@ -161,7 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: 10),
 
-        // QUICK LOGIN AS Section (Maintained in 2 clean rows)
+        // QUICK LOGIN AS Section
         Text(
           s.quickLoginAs,
           style: TextStyle(
@@ -173,22 +173,24 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: 10),
 
-        // Row 1
+        // Quick Logins Row
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-              _buildQuickChip(s.directorVamsi, 'vamsi@samskar.edu', isHighlighted: true),
+              _buildQuickChip('Director · Vamsi', 'vamsi@samskar.edu', isHighlighted: true),
               const SizedBox(width: 8),
-              _buildQuickChip(s.principalMadhumathi, 'madhumathi@samskar.edu'),
+              _buildQuickChip('Principal · Madhumathi', 'madhumathi@samskar.edu'),
               const SizedBox(width: 8),
-              _buildQuickChip(s.centerHeadCharan, 'charan@samskar.edu'),
+              _buildQuickChip('Manager · Murali', 'murali@samskar.edu'),
               const SizedBox(width: 8),
-              _buildQuickChip(s.managerMurali, 'murali@samskar.edu'),
+              _buildQuickChip('Manager · Swapnika', 'swapnika@samskar.edu'),
               const SizedBox(width: 8),
-              _buildQuickChip(s.managerSwapnika, 'swapnika@samskar.edu'),
+              _buildQuickChip('Team Lead · Narasimha', 'narasimha@samskar.edu'),
               const SizedBox(width: 8),
-              _buildQuickChip(s.managerSandeep, 'sandeep@samskar.edu'),
+              _buildQuickChip('Executive · Anamika', 'anamika@samskar.edu'),
+              const SizedBox(width: 8),
+              _buildQuickChip('Executive · Gyapika', 'gyapika@samskar.edu'),
             ],
           ),
         ),

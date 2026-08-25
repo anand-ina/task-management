@@ -21,9 +21,10 @@ class TaskRepository {
     bool? overdue,
     String? overdueAge,
     String? status,
+    String? search,
     String sort = 'entry',
     String dir = 'desc',
-    int limit = 50,
+    int limit = 20,
     int offset = 0,
   }) async {
     final Map<String, dynamic> params = {
@@ -39,6 +40,7 @@ class TaskRepository {
     if (overdue == true) params['overdue'] = 'true';
     if (overdueAge != null && overdueAge.isNotEmpty) params['overdueAge'] = overdueAge;
     if (status != null && status.isNotEmpty) params['status'] = status;
+    if (search != null && search.isNotEmpty) params['q'] = search;
 
     final response = await _dioClient.dio.get(
       ApiConstants.tasks,

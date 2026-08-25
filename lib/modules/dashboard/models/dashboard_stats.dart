@@ -59,7 +59,7 @@ class DashboardStats {
       topMost: (topMostVal != null && topMostVal > 0) ? topMostVal : 0,
       high: (highVal != null && highVal > 0) ? highVal : 0,
       medium: (mediumVal != null && mediumVal > 0) ? mediumVal : 0,
-      low: (lowVal != null && lowVal > 0) ? lowVal : 6,
+      low: (lowVal != null && lowVal > 0) ? lowVal : 0,
       emergencyHighOpen: json['emergency_high_open'] as int? ?? 0,
       completionRate: json['completionRate'] as int? ?? 0,
     );

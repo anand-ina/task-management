@@ -10,7 +10,7 @@ abstract class DashboardEvent extends Equatable {
 class FetchDashboardDataEvent extends DashboardEvent {
   final int? branchId;
   final int? mine;
-  const FetchDashboardDataEvent({this.branchId, this.mine = 1});
+  const FetchDashboardDataEvent({this.branchId, this.mine});
   @override
   List<Object?> get props => [branchId, mine];
 }

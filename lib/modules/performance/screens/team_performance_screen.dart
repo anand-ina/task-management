@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
+import '../../../shared_widgets/dialogs/tasks_due_today_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
 import '../bloc/performance_bloc.dart';
 import '../bloc/performance_event.dart';
@@ -92,31 +93,46 @@ class TeamPerformanceScreen extends StatelessWidget {
   Widget _buildHeaderBanner(BuildContext context, AppStrings s, TeamPerformanceModel data) {
     final totals = data.totals;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF115E59), // Dark Teal fill matching Image 4
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'PERFORMANCE',
-            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white70, letterSpacing: 1.2),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            s.teamPerformanceTitle,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${totals.teamSize} members · ${totals.assigned} assignments · ${totals.done} completed · ${totals.overdue} overdue',
-            style: const TextStyle(fontSize: 12, color: Colors.white70),
-          ),
-        ],
+    return InkWell(
+      onTap: () {
+        TasksDueTodayDialog.show(
+          context,
+          customTitle: 'Team · All assigned',
+        );
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFF115E59), // Dark Teal fill matching Image 4
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'PERFORMANCE',
+              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white70, letterSpacing: 1.2),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  s.teamPerformanceTitle,
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+                const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.white70),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '${totals.teamSize} members · ${totals.assigned} assignments · ${totals.done} completed · ${totals.overdue} overdue',
+              style: const TextStyle(fontSize: 12, color: Colors.white70),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -150,36 +166,50 @@ class TeamPerformanceScreen extends StatelessWidget {
           itemCount: tiles.length,
           itemBuilder: (context, index) {
             final t = tiles[index];
-            return Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    t['val'] as String,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : (t['color'] as Color),
+            return InkWell(
+              onTap: () {
+                if (index == 2) {
+                  TasksDueTodayDialog.show(context, customTitle: 'Team · Completed', status: 'completed');
+                } else if (index == 3) {
+                  TasksDueTodayDialog.show(context, customTitle: 'Team · In Progress', status: 'in_progress');
+                } else if (index == 4) {
+                  TasksDueTodayDialog.show(context, customTitle: 'Team · Overdue', overdue: true);
+                } else {
+                  TasksDueTodayDialog.show(context, customTitle: 'Team · All assigned');
+                }
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t['val'] as String,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : (t['color'] as Color),
+                      ),
                     ),
-                  ),
-                  Text(
-                    t['title'] as String,
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black87),
-                  ),
-                  Text(
-                    t['sub'] as String,
-                    style: TextStyle(fontSize: 9.5, color: isDark ? Colors.white54 : Colors.grey.shade500),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+                    Text(
+                      t['title'] as String,
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black87),
+                    ),
+                    Text(
+                      t['sub'] as String,
+                      style: TextStyle(fontSize: 9.5, color: isDark ? Colors.white54 : Colors.grey.shade500),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -303,7 +333,23 @@ class TeamPerformanceScreen extends StatelessWidget {
                           ),
                         ],
                       )),
-                      DataCell(Text('${m.assigned}', style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold))),
+                      DataCell(
+                        InkWell(
+                          onTap: () {
+                            TasksDueTodayDialog.show(
+                              context,
+                              customTitle: '${m.name} · All assigned',
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                            child: Text(
+                              '${m.assigned}',
+                              style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF2563EB)),
+                            ),
+                          ),
+                        ),
+                      ),
                       DataCell(Text('${m.done}', style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF16A34A)))),
                       DataCell(Row(
                         children: [

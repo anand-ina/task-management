@@ -40,9 +40,15 @@ class _CustomAppBarState extends State<CustomAppBar> {
     final authState = context.watch<AuthBloc>().state;
     String userName = 'Vamsi';
     String userEmail = 'vamsi@samskar.edu';
+    bool isDirector = false;
     if (authState is AuthenticatedState) {
       userName = authState.userProfile.name;
       userEmail = authState.userProfile.email;
+      final role = authState.userProfile.role.toLowerCase();
+      final roleLabel = authState.userProfile.roleLabel.toLowerCase();
+      if (role.contains('director') || roleLabel.contains('director') || userEmail.contains('vamsi')) {
+        isDirector = true;
+      }
     }
 
     final initialChar = userName.isNotEmpty ? userName[0].toUpperCase() : 'V';
@@ -55,11 +61,13 @@ class _CustomAppBarState extends State<CustomAppBar> {
 
         if (dashState is DashboardLoadedState) {
           branches = List<BranchModel>.from(dashState.branches);
-          if (!branches.any((b) => b.isAll || b.id == 0 || b.name.toLowerCase().contains('all'))) {
+          if (!branches.any((b) => b.id == 0 || b.code == 'ALL')) {
             branches.insert(0, BranchModel(id: 0, code: 'ALL', name: 'All Branches', isAll: true));
           }
           selectedBranch = dashState.selectedBranch;
-          if (selectedBranch != null) {
+          if (isDirector && (selectedBranch == null || dashState.selectedBranch == null)) {
+            selectedBranch = branches.first;
+          } else if (selectedBranch != null) {
             final matchIndex = branches.indexWhere((b) => b.id == selectedBranch?.id || b.code == selectedBranch?.code);
             if (matchIndex != -1) {
               selectedBranch = branches[matchIndex];
@@ -213,6 +221,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
                       isExpanded: true,
                       icon: const Icon(Icons.arrow_drop_down_rounded, size: 16),
                       items: branches.map((b) {
+                        final displayName = b.isAll
+                            ? 'All Branches'
+                            : (b.code.isNotEmpty ? '${b.code} · ${b.name}' : b.name);
                         return DropdownMenuItem<BranchModel>(
                           value: b,
                           child: Row(
@@ -221,7 +232,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                               Text(b.isAll ? '🏛️ ' : '🏫 ', style: const TextStyle(fontSize: 11)),
                               Expanded(
                                 child: Text(
-                                  b.name,
+                                  displayName,
                                   style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
                                   overflow: TextOverflow.ellipsis,
                                   maxLines: 1,
