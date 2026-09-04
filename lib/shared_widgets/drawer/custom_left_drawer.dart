@@ -23,6 +23,7 @@ import '../../modules/performance/screens/team_performance_screen.dart';
 import '../../modules/fines/screens/fines_rewards_screen.dart';
 import '../../modules/fines/screens/performance_settings_screen.dart';
 import '../../modules/staff/screens/staff_screen.dart';
+import '../../modules/admin/screens/admin_section_screen.dart';
 import '../../modules/sutra/screens/sutra_ai_screen.dart';
 import '../../modules/preferences/screens/my_preferences_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -46,6 +47,7 @@ class CustomLeftDrawer extends StatelessWidget {
     bool isTeamLead = false;
     bool isManager = false;
     bool isPrincipal = false;
+    bool isAdmin = false;
     String roleTitle = s.directorRole;
     String roleScope = s.directorBadgeScope;
 
@@ -54,7 +56,13 @@ class CustomLeftDrawer extends StatelessWidget {
       final roleLower = user.role.toLowerCase();
       final roleLabelLower = user.roleLabel.toLowerCase();
 
-      if (user.email == 'sushma@samskar.edu' ||
+      if (roleLower.contains('admin') ||
+          roleLabelLower.contains('admin') ||
+          user.email.contains('admin')) {
+        isAdmin = true;
+        roleTitle = s.administratorRole;
+        roleScope = s.administratorBadgeScope;
+      } else if (user.email == 'sushma@samskar.edu' ||
           roleLabelLower.contains('executive') ||
           roleLower.contains('executive')) {
         isExecutive = true;
@@ -143,228 +151,256 @@ class CustomLeftDrawer extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 children: [
-                  // DASHBOARD
-                  _buildNavItem(
-                    context,
-                    icon: Icons.grid_view_rounded,
-                    title: s.dashboard,
-                    isSelected: currentRoute == '/dashboard',
-                    onTap: () => _navigate(context, '/dashboard'),
-                  ),
-                  if (isPrincipal || (!isExecutive && !isManager && !isTeamLead))
-                    _buildNavItem(
-                      context,
-                      icon: Icons.table_chart_outlined,
-                      title: s.organizationOverview,
-                      isSelected: currentRoute == '/org-overview',
-                      onTap: () => _navigate(context, '/org-overview'),
-                    ),
-                  const SizedBox(height: 12),
-
-                  // TASKS
-                  _buildSectionHeader(context, s.tasksHeader),
-                  if (!isExecutive && !isManager && !isTeamLead && !isPrincipal)
-                    _buildNavItem(
-                      context,
-                      icon: Icons.check_circle_outline,
-                      title: s.allTasks,
-                      isSelected: currentRoute == '/tasks',
-                      onTap: () => _navigate(context, '/tasks'),
-                    ),
-                  _buildNavItem(
-                    context,
-                    icon: Icons.check_box_outlined,
-                    title: s.myTasks,
-                    isSelected: currentRoute == '/my-tasks',
-                    onTap: () => _navigate(context, '/my-tasks'),
-                  ),
-                  _buildNavItem(
-                    context,
-                    icon: Icons.autorenew_rounded,
-                    title: s.recurringTasks,
-                    isSelected: currentRoute == '/recurring',
-                    onTap: () => _navigate(context, '/recurring'),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // APPROVALS
-                  _buildSectionHeader(context, s.approvalsHeader),
-                  _buildNavItem(
-                    context,
-                    icon: Icons.check_circle_rounded,
-                    title: s.taskApprovals,
-                    iconColor: Colors.green,
-                    isSelected: currentRoute == '/approvals/tasks',
-                    onTap: () => _navigate(context, '/approvals/tasks'),
-                  ),
-                  _buildNavItem(
-                    context,
-                    icon: Icons.outlined_flag_rounded,
-                    title: s.escalations,
-                    isSelected: currentRoute == '/approvals/escalations',
-                    onTap: () => _navigate(context, '/approvals/escalations'),
-                  ),
-                  _buildNavItem(
-                    context,
-                    icon: Icons.calendar_today_rounded,
-                    title: s.meetingApprovals,
-                    isSelected: currentRoute == '/approvals/meetings',
-                    onTap: () => _navigate(context, '/approvals/meetings'),
-                  ),
-                  _buildNavItem(
-                    context,
-                    icon: Icons.currency_rupee_rounded,
-                    title: s.budgetApprovals,
-                    isSelected: currentRoute == '/approvals/budget',
-                    onTap: () => _navigate(context, '/approvals/budget'),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // MEETINGS
-                  _buildSectionHeader(context, s.meetingsHeader),
-                  if (!isExecutive && !isManager && !isTeamLead && !isPrincipal)
+                  if (isAdmin) ...[
+                    // ADMINISTRATION / USER MANAGEMENT
+                    _buildSectionHeader(context, s.administrationHeader),
                     _buildNavItem(
                       context,
                       icon: Icons.person_outline_rounded,
-                      title: s.monthlyOneOnOnePending,
-                      isSelected: currentRoute == '/one-on-one-pending' || currentRoute == '/one-on-one',
-                      onTap: () => _navigate(context, '/one-on-one-pending'),
-                    ),
-                  _buildNavItem(
-                    context,
-                    icon: Icons.access_time_rounded,
-                    title: s.myScheduledMeetings,
-                    isSelected: currentRoute == '/my-meetings' || currentRoute == '/meetings',
-                    onTap: () => _navigate(context, '/my-meetings'),
-                  ),
-                  _buildNavItem(
-                    context,
-                    icon: Icons.calendar_month_outlined,
-                    title: s.meetingCalendar,
-                    isSelected: currentRoute == '/meetings-calendar',
-                    onTap: () => _navigate(context, '/meetings-calendar'),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // EVENTS
-                  _buildSectionHeader(context, s.eventsHeader),
-                  _buildNavItem(
-                    context,
-                    icon: Icons.star_border_rounded,
-                    title: s.events,
-                    isSelected: currentRoute == '/events',
-                    onTap: () => _navigate(context, '/events'),
-                  ),
-                  _buildNavItem(
-                    context,
-                    icon: Icons.calendar_today_outlined,
-                    title: s.eventsCalendar,
-                    isSelected: currentRoute == '/events-calendar',
-                    onTap: () => _navigate(context, '/events-calendar'),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // REPORTS
-                  _buildSectionHeader(context, s.reportsHeader),
-                  _buildNavItem(
-                    context,
-                    icon: Icons.article_outlined,
-                    title: s.statusReports,
-                    isSelected: currentRoute == '/reports',
-                    onTap: () => _navigate(context, '/reports'),
-                  ),
-                  _buildNavItem(
-                    context,
-                    icon: Icons.bar_chart_rounded,
-                    title: s.reportsDashboard,
-                    isSelected: currentRoute == '/reports-dashboard',
-                    onTap: () => _navigate(context, '/reports-dashboard'),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // TO-DO
-                  _buildSectionHeader(context, s.todoHeader),
-                  _buildNavItem(
-                    context,
-                    icon: Icons.pie_chart_outline_rounded,
-                    title: s.today,
-                    isSelected: currentRoute == '/todo',
-                    onTap: () => _navigate(context, '/todo'),
-                  ),
-                  _buildNavItem(
-                    context,
-                    icon: Icons.history_rounded,
-                    title: s.history,
-                    isSelected: currentRoute == '/todo-history',
-                    onTap: () => _navigate(context, '/todo-history'),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // PERFORMANCE
-                  _buildSectionHeader(context, s.performanceHeader),
-                  _buildNavItem(
-                    context,
-                    icon: Icons.emoji_events_outlined,
-                    title: s.leaderboard,
-                    isSelected: currentRoute == '/leaderboard',
-                    onTap: () => _navigate(context, '/leaderboard'),
-                  ),
-                  if (!isExecutive)
-                    _buildNavItem(
-                      context,
-                      icon: Icons.people_alt_outlined,
-                      title: s.teamPerformance,
-                      isSelected: currentRoute == '/team-performance',
-                      onTap: () => _navigate(context, '/team-performance'),
-                    ),
-                  _buildNavItem(
-                    context,
-                    icon: Icons.diamond_outlined,
-                    title: s.finesAndRewards,
-                    isSelected: currentRoute == '/fines-rewards' || currentRoute == '/fines',
-                    onTap: () => _navigate(context, '/fines-rewards'),
-                  ),
-                  if (!isExecutive && !isTeamLead && !isManager && !isPrincipal)
-                    _buildNavItem(
-                      context,
-                      icon: Icons.settings_outlined,
-                      title: s.settings,
-                      isSelected: currentRoute == '/performance-settings' || currentRoute == '/perf-settings',
-                      onTap: () => _navigate(context, '/performance-settings'),
-                    ),
-                  const SizedBox(height: 12),
-
-                  // ORGANIZATION (Only for directors)
-                  if (!isExecutive && !isTeamLead && !isManager && !isPrincipal) ...[
-                    _buildSectionHeader(context, s.organizationHeader),
-                    _buildNavItem(
-                      context,
-                      icon: Icons.people_outline_rounded,
-                      title: s.staff,
+                      title: s.userManagement,
                       isSelected: currentRoute == '/staff',
                       onTap: () => _navigate(context, '/staff'),
                     ),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.folder_open_outlined,
+                      title: s.branchesAndDepartments,
+                      isSelected: currentRoute == '/admin/access',
+                      onTap: () => _navigate(context, '/admin/access'),
+                    ),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.alt_route_rounded,
+                      title: s.reportingStructure,
+                      isSelected: currentRoute == '/admin/reporting',
+                      onTap: () => _navigate(context, '/admin/reporting'),
+                    ),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.shield_outlined,
+                      title: s.rolesAndPermissions,
+                      isSelected: currentRoute == '/admin/roles',
+                      onTap: () => _navigate(context, '/admin/roles'),
+                    ),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.receipt_long_outlined,
+                      title: s.auditLog,
+                      isSelected: currentRoute == '/admin/audit',
+                      onTap: () => _navigate(context, '/admin/audit'),
+                    ),
+                    const SizedBox(height: 20),
+                  ] else ...[
+                    // DASHBOARD
+                    _buildNavItem(
+                      context,
+                      icon: Icons.grid_view_rounded,
+                      title: s.dashboard,
+                      isSelected: currentRoute == '/dashboard',
+                      onTap: () => _navigate(context, '/dashboard'),
+                    ),
+                    if (isPrincipal || (!isExecutive && !isManager && !isTeamLead))
+                      _buildNavItem(
+                        context,
+                        icon: Icons.table_chart_outlined,
+                        title: s.organizationOverview,
+                        isSelected: currentRoute == '/org-overview',
+                        onTap: () => _navigate(context, '/org-overview'),
+                      ),
                     const SizedBox(height: 12),
-                  ],
 
-                  // AI & SETTINGS
-                  _buildSectionHeader(context, s.aiAndSettingsHeader),
-                  _buildNavItem(
-                    context,
-                    icon: Icons.auto_awesome_rounded,
-                    title: s.sutraAi,
-                    iconColor: Colors.amber,
-                    isSelected: currentRoute == '/sutra',
-                    onTap: () => _navigate(context, '/sutra'),
-                  ),
-                  _buildNavItem(
-                    context,
-                    icon: Icons.tune_rounded,
-                    title: s.myPreferences,
-                    isSelected: currentRoute == '/my-preferences' || currentRoute == '/preferences',
-                    onTap: () => _navigate(context, '/my-preferences'),
-                  ),
-                  const SizedBox(height: 20),
+                    // TASKS
+                    _buildSectionHeader(context, s.tasksHeader),
+                    if (!isExecutive && !isManager && !isTeamLead && !isPrincipal)
+                      _buildNavItem(
+                        context,
+                        icon: Icons.check_circle_outline,
+                        title: s.allTasks,
+                        isSelected: currentRoute == '/tasks',
+                        onTap: () => _navigate(context, '/tasks'),
+                      ),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.check_box_outlined,
+                      title: s.myTasks,
+                      isSelected: currentRoute == '/my-tasks',
+                      onTap: () => _navigate(context, '/my-tasks'),
+                    ),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.autorenew_rounded,
+                      title: s.recurringTasks,
+                      isSelected: currentRoute == '/recurring',
+                      onTap: () => _navigate(context, '/recurring'),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // APPROVALS
+                    _buildSectionHeader(context, s.approvalsHeader),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.check_circle_rounded,
+                      title: s.taskApprovals,
+                      iconColor: Colors.green,
+                      isSelected: currentRoute == '/approvals/tasks',
+                      onTap: () => _navigate(context, '/approvals/tasks'),
+                    ),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.outlined_flag_rounded,
+                      title: s.escalations,
+                      isSelected: currentRoute == '/approvals/escalations',
+                      onTap: () => _navigate(context, '/approvals/escalations'),
+                    ),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.calendar_today_rounded,
+                      title: s.meetingApprovals,
+                      isSelected: currentRoute == '/approvals/meetings',
+                      onTap: () => _navigate(context, '/approvals/meetings'),
+                    ),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.currency_rupee_rounded,
+                      title: s.budgetApprovals,
+                      isSelected: currentRoute == '/approvals/budget',
+                      onTap: () => _navigate(context, '/approvals/budget'),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // MEETINGS
+                    _buildSectionHeader(context, s.meetingsHeader),
+                    if (!isExecutive && !isManager && !isTeamLead && !isPrincipal)
+                      _buildNavItem(
+                        context,
+                        icon: Icons.person_outline_rounded,
+                        title: s.monthlyOneOnOnePending,
+                        isSelected: currentRoute == '/one-on-one-pending' || currentRoute == '/one-on-one',
+                        onTap: () => _navigate(context, '/one-on-one-pending'),
+                      ),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.access_time_rounded,
+                      title: s.myScheduledMeetings,
+                      isSelected: currentRoute == '/my-meetings' || currentRoute == '/meetings',
+                      onTap: () => _navigate(context, '/my-meetings'),
+                    ),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.calendar_month_outlined,
+                      title: s.meetingCalendar,
+                      isSelected: currentRoute == '/meetings-calendar',
+                      onTap: () => _navigate(context, '/meetings-calendar'),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // EVENTS
+                    _buildSectionHeader(context, s.eventsHeader),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.star_border_rounded,
+                      title: s.events,
+                      isSelected: currentRoute == '/events',
+                      onTap: () => _navigate(context, '/events'),
+                    ),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.calendar_today_outlined,
+                      title: s.eventsCalendar,
+                      isSelected: currentRoute == '/events-calendar',
+                      onTap: () => _navigate(context, '/events-calendar'),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // REPORTS
+                    _buildSectionHeader(context, s.reportsHeader),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.article_outlined,
+                      title: s.statusReports,
+                      isSelected: currentRoute == '/reports',
+                      onTap: () => _navigate(context, '/reports'),
+                    ),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.bar_chart_rounded,
+                      title: s.reportsDashboard,
+                      isSelected: currentRoute == '/reports-dashboard',
+                      onTap: () => _navigate(context, '/reports-dashboard'),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // TO-DO
+                    _buildSectionHeader(context, s.todoHeader),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.pie_chart_outline_rounded,
+                      title: s.today,
+                      isSelected: currentRoute == '/todo',
+                      onTap: () => _navigate(context, '/todo'),
+                    ),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.history_rounded,
+                      title: s.history,
+                      isSelected: currentRoute == '/todo-history',
+                      onTap: () => _navigate(context, '/todo-history'),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // PERFORMANCE
+                    _buildSectionHeader(context, s.performanceHeader),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.emoji_events_outlined,
+                      title: s.leaderboard,
+                      isSelected: currentRoute == '/leaderboard',
+                      onTap: () => _navigate(context, '/leaderboard'),
+                    ),
+                    if (!isExecutive)
+                      _buildNavItem(
+                        context,
+                        icon: Icons.people_alt_outlined,
+                        title: s.teamPerformance,
+                        isSelected: currentRoute == '/team-performance',
+                        onTap: () => _navigate(context, '/team-performance'),
+                      ),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.diamond_outlined,
+                      title: s.finesAndRewards,
+                      isSelected: currentRoute == '/fines-rewards' || currentRoute == '/fines',
+                      onTap: () => _navigate(context, '/fines-rewards'),
+                    ),
+                    if (!isExecutive && !isTeamLead && !isManager && !isPrincipal)
+                      _buildNavItem(
+                        context,
+                        icon: Icons.settings_outlined,
+                        title: s.settings,
+                        isSelected: currentRoute == '/performance-settings' || currentRoute == '/perf-settings',
+                        onTap: () => _navigate(context, '/performance-settings'),
+                      ),
+                    const SizedBox(height: 12),
+
+                    // AI & SETTINGS
+                    _buildSectionHeader(context, s.aiAndSettingsHeader),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.auto_awesome_rounded,
+                      title: s.sutraAi,
+                      iconColor: Colors.amber,
+                      isSelected: currentRoute == '/sutra',
+                      onTap: () => _navigate(context, '/sutra'),
+                    ),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.tune_rounded,
+                      title: s.myPreferences,
+                      isSelected: currentRoute == '/my-preferences' || currentRoute == '/preferences',
+                      onTap: () => _navigate(context, '/my-preferences'),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
                 ],
               ),
             ),
@@ -817,6 +853,90 @@ class CustomLeftDrawer extends StatelessWidget {
       }
       navigator.push(
         MaterialPageRoute(builder: (context) => const StaffScreen()),
+      );
+      return;
+    }
+
+    if (route == '/admin/access') {
+      if (currentRoute == '/admin/access') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(
+          builder: (context) => AdminSectionScreen(
+            title: AppStrings.of(context).branchesAndDepartments,
+            route: '/admin/access',
+            icon: Icons.folder_open_outlined,
+          ),
+        ),
+      );
+      return;
+    }
+
+    if (route == '/admin/reporting') {
+      if (currentRoute == '/admin/reporting') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(
+          builder: (context) => AdminSectionScreen(
+            title: AppStrings.of(context).reportingStructure,
+            route: '/admin/reporting',
+            icon: Icons.alt_route_rounded,
+          ),
+        ),
+      );
+      return;
+    }
+
+    if (route == '/admin/roles') {
+      if (currentRoute == '/admin/roles') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(
+          builder: (context) => AdminSectionScreen(
+            title: AppStrings.of(context).rolesAndPermissions,
+            route: '/admin/roles',
+            icon: Icons.shield_outlined,
+          ),
+        ),
+      );
+      return;
+    }
+
+    if (route == '/admin/audit') {
+      if (currentRoute == '/admin/audit') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(
+          builder: (context) => AdminSectionScreen(
+            title: AppStrings.of(context).auditLog,
+            route: '/admin/audit',
+            icon: Icons.receipt_long_outlined,
+          ),
+        ),
       );
       return;
     }

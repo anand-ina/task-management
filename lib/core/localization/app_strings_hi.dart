@@ -21,6 +21,37 @@ class AppStringsHi extends AppStrings {
   String get demoPasswordHint => 'डेमो पासवर्ड: Samskar@123';
 
   @override
+  String get forgotPasswordTitle => 'पासवर्ड भूल गए';
+  @override
+  String get forgotPasswordSubtitle => 'अपना ईमेल, फोन या उपयोगकर्ता नाम दर्ज करें। हम व्हाट्सएप (और ईमेल) द्वारा 6 अंकों का रीसेट कोड भेजेंगे।';
+  @override
+  String get emailPhoneOrUsernameLabel => 'ईमेल, फोन या उपयोगकर्ता नाम';
+  @override
+  String get sendResetCodeButton => 'रीसेट कोड भेजें';
+  @override
+  String get backToSignInLink => 'साइन इन पर वापस जाएं';
+  @override
+  String get resetCodeSentNotice => 'यदि खाता मौजूद है, तो एक रीसेट कोड आ रहा है। इसे अगली स्क्रीन पर दर्ज करें।';
+  @override
+  String get enterResetCodeButton => 'रीसेट कोड दर्ज करें';
+  @override
+  String get resetPasswordTitle => 'पासवर्ड रीसेट करें';
+  @override
+  String get resetPasswordSubtitle => 'आपको प्राप्त 6 अंकों का कोड दर्ज करें और एक नया पासवर्ड चुनें।';
+  @override
+  String get resetCodeLabel => 'रीसेट कोड';
+  @override
+  String get resetCodeHint => '6 अंकों का कोड';
+  @override
+  String get newPasswordLabel => 'नया पासवर्ड';
+  @override
+  String get newPasswordHint => 'न्यूनतम 8 अक्षर, एक अक्षर और एक संख्या';
+  @override
+  String get confirmNewPasswordLabel => 'नए पासवर्ड की पुष्टि करें';
+  @override
+  String get resetPasswordButton => 'पासवर्ड रीसेट करें';
+
+  @override
   String get directorVamsi => 'वामसी (निदेशक)';
   @override
   String get principalMadhumathi => 'मधुमति (प्राचार्य)';
@@ -103,6 +134,22 @@ class AppStringsHi extends AppStrings {
   String get organizationHeader => 'संगठन';
   @override
   String get staff => 'कर्मचारी (Staff)';
+  @override
+  String get administrationHeader => 'प्रशासन (Administration)';
+  @override
+  String get userManagement => 'उपयोगकर्ता प्रबंधन';
+  @override
+  String get branchesAndDepartments => 'शाखाएं और विभाग';
+  @override
+  String get reportingStructure => 'रिपोर्टिंग संरचना';
+  @override
+  String get rolesAndPermissions => 'भूमिकाएं और अनुमतियां';
+  @override
+  String get auditLog => 'ऑडिट लॉग';
+  @override
+  String get administratorRole => 'प्रशासक (Administrator)';
+  @override
+  String get administratorBadgeScope => 'पूरा संगठन अवलोकन — प्रत्येक परिसर और विभाग।';
   @override
   String get aiAndSettingsHeader => 'एआई और सेटिंग्स';
   @override

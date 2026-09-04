@@ -5,6 +5,7 @@ import '../bloc/auth_bloc.dart';
 import '../bloc/auth_state.dart';
 import 'login_screen.dart';
 import '../../dashboard/screens/dashboard_screen.dart';
+import '../../staff/screens/staff_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -49,9 +50,20 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     final authState = context.read<AuthBloc>().state;
 
     if (authState is AuthenticatedState) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const DashboardScreen()),
-      );
+      final user = authState.userProfile;
+      final roleLower = user.role.toLowerCase();
+      final roleLabelLower = user.roleLabel.toLowerCase();
+      if (roleLower.contains('admin') ||
+          roleLabelLower.contains('admin') ||
+          user.email.contains('admin')) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const StaffScreen()),
+        );
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const DashboardScreen()),
+        );
+      }
     } else if (authState is UnauthenticatedState || authState is AuthErrorState) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const LoginScreen()),

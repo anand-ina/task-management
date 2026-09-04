@@ -62,70 +62,116 @@ class _StaffScreenState extends State<StaffScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Header Row
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
+                      Builder(
+                        builder: (context) {
+                          final missingContactCount = state is StaffLoadedState
+                              ? state.data.staffList.where((st) => st.hasMissingContact).length
+                              : 0;
+
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    s.staffTitle,
-                                    style: TextStyle(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
-                                      color: isDark ? Colors.white : const Color(0xFF0F172A),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  if (state is StaffLoadedState)
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                      decoration: BoxDecoration(
-                                        color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        '${state.data.staffList.length} team members',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: isDark ? Colors.white70 : Colors.grey.shade700,
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Wrap(
+                                      crossAxisAlignment: WrapCrossAlignment.center,
+                                      spacing: 8,
+                                      runSpacing: 6,
+                                      children: [
+                                        Text(
+                                          s.userManagement,
+                                          style: TextStyle(
+                                            fontSize: 22,
+                                            fontWeight: FontWeight.bold,
+                                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                          ),
                                         ),
+                                        if (state is StaffLoadedState) ...[
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                                            decoration: BoxDecoration(
+                                              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            child: Text(
+                                              '${state.data.staffList.length} users',
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w600,
+                                                color: isDark ? Colors.white70 : const Color(0xFF475569),
+                                              ),
+                                            ),
+                                          ),
+                                          if (missingContactCount > 0)
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                                              decoration: BoxDecoration(
+                                                color: isDark
+                                                    ? const Color(0xFF78350F).withOpacity(0.4)
+                                                    : const Color(0xFFFEF3C7),
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  const Text('⚠️ ', style: TextStyle(fontSize: 11)),
+                                                  Text(
+                                                    '$missingContactCount missing contact',
+                                                    style: TextStyle(
+                                                      fontSize: 11,
+                                                      fontWeight: FontWeight.w600,
+                                                      color: isDark
+                                                          ? const Color(0xFFFDE68A)
+                                                          : const Color(0xFFD97706),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                        ],
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Create and edit users, set roles, email, phone & branch, and manage passwords.',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: isDark ? Colors.white54 : const Color(0xFF64748B),
                                       ),
                                     ),
-                                ],
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                s.staffSubtitle,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: isDark ? Colors.white54 : Colors.black54,
+                                  ],
                                 ),
                               ),
+                              if (state is StaffLoadedState) ...[
+                                const SizedBox(width: 12),
+                                ElevatedButton.icon(
+                                  onPressed: () {
+                                    AddStaffDialog.show(
+                                      context,
+                                      departments: state.data.departments,
+                                      roles: state.data.roles,
+                                      branches: state.data.branches,
+                                    );
+                                  },
+                                  icon: const Icon(Icons.add, size: 16),
+                                  label: const Text(
+                                    '+ Add User',
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF0F172A),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  ),
+                                ),
+                              ],
                             ],
-                          ),
-                          if (state is StaffLoadedState)
-                            ElevatedButton.icon(
-                              onPressed: () {
-                                AddStaffDialog.show(
-                                  context,
-                                  departments: state.data.departments,
-                                  roles: state.data.roles,
-                                  branches: state.data.branches,
-                                );
-                              },
-                              icon: const Icon(Icons.add, size: 16),
-                              label: Text(s.addStaffTitle, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF0F172A),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                              ),
-                            ),
-                        ],
+                          );
+                        },
                       ),
                       const SizedBox(height: 16),
 
@@ -317,7 +363,7 @@ class _StaffScreenState extends State<StaffScreen> {
             crossAxisCount: crossCount,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            mainAxisExtent: 250,
+            mainAxisExtent: 310,
           ),
           itemCount: filtered.length,
           itemBuilder: (context, index) {
@@ -325,7 +371,7 @@ class _StaffScreenState extends State<StaffScreen> {
             final isCreator = staff.isTaskCreator;
 
             return Container(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1E293B) : Colors.white,
                 borderRadius: BorderRadius.circular(12),
@@ -335,11 +381,11 @@ class _StaffScreenState extends State<StaffScreen> {
                 children: [
                   // Avatar
                   CircleAvatar(
-                    radius: 22,
+                    radius: 24,
                     backgroundColor: _hexToColor(staff.avatarColor),
                     child: Text(
                       staff.initials,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -348,22 +394,25 @@ class _StaffScreenState extends State<StaffScreen> {
                   Text(
                     staff.name,
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 14.5,
                       fontWeight: FontWeight.bold,
                       color: isDark ? Colors.white : const Color(0xFF0F172A),
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
                   ),
 
                   // Department
                   Text(
                     staff.department,
-                    style: TextStyle(fontSize: 10.5, color: isDark ? Colors.white54 : Colors.grey.shade600),
+                    style: TextStyle(fontSize: 11, color: isDark ? Colors.white54 : const Color(0xFF64748B)),
                   ),
                   const SizedBox(height: 6),
 
                   // Role Badge e.g. EXECUTOR vs CREATOR
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2.5),
                     decoration: BoxDecoration(
                       color: isCreator
                           ? (isDark ? const Color(0xFF7C2D12) : const Color(0xFFFFEDD5))
@@ -375,6 +424,7 @@ class _StaffScreenState extends State<StaffScreen> {
                       style: TextStyle(
                         fontSize: 9.5,
                         fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
                         color: isCreator
                             ? (isDark ? const Color(0xFFFDBA74) : const Color(0xFFC2410C))
                             : (isDark ? const Color(0xFF86EFAC) : const Color(0xFF15803D)),
@@ -383,41 +433,128 @@ class _StaffScreenState extends State<StaffScreen> {
                   ),
                   const SizedBox(height: 4),
 
-                  // Designation
+                  // Designation / Role Label
                   Text(
                     staff.designation ?? staff.roleLabel,
-                    style: TextStyle(fontSize: 10, color: isDark ? Colors.white54 : Colors.grey.shade600),
+                    style: TextStyle(fontSize: 11, color: isDark ? Colors.white54 : const Color(0xFF64748B)),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 8),
 
-                  // Edit & Remove Row
+                  // Status Pills (password pending | no mobile | @username)
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 4,
+                    runSpacing: 4,
+                    children: [
+                      if (staff.isPasswordPending)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF78350F).withOpacity(0.3) : const Color(0xFFFEF3C7),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            'password pending',
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w500,
+                              color: isDark ? const Color(0xFFFDE68A) : const Color(0xFFB45309),
+                            ),
+                          ),
+                        ),
+                      if (staff.hasMissingContact)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF7F1D1D).withOpacity(0.3) : const Color(0xFFFEE2E2),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            'no mobile',
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w500,
+                              color: isDark ? const Color(0xFFFCA5A5) : const Color(0xFFB91C1C),
+                            ),
+                          ),
+                        ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1E3A8A).withOpacity(0.3) : const Color(0xFFEFF6FF),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          staff.handle,
+                          style: TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w500,
+                            color: isDark ? const Color(0xFF93C5FD) : const Color(0xFF1D4ED8),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Action Buttons Row (Edit | Reset PW | Remove)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       OutlinedButton(
                         onPressed: () {},
                         style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          side: BorderSide(color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1)),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                        child: const Text('Edit', style: TextStyle(fontSize: 10)),
+                        child: Text(
+                          'Edit',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            color: isDark ? Colors.white70 : const Color(0xFF334155),
+                          ),
+                        ),
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 5),
                       OutlinedButton(
                         onPressed: () {},
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.red,
-                          side: const BorderSide(color: Colors.redAccent),
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          side: BorderSide(color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1)),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                        child: const Text('Remove', style: TextStyle(fontSize: 10)),
+                        child: Text(
+                          'Reset PW',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            color: isDark ? Colors.white70 : const Color(0xFF334155),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      OutlinedButton(
+                        onPressed: () {},
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          side: BorderSide(color: isDark ? const Color(0xFF991B1B) : const Color(0xFFFCA5A5)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: const Text(
+                          'Remove',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            color: Color(0xFFDC2626),
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -428,10 +565,10 @@ class _StaffScreenState extends State<StaffScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildStatCol('${staff.created}', s.createdStat),
-                      _buildStatCol('${staff.assigned}', s.assignedHeader),
-                      _buildStatCol('${staff.done}', s.doneHeader),
-                      _buildStatCol('₹${staff.fines}', s.finesStat),
+                      _buildStatCol('${staff.created}', 'CREATED'),
+                      _buildStatCol('${staff.assigned}', 'ASSIGNED'),
+                      _buildStatCol('${staff.done}', 'DONE'),
+                      _buildStatCol('₹${staff.fines}', 'FINES'),
                     ],
                   ),
                 ],
@@ -451,14 +588,20 @@ class _StaffScreenState extends State<StaffScreen> {
         Text(
           val,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 13,
             fontWeight: FontWeight.bold,
             color: isDark ? Colors.white : const Color(0xFF0F172A),
           ),
         ),
+        const SizedBox(height: 1),
         Text(
           label,
-          style: TextStyle(fontSize: 8.5, color: isDark ? Colors.white54 : Colors.grey.shade500),
+          style: TextStyle(
+            fontSize: 8.5,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.4,
+            color: isDark ? Colors.white54 : const Color(0xFF94A3B8),
+          ),
         ),
       ],
     );

@@ -21,6 +21,37 @@ class AppStringsTe extends AppStrings {
   String get demoPasswordHint => 'డెమో పాస్‌వర్డ్: Samskar@123';
 
   @override
+  String get forgotPasswordTitle => 'పాస్‌వర్డ్ మరచిపోయారా';
+  @override
+  String get forgotPasswordSubtitle => 'మీ ఈమెయిల్, ఫోన్ లేదా యూజర్ నేమ్ నమోదు చేయండి. మేము WhatsApp ద్వారా 6 అంకెల రీసెట్ కోడ్‌ను పంపుతాము.';
+  @override
+  String get emailPhoneOrUsernameLabel => 'ఈమెయిల్, ఫోన్ లేదా యూజర్ నేమ్';
+  @override
+  String get sendResetCodeButton => 'రీసెట్ కోడ్ పంపండి';
+  @override
+  String get backToSignInLink => 'సైన్ ఇన్ కి తిరిగి వెళ్ళండి';
+  @override
+  String get resetCodeSentNotice => 'ఆ ఖాతా ఉంటే, రీసెట్ కోడ్ వస్తోంది. తదుపరి స్క్రీన్‌లో ఎంటర్ చేయండి.';
+  @override
+  String get enterResetCodeButton => 'రీసెట్ కోడ్ ఎంటర్ చేయండి';
+  @override
+  String get resetPasswordTitle => 'పాస్‌వర్డ్ రీసెట్ చేయండి';
+  @override
+  String get resetPasswordSubtitle => 'మీరు పొందిన 6 అంకెల కోడ్‌ను నమోదు చేసి, కొత్త పాస్‌వర్డ్‌ను ఎంచుకోండి.';
+  @override
+  String get resetCodeLabel => 'రీసెట్ కోడ్';
+  @override
+  String get resetCodeHint => '6-అంకెల కోడ్';
+  @override
+  String get newPasswordLabel => 'కొత్త పాస్‌వర్డ్';
+  @override
+  String get newPasswordHint => 'కనీసం 8 అక్షరాలు, ఒక అక్షరం మరియు సంఖ్య';
+  @override
+  String get confirmNewPasswordLabel => 'కొత్త పాస్‌వర్డ్‌ను నిర్ధారించండి';
+  @override
+  String get resetPasswordButton => 'పాస్‌వర్డ్ రీసెట్ చేయండి';
+
+  @override
   String get directorVamsi => 'వంశీ (డైరెక్టర్)';
   @override
   String get principalMadhumathi => 'మధుమతి (ప్రిన్సిపాల్)';
@@ -103,6 +134,22 @@ class AppStringsTe extends AppStrings {
   String get organizationHeader => 'సంస్థ';
   @override
   String get staff => 'సిబ్బంది';
+  @override
+  String get administrationHeader => 'అడ్మినిస్ట్రేషన్';
+  @override
+  String get userManagement => 'యూజర్ మేనేజ్‌మెంట్';
+  @override
+  String get branchesAndDepartments => 'బ్రాంచ్‌లు & విభాగాలు';
+  @override
+  String get reportingStructure => 'రిపోర్టింగ్ నిర్మాణం';
+  @override
+  String get rolesAndPermissions => 'పాత్రలు & అనుమతులు';
+  @override
+  String get auditLog => 'ఆడిట్ లాగ్';
+  @override
+  String get administratorRole => 'అడ్మినిస్ట్రేటర్';
+  @override
+  String get administratorBadgeScope => 'పూర్తి సంస్థ వీక్షణ — ప్రతి క్యాంపస్ & విభాగం.';
   @override
   String get aiAndSettingsHeader => 'AI & సెట్టింగ్‌లు';
   @override

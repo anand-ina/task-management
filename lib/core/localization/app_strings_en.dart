@@ -21,6 +21,37 @@ class AppStringsEn extends AppStrings {
   String get demoPasswordHint => 'Demo password: Samskar@123';
 
   @override
+  String get forgotPasswordTitle => 'Forgot password';
+  @override
+  String get forgotPasswordSubtitle => 'Enter your email, phone or username. We’ll send a 6-digit reset code by WhatsApp (and email, if set up).';
+  @override
+  String get emailPhoneOrUsernameLabel => 'Email, phone or username';
+  @override
+  String get sendResetCodeButton => 'Send reset code';
+  @override
+  String get backToSignInLink => 'Back to sign in';
+  @override
+  String get resetCodeSentNotice => 'If that account exists, a reset code is on its way. Enter it on the next screen.';
+  @override
+  String get enterResetCodeButton => 'Enter reset code';
+  @override
+  String get resetPasswordTitle => 'Reset password';
+  @override
+  String get resetPasswordSubtitle => 'Enter the 6-digit code you received and choose a new password.';
+  @override
+  String get resetCodeLabel => 'Reset code';
+  @override
+  String get resetCodeHint => '6-digit code';
+  @override
+  String get newPasswordLabel => 'New password';
+  @override
+  String get newPasswordHint => 'min 8 chars, a letter and a number';
+  @override
+  String get confirmNewPasswordLabel => 'Confirm new password';
+  @override
+  String get resetPasswordButton => 'Reset password';
+
+  @override
   String get directorVamsi => 'Vamsi (Director)';
   @override
   String get principalMadhumathi => 'Madhumathi (Principal)';
@@ -103,6 +134,22 @@ class AppStringsEn extends AppStrings {
   String get organizationHeader => 'ORGANIZATION';
   @override
   String get staff => 'Staff';
+  @override
+  String get administrationHeader => 'ADMINISTRATION';
+  @override
+  String get userManagement => 'User Management';
+  @override
+  String get branchesAndDepartments => 'Branches & Departments';
+  @override
+  String get reportingStructure => 'Reporting Structure';
+  @override
+  String get rolesAndPermissions => 'Roles & Permissions';
+  @override
+  String get auditLog => 'Audit Log';
+  @override
+  String get administratorRole => 'Administrator';
+  @override
+  String get administratorBadgeScope => 'Full organization view — every campus & department.';
   @override
   String get aiAndSettingsHeader => 'AI & SETTINGS';
   @override

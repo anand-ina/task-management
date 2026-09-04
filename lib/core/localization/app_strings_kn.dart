@@ -21,6 +21,37 @@ class AppStringsKn extends AppStrings {
   String get demoPasswordHint => 'ಡೆಮೊ ಪಾಸ್‌ವರ್ಡ್: Samskar@123';
 
   @override
+  String get forgotPasswordTitle => 'ಪಾಸ್‌ವರ್ಡ್ ಮರೆತಿದ್ದೀರಾ';
+  @override
+  String get forgotPasswordSubtitle => 'ನಿಮ್ಮ ಇಮೇಲ್, ಫೋನ್ ಅಥವಾ ಬಳಕೆದಾರ ಹೆಸರನ್ನು ನಮೂದಿಸಿ. ನಾವು 6-ಅಂಕಿಯ ಮರುಹೊಂದಿಸುವ ಕೋಡ್ ಅನ್ನು WhatsApp ಮೂಲಕ ಕಳುಹಿಸುತ್ತೇವೆ.';
+  @override
+  String get emailPhoneOrUsernameLabel => 'ಇಮೇಲ್, ಫೋನ್ ಅಥವಾ ಬಳಕೆದಾರ ಹೆಸರು';
+  @override
+  String get sendResetCodeButton => 'ಮರುಹೊಂದಿಸುವ ಕೋಡ್ ಕಳುಹಿಸಿ';
+  @override
+  String get backToSignInLink => 'ಸೈನ್ ಇನ್‌ಗೆ ಹಿಂತಿರುಗಿ';
+  @override
+  String get resetCodeSentNotice => 'ಆ ಖಾತೆಯು ಅಸ್ತಿತ್ವದಲ್ಲಿದ್ದರೆ, ಮರುಹೊಂದಿಸುವ ಕೋಡ್ ಕಳುಹಿಸಲಾಗುತ್ತಿದೆ. ಮುಂದಿನ ಪರದೆಯಲ್ಲಿ ಅದನ್ನು ನಮೂದಿಸಿ.';
+  @override
+  String get enterResetCodeButton => 'ಮರುಹೊಂದಿಸುವ ಕೋಡ್ ನಮೂದಿಸಿ';
+  @override
+  String get resetPasswordTitle => 'ಪಾಸ್‌ವರ್ಡ್ ಮರುಹೊಂದಿಸಿ';
+  @override
+  String get resetPasswordSubtitle => 'ನೀವು ಸ್ವೀಕರಿಸಿದ 6-ಅಂಕಿಯ ಕೋಡ್ ಅನ್ನು ನಮೂದಿಸಿ ಮತ್ತು ಹೊಸ ಪಾಸ್‌ವರ್ಡ್ ಅನ್ನು ಆಯ್ಕೆಮಾಡಿ.';
+  @override
+  String get resetCodeLabel => 'ಮರುಹೊಂದಿಸುವ ಕೋಡ್';
+  @override
+  String get resetCodeHint => '6-ಅಂಕಿಯ ಕೋಡ್';
+  @override
+  String get newPasswordLabel => 'ಹೊಸ ಪಾಸ್‌ವರ್ಡ್';
+  @override
+  String get newPasswordHint => 'ಕನಿಷ್ಠ 8 ಅಕ್ಷರಗಳು, ಒಂದು ಅಕ್ಷರ ಮತ್ತು ಸಂಖ್ಯೆ';
+  @override
+  String get confirmNewPasswordLabel => 'ಹೊಸ ಪಾಸ್‌ವರ್ಡ್ ಅನ್ನು ದೃಢೀಕರಿಸಿ';
+  @override
+  String get resetPasswordButton => 'ಪಾಸ್‌ವರ್ಡ್ ಮರುಹೊಂದಿಸಿ';
+
+  @override
   String get directorVamsi => 'ವಂಶಿ (ನಿರ್ದೇಶಕರು)';
   @override
   String get principalMadhumathi => 'ಮಧುಮತಿ (ಪ್ರಾಂಶುಪಾಲರು)';
@@ -103,6 +134,22 @@ class AppStringsKn extends AppStrings {
   String get organizationHeader => 'ಸಂಸ್ಥೆ';
   @override
   String get staff => 'ಸಿಬ್ಬಂದಿ';
+  @override
+  String get administrationHeader => 'ಆಡಳಿತ (Administration)';
+  @override
+  String get userManagement => 'ಬಳಕೆದಾರ ನಿರ್ವಹಣೆ';
+  @override
+  String get branchesAndDepartments => 'ಶಾಖೆಗಳು & ವಿಭಾಗಗಳು';
+  @override
+  String get reportingStructure => 'ವರದಿ ಮಾಡುವ ರಚನೆ';
+  @override
+  String get rolesAndPermissions => 'ಪಾತ್ರಗಳು & ಅನುಮತಿಗಳು';
+  @override
+  String get auditLog => 'ಆಡಿಟ್ ಲಾగ్';
+  @override
+  String get administratorRole => 'ಆಡಳಿತಗಾರ (Administrator)';
+  @override
+  String get administratorBadgeScope => 'ಸಂಪೂರ್ಣ ಸಂಸ್ಥೆಯ ವೀಕ್ಷಣೆ — ಪ್ರತಿಯೊಂದು ಕ್ಯಾಂಪಸ್ & ವಿಭಾಗ.';
   @override
   String get aiAndSettingsHeader => 'ಎಐ ಮತ್ತು ಸೆಟ್ಟಿಂಗ್‌ಗಳು';
   @override

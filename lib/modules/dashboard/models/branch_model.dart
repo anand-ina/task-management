@@ -14,11 +14,12 @@ class BranchModel {
   factory BranchModel.fromJson(Map<String, dynamic> json) {
     final idVal = json['id'] as int? ?? 0;
     final codeVal = json['code'] as String? ?? '';
+    final isAllApi = json['is_all'] as bool?;
     return BranchModel(
       id: idVal,
       code: codeVal,
       name: json['name'] as String? ?? '',
-      isAll: idVal == 0 || codeVal.toUpperCase() == 'ALL',
+      isAll: isAllApi ?? (idVal == 0 || codeVal.toUpperCase() == 'ALL'),
     );
   }
 }

@@ -43,6 +43,23 @@ abstract class AppStrings {
 
   String get demoPasswordHint;
 
+  // Forgot Password & Reset Password Strings
+  String get forgotPasswordTitle;
+  String get forgotPasswordSubtitle;
+  String get emailPhoneOrUsernameLabel;
+  String get sendResetCodeButton;
+  String get backToSignInLink;
+  String get resetCodeSentNotice;
+  String get enterResetCodeButton;
+  String get resetPasswordTitle;
+  String get resetPasswordSubtitle;
+  String get resetCodeLabel;
+  String get resetCodeHint;
+  String get newPasswordLabel;
+  String get newPasswordHint;
+  String get confirmNewPasswordLabel;
+  String get resetPasswordButton;
+
   // Quick Login Role Titles
   String get directorVamsi;
 
@@ -126,6 +143,22 @@ abstract class AppStrings {
   String get organizationHeader;
 
   String get staff;
+
+  String get administrationHeader;
+
+  String get userManagement;
+
+  String get branchesAndDepartments;
+
+  String get reportingStructure;
+
+  String get rolesAndPermissions;
+
+  String get auditLog;
+
+  String get administratorRole;
+
+  String get administratorBadgeScope;
 
   String get aiAndSettingsHeader;
 

@@ -51,12 +51,17 @@ class DioClient {
 
           return handler.next(response);
         },
-        onError: (DioException error, handler) {
+        onError: (DioException error, handler) async {
           debugPrint('==================== API ERROR ====================');
           debugPrint('URL: [${error.requestOptions.method}] ${error.requestOptions.uri}');
           debugPrint('Status Code: ${error.response?.statusCode}');
           debugPrint('Error Data: ${error.response?.data ?? error.message}');
           debugPrint('===================================================');
+
+          // If 401 Unauthorized, clear invalid session token
+          if (error.response?.statusCode == 401) {
+            await PreferencesService().clearSession();
+          }
 
           return handler.next(error);
         },

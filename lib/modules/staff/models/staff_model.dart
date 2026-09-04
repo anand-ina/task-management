@@ -23,6 +23,7 @@ class StaffModel {
   final int assigned;
   final int done;
   final String fines;
+  final bool isPasswordPending;
 
   StaffModel({
     required this.id,
@@ -49,7 +50,22 @@ class StaffModel {
     required this.assigned,
     required this.done,
     required this.fines,
+    this.isPasswordPending = true,
   });
+
+  bool get hasMissingContact =>
+      phone.trim().isEmpty ||
+      phone == '0' ||
+      phone.toLowerCase().contains('no mobile') ||
+      phone.toLowerCase().contains('missing');
+
+  String get handle {
+    if (email.contains('@')) {
+      final username = email.split('@').first;
+      if (username.isNotEmpty) return '@$username';
+    }
+    return '@${name.toLowerCase().replaceAll(' ', '')}';
+  }
 
   factory StaffModel.fromJson(Map<String, dynamic> json) {
     return StaffModel(
@@ -77,6 +93,9 @@ class StaffModel {
       assigned: json['assigned'] as int? ?? 0,
       done: json['done'] as int? ?? 0,
       fines: json['fines']?.toString() ?? '0',
+      isPasswordPending: json['is_password_pending'] as bool? ??
+          json['password_pending'] as bool? ??
+          true,
     );
   }
 }
