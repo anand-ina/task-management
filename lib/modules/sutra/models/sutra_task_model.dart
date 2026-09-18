@@ -33,7 +33,12 @@ class SutraTaskModel {
       description: json['description']?.toString() ?? '',
       priority: json['priority']?.toString() ?? 'medium',
       status: json['status']?.toString() ?? 'in_progress',
-      progress: json['progress'] is int ? json['progress'] : (int.tryParse(json['progress']?.toString() ?? '0') ?? 0),
+      progress: json['progress'] is int
+          ? json['progress']
+          : (int.tryParse(json['progress']?.toString() ?? '') ??
+              int.tryParse(json['progress_percent']?.toString() ?? '') ??
+              int.tryParse(json['completion']?.toString() ?? '') ??
+              0),
       dueDate: json['due_date']?.toString(),
       branchName: json['branch_name']?.toString() ?? 'Head Office',
       assignedByName: json['assigned_by_name']?.toString() ?? '',

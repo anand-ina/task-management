@@ -1,3 +1,4 @@
+import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/localization/app_strings.dart';
@@ -46,6 +47,7 @@ class _MeetingCalendarScreenState extends State<MeetingCalendarScreen> {
           }
         },
         child: Scaffold(
+          floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/meetings-calendar'),
           appBar: const CustomAppBar(),
           body: BlocBuilder<MeetingsBloc, MeetingsState>(
@@ -119,6 +121,15 @@ class _MeetingCalendarScreenState extends State<MeetingCalendarScreen> {
                                 children: [
                                   Row(
                                     children: [
+                                      // Prev Button (<)
+                                      IconButton(
+                                        onPressed: _navigatePrev,
+                                        icon: const Icon(Icons.chevron_left_rounded, size: 22),
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
+                                      ),
+                                      const SizedBox(width: 6),
+
                                       // Today Button
                                       OutlinedButton(
                                         onPressed: () {
@@ -130,25 +141,16 @@ class _MeetingCalendarScreenState extends State<MeetingCalendarScreen> {
                                         ),
                                         child: Text(s.todayButton, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                                       ),
-                                      const SizedBox(width: 8),
+                                      const SizedBox(width: 6),
 
-                                      // Prev Button
-                                      IconButton(
-                                        onPressed: _navigatePrev,
-                                        icon: const Icon(Icons.chevron_left_rounded, size: 22),
-                                        padding: EdgeInsets.zero,
-                                        constraints: const BoxConstraints(),
-                                      ),
-                                      const SizedBox(width: 4),
-
-                                      // Next Button
+                                      // Next Button (>)
                                       IconButton(
                                         onPressed: _navigateNext,
                                         icon: const Icon(Icons.chevron_right_rounded, size: 22),
                                         padding: EdgeInsets.zero,
                                         constraints: const BoxConstraints(),
                                       ),
-                                      const SizedBox(width: 12),
+                                      const SizedBox(width: 14),
 
                                       // Dynamic Date Range Display Text
                                       Text(
@@ -160,8 +162,6 @@ class _MeetingCalendarScreenState extends State<MeetingCalendarScreen> {
                                         ),
                                       ),
                                       const SizedBox(width: 20),
-
-                                      // View Mode Segmented Controls
                                     ],
                                   ),
                                   const SizedBox(height: 16),
@@ -257,7 +257,12 @@ class _MeetingCalendarScreenState extends State<MeetingCalendarScreen> {
       } else if (_selectedViewMode == 'work_week' || _selectedViewMode == 'week') {
         _selectedDate = _selectedDate.subtract(const Duration(days: 7));
       } else if (_selectedViewMode == 'month') {
-        _selectedDate = DateTime(_selectedDate.year, _selectedDate.month - 1, _selectedDate.day);
+        final prevMonth = _selectedDate.month - 1;
+        final year = prevMonth < 1 ? _selectedDate.year - 1 : _selectedDate.year;
+        final month = prevMonth < 1 ? 12 : prevMonth;
+        final daysInMonth = DateUtils.getDaysInMonth(year, month);
+        final day = _selectedDate.day > daysInMonth ? daysInMonth : _selectedDate.day;
+        _selectedDate = DateTime(year, month, day);
       }
     });
   }
@@ -269,7 +274,12 @@ class _MeetingCalendarScreenState extends State<MeetingCalendarScreen> {
       } else if (_selectedViewMode == 'work_week' || _selectedViewMode == 'week') {
         _selectedDate = _selectedDate.add(const Duration(days: 7));
       } else if (_selectedViewMode == 'month') {
-        _selectedDate = DateTime(_selectedDate.year, _selectedDate.month + 1, _selectedDate.day);
+        final nextMonth = _selectedDate.month + 1;
+        final year = nextMonth > 12 ? _selectedDate.year + 1 : _selectedDate.year;
+        final month = nextMonth > 12 ? 1 : nextMonth;
+        final daysInMonth = DateUtils.getDaysInMonth(year, month);
+        final day = _selectedDate.day > daysInMonth ? daysInMonth : _selectedDate.day;
+        _selectedDate = DateTime(year, month, day);
       }
     });
   }

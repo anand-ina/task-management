@@ -1,3 +1,4 @@
+import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/localization/app_strings.dart';
@@ -29,12 +30,24 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
 
     final authState = context.watch<AuthBloc>().state;
     bool isAcademicExecutive = false;
+    bool isTeamLead = false;
     if (authState is AuthenticatedState) {
       final role = authState.userProfile.role.toLowerCase();
       final roleLabel = authState.userProfile.roleLabel.toLowerCase();
-      final email = authState.userProfile.email.toLowerCase();
-      if (role.contains('executive') || role.contains('ae') || roleLabel.contains('executive') || roleLabel.contains('ae') || email.contains('sushma')) {
+      if (role.contains('executive') || role.contains('ae') || roleLabel.contains('executive') || roleLabel.contains('ae')) {
         isAcademicExecutive = true;
+      }
+      if (role.contains('team lead') ||
+          role.contains('team_lead') ||
+          role.contains('team leader') ||
+          role.contains('team_leader') ||
+          role.contains('tl') ||
+          roleLabel.contains('team lead') ||
+          roleLabel.contains('team_lead') ||
+          roleLabel.contains('team leader') ||
+          roleLabel.contains('team_leader') ||
+          roleLabel.contains('tl')) {
+        isTeamLead = true;
       }
     }
 
@@ -50,6 +63,7 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
           }
         },
         child: Scaffold(
+          floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/fines-rewards'),
           appBar: const CustomAppBar(),
           body: BlocBuilder<FinesBloc, FinesState>(
@@ -89,7 +103,7 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
                               ),
                             ],
                           ),
-                          if (!isAcademicExecutive)
+                          if (!isAcademicExecutive && !isTeamLead)
                             ElevatedButton(
                               onPressed: () => IssueFineRewardDialog.show(context),
                               style: ElevatedButton.styleFrom(

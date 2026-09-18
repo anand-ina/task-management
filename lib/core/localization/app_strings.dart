@@ -60,31 +60,12 @@ abstract class AppStrings {
   String get confirmNewPasswordLabel;
   String get resetPasswordButton;
 
-  // Quick Login Role Titles
-  String get directorVamsi;
-
-  String get principalMadhumathi;
-
-  String get managerMurali;
-
-  String get managerSwapnika;
-
-  String get teamLeadNarasimha;
-
-  String get executiveAnamika;
-
-  String get executiveGyapika;
-
-  String get teamLeadAkash;
-
-  String get managerSandeep;
-
-  String get centerHeadCharan;
-
   // Navigation Drawer Headers & Items
   String get dashboard;
 
   String get organizationOverview;
+
+  String get campusOverview;
 
   String get tasksHeader;
 
@@ -159,6 +140,110 @@ abstract class AppStrings {
   String get administratorRole;
 
   String get administratorBadgeScope;
+
+  String get branchesAndDepartmentsSubtitle;
+
+  String get branchesHeader;
+
+  String get departmentsHeader;
+
+  String get codePlaceholder;
+
+  String get branchNamePlaceholder;
+
+  String get newDepartmentPlaceholder;
+
+  String get editButton;
+
+  String get saveButton;
+  String get cancelEditButton;
+
+  // Reporting Structure Screen
+  String get reportingStructureSubtitle;
+  String get personColumn;
+  String get reportsToColumn;
+  String get dottedLineColumn;
+  String get addManagerLabel;
+  String get addDottedLabel;
+  String get noReportingDataFound;
+
+  // Roles & Permissions Screen
+  String get rolesAndPermissionsSubtitle;
+  String get addRoleButton;
+  String rolesCount(int count);
+  String get levelLabel;
+  String get permissionsLabel;
+  String get usersLabel;
+  String get savePermissionsButton;
+  String get addRoleTitle;
+  String get roleLabelField;
+  String get roleKeyField;
+  String get roleLevelField;
+  String get noRolesFound;
+
+  // Role Badges
+  String get academicExecutiveRole;
+  String get academicExecutiveScope;
+
+  // New Drawer Headers & Nav Items
+  String get adminOrgChart;
+  String get myReportingStructure;
+  String get rolesAndResponsibilitiesHeader;
+  String get myResponsibilities;
+  String get myAuditsHeader;
+  String get asAnInternalAuditor;
+  String get asAnAuditee;
+
+  // Admin Org Chart Screen
+  String get adminOrgChartSubtitle;
+  String peopleCount(int count);
+  String get primaryReportingLegend;
+  String get secondaryReportingLegend;
+  String get reportsToPrefix;
+  String get dottedPrefix;
+  String get youBadge;
+  String get noOrgChartDataFound;
+
+  // My Reporting Structure Screen
+  String get myReportingSubtitle;
+  String get meSectionTitle;
+  String get iReportToSectionTitle;
+  String get reportsToMeSectionTitle;
+  String get peersSectionTitle;
+  String get shareManagerSubtitle;
+  String get primarySolidLegend;
+  String get secondaryDottedLegend;
+  String get noneText;
+  String get noReportingStructureFound;
+
+  // My Responsibilities Screen
+  String get myResponsibilitiesSubtitle;
+  String get primaryResponsibilitiesTitle;
+  String get secondaryResponsibilitiesTitle;
+  String get addPrimaryResponsibilityPlaceholder;
+  String get addSecondaryResponsibilityPlaceholder;
+  String get noneYetText;
+  String get noResponsibilitiesFound;
+
+  // My Audits Screens
+  String get auditsAuditeeTitle;
+  String get auditsAuditeeSubtitle;
+  String get noAuditsInvolveYouYet;
+  String get auditsAuditorTitle;
+  String get auditsAuditorSubtitle;
+  String get noAuditsAssignedYet;
+
+  // Audit Log Screen
+  String get auditLogSubtitle;
+  String get allActivityFilter;
+  String get loginAction;
+  String get logoutAction;
+  String get passwordChangedAction;
+  String get noAuditLogsFound;
+
+  // Calendar Navigation
+  String get previousMonth;
+  String get nextMonth;
 
   String get aiAndSettingsHeader;
 

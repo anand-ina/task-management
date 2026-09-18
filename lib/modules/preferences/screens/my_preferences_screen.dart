@@ -1,3 +1,4 @@
+import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/localization/app_strings.dart';
@@ -39,6 +40,7 @@ class _MyPreferencesScreenState extends State<MyPreferencesScreen> {
       child: BlocProvider(
         create: (_) => PreferencesBloc()..add(LoadPreferencesEvent()),
         child: Scaffold(
+          floatingActionButton: const TodoFloatingActionButton(),
           appBar: const CustomAppBar(),
           drawer: const CustomLeftDrawer(currentRoute: '/my-preferences'),
           body: BlocBuilder<PreferencesBloc, PreferencesState>(
@@ -295,9 +297,9 @@ class _MyPreferencesScreenState extends State<MyPreferencesScreen> {
 
   Widget _buildProfileCard(BuildContext context, AppStrings s, dynamic profile, bool isDark) {
     final rows = [
-      {'label': 'Name', 'val': profile.name.isNotEmpty ? profile.name : 'Vamsi'},
-      {'label': 'Email', 'val': profile.email.isNotEmpty ? profile.email : 'vamsi@samskar.edu'},
-      {'label': 'Role', 'val': profile.role.isNotEmpty ? profile.role : 'Director'},
+      {'label': 'Name', 'val': profile.name.isNotEmpty ? profile.name : '-'},
+      {'label': 'Email', 'val': profile.email.isNotEmpty ? profile.email : '-'},
+      {'label': 'Role', 'val': profile.role.isNotEmpty ? (profile.roleLabel.isNotEmpty ? profile.roleLabel : profile.role) : '-'},
       {'label': 'Department', 'val': 'Administration'},
       {'label': 'Branch', 'val': 'Head Office'},
       {'label': 'Task Creator', 'val': 'Yes'},

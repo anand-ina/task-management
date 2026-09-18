@@ -1,3 +1,4 @@
+import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -34,17 +35,21 @@ class _BudgetApprovalsScreenState extends State<BudgetApprovalsScreen> {
 
     final authState = context.watch<AuthBloc>().state;
     bool isAcademicExecutive = false;
+    bool isDirector = false;
     if (authState is AuthenticatedState) {
       final role = authState.userProfile.role.toLowerCase();
       final roleLabel = authState.userProfile.roleLabel.toLowerCase();
-      final email = authState.userProfile.email.toLowerCase();
-      if (role.contains('executive') || role.contains('ae') || roleLabel.contains('executive') || roleLabel.contains('ae') || email.contains('sushma')) {
+      if (role.contains('director') || roleLabel.contains('director')) {
+        isDirector = true;
+      }
+      if (role.contains('executive') || role.contains('ae') || roleLabel.contains('executive') || roleLabel.contains('ae')) {
         isAcademicExecutive = true;
       }
     }
 
     return Scaffold(
-      drawer: const CustomLeftDrawer(currentRoute: '/approvals/budget'),
+      floatingActionButton: const TodoFloatingActionButton(),
+          drawer: const CustomLeftDrawer(currentRoute: '/approvals/budget'),
       appBar: const CustomAppBar(),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -173,7 +178,7 @@ class _BudgetApprovalsScreenState extends State<BudgetApprovalsScreen> {
                       itemCount: items.length,
                       separatorBuilder: (context, index) => const SizedBox(height: 12),
                       itemBuilder: (context, index) {
-                        return _buildBudgetCard(items[index]);
+                        return _buildBudgetCard(items[index], isDirector: isDirector);
                       },
                     );
                   }
@@ -254,7 +259,7 @@ class _BudgetApprovalsScreenState extends State<BudgetApprovalsScreen> {
     }
   }
 
-  Widget _buildBudgetCard(BudgetApprovalModel item) {
+  Widget _buildBudgetCard(BudgetApprovalModel item, {required bool isDirector}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isApproved = item.status.toLowerCase() == 'approved';
     final isRejected = item.status.toLowerCase() == 'rejected';
@@ -349,6 +354,60 @@ class _BudgetApprovalsScreenState extends State<BudgetApprovalsScreen> {
                 fontSize: 12,
                 color: isDark ? Colors.grey[300] : const Color(0xFF475569),
               ),
+            ),
+          ],
+
+          // 6. Approve & Reject Action Buttons (Only for Director login)
+          if (isDirector && !isApproved && !isRejected && _selectedTabIndex == 0) ...[
+            const SizedBox(height: 12),
+            const Divider(),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                InkWell(
+                  onTap: () {
+                    context.read<ApprovalsBloc>().add(
+                          DecideBudgetEvent(id: item.id, decision: 'approve'),
+                        );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Budget approved successfully!'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'Approve',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF16A34A),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                InkWell(
+                  onTap: () {
+                    context.read<ApprovalsBloc>().add(
+                          DecideBudgetEvent(id: item.id, decision: 'reject'),
+                        );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Budget request rejected.'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'Reject',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFFDC2626),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ],

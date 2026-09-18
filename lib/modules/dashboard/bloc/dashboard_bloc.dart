@@ -37,7 +37,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       List<TodoItem> todoList = List<TodoItem>.from(todos);
 
       List<BranchModel> branchList = List<BranchModel>.from(branchesRes);
-      if (!branchList.any((b) => b.isAll || b.id == 0 || b.name.toLowerCase().contains('all'))) {
+      if (!branchList.any((b) => b.id == 0 || b.code.toUpperCase() == 'ALL' || b.name.toLowerCase().contains('all branches'))) {
         branchList.insert(0, BranchModel(id: 0, code: 'ALL', name: 'All Branches', isAll: true));
       }
 
@@ -62,9 +62,10 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       final currentState = state as DashboardLoadedState;
       emit(DashboardLoadingState());
       try {
-        final targetBranchId = event.branch.isAll ? null : event.branch.id;
+        final isAllSelected = event.branch.id == 0 || event.branch.code.toUpperCase() == 'ALL' || event.branch.isAll;
+        final targetBranchId = isAllSelected ? null : event.branch.id;
         final results = await Future.wait([
-          _repository.getDashboardData(branchId: targetBranchId, mine: event.branch.isAll ? null : 1),
+          _repository.getDashboardData(branchId: targetBranchId, mine: isAllSelected ? null : 1),
           _repository.getTeamData(branchId: targetBranchId),
         ]);
 

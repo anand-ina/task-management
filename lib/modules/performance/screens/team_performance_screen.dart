@@ -1,3 +1,4 @@
+import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/localization/app_strings.dart';
@@ -10,8 +11,15 @@ import '../bloc/performance_event.dart';
 import '../bloc/performance_state.dart';
 import '../models/team_performance_model.dart';
 
-class TeamPerformanceScreen extends StatelessWidget {
+class TeamPerformanceScreen extends StatefulWidget {
   const TeamPerformanceScreen({super.key});
+
+  @override
+  State<TeamPerformanceScreen> createState() => _TeamPerformanceScreenState();
+}
+
+class _TeamPerformanceScreenState extends State<TeamPerformanceScreen> {
+  bool _isContainerView = true;
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +37,7 @@ class TeamPerformanceScreen extends StatelessWidget {
           }
         },
         child: Scaffold(
+          floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/team-performance'),
           appBar: const CustomAppBar(),
           body: BlocBuilder<PerformanceBloc, PerformanceState>(
@@ -226,21 +235,55 @@ class TeamPerformanceScreen extends StatelessWidget {
       children: [
         Row(
           children: [
-            Text(
-              s.workloadDeliveryHeader,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : const Color(0xFF0F172A),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    s.workloadDeliveryHeader,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    s.workloadDeliverySubtitle,
+                    style: TextStyle(fontSize: 11, color: isDark ? Colors.white54 : Colors.black45),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
             ),
             const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                s.workloadDeliverySubtitle,
-                style: TextStyle(fontSize: 11, color: isDark ? Colors.white54 : Colors.black45),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+            // View Mode Toggle (Card List vs Table)
+            Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+              ),
+              padding: const EdgeInsets.all(2),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildViewToggleBtn(
+                    icon: Icons.view_agenda_outlined,
+                    label: 'Card List',
+                    isSelected: _isContainerView,
+                    isDark: isDark,
+                    onTap: () => setState(() => _isContainerView = true),
+                  ),
+                  _buildViewToggleBtn(
+                    icon: Icons.table_chart_outlined,
+                    label: 'Table View',
+                    isSelected: !_isContainerView,
+                    isDark: isDark,
+                    onTap: () => setState(() => _isContainerView = false),
+                  ),
+                ],
               ),
             ),
           ],
@@ -263,6 +306,8 @@ class TeamPerformanceScreen extends StatelessWidget {
               ),
             ),
           )
+        else if (_isContainerView)
+          _buildWorkloadContainerList(context, s, members)
         else
           Container(
             decoration: BoxDecoration(
@@ -271,127 +316,419 @@ class TeamPerformanceScreen extends StatelessWidget {
               border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
             ),
             child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: 1000),
-              child: DataTable(
-                headingRowHeight: 38,
-                dataRowMinHeight: 52,
-                dataRowMaxHeight: 60,
-                horizontalMargin: 12,
-                columnSpacing: 18,
-                columns: [
-                  const DataColumn(label: Text('#', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.grey))),
-                  DataColumn(label: Text(s.memberHeader, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.grey))),
-                  DataColumn(label: Text(s.assignedHeader, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.grey))),
-                  DataColumn(label: Text(s.doneHeader, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.grey))),
-                  DataColumn(label: Text(s.completionHeader, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.grey))),
-                  DataColumn(label: Text(s.inProgressLabel.toUpperCase(), style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.grey))),
-                  DataColumn(label: Text(s.toStartLabel.toUpperCase(), style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.grey))),
-                  DataColumn(label: Text(s.overdueHeader, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.grey))),
-                  DataColumn(label: Text(s.dueTodayHeader, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.grey))),
-                  DataColumn(label: Text(s.emgHighHeader, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.grey))),
-                  DataColumn(label: Text(s.droppedHeader, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.grey))),
-                  DataColumn(label: Text(s.onTimeHeader, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.grey))),
-                  DataColumn(label: Text(s.avgDaysHeader, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.grey))),
-                ],
-                rows: List.generate(members.length, (index) {
-                  final m = members[index];
-                  final compRate = m.assigned > 0 ? ((m.done / m.assigned) * 100).toInt() : 0;
+              scrollDirection: Axis.horizontal,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minWidth: 1000),
+                child: DataTable(
+                  headingRowHeight: 38,
+                  dataRowMinHeight: 52,
+                  dataRowMaxHeight: 60,
+                  horizontalMargin: 12,
+                  columnSpacing: 18,
+                  columns: [
+                    const DataColumn(label: Text('#', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.grey))),
+                    DataColumn(label: Text(s.memberHeader, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.grey))),
+                    DataColumn(label: Text(s.assignedHeader, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.grey))),
+                    DataColumn(label: Text(s.doneHeader, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.grey))),
+                    DataColumn(label: Text(s.completionHeader, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.grey))),
+                    DataColumn(label: Text(s.inProgressLabel.toUpperCase(), style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.grey))),
+                    DataColumn(label: Text(s.toStartLabel.toUpperCase(), style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.grey))),
+                    DataColumn(label: Text(s.overdueHeader, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.grey))),
+                    DataColumn(label: Text(s.dueTodayHeader, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.grey))),
+                    DataColumn(label: Text(s.emgHighHeader, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.grey))),
+                    DataColumn(label: Text(s.droppedHeader, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.grey))),
+                    DataColumn(label: Text(s.onTimeHeader, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.grey))),
+                    DataColumn(label: Text(s.avgDaysHeader, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: Colors.grey))),
+                  ],
+                  rows: List.generate(members.length, (index) {
+                    final m = members[index];
+                    final compRate = m.assigned > 0 ? ((m.done / m.assigned) * 100).toInt() : 0;
 
-                  return DataRow(
-                    cells: [
-                      DataCell(Text('${index + 1}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold))),
-                      DataCell(Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 11,
-                            backgroundColor: _hexToColor(m.avatarColor),
-                            child: Text(
-                              m.initials,
-                              style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                    return DataRow(
+                      cells: [
+                        DataCell(Text('${index + 1}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold))),
+                        DataCell(Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 11,
+                              backgroundColor: _hexToColor(m.avatarColor),
+                              child: Text(
+                                m.initials,
+                                style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 6),
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                m.name,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                            const SizedBox(width: 6),
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  m.name,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                  ),
                                 ),
+                                Text(
+                                  '${m.designation ?? m.role ?? "Member"} · ${m.department}${m.branchCode != null ? " · ${m.branchCode}" : ""}',
+                                  style: TextStyle(fontSize: 9.5, color: isDark ? Colors.white54 : Colors.grey.shade600),
+                                ),
+                              ],
+                            ),
+                          ],
+                        )),
+                        DataCell(
+                          InkWell(
+                            onTap: () {
+                              TasksDueTodayDialog.show(
+                                context,
+                                customTitle: '${m.name} · All assigned',
+                              );
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                              child: Text(
+                                '${m.assigned}',
+                                style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF2563EB)),
                               ),
-                              Text(
-                                '${m.designation ?? m.role ?? "Member"} · ${m.department}${m.branchCode != null ? " · ${m.branchCode}" : ""}',
-                                style: TextStyle(fontSize: 9.5, color: isDark ? Colors.white54 : Colors.grey.shade600),
-                              ),
-                            ],
-                          ),
-                        ],
-                      )),
-                      DataCell(
-                        InkWell(
-                          onTap: () {
-                            TasksDueTodayDialog.show(
-                              context,
-                              customTitle: '${m.name} · All assigned',
-                            );
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-                            child: Text(
-                              '${m.assigned}',
-                              style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF2563EB)),
                             ),
                           ),
                         ),
-                      ),
-                      DataCell(Text('${m.done}', style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF16A34A)))),
-                      DataCell(Row(
-                        children: [
-                          SizedBox(
-                            width: 50,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: LinearProgressIndicator(
-                                value: compRate / 100.0,
-                                minHeight: 6,
-                                backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-                                valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF0F172A)),
+                        DataCell(Text('${m.done}', style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF16A34A)))),
+                        DataCell(Row(
+                          children: [
+                            SizedBox(
+                              width: 50,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: LinearProgressIndicator(
+                                  value: compRate / 100.0,
+                                  minHeight: 6,
+                                  backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF0F172A)),
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text('$compRate%', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                        ],
-                      )),
-                      DataCell(Text('${m.inProgress}', style: const TextStyle(fontSize: 11.5, color: Color(0xFF0284C7)))),
-                      DataCell(Text('${m.toBeStarted}', style: const TextStyle(fontSize: 11.5, color: Color(0xFF0284C7)))),
-                      DataCell(Text(
-                        '${m.overdue}',
-                        style: TextStyle(fontSize: 11.5, color: m.overdue > 0 ? const Color(0xFFDC2626) : Colors.grey),
-                      )),
-                      DataCell(Text('${m.dueToday}', style: const TextStyle(fontSize: 11.5))),
-                      DataCell(Text(
-                        '${m.emergencyHighOpen}',
-                        style: TextStyle(fontSize: 11.5, color: m.emergencyHighOpen > 0 ? const Color(0xFFDC2626) : Colors.grey),
-                      )),
-                      DataCell(Text('${m.dropped}', style: const TextStyle(fontSize: 11.5))),
-                      DataCell(Text('${m.onTime}%', style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF16A34A)))),
-                      DataCell(Text(m.avgDays > 0 ? '${m.avgDays}' : '—', style: const TextStyle(fontSize: 11))),
-                    ],
-                  );
-                }),
+                            const SizedBox(width: 6),
+                            Text('$compRate%', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                          ],
+                        )),
+                        DataCell(Text('${m.inProgress}', style: const TextStyle(fontSize: 11.5, color: Color(0xFF0284C7)))),
+                        DataCell(Text('${m.toBeStarted}', style: const TextStyle(fontSize: 11.5, color: Color(0xFF0284C7)))),
+                        DataCell(Text(
+                          '${m.overdue}',
+                          style: TextStyle(fontSize: 11.5, color: m.overdue > 0 ? const Color(0xFFDC2626) : Colors.grey),
+                        )),
+                        DataCell(Text('${m.dueToday}', style: const TextStyle(fontSize: 11.5))),
+                        DataCell(Text(
+                          '${m.emergencyHighOpen}',
+                          style: TextStyle(fontSize: 11.5, color: m.emergencyHighOpen > 0 ? const Color(0xFFDC2626) : Colors.grey),
+                        )),
+                        DataCell(Text('${m.dropped}', style: const TextStyle(fontSize: 11.5))),
+                        DataCell(Text('${m.onTime}%', style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF16A34A)))),
+                        DataCell(Text(m.avgDays > 0 ? '${m.avgDays}' : '—', style: const TextStyle(fontSize: 11))),
+                      ],
+                    );
+                  }),
+                ),
               ),
             ),
           ),
-        ),
       ],
     );
+  }
+
+  Widget _buildViewToggleBtn({
+    required IconData icon,
+    required String label,
+    required bool isSelected,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? (isDark ? const Color(0xFF1E293B) : Colors.white)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.06),
+                    blurRadius: 3,
+                    offset: const Offset(0, 1),
+                  )
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 13,
+              color: isSelected
+                  ? (isDark ? Colors.white : const Color(0xFF0F172A))
+                  : Colors.grey,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                color: isSelected
+                    ? (isDark ? Colors.white : const Color(0xFF0F172A))
+                    : Colors.grey,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWorkloadContainerList(BuildContext context, AppStrings s, List<TeamMemberModel> members) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: members.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final m = members[index];
+        final compRate = m.assigned > 0 ? ((m.done / m.assigned) * 100).toInt() : 0;
+
+        return Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header: #, Avatar, Name, Role/Designation, Branch, Completion Pill
+              Row(
+                children: [
+                  Container(
+                    width: 22,
+                    height: 22,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      '${index + 1}',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white70 : Colors.black87,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundColor: _hexToColor(m.avatarColor),
+                    child: Text(
+                      m.initials,
+                      style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          m.name,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          ),
+                        ),
+                        Text(
+                          '${m.designation ?? m.role ?? "Member"} · ${m.department}${m.branchCode != null ? " · ${m.branchCode}" : ""}',
+                          style: TextStyle(fontSize: 10.5, color: isDark ? Colors.white60 : Colors.grey.shade600),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: compRate >= 80
+                          ? (isDark ? const Color(0xFF064E3B) : const Color(0xFFDCFCE7))
+                          : (isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9)),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      '$compRate% ${s.completionHeader}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: compRate >= 80
+                            ? (isDark ? const Color(0xFF34D399) : const Color(0xFF15803D))
+                            : (isDark ? Colors.white70 : Colors.black87),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+
+              // Progress Bar
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: compRate / 100.0,
+                  minHeight: 5,
+                  backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF0F172A)),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Metric Badges formatted in clean organized rows
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  _buildMetricBadge(
+                    label: s.assignedHeader,
+                    value: '${m.assigned}',
+                    valueColor: const Color(0xFF2563EB),
+                    isDark: isDark,
+                    onTap: () {
+                      TasksDueTodayDialog.show(context, customTitle: '${m.name} · All assigned');
+                    },
+                  ),
+                  _buildMetricBadge(
+                    label: s.doneHeader,
+                    value: '${m.done}',
+                    valueColor: const Color(0xFF16A34A),
+                    isDark: isDark,
+                  ),
+                  _buildMetricBadge(
+                    label: s.inProgressLabel,
+                    value: '${m.inProgress}',
+                    valueColor: const Color(0xFF0284C7),
+                    isDark: isDark,
+                  ),
+                  _buildMetricBadge(
+                    label: s.toStartLabel,
+                    value: '${m.toBeStarted}',
+                    valueColor: const Color(0xFF0284C7),
+                    isDark: isDark,
+                  ),
+                  _buildMetricBadge(
+                    label: s.overdueHeader,
+                    value: '${m.overdue}',
+                    valueColor: m.overdue > 0 ? const Color(0xFFDC2626) : Colors.grey,
+                    isDark: isDark,
+                  ),
+                  _buildMetricBadge(
+                    label: s.dueTodayHeader,
+                    value: '${m.dueToday}',
+                    valueColor: m.dueToday > 0 ? const Color(0xFFD97706) : Colors.grey,
+                    isDark: isDark,
+                  ),
+                  _buildMetricBadge(
+                    label: s.emgHighHeader,
+                    value: '${m.emergencyHighOpen}',
+                    valueColor: m.emergencyHighOpen > 0 ? const Color(0xFFDC2626) : Colors.grey,
+                    isDark: isDark,
+                  ),
+                  _buildMetricBadge(
+                    label: s.droppedHeader,
+                    value: '${m.dropped}',
+                    valueColor: Colors.grey,
+                    isDark: isDark,
+                  ),
+                  _buildMetricBadge(
+                    label: s.onTimeHeader,
+                    value: '${m.onTime}%',
+                    valueColor: const Color(0xFF16A34A),
+                    isDark: isDark,
+                  ),
+                  if (m.avgDays > 0)
+                    _buildMetricBadge(
+                      label: s.avgDaysHeader,
+                      value: '${m.avgDays}d',
+                      valueColor: Colors.grey,
+                      isDark: isDark,
+                    ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMetricBadge({
+    required String label,
+    required String value,
+    required Color valueColor,
+    required bool isDark,
+    VoidCallback? onTap,
+  }) {
+    final content = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '$label: ',
+            style: TextStyle(
+              fontSize: 10,
+              color: isDark ? Colors.white60 : Colors.black54,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: valueColor,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (onTap != null) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(6),
+        child: content,
+      );
+    }
+    return content;
   }
 
   Widget _buildByDepartment(BuildContext context, AppStrings s, List<DepartmentSummaryModel> departments) {

@@ -1,8 +1,12 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/dio_client.dart';
+
+import '../../modules/auth/bloc/auth_bloc.dart';
+import '../../modules/auth/bloc/auth_state.dart';
 
 class CreateEventDialog extends StatefulWidget {
   const CreateEventDialog({super.key});
@@ -116,9 +120,21 @@ class _CreateEventDialogState extends State<CreateEventDialog> {
       return;
     }
 
-    setState(() => _isSaving = true);
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+
+    // Close the dialog immediately when Create Event button is clicked
+    navigator.pop(true);
 
     try {
+      int currentUserId = 29;
+      try {
+        final authState = context.read<AuthBloc>().state;
+        if (authState is AuthenticatedState) {
+          currentUserId = authState.userProfile.id;
+        }
+      } catch (_) {}
+
       final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
       final payload = {
         'title': title,
@@ -127,31 +143,25 @@ class _CreateEventDialogState extends State<CreateEventDialog> {
         'branchId': _selectedBranchId ?? 2,
         'description': _descController.text.trim().isNotEmpty ? _descController.text.trim() : 'testing',
         'checklist': _checklistItems.isNotEmpty ? _checklistItems : ['testc'],
-        'ownerUserId': 29,
-        'assigneeIds': _selectedAssigneeIds.isNotEmpty ? _selectedAssigneeIds : [30],
+        'ownerUserId': currentUserId,
+        'assigneeIds': _selectedAssigneeIds.isNotEmpty ? _selectedAssigneeIds : [currentUserId],
       };
 
       await _dioClient.dio.post(ApiConstants.events, data: payload);
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Event created successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.of(context).pop();
-      }
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Event created successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
     } catch (e) {
-      if (mounted) {
-        setState(() => _isSaving = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to create event: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Event creation response: $e'),
+          backgroundColor: Colors.orange,
+        ),
+      );
     }
   }
 

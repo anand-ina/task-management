@@ -92,7 +92,12 @@ class DashboardRepository {
         return list;
       }
     } catch (_) {}
-    return [BranchModel(id: 0, code: 'ALL', name: 'All Branches', isAll: true)];
+    return [
+      BranchModel(id: 0, code: 'ALL', name: 'All Branches', isAll: true),
+      BranchModel(id: 1, code: 'SS00', name: 'Head Office', isAll: false),
+      BranchModel(id: 2, code: 'SS01', name: 'Moti Nagar & Sanath Nagar', isAll: false),
+      BranchModel(id: 3, code: 'SS02', name: 'Peerzadiguda', isAll: false),
+    ];
   }
 
   Future<List<dynamic>> getScheduleMy() async {

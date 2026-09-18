@@ -1,3 +1,4 @@
+import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/localization/app_strings.dart';
@@ -106,6 +107,7 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
           }
         },
         child: Scaffold(
+          floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/tasks'),
           appBar: const CustomAppBar(),
           body: BlocBuilder<AllTasksBloc, AllTasksState>(
@@ -733,37 +735,94 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
               // Bottom Assigned By, Assignees Avatar & Quick Action Buttons
               Row(
                 children: [
-                  Text(
-                    '${s.assignedByLabel.toLowerCase()}: ',
-                    style: const TextStyle(fontSize: 10, color: Colors.grey),
-                  ),
-                  Text(
-                    item.assignedByName.isNotEmpty ? item.assignedByName : 'Madhumathi',
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white70 : const Color(0xFF334155),
+                  Flexible(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '${s.assignedByLabel.toLowerCase()}: ',
+                          style: const TextStyle(fontSize: 10, color: Colors.grey),
+                        ),
+                        Text(
+                          item.assignedByName.isNotEmpty ? item.assignedByName : 'Madhumathi',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.white70 : const Color(0xFF334155),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+
+                        // Assignees (Max 2 names, then +count)
+                        if (item.assignees.isNotEmpty)
+                          Flexible(
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ...item.assignees.take(2).map((a) {
+                                    final badgeColor = _hexToColor(a.color);
+                                    return Container(
+                                      margin: const EdgeInsets.only(right: 4),
+                                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: badgeColor.withValues(alpha: 0.12),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          CircleAvatar(
+                                            radius: 7,
+                                            backgroundColor: badgeColor,
+                                            child: Text(
+                                              a.initials.isNotEmpty ? a.initials : 'NA',
+                                              style: const TextStyle(color: Colors.white, fontSize: 6.5, fontWeight: FontWeight.bold),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 3),
+                                          Text(
+                                            a.name,
+                                            style: TextStyle(
+                                              fontSize: 9.5,
+                                              fontWeight: FontWeight.w600,
+                                              color: badgeColor,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }),
+                                  if (item.assignees.length > 2)
+                                    Tooltip(
+                                      message: item.assignees.skip(2).map((e) => e.name).join(', '),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: isDark ? Colors.white12 : const Color(0xFFE2E8F0),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          '+${item.assignees.length - 2}',
+                                          style: TextStyle(
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.bold,
+                                            color: isDark ? Colors.white70 : const Color(0xFF475569),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                   const SizedBox(width: 8),
-
-                  // Assignees Avatar Circle
-                  if (item.assignees.isNotEmpty)
-                    Wrap(
-                      spacing: 4,
-                      children: item.assignees.map((a) {
-                        return CircleAvatar(
-                          radius: 9,
-                          backgroundColor: _hexToColor(a.color),
-                          child: Text(
-                            a.initials.isNotEmpty ? a.initials : 'NA',
-                            style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-
-                  const Spacer(),
 
                   // Quick Action Buttons on Right (Update, Complete, Cancel, Pause, Delete)
                   Row(

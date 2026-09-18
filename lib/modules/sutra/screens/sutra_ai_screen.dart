@@ -1,3 +1,4 @@
+import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
@@ -28,6 +29,7 @@ class _SutraAiScreenState extends State<SutraAiScreen> {
   late stt.SpeechToText _speech;
   bool _isListening = false;
   bool _speechEnabled = false;
+  String _preSpeechText = '';
 
   @override
   void initState() {
@@ -53,10 +55,16 @@ class _SutraAiScreenState extends State<SutraAiScreen> {
     }
   }
 
-  void _toggleListening() async {
+  void _stopListening() async {
     if (_isListening) {
       setState(() => _isListening = false);
       await _speech.stop();
+    }
+  }
+
+  void _toggleListening() async {
+    if (_isListening) {
+      _stopListening();
       return;
     }
 
@@ -78,18 +86,29 @@ class _SutraAiScreenState extends State<SutraAiScreen> {
     }
 
     if (_speechEnabled) {
+      _preSpeechText = _askSutraController.text.trim();
       setState(() => _isListening = true);
       await _speech.listen(
         onResult: (result) {
           if (mounted) {
             setState(() {
-              _askSutraController.text = result.recognizedWords;
+              final spoken = result.recognizedWords;
+              if (_preSpeechText.isNotEmpty) {
+                _askSutraController.text = '$_preSpeechText $spoken';
+              } else {
+                _askSutraController.text = spoken;
+              }
               _askSutraController.selection = TextSelection.fromPosition(
                 TextPosition(offset: _askSutraController.text.length),
               );
             });
           }
         },
+        listenFor: const Duration(minutes: 5),
+        pauseFor: const Duration(seconds: 10),
+        partialResults: true,
+        cancelOnError: false,
+        listenMode: stt.ListenMode.dictation,
       );
     } else {
       _showDictationFallbackDialog();
@@ -160,6 +179,7 @@ class _SutraAiScreenState extends State<SutraAiScreen> {
 
   @override
   void dispose() {
+    _speech.stop();
     _askSutraController.dispose();
     _composeController.dispose();
     super.dispose();
@@ -182,6 +202,7 @@ class _SutraAiScreenState extends State<SutraAiScreen> {
       child: BlocProvider(
         create: (_) => SutraBloc()..add(LoadSutraDataEvent()),
         child: Scaffold(
+          floatingActionButton: const TodoFloatingActionButton(),
           appBar: const CustomAppBar(),
           drawer: const CustomLeftDrawer(currentRoute: '/sutra'),
           body: BlocBuilder<SutraBloc, SutraState>(
@@ -308,6 +329,42 @@ class _SutraAiScreenState extends State<SutraAiScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
+                                InkWell(
+                                  onTap: _isListening ? _stopListening : null,
+                                  borderRadius: BorderRadius.circular(6),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                                    decoration: BoxDecoration(
+                                      color: _isListening ? Colors.red.withValues(alpha: 0.1) : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(
+                                        color: _isListening
+                                            ? Colors.red.shade300
+                                            : (isDark ? Colors.white24 : Colors.black12),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        if (_isListening) ...[
+                                          const Icon(Icons.stop_circle_rounded, size: 14, color: Colors.red),
+                                          const SizedBox(width: 4),
+                                        ],
+                                        Text(
+                                          'Stop',
+                                          style: TextStyle(
+                                            color: _isListening
+                                                ? Colors.red
+                                                : (isDark ? Colors.grey[400] : const Color(0xFF64748B)),
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
                                 IconButton(
                                   onPressed: _toggleListening,
                                   icon: Icon(
@@ -321,14 +378,30 @@ class _SutraAiScreenState extends State<SutraAiScreen> {
                                   onPressed: _isInterpreting
                                       ? null
                                       : () async {
-                                          if (_askSutraController.text.trim().isEmpty) return;
-                                          setState(() => _isInterpreting = true);
-                                          final res = await _sutraRepository.sendSutraCommand(_askSutraController.text);
+                                          final promptText = _askSutraController.text.trim();
+                                          if (promptText.isEmpty) return;
+                                          setState(() {
+                                            _isInterpreting = true;
+                                            _interpretResultMessage = null;
+                                          });
+                                          final res = await _sutraRepository.sendSutraCommand(promptText);
                                           if (mounted) {
+                                            final message = res['message']?.toString() ??
+                                                res['reply']?.toString() ??
+                                                res['text']?.toString() ??
+                                                "I couldn't understand that. Try e.g. “Schedule a meeting with Swapnika and Narasimha tomorrow 4pm”.";
                                             setState(() {
                                               _isInterpreting = false;
-                                              _interpretResultMessage = res['message']?.toString();
+                                              _interpretResultMessage = message;
                                             });
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                content: Text(message),
+                                                behavior: SnackBarBehavior.floating,
+                                                backgroundColor: const Color(0xFF0F172A),
+                                              ),
+                                            );
+                                            context.read<SutraBloc>().add(LoadSutraDataEvent());
                                           }
                                         },
                                   style: ElevatedButton.styleFrom(
@@ -752,61 +825,116 @@ class _SutraAiScreenState extends State<SutraAiScreen> {
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
           ),
-          child: Row(
+          child: Column(
             children: [
-              Text(
-                t.taskNo.isNotEmpty ? t.taskNo : '#${t.id}',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : const Color(0xFF0F172A),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  t.title,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isDark ? Colors.grey[300] : const Color(0xFF334155),
+              Row(
+                children: [
+                  Text(
+                    t.taskNo.isNotEmpty ? t.taskNo : '#${t.id}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    ),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      t.title,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? Colors.grey[300] : const Color(0xFF334155),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+
+                ],
               ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: pColor,
-                  borderRadius: BorderRadius.circular(4),
+              SizedBox(width: 10,),
+              Row(children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: pColor,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    priority.toUpperCase(),
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: pText),
+                  ),
                 ),
-                child: Text(
-                  priority.toUpperCase(),
-                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: pText),
+                const SizedBox(width: 8),
+                Text(
+                  '• ${_formatTaskStatus(t.status, s)} · ${t.progress}%',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: _getTaskStatusColor(t.status),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '• In Progress · ${t.progress}%',
-                style: const TextStyle(fontSize: 11, color: Colors.blue, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFDCFCE7),
-                  borderRadius: BorderRadius.circular(4),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFDCFCE7),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    s.trackingBadge,
+                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF166534)),
+                  ),
                 ),
-                child: Text(
-                  s.trackingBadge,
-                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF166534)),
-                ),
-              ),
+              ],)
             ],
           ),
         );
       }).toList(),
     );
+  }
+
+  String _formatTaskStatus(String status, AppStrings s) {
+    final lower = status.toLowerCase().replaceAll(' ', '_');
+    switch (lower) {
+      case 'in_progress':
+        return s.inProgress;
+      case 'completed':
+        return s.completed;
+      case 'overdue':
+        return s.overdue;
+      case 'to_be_started':
+        return 'To be Started';
+      case 'paused':
+        return 'Paused';
+      case 'dropped':
+        return s.dropped;
+      default:
+        if (status.isEmpty) return s.inProgress;
+        return status
+            .replaceAll('_', ' ')
+            .split(' ')
+            .map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '')
+            .join(' ');
+    }
+  }
+
+  Color _getTaskStatusColor(String status) {
+    final lower = status.toLowerCase().replaceAll(' ', '_');
+    switch (lower) {
+      case 'completed':
+        return const Color(0xFF16A34A);
+      case 'overdue':
+        return const Color(0xFFDC2626);
+      case 'paused':
+        return const Color(0xFFD97706);
+      case 'to_be_started':
+        return const Color(0xFF64748B);
+      case 'dropped':
+        return const Color(0xFF94A3B8);
+      default:
+        return const Color(0xFF2563EB);
+    }
   }
 }

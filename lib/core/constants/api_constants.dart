@@ -58,5 +58,16 @@ class ApiConstants {
   static const String roles = '$baseUrl/lookups/roles';
   static const String notificationPreferences = '$baseUrl/notifications/preferences';
   static const String staffMeProfile = '$baseUrl/staff/me/profile';
+
+  // Organization & Responsibilities Endpoints
+  static const String orgChart = '$baseUrl/org/chart';
+  static const String orgMyReporting = '$baseUrl/org/my-reporting';
+  static const String responsibilities = '$baseUrl/responsibilities';
+  static const String adminAudit = '$baseUrl/admin/audit';
+  static const String adminBranches = '$baseUrl/admin/branches';
+  static const String adminDepartments = '$baseUrl/admin/departments';
+  static const String adminReporting = '$baseUrl/admin/reporting';
+  static const String adminRoles = '$baseUrl/admin/roles';
+  static String taskReview(int taskId) => '$baseUrl/tasks/$taskId/review';
 }
 

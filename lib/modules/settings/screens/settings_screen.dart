@@ -1,3 +1,4 @@
+import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/localization/app_strings.dart';
@@ -15,7 +16,8 @@ class SettingsScreen extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      drawer: const CustomLeftDrawer(currentRoute: '/preferences'),
+      floatingActionButton: const TodoFloatingActionButton(),
+          drawer: const CustomLeftDrawer(currentRoute: '/preferences'),
       appBar: const CustomAppBar(),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),

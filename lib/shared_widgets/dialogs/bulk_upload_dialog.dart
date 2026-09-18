@@ -437,7 +437,7 @@ class BulkUploadDialog extends StatelessWidget {
           children: [
             OutlinedButton(
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 10),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
               onPressed: () => Navigator.of(context).pop(),
@@ -446,11 +446,11 @@ class BulkUploadDialog extends StatelessWidget {
             const SizedBox(width: 2),
             OutlinedButton(
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 10),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
               onPressed: () => context.read<BulkTasksBloc>().add(ResetBulkUploadEvent()),
-              child: Text(s.chooseAnotherFile),
+              child: Text(s.chooseAnotherFile,  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),),
             ),
             const SizedBox(width: 2),
             ElevatedButton(
@@ -458,14 +458,14 @@ class BulkUploadDialog extends StatelessWidget {
                 backgroundColor: const Color(0xFF0F172A),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 10),
               ),
               onPressed: () {
                 context.read<BulkTasksBloc>().add(CommitBulkTasksEvent(rows: preview.rows));
               },
               child: Text(
                 s.importTasksCount(preview.importable > 0 ? preview.importable : preview.rows.length),
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
               ),
             ),
           ],

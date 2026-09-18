@@ -23,7 +23,14 @@ import '../../modules/performance/screens/team_performance_screen.dart';
 import '../../modules/fines/screens/fines_rewards_screen.dart';
 import '../../modules/fines/screens/performance_settings_screen.dart';
 import '../../modules/staff/screens/staff_screen.dart';
-import '../../modules/admin/screens/admin_section_screen.dart';
+import '../../modules/admin/screens/admin_branches_departments_screen.dart';
+import '../../modules/admin/screens/admin_reporting_structure_screen.dart';
+import '../../modules/admin/screens/admin_roles_permissions_screen.dart';
+import '../../modules/admin/screens/admin_audit_log_screen.dart';
+import '../../modules/organization/screens/admin_org_chart_screen.dart';
+import '../../modules/organization/screens/my_reporting_structure_screen.dart';
+import '../../modules/responsibilities/screens/my_responsibilities_screen.dart';
+import '../../modules/audits/screens/audits_screen.dart';
 import '../../modules/sutra/screens/sutra_ai_screen.dart';
 import '../../modules/preferences/screens/my_preferences_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -62,12 +69,13 @@ class CustomLeftDrawer extends StatelessWidget {
         isAdmin = true;
         roleTitle = s.administratorRole;
         roleScope = s.administratorBadgeScope;
-      } else if (user.email == 'sushma@samskar.edu' ||
-          roleLabelLower.contains('executive') ||
-          roleLower.contains('executive')) {
+      } else if (roleLabelLower.contains('executive') ||
+          roleLower.contains('executive') ||
+          roleLower.contains('ae') ||
+          roleLabelLower.contains('ae')) {
         isExecutive = true;
-        roleTitle = 'Academic Executive';
-        roleScope = 'Operational scope — your own tasks & reports.';
+        roleTitle = user.roleLabel.isNotEmpty ? user.roleLabel : s.academicExecutiveRole;
+        roleScope = s.academicExecutiveScope;
       } else if (roleLabelLower.contains('manager') ||
           roleLower.contains('manager')) {
         isManager = true;
@@ -203,7 +211,7 @@ class CustomLeftDrawer extends StatelessWidget {
                       _buildNavItem(
                         context,
                         icon: Icons.table_chart_outlined,
-                        title: s.organizationOverview,
+                        title: isPrincipal ? s.campusOverview : s.organizationOverview,
                         isSelected: currentRoute == '/org-overview',
                         onTap: () => _navigate(context, '/org-overview'),
                       ),
@@ -380,6 +388,53 @@ class CustomLeftDrawer extends StatelessWidget {
                         isSelected: currentRoute == '/performance-settings' || currentRoute == '/perf-settings',
                         onTap: () => _navigate(context, '/performance-settings'),
                       ),
+                    const SizedBox(height: 12),
+
+                    // ORGANIZATION
+                    _buildSectionHeader(context, s.organizationHeader),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.corporate_fare_rounded,
+                      title: s.adminOrgChart,
+                      isSelected: currentRoute == '/org-chart',
+                      onTap: () => _navigate(context, '/org-chart'),
+                    ),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.subdirectory_arrow_right_rounded,
+                      title: s.myReportingStructure,
+                      isSelected: currentRoute == '/my-reporting',
+                      onTap: () => _navigate(context, '/my-reporting'),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // ROLES & RESPONSIBILITIES
+                    _buildSectionHeader(context, s.rolesAndResponsibilitiesHeader),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.pie_chart_outline_rounded,
+                      title: s.myResponsibilities,
+                      isSelected: currentRoute == '/responsibilities',
+                      onTap: () => _navigate(context, '/responsibilities'),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // MY AUDITS
+                    _buildSectionHeader(context, s.myAuditsHeader),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.search_rounded,
+                      title: s.asAnInternalAuditor,
+                      isSelected: currentRoute == '/audits/auditor',
+                      onTap: () => _navigate(context, '/audits/auditor'),
+                    ),
+                    _buildNavItem(
+                      context,
+                      icon: Icons.assignment_outlined,
+                      title: s.asAnAuditee,
+                      isSelected: currentRoute == '/audits/auditee',
+                      onTap: () => _navigate(context, '/audits/auditee'),
+                    ),
                     const SizedBox(height: 12),
 
                     // AI & SETTINGS
@@ -868,11 +923,7 @@ class CustomLeftDrawer extends StatelessWidget {
       }
       navigator.push(
         MaterialPageRoute(
-          builder: (context) => AdminSectionScreen(
-            title: AppStrings.of(context).branchesAndDepartments,
-            route: '/admin/access',
-            icon: Icons.folder_open_outlined,
-          ),
+          builder: (context) => const AdminBranchesDepartmentsScreen(),
         ),
       );
       return;
@@ -889,11 +940,7 @@ class CustomLeftDrawer extends StatelessWidget {
       }
       navigator.push(
         MaterialPageRoute(
-          builder: (context) => AdminSectionScreen(
-            title: AppStrings.of(context).reportingStructure,
-            route: '/admin/reporting',
-            icon: Icons.alt_route_rounded,
-          ),
+          builder: (context) => const AdminReportingStructureScreen(),
         ),
       );
       return;
@@ -910,11 +957,7 @@ class CustomLeftDrawer extends StatelessWidget {
       }
       navigator.push(
         MaterialPageRoute(
-          builder: (context) => AdminSectionScreen(
-            title: AppStrings.of(context).rolesAndPermissions,
-            route: '/admin/roles',
-            icon: Icons.shield_outlined,
-          ),
+          builder: (context) => const AdminRolesPermissionsScreen(),
         ),
       );
       return;
@@ -931,12 +974,83 @@ class CustomLeftDrawer extends StatelessWidget {
       }
       navigator.push(
         MaterialPageRoute(
-          builder: (context) => AdminSectionScreen(
-            title: AppStrings.of(context).auditLog,
-            route: '/admin/audit',
-            icon: Icons.receipt_long_outlined,
-          ),
+          builder: (context) => const AdminAuditLogScreen(),
         ),
+      );
+      return;
+    }
+
+    if (route == '/org-chart') {
+      if (currentRoute == '/org-chart') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const AdminOrgChartScreen()),
+      );
+      return;
+    }
+
+    if (route == '/my-reporting') {
+      if (currentRoute == '/my-reporting') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const MyReportingStructureScreen()),
+      );
+      return;
+    }
+
+    if (route == '/responsibilities') {
+      if (currentRoute == '/responsibilities') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const MyResponsibilitiesScreen()),
+      );
+      return;
+    }
+
+    if (route == '/audits/auditor') {
+      if (currentRoute == '/audits/auditor') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const AuditsScreen(isAuditee: false)),
+      );
+      return;
+    }
+
+    if (route == '/audits/auditee') {
+      if (currentRoute == '/audits/auditee') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const AuditsScreen(isAuditee: true)),
       );
       return;
     }

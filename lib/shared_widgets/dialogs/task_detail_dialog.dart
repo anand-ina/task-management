@@ -10,6 +10,7 @@ import 'mark_done_dialog.dart';
 import 'move_task_dialog.dart';
 import 'raise_escalation_dialog.dart';
 import 'reassign_task_dialog.dart';
+import 'review_task_dialog.dart';
 
 
 class TaskDetailDialog extends StatefulWidget {
@@ -50,6 +51,7 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
   final TextEditingController _commentController = TextEditingController();
 
   bool _isLoading = true;
+  bool _hasReviewed = false;
   TaskDetailModel? _detail;
   final List<Map<String, dynamic>> _postedComments = [];
 
@@ -131,14 +133,17 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
     final authState = context.watch<AuthBloc>().state;
     bool isTeamLead = false;
     bool isAcademicExecutive = false;
+    bool isDirector = false;
     if (authState is AuthenticatedState) {
       final role = authState.userProfile.role.toLowerCase();
       final roleLabel = authState.userProfile.roleLabel.toLowerCase();
-      final email = authState.userProfile.email.toLowerCase();
+      if (role.contains('director') || roleLabel.contains('director')) {
+        isDirector = true;
+      }
       if (roleLabel.contains('team lead') || roleLabel.contains('tl') || role.contains('team_lead') || role.contains('tl')) {
         isTeamLead = true;
       }
-      if (role.contains('executive') || role.contains('ae') || roleLabel.contains('executive') || roleLabel.contains('ae') || email.contains('sushma')) {
+      if (role.contains('executive') || role.contains('ae') || roleLabel.contains('executive') || roleLabel.contains('ae')) {
         isAcademicExecutive = true;
       }
     }
@@ -148,6 +153,10 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
     final description = _detail?.description ?? widget.initialTask?.description ?? '';
     final priority = _detail?.priority ?? widget.initialTask?.priority ?? 'high';
     final status = _detail?.status ?? widget.initialTask?.status ?? 'to_be_started';
+    final statusLower = status.toLowerCase();
+    final isDone = statusLower == 'done' || statusLower.contains('review');
+    final isCompleted = statusLower == 'completed';
+    final isDoneOrCompleted = isDone || isCompleted;
     final progress = _detail?.progress ?? widget.initialTask?.progress ?? 0;
     final branchName = _detail?.branchName ?? widget.initialTask?.branchName ?? 'Head Office';
     final assignedBy = _detail?.assignedByName ?? widget.initialTask?.assignedByName ?? 'Test_Manager';
@@ -197,7 +206,7 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                     ),
                   ),
                   IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () => Navigator.of(context).pop(_hasReviewed),
                     icon: const Icon(Icons.close_rounded, size: 20),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
@@ -257,7 +266,7 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text('Assignees', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
-                  if (!widget.isReadOnly && !isAcademicExecutive) ...[
+                  if (!widget.isReadOnly && !isAcademicExecutive && !(isDirector && isDoneOrCompleted)) ...[
                     InkWell(
                       onTap: () async {
                         final result = await ReassignTaskDialog.show(
@@ -286,34 +295,56 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                 children: [
                   Wrap(
                     spacing: 6,
-                    children: assignees.map((a) {
-                      final badgeColor = _hexToColor(a.color);
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: badgeColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            CircleAvatar(
-                              radius: 8,
-                              backgroundColor: badgeColor,
-                              child: Text(
-                                a.initials.isNotEmpty ? a.initials : 'U',
-                                style: const TextStyle(fontSize: 8, color: Colors.white, fontWeight: FontWeight.bold),
+                    runSpacing: 4,
+                    children: [
+                      ...assignees.take(2).map((a) {
+                        final badgeColor = _hexToColor(a.color);
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: badgeColor.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              CircleAvatar(
+                                radius: 8,
+                                backgroundColor: badgeColor,
+                                child: Text(
+                                  a.initials.isNotEmpty ? a.initials : 'U',
+                                  style: const TextStyle(fontSize: 8, color: Colors.white, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                a.name,
+                                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: badgeColor),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                      if (assignees.length > 2)
+                        Tooltip(
+                          message: assignees.skip(2).map((e) => e.name).join(', '),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: isDark ? Colors.white12 : Colors.grey.shade200,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '+${assignees.length - 2}',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.white70 : Colors.black87,
                               ),
                             ),
-                            const SizedBox(width: 4),
-                            Text(
-                              a.name,
-                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: badgeColor),
-                            ),
-                          ],
+                          ),
                         ),
-                      );
-                    }).toList(),
+                    ],
                   ),
                 ],
               ),
@@ -449,125 +480,162 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
               const SizedBox(height: 16),
 
               // 9. Comments Section
-              Text(
-                'Comments${_postedComments.isNotEmpty ? " (${_postedComments.length})" : ""}',
-                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey),
-              ),
-              const SizedBox(height: 6),
-
-              if (_postedComments.isNotEmpty)
-                Column(
-                  children: _postedComments.map((c) {
-                    final initials = c['initials']?.toString() ?? 'SA';
-                    final name = c['name']?.toString() ?? 'Test_AE';
-                    final body = c['body']?.toString() ?? '';
-                    final colorHex = c['avatar_color']?.toString() ?? '#8b5cf6';
-                    final dateStr = DateFormat('d MMM, HH:mm').format(DateTime.now());
-
-                    return Container(
-                      width: double.infinity,
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: isDark ? Colors.white12 : Colors.grey.shade300),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 10,
-                                backgroundColor: _hexToColor(colorHex),
-                                child: Text(
-                                  initials,
-                                  style: const TextStyle(fontSize: 8, color: Colors.white, fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Text(name, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                              const SizedBox(width: 8),
-                              Text(dateStr, style: const TextStyle(fontSize: 9.5, color: Colors.grey)),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text(body, style: TextStyle(fontSize: 11.5, color: isDark ? Colors.white70 : const Color(0xFF334155))),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                )
-              else
+              if (!(isDirector && isDoneOrCompleted)) ...[
                 Text(
-                  'No comments yet — start the conversation.',
-                  style: TextStyle(fontSize: 10, color: isDark ? Colors.grey[400] : const Color(0xFF64748B)),
+                  'Comments${_postedComments.isNotEmpty ? " (${_postedComments.length})" : ""}',
+                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey),
                 ),
-              const SizedBox(height: 2),
-              Text(
-                'Type @ then a name to mention anyone — they get notified.',
-                style: TextStyle(fontSize: 9.5, color: isDark ? Colors.grey[500] : Colors.grey.shade500),
-              ),
-              const SizedBox(height: 6),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _commentController,
-                      style: const TextStyle(fontSize: 11),
-                      decoration: InputDecoration(
-                        hintText: 'Write a comment... type @ to mention someone',
-                        hintStyle: const TextStyle(fontSize: 11, color: Colors.grey),
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                        filled: true,
-                        fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                const SizedBox(height: 6),
+
+                if (_postedComments.isNotEmpty)
+                  Column(
+                    children: _postedComments.map((c) {
+                      final initials = c['initials']?.toString() ?? 'SA';
+                      final name = c['name']?.toString() ?? 'Test_AE';
+                      final body = c['body']?.toString() ?? '';
+                      final colorHex = c['avatar_color']?.toString() ?? '#8b5cf6';
+                      final dateStr = DateFormat('d MMM, HH:mm').format(DateTime.now());
+
+                      return Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: isDark ? Colors.white12 : Colors.grey.shade300),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 10,
+                                  backgroundColor: _hexToColor(colorHex),
+                                  child: Text(
+                                    initials,
+                                    style: const TextStyle(fontSize: 8, color: Colors.white, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(name, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                const SizedBox(width: 8),
+                                Text(dateStr, style: const TextStyle(fontSize: 9.5, color: Colors.grey)),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(body, style: TextStyle(fontSize: 11.5, color: isDark ? Colors.white70 : const Color(0xFF334155))),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  )
+                else
+                  Text(
+                    'No comments yet — start the conversation.',
+                    style: TextStyle(fontSize: 10, color: isDark ? Colors.grey[400] : const Color(0xFF64748B)),
+                  ),
+                const SizedBox(height: 2),
+                Text(
+                  'Type @ then a name to mention anyone — they get notified.',
+                  style: TextStyle(fontSize: 9.5, color: isDark ? Colors.grey[500] : Colors.grey.shade500),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _commentController,
+                        style: const TextStyle(fontSize: 11),
+                        decoration: InputDecoration(
+                          hintText: 'Write a comment... type @ to mention someone',
+                          hintStyle: const TextStyle(fontSize: 11, color: Colors.grey),
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          filled: true,
+                          fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                        ),
                       ),
                     ),
-                  ),
-                  if (!widget.isReadOnly) ...[
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0F172A),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                      onPressed: () {
-                        final txt = _commentController.text.trim();
-                        if (txt.isNotEmpty) {
-                          setState(() {
-                            _postedComments.add({
-                              'initials': 'SA',
-                              'name': 'Test_AE',
-                              'body': txt,
-                              'avatar_color': '#8b5cf6',
+                    if (!widget.isReadOnly) ...[
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0F172A),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        onPressed: () {
+                          final txt = _commentController.text.trim();
+                          if (txt.isNotEmpty) {
+                            setState(() {
+                              _postedComments.add({
+                                'initials': 'SA',
+                                'name': 'Test_AE',
+                                'body': txt,
+                                'avatar_color': '#8b5cf6',
+                              });
+                              _commentController.clear();
                             });
-                            _commentController.clear();
+                          }
+                        },
+                        child: const Text('Send', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+
+              // 10. Footer Action Buttons Bar
+              if (isDirector && isCompleted) ...[
+                // When status is completed in Director login, all action buttons are hidden
+                const SizedBox(height: 8),
+              ] else if (isDirector && isDone) ...[
+                const SizedBox(height: 20),
+                const Divider(),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () async {
+                        final updated = await ReviewTaskDialog.show(
+                          context,
+                          taskId: widget.taskId,
+                          taskNo: taskNo,
+                          title: title,
+                          assigneeNote: reviewNote,
+                        );
+                        if (updated != null && mounted) {
+                          setState(() {
+                            _detail = updated;
+                            _hasReviewed = true;
                           });
                         }
                       },
-                      child: const Text('Send', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0F172A),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: const Text('Review →', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                     ),
                   ],
-                ],
-              ),
-
-              const SizedBox(height: 20),
-              const Divider(),
-              const SizedBox(height: 12),
-
-              // 10. Footer Action Buttons Bar
-              if (widget.isReadOnly) ...[
+                ),
+              ] else if (widget.isReadOnly) ...[
+                const SizedBox(height: 20),
+                const Divider(),
+                const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     OutlinedButton(
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: () => Navigator.of(context).pop(_hasReviewed),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -578,6 +646,9 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                   ],
                 ),
               ] else ...[
+                const SizedBox(height: 20),
+                const Divider(),
+                const SizedBox(height: 12),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
@@ -658,8 +729,7 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                                 );
                             await MarkDoneDialog.show(context, task: taskItem);
                           },
-                          icon: const Icon(Icons.check_circle_outline_rounded, size: 14),
-                          label: const Text('✓ Mark Done', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                           label: const Text('✓ Mark Done', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF16A34A),
                             foregroundColor: Colors.white,
@@ -670,7 +740,7 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                         const SizedBox(width: 8),
                       ],
                       OutlinedButton(
-                        onPressed: () => Navigator.of(context).pop(),
+                        onPressed: () => Navigator.of(context).pop(_hasReviewed),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

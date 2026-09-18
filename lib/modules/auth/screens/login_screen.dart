@@ -41,6 +41,24 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoadingForgot = false;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkConnectivityOnStart();
+    });
+  }
+
+  Future<void> _checkConnectivityOnStart() async {
+    final isConnected = await NetworkConnectivityService().checkConnection();
+    if (!mounted) return;
+    if (!isConnected) {
+      NoInternetDialog.show(context, onRetry: () {
+        _checkConnectivityOnStart();
+      });
+    }
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
@@ -56,18 +74,32 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
     if (!isConnected) {
       NoInternetDialog.show(context, onRetry: () {
-        NetworkConnectivityService().checkConnection();
+        _submitLogin();
       });
       return;
     }
 
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
-    if (email.isNotEmpty && password.isNotEmpty) {
-      context.read<AuthBloc>().add(
-            LoginRequestedEvent(email: email, password: password),
-          );
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            email.isEmpty && password.isEmpty
+                ? 'Please enter email and password'
+                : email.isEmpty
+                    ? 'Please enter email'
+                    : 'Please enter password',
+          ),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+      return;
     }
+
+    context.read<AuthBloc>().add(
+          LoginRequestedEvent(email: email, password: password),
+        );
   }
 
   Future<void> _onSendResetCode() async {
@@ -75,7 +107,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
     if (!isConnected) {
       NoInternetDialog.show(context, onRetry: () {
-        NetworkConnectivityService().checkConnection();
+        _onSendResetCode();
       });
       return;
     }
@@ -113,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
     if (!isConnected) {
       NoInternetDialog.show(context, onRetry: () {
-        NetworkConnectivityService().checkConnection();
+        _onResetPasswordSubmitted();
       });
       return;
     }
@@ -643,7 +675,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           decoration: InputDecoration(
             isDense: true,
-            hintText: 'you@school.edu · 98xxxxxxxx · username',
+            hintText: 'you@school.edu  · username',
             hintStyle: TextStyle(
               color: isDark ? Colors.white38 : const Color(0xFF9CA3AF),
               fontSize: 14,
@@ -759,8 +791,7 @@ class _LoginScreenState extends State<LoginScreen> {
               final roleLower = user.role.toLowerCase();
               final roleLabelLower = user.roleLabel.toLowerCase();
               if (roleLower.contains('admin') ||
-                  roleLabelLower.contains('admin') ||
-                  user.email.contains('admin')) {
+                  roleLabelLower.contains('admin')) {
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute(builder: (_) => const StaffScreen()),
                 );

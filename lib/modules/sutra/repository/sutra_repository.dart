@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:dio/dio.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/dio_client.dart';
 import '../../dashboard/models/dashboard_stats.dart';
@@ -71,7 +72,14 @@ class SutraRepository {
       if (res is Map<String, dynamic>) {
         return res;
       }
-    } catch (_) {}
+    } catch (e) {
+      if (e is DioException && e.response?.data != null) {
+        final res = _safeParse(e.response!.data);
+        if (res is Map<String, dynamic>) {
+          return res;
+        }
+      }
+    }
     return {
       'kind': 'unknown',
       'message': "I couldn't understand that. Try e.g. “Schedule a meeting with Swapnika and Narasimha tomorrow 4pm”.",

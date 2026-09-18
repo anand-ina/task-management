@@ -1,3 +1,6 @@
+import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
+import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/api_constants.dart';
@@ -11,6 +14,8 @@ import '../bloc/meetings_bloc.dart';
 import '../bloc/meetings_event.dart';
 import '../bloc/meetings_state.dart';
 import '../models/meeting_model.dart';
+import '../../auth/bloc/auth_bloc.dart';
+import '../../auth/bloc/auth_state.dart';
 import '../../reports/screens/status_reports_screen.dart';
 
 class MyScheduledMeetingsScreen extends StatefulWidget {
@@ -24,6 +29,57 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
   int _selectedTabIndex = 0; // 0: All, 1: Initiated by Me, 2: Received by Me
   final DioClient _dioClient = DioClient();
   final Set<dynamic> _attendedMeetingIds = {};
+
+  String _extractErrorMessage(dynamic error) {
+    if (error is DioException) {
+      final data = error.response?.data;
+      if (data is Map) {
+        final msg = data['message'];
+        if (msg != null) {
+          if (msg is List) return msg.join(', ');
+          if (msg.toString().trim().isNotEmpty) return msg.toString();
+        }
+        final err = data['error'];
+        if (err != null && err.toString().trim().isNotEmpty) {
+          return err.toString();
+        }
+      } else if (data is String && data.trim().isNotEmpty) {
+        try {
+          final decoded = jsonDecode(data);
+          if (decoded is Map) {
+            final msg = decoded['message'];
+            if (msg != null) {
+              if (msg is List) return msg.join(', ');
+              if (msg.toString().trim().isNotEmpty) return msg.toString();
+            }
+            final err = decoded['error'];
+            if (err != null && err.toString().trim().isNotEmpty) {
+              return err.toString();
+            }
+          }
+        } catch (_) {
+          return data;
+        }
+      }
+      if (error.message != null && error.message!.trim().isNotEmpty) {
+        return error.message!;
+      }
+    }
+    final str = error.toString();
+    if (str.startsWith('Exception: ')) return str.substring(11);
+    return str;
+  }
+
+  void _showErrorToast(BuildContext context, dynamic error) {
+    final msg = _extractErrorMessage(error);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
 
   Future<void> _markAttended(BuildContext context, MeetingItemModel item) async {
     try {
@@ -43,18 +99,9 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
         );
         context.read<MeetingsBloc>().add(FetchMyScheduledMeetingsEvent());
       }
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
-        setState(() {
-          _attendedMeetingIds.add(item.id);
-          if (item.rawId != null) _attendedMeetingIds.add(item.rawId);
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Attendance marked! +2 points earned 🎉'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        _showErrorToast(context, e);
       }
     }
   }
@@ -330,9 +377,7 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-          );
+          _showErrorToast(context, e);
         }
       }
     }
@@ -345,18 +390,31 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
 
     return BlocProvider(
       create: (context) => MeetingsBloc()..add(FetchMyScheduledMeetingsEvent()),
-      child: PopScope(
-        canPop: false,
-        onPopInvokedWithResult: (didPop, result) async {
-          if (didPop) return;
-          final shouldExit = await ExitConfirmationDialog.show(context);
-          if (shouldExit) {
-            // Handled inside exit dialog
+      child: BlocListener<MeetingsBloc, MeetingsState>(
+        listener: (context, state) {
+          if (state is MeetingsErrorState) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
           }
         },
-        child: Scaffold(
+        child: PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, result) async {
+            if (didPop) return;
+            final shouldExit = await ExitConfirmationDialog.show(context);
+            if (shouldExit) {
+              // Handled inside exit dialog
+            }
+          },
+          child: Scaffold(
+            floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/my-meetings'),
-          appBar: const CustomAppBar(),
+            appBar: const CustomAppBar(),
           body: BlocBuilder<MeetingsBloc, MeetingsState>(
             builder: (context, state) {
               return RefreshIndicator(
@@ -561,7 +619,7 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
             },
           ),
         ),
-      ),
+      ),)
     );
   }
 
@@ -655,14 +713,9 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
         );
         context.read<MeetingsBloc>().add(FetchMyScheduledMeetingsEvent());
       }
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('RSVP saved: $responseValue'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        _showErrorToast(context, e);
       }
     }
   }
@@ -689,7 +742,36 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
 
   Widget _buildMeetingCard(BuildContext context, AppStrings s, MeetingItemModel item) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final authState = context.watch<AuthBloc>().state;
+    bool isTeamLead = false;
+    bool isManager = false;
+    if (authState is AuthenticatedState) {
+      final role = authState.userProfile.role.toLowerCase();
+      final roleLabel = authState.userProfile.roleLabel.toLowerCase();
+      if (role.contains('manager') || roleLabel.contains('manager')) {
+        isManager = true;
+      }
+      if (role.contains('team lead') ||
+          role.contains('team_lead') ||
+          role.contains('team leader') ||
+          role.contains('team_leader') ||
+          role.contains('tl') ||
+          roleLabel.contains('team lead') ||
+          roleLabel.contains('team_lead') ||
+          roleLabel.contains('team leader') ||
+          roleLabel.contains('team_leader') ||
+          roleLabel.contains('tl')) {
+        isTeamLead = true;
+      }
+    }
+
     final isPendingCompletion = item.completionStatus?.toLowerCase() == 'pending';
+    final isApprovedCompletion = item.completionStatus?.toLowerCase() == 'approved';
+    final isCompleted = item.status.toLowerCase() == 'completed' ||
+        isApprovedCompletion ||
+        item.completionStatus?.toLowerCase() == 'completed';
+    final showMeetingHappened = item.completionStatus == null || item.completionStatus!.trim().isEmpty;
     final isAttended = item.myAttended == true || _attendedMeetingIds.contains(item.id) || (item.rawId != null && _attendedMeetingIds.contains(item.rawId));
     final showRsvp = !isAttended && item.myResponse != null && item.myResponse!.toLowerCase() == 'pending';
 
@@ -725,7 +807,7 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Top Badge: Completion awaiting approval (if pending)
+                      // Top Badge: Completion awaiting approval / Approved
                       if (isPendingCompletion) ...[
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -739,6 +821,23 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
                               fontSize: 10.5,
                               fontWeight: FontWeight.bold,
                               color: Color(0xFF9A3412),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                      ] else if (isApprovedCompletion) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFDCFCE7),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text(
+                            'Completed · Approved',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF166534),
                             ),
                           ),
                         ),
@@ -883,31 +982,7 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
                       // Action Links Row
                       Row(
                         children: [
-                          if (isPendingCompletion) ...[
-                            InkWell(
-                              onTap: () => _cancelMeetingReminder(context, item),
-                              child: const Text(
-                                'Cancel',
-                                style: TextStyle(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFFDC2626),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                            InkWell(
-                              onTap: () => _showMeetingReminder(context, item),
-                              child: Text(
-                                s.reminderButton,
-                                style: TextStyle(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.white70 : Colors.black87,
-                                ),
-                              ),
-                            ),
-                          ] else ...[
+                          if (showMeetingHappened) ...[
                             InkWell(
                               onTap: () => _showMeetingHappenedDialog(context, item),
                               child: Row(
@@ -924,6 +999,8 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
                               ),
                             ),
                             const SizedBox(width: 14),
+                          ],
+                          if (!isTeamLead && !isCompleted) ...[
                             InkWell(
                               onTap: () => _cancelMeetingReminder(context, item),
                               child: const Text(
@@ -936,18 +1013,18 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
                               ),
                             ),
                             const SizedBox(width: 14),
-                            InkWell(
-                              onTap: () => _showMeetingReminder(context, item),
-                              child: Text(
-                                s.reminderButton,
-                                style: TextStyle(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.white70 : Colors.black87,
-                                ),
+                          ],
+                          InkWell(
+                            onTap: () => _showMeetingReminder(context, item),
+                            child: Text(
+                              s.reminderButton,
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.white70 : Colors.black87,
                               ),
                             ),
-                          ],
+                          ),
                         ],
                       ),
                     ],

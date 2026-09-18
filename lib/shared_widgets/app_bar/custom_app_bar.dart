@@ -33,21 +33,69 @@ class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
 
 class _CustomAppBarState extends State<CustomAppBar> {
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final dashBloc = context.read<DashboardBloc>();
+      if (dashBloc.state is DashboardInitialState) {
+        dashBloc.add(const FetchDashboardDataEvent());
+      } else if (dashBloc.state is DashboardLoadedState) {
+        final loaded = dashBloc.state as DashboardLoadedState;
+        if (loaded.branches.length <= 1) {
+          dashBloc.add(const FetchDashboardDataEvent());
+        }
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final s = AppStrings.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final authState = context.watch<AuthBloc>().state;
-    String userName = 'Vamsi';
-    String userEmail = 'vamsi@samskar.edu';
+    String userName = 'User';
+    String userEmail = '';
     bool isDirector = false;
+    bool isPrincipal = false;
+    bool isAdmin = false;
+    String userRoleLabel = '';
+    String deptName = '';
+    String userBranchName = '';
+    bool hasMultiBranchAccess = true;
+
     if (authState is AuthenticatedState) {
-      userName = authState.userProfile.name;
-      userEmail = authState.userProfile.email;
-      final role = authState.userProfile.role.toLowerCase();
-      final roleLabel = authState.userProfile.roleLabel.toLowerCase();
-      if (role.contains('director') || roleLabel.contains('director') || userEmail.contains('vamsi')) {
+      final user = authState.userProfile;
+      userName = user.name.isNotEmpty ? user.name : (user.email.split('@').first);
+      userEmail = user.email;
+      userRoleLabel = user.roleLabel.isNotEmpty ? user.roleLabel : user.role;
+      deptName = user.department?.name ?? '';
+      userBranchName = user.firstBranchName.isNotEmpty ? user.firstBranchName : (user.branch?.name ?? '');
+      final role = user.role.toLowerCase();
+      final roleLabel = user.roleLabel.toLowerCase();
+      if (role.contains('director') || roleLabel.contains('director')) {
         isDirector = true;
+      }
+      if (role.contains('admin') || roleLabel.contains('admin')) {
+        isAdmin = true;
+      }
+      if (role.contains('principal') ||
+          role.contains('center_head') ||
+          role.contains('campus_head') ||
+          role.contains('center head') ||
+          role.contains('campus head') ||
+          roleLabel.contains('principal') ||
+          roleLabel.contains('center head') ||
+          roleLabel.contains('campus head')) {
+        isPrincipal = true;
+      }
+      if (isDirector || isPrincipal) {
+        hasMultiBranchAccess = true;
+      } else if (isAdmin) {
+        hasMultiBranchAccess = true;
+      } else if (user.scope?.isAll == false || (user.branch != null && !user.branch!.isAll)) {
+        hasMultiBranchAccess = false;
       }
     }
 
@@ -55,32 +103,77 @@ class _CustomAppBarState extends State<CustomAppBar> {
 
     return BlocBuilder<DashboardBloc, DashboardState>(
       builder: (context, dashState) {
+        final defaultBranches = [
+          BranchModel(id: 0, code: 'ALL', name: 'All Branches', isAll: true),
+          BranchModel(id: 1, code: 'SS00', name: 'Head Office', isAll: false),
+          BranchModel(id: 2, code: 'SS01', name: 'Moti Nagar & Sanath Nagar', isAll: false),
+          BranchModel(id: 3, code: 'SS02', name: 'Peerzadiguda', isAll: false),
+        ];
+
         List<BranchModel> branches = [];
         BranchModel? selectedBranch;
         int unreadCount = 0;
 
         if (dashState is DashboardLoadedState) {
           branches = List<BranchModel>.from(dashState.branches);
-          if (!branches.any((b) => b.id == 0 || b.code == 'ALL')) {
-            branches.insert(0, BranchModel(id: 0, code: 'ALL', name: 'All Branches', isAll: true));
+          if (!hasMultiBranchAccess && userBranchName.isNotEmpty) {
+            branches = branches.where((b) => !b.isAll && (b.name == userBranchName || b.id == (authState is AuthenticatedState ? authState.userProfile.branch?.id : null))).toList();
+            if (branches.isEmpty && authState is AuthenticatedState && authState.userProfile.branch != null) {
+              final ub = authState.userProfile.branch!;
+              branches = [BranchModel(id: ub.id, code: ub.code, name: ub.name, isAll: ub.isAll)];
+            }
+          } else {
+            if (!branches.any((b) => b.id == 0 || b.code.toUpperCase() == 'ALL' || b.name.toLowerCase().contains('all branches'))) {
+              branches.insert(0, BranchModel(id: 0, code: 'ALL', name: 'All Branches', isAll: true));
+            }
+            if (branches.length <= 1) {
+              branches = List<BranchModel>.from(defaultBranches);
+            }
           }
           selectedBranch = dashState.selectedBranch;
-          if (isDirector && (selectedBranch == null || dashState.selectedBranch == null)) {
-            selectedBranch = branches.first;
+          if ((isDirector || isPrincipal) && (selectedBranch == null || dashState.selectedBranch == null)) {
+            selectedBranch = branches.isNotEmpty ? branches.first : null;
           } else if (selectedBranch != null) {
             final matchIndex = branches.indexWhere((b) => b.id == selectedBranch?.id || b.code == selectedBranch?.code);
             if (matchIndex != -1) {
               selectedBranch = branches[matchIndex];
             } else {
-              selectedBranch = branches.first;
+              selectedBranch = branches.isNotEmpty ? branches.first : null;
             }
           } else {
-            selectedBranch = branches.first;
+            selectedBranch = branches.isNotEmpty ? branches.first : null;
           }
           unreadCount = dashState.notifications.unread;
         } else {
-          branches = [BranchModel(id: 0, code: 'ALL', name: 'All Branches', isAll: true)];
+          if (!hasMultiBranchAccess && userBranchName.isNotEmpty) {
+            branches = [BranchModel(id: 1, code: '', name: userBranchName, isAll: false)];
+          } else {
+            branches = List<BranchModel>.from(defaultBranches);
+          }
           selectedBranch = branches.first;
+        }
+
+        String directBranchDisplayName = '';
+        if (deptName.isNotEmpty && userBranchName.isNotEmpty) {
+          directBranchDisplayName = '$deptName · $userBranchName';
+        } else if (userBranchName.isNotEmpty) {
+          directBranchDisplayName = userBranchName;
+        } else if (branches.isNotEmpty && !branches.first.isAll) {
+          directBranchDisplayName = branches.first.name;
+        } else {
+          directBranchDisplayName = 'Administration · Head Office';
+        }
+
+        String adminBranchName = userBranchName;
+        if (adminBranchName.isEmpty) {
+          final nonAll = branches.where((b) => !b.isAll && b.id != 0 && b.code.toUpperCase() != 'ALL').toList();
+          if (nonAll.isNotEmpty) {
+            adminBranchName = nonAll.first.name;
+          } else if (branches.isNotEmpty) {
+            adminBranchName = branches.first.name;
+          } else {
+            adminBranchName = 'Head Office';
+          }
         }
 
         return AppBar(
@@ -123,152 +216,246 @@ class _CustomAppBarState extends State<CustomAppBar> {
               //     ),
               //   ),
               // ),
-
-              // + New Popup Button
-              PopupMenuButton<String>(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                onSelected: (value) {
-                  if (value == 'task') {
-                    CreateTaskDialog.show(context);
-                  } else if (value == 'todo') {
-                    CreateTodoDialog.show(context);
-                  } else if (value == 'meeting') {
-                    ScheduleMeetingDialog.show(context);
-                  } else if (value == 'event') {
-                    CreateEventDialog.show(context);
-                  }
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'task',
-                    child: Row(
-                      children: [
-                        const Icon(Icons.check_rounded, size: 18, color: Colors.blue),
-                        const SizedBox(width: 8),
-                        Text(s.newTask),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'todo',
-                    child: Row(
-                      children: [
-                        const Icon(Icons.assignment_outlined, size: 18, color: Colors.orange),
-                        const SizedBox(width: 8),
-                        Text(s.newTodo),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'meeting',
-                    child: Row(
-                      children: [
-                        const Icon(Icons.access_time_rounded, size: 18, color: Colors.purple),
-                        const SizedBox(width: 8),
-                        Text(s.newMeeting),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'event',
-                    child: Row(
-                      children: [
-                        const Icon(Icons.star_rounded, size: 18, color: Colors.amber),
-                        const SizedBox(width: 8),
-                        Text(s.newEvent),
-                      ],
-                    ),
-                  ),
-                ],
-                child: Container(
+              if (isAdmin) ...[
+                Container(
                   height: 36,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0B132B),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Text(
-                        s.newButton,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const Icon(Icons.arrow_drop_down_rounded, size: 16, color: Colors.white),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 6),
-
-              // Dynamic Branch Selector Dropdown (Populated via /api/lookups/branches)
-              Flexible(
-                child: Container(
-                  height: 36,
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
                   decoration: BoxDecoration(
                     color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: isDark ? Colors.white24 : Colors.black12),
                   ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<BranchModel>(
-                      value: selectedBranch,
-                      isDense: true,
-                      isExpanded: true,
-                      icon: const Icon(Icons.arrow_drop_down_rounded, size: 16),
-                      items: branches.map((b) {
-                        final displayName = b.isAll
-                            ? 'All Branches'
-                            : (b.code.isNotEmpty ? '${b.code} · ${b.name}' : b.name);
-                        return DropdownMenuItem<BranchModel>(
-                          value: b,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(b.isAll ? '🏛️ ' : '🏫 ', style: const TextStyle(fontSize: 11)),
-                              Expanded(
-                                child: Text(
-                                  displayName,
-                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (val) {
-                        if (val != null) {
-                          context.read<DashboardBloc>().add(SelectBranchEvent(val));
-                        }
-                      },
+                  alignment: Alignment.center,
+                  child: Text(
+                    userRoleLabel.isNotEmpty
+                        ? (userRoleLabel.toLowerCase().contains('admin') ? 'Administrator' : userRoleLabel)
+                        : 'Administrator',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white70 : const Color(0xFF334155),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 1),
-              //
-              // // Dynamic Role Badge
-              // Container(
-              //   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              //   decoration: BoxDecoration(
-              //     color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
-              //     borderRadius: BorderRadius.circular(6),
-              //   ),
-              //   child: Text(
-              //     roleLabel,
-              //     style: TextStyle(
-              //       fontSize: 10,
-              //       fontWeight: FontWeight.bold,
-              //       color: isDark ? Colors.white : const Color(0xFF334155),
-              //     ),
-              //   ),
-              // ),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Container(
+                    height: 36,
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: isDark ? Colors.white24 : Colors.black12),
+                    ),
+                    alignment: Alignment.centerLeft,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('🏫 ', style: TextStyle(fontSize: 11)),
+                        Flexible(
+                          child: Text(
+                            adminBranchName,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white70 : const Color(0xFF334155),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ] else ...[
+                // + New Popup Button (non-admin users)
+                PopupMenuButton<String>(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  onSelected: (value) {
+                    if (value == 'task') {
+                      CreateTaskDialog.show(context);
+                    } else if (value == 'todo') {
+                      CreateTodoDialog.show(context);
+                    } else if (value == 'meeting') {
+                      ScheduleMeetingDialog.show(context);
+                    } else if (value == 'event') {
+                      CreateEventDialog.show(context);
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'task',
+                      child: Row(children: [
+                        const Icon(Icons.check_rounded, size: 18, color: Colors.blue),
+                        const SizedBox(width: 8),
+                        Text(s.newTask),
+                      ]),
+                    ),
+                    PopupMenuItem(
+                      value: 'todo',
+                      child: Row(children: [
+                        const Icon(Icons.assignment_outlined, size: 18, color: Colors.orange),
+                        const SizedBox(width: 8),
+                        Text(s.newTodo),
+                      ]),
+                    ),
+                    PopupMenuItem(
+                      value: 'meeting',
+                      child: Row(children: [
+                        const Icon(Icons.access_time_rounded, size: 18, color: Colors.purple),
+                        const SizedBox(width: 8),
+                        Text(s.newMeeting),
+                      ]),
+                    ),
+                    PopupMenuItem(
+                      value: 'event',
+                      child: Row(children: [
+                        const Icon(Icons.star_rounded, size: 18, color: Colors.amber),
+                        const SizedBox(width: 8),
+                        Text(s.newEvent),
+                      ]),
+                    ),
+                  ],
+                  child: Container(
+                    height: 36,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0B132B),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Text(
+                          s.newButton,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const Icon(Icons.arrow_drop_down_rounded, size: 16, color: Colors.white),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+
+                // Branch Selector: if branch list inside more then one or isPrincipal or isDirector then maintain drop down otherwise direct branch name in 2 lines text
+                if (branches.length > 1 || isPrincipal || isDirector)
+                  Flexible(
+                    child: Container(
+                      height: 36,
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: isDark ? Colors.white24 : Colors.black12),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<BranchModel>(
+                          value: selectedBranch,
+                          isDense: true,
+                          isExpanded: true,
+                          icon: const Icon(Icons.arrow_drop_down_rounded, size: 16),
+                          items: branches.map((b) {
+                            final isAllItem = b.id == 0 || b.code.toUpperCase() == 'ALL' || b.name.toLowerCase().contains('all branches');
+                            final displayName = isAllItem
+                                ? 'All Branches'
+                                : (b.code.isNotEmpty ? '${b.code} · ${b.name}' : b.name);
+                            return DropdownMenuItem<BranchModel>(
+                              value: b,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(isAllItem ? '🏛️ ' : '🏫 ', style: const TextStyle(fontSize: 9)),
+                                  Expanded(
+                                    child: Text(
+                                      displayName,
+                                      style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold),
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 2,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (val) {
+                            if (val != null) {
+                              context.read<DashboardBloc>().add(SelectBranchEvent(val));
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  Flexible(
+                    child: Container(
+                      height: 36,
+                      padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: isDark ? Colors.white24 : Colors.black12),
+                      ),
+                      alignment: Alignment.centerLeft,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: isDark ? Colors.white70 : const Color(0xFF0F172A),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              directBranchDisplayName,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.white70 : const Color(0xFF334155),
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                // Dynamic Role Badge (e.g. Academic Executive)
+                if (userRoleLabel.isNotEmpty && !isAdmin) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    width: 55,
+                    height: 36,
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      userRoleLabel,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white70 : const Color(0xFF334155),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
 
               // Theme Toggle Button
               const SizedBox(width: 4),
@@ -489,6 +676,16 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                   userName,
                                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                 ),
+                                if (userRoleLabel.isNotEmpty) ...[
+                                  Text(
+                                    userRoleLabel,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
+                                    ),
+                                  ),
+                                ],
                                 Text(
                                   userEmail,
                                   style: const TextStyle(fontSize: 11, color: Colors.grey),

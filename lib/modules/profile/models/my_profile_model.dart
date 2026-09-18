@@ -68,19 +68,19 @@ class MyProfileModel {
   factory MyProfileModel.fromJson(Map<String, dynamic> json) {
     return MyProfileModel(
       id: json['id'] is int ? json['id'] : (int.tryParse(json['id']?.toString() ?? '0') ?? 0),
-      name: json['name']?.toString() ?? 'Vamsi',
-      firstName: json['first_name']?.toString() ?? 'Vamsi',
+      name: json['name']?.toString() ?? '',
+      firstName: json['first_name']?.toString() ?? '',
       lastName: json['last_name']?.toString(),
-      email: json['email']?.toString() ?? 'vamsi@samskar.edu',
+      email: json['email']?.toString() ?? '',
       phone: json['phone']?.toString() ?? '',
-      designation: json['designation']?.toString() ?? 'Director',
+      designation: json['designation']?.toString() ?? '',
       employmentType: json['employment_type']?.toString() ?? 'non_teaching',
       responsibilities: json['responsibilities']?.toString(),
       avatarColor: json['avatar_color']?.toString() ?? '#1f9d57',
-      initials: json['initials']?.toString() ?? 'VA',
-      department: json['department']?.toString() ?? 'Administration',
-      branchName: json['branch_name']?.toString() ?? 'Head Office',
-      roleLabel: json['role_label']?.toString() ?? 'Director',
+      initials: json['initials']?.toString() ?? '',
+      department: json['department']?.toString() ?? '',
+      branchName: json['branch_name']?.toString() ?? '',
+      roleLabel: json['role_label']?.toString() ?? '',
       stats: json['stats'] is Map<String, dynamic>
           ? ProfileStatsModel.fromJson(json['stats'] as Map<String, dynamic>)
           : ProfileStatsModel(total: 6, completed: 2, overdue: 1, points: -4, onTimeRate: 100, completionRate: 33, streak: 0),

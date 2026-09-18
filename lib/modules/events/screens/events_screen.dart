@@ -1,3 +1,4 @@
+import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -26,6 +27,7 @@ class _EventsScreenState extends State<EventsScreen> {
   final DioClient _dioClient = DioClient();
 
   DateTime _selectedDayDate = DateTime(2026, 8, 14);
+  DateTime _selectedMonthDate = DateTime(2026, 8, 1);
 
   // Map of eventId -> Map of expansion/loading state
   final Map<int, bool> _expandedChecklists = {};
@@ -142,6 +144,7 @@ class _EventsScreenState extends State<EventsScreen> {
           }
         },
         child: Scaffold(
+          floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/events'),
           appBar: const CustomAppBar(),
           body: BlocBuilder<EventsBloc, EventsState>(
@@ -666,6 +669,12 @@ class _EventsScreenState extends State<EventsScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
+    final firstDayOfMonth = DateTime(_selectedMonthDate.year, _selectedMonthDate.month, 1);
+    final daysInMonth = DateUtils.getDaysInMonth(_selectedMonthDate.year, _selectedMonthDate.month);
+    final startingWeekday = firstDayOfMonth.weekday % 7; // Sunday = 0
+    final numRows = ((startingWeekday + daysInMonth) / 7).ceil();
+    final now = DateTime.now();
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -676,9 +685,65 @@ class _EventsScreenState extends State<EventsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'August 2026',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? Colors.white : const Color(0xFF0F172A)),
+          Row(
+            children: [
+              Text(
+                DateFormat('MMMM yyyy').format(_selectedMonthDate),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                ),
+              ),
+              const Spacer(),
+              // Prev Button (<)
+              IconButton(
+                icon: const Icon(Icons.chevron_left_rounded, size: 22),
+                tooltip: s.previousMonth,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                onPressed: () {
+                  setState(() {
+                    final prevMonth = _selectedMonthDate.month - 1;
+                    final year = prevMonth < 1 ? _selectedMonthDate.year - 1 : _selectedMonthDate.year;
+                    final month = prevMonth < 1 ? 12 : prevMonth;
+                    final dim = DateUtils.getDaysInMonth(year, month);
+                    final day = _selectedMonthDate.day > dim ? dim : _selectedMonthDate.day;
+                    _selectedMonthDate = DateTime(year, month, day);
+                  });
+                },
+              ),
+              const SizedBox(width: 8),
+              // Today Button
+              OutlinedButton(
+                onPressed: () {
+                  setState(() => _selectedMonthDate = DateTime.now());
+                },
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                child: Text(s.todayButton, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(width: 8),
+              // Next Button (>)
+              IconButton(
+                icon: const Icon(Icons.chevron_right_rounded, size: 22),
+                tooltip: s.nextMonth,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                onPressed: () {
+                  setState(() {
+                    final nextMonth = _selectedMonthDate.month + 1;
+                    final year = nextMonth > 12 ? _selectedMonthDate.year + 1 : _selectedMonthDate.year;
+                    final month = nextMonth > 12 ? 1 : nextMonth;
+                    final dim = DateUtils.getDaysInMonth(year, month);
+                    final day = _selectedMonthDate.day > dim ? dim : _selectedMonthDate.day;
+                    _selectedMonthDate = DateTime(year, month, day);
+                  });
+                },
+              ),
+            ],
           ),
           const SizedBox(height: 12),
 
@@ -705,18 +770,24 @@ class _EventsScreenState extends State<EventsScreen> {
                   ),
 
                   // Calendar Grid Weeks
-                  ...List.generate(5, (weekIndex) {
+                  ...List.generate(numRows, (weekIndex) {
                     return TableRow(
                       children: List.generate(7, (dayOfWeek) {
-                        final cellNumber = weekIndex * 7 + dayOfWeek - 5; // Aligning Aug 1 2026 to Sat
-                        if (cellNumber < 1 || cellNumber > 31) {
+                        final cellNumber = weekIndex * 7 + dayOfWeek - startingWeekday + 1;
+                        if (cellNumber < 1 || cellNumber > daysInMonth) {
                           return const SizedBox(height: 64);
                         }
+
+                        final isToday = cellNumber == now.day &&
+                            _selectedMonthDate.month == now.month &&
+                            _selectedMonthDate.year == now.year;
 
                         final matchingEvents = events.where((e) {
                           try {
                             final dt = DateTime.parse(e.eventDate);
-                            return dt.day == cellNumber;
+                            return dt.year == _selectedMonthDate.year &&
+                                dt.month == _selectedMonthDate.month &&
+                                dt.day == cellNumber;
                           } catch (_) {
                             return false;
                           }
@@ -725,6 +796,9 @@ class _EventsScreenState extends State<EventsScreen> {
                         return Container(
                           height: 64,
                           padding: const EdgeInsets.all(4),
+                          color: isToday
+                              ? (isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9))
+                              : Colors.transparent,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -732,7 +806,7 @@ class _EventsScreenState extends State<EventsScreen> {
                                 '$cellNumber',
                                 style: TextStyle(
                                   fontSize: 11,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: isToday ? FontWeight.bold : FontWeight.w600,
                                   color: isDark ? Colors.white : Colors.black87,
                                 ),
                               ),

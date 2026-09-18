@@ -1,3 +1,4 @@
+import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import 'package:flutter/material.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
@@ -37,7 +38,8 @@ class _FaqScreenState extends State<FaqScreen> {
         }
       },
       child: Scaffold(
-        appBar: const CustomAppBar(),
+        floatingActionButton: const TodoFloatingActionButton(),
+          appBar: const CustomAppBar(),
         drawer: const CustomLeftDrawer(currentRoute: '/faq'),
         body: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),

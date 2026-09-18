@@ -63,6 +63,9 @@ class PreferencesService {
 
   static const String _keyUserRole = 'user_role';
   static const String _keyUserRoleLabel = 'user_role_label';
+  static const String _keyUserName = 'user_name';
+  static const String _keyUserEmail = 'user_email';
+  static const String _keyUserId = 'user_id';
 
   // User Role
   Future<void> saveUserRole(String role, {String? roleLabel}) async {
@@ -83,6 +86,35 @@ class PreferencesService {
     return prefs.getString(_keyUserRoleLabel);
   }
 
+  // User Name, Email, ID
+  Future<void> saveUserDetails({String? name, String? email, int? id}) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (name != null && name.isNotEmpty) {
+      await prefs.setString(_keyUserName, name);
+    }
+    if (email != null && email.isNotEmpty) {
+      await prefs.setString(_keyUserEmail, email);
+    }
+    if (id != null) {
+      await prefs.setInt(_keyUserId, id);
+    }
+  }
+
+  Future<String?> getUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keyUserName);
+  }
+
+  Future<String?> getUserEmail() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keyUserEmail);
+  }
+
+  Future<int?> getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_keyUserId);
+  }
+
   Future<bool> isAcademicExecutive() async {
     final prefs = await SharedPreferences.getInstance();
     final role = prefs.getString(_keyUserRole)?.toLowerCase() ?? '';
@@ -97,5 +129,8 @@ class PreferencesService {
     await prefs.remove(_keyUserMe);
     await prefs.remove(_keyUserRole);
     await prefs.remove(_keyUserRoleLabel);
+    await prefs.remove(_keyUserName);
+    await prefs.remove(_keyUserEmail);
+    await prefs.remove(_keyUserId);
   }
 }

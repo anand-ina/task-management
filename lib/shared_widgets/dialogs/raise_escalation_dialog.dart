@@ -6,13 +6,15 @@ import '../../../core/network/dio_client.dart';
 import '../../../modules/tasks/models/task_model.dart';
 
 class RaiseEscalationDialog extends StatefulWidget {
-  const RaiseEscalationDialog({super.key});
+  final TaskItemModel? initialTask;
 
-  static Future<bool?> show(BuildContext context) async {
+  const RaiseEscalationDialog({super.key, this.initialTask});
+
+  static Future<bool?> show(BuildContext context, {TaskItemModel? initialTask}) async {
     return showDialog<bool>(
       context: context,
       barrierDismissible: true,
-      builder: (context) => const RaiseEscalationDialog(),
+      builder: (context) => RaiseEscalationDialog(initialTask: initialTask),
     );
   }
 
@@ -33,6 +35,7 @@ class _RaiseEscalationDialogState extends State<RaiseEscalationDialog> {
   String _selectedEscalateTo = '30';
 
   String _selectedType = 'date_change'; // 'date_change', 'clarification', 'budget', 'cancellation'
+  DateTime? _proposedDate = DateTime.now().add(const Duration(days: 7));
   bool _isSaving = false;
 
   final Map<String, String> _typeMap = {
@@ -45,6 +48,9 @@ class _RaiseEscalationDialogState extends State<RaiseEscalationDialog> {
   @override
   void initState() {
     super.initState();
+    if (widget.initialTask != null) {
+      _selectedTask = widget.initialTask;
+    }
     _loadLookups();
   }
 
@@ -116,17 +122,19 @@ class _RaiseEscalationDialogState extends State<RaiseEscalationDialog> {
     setState(() => _isSaving = true);
 
     try {
-      final proposedDateStr = DateFormat('yyyy-MM-dd').format(
-        DateTime.now().add(const Duration(days: 12)),
-      );
+      final proposedDateStr = _proposedDate != null
+          ? DateFormat('yyyy-MM-dd').format(_proposedDate!)
+          : DateFormat('yyyy-MM-dd').format(DateTime.now().add(const Duration(days: 7)));
 
-      final payload = {
+      final Map<String, dynamic> payload = {
         'taskId': _selectedTask!.id,
         'type': _selectedType,
         'reason': reason,
-        'escalateTo': _selectedEscalateTo,
         'proposedDate': proposedDateStr,
       };
+      if (_selectedEscalateTo.isNotEmpty && _selectedEscalateTo != '30') {
+        payload['escalateTo'] = int.tryParse(_selectedEscalateTo) ?? _selectedEscalateTo;
+      }
 
       await _dioClient.dio.post(
         '${ApiConstants.baseUrl}/escalations',
@@ -267,6 +275,58 @@ class _RaiseEscalationDialogState extends State<RaiseEscalationDialog> {
                       onChanged: (val) {
                         if (val != null) setState(() => _selectedType = val);
                       },
+                    ),
+                    const SizedBox(height: 12),
+
+                    // New target date Picker Section
+                    Row(
+                      children: [
+                        const Text('New target date ', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey)),
+                        if (_selectedType == 'date_change')
+                          const Text('*', style: TextStyle(fontSize: 11, color: Colors.red, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    InkWell(
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: _proposedDate ?? DateTime.now().add(const Duration(days: 7)),
+                          firstDate: DateTime.now().subtract(const Duration(days: 30)),
+                          lastDate: DateTime.now().add(const Duration(days: 365 * 3)),
+                        );
+                        if (picked != null) {
+                          setState(() => _proposedDate = picked);
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              _proposedDate != null
+                                  ? DateFormat('yyyy-MM-dd').format(_proposedDate!)
+                                  : 'Select target date',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: _proposedDate != null
+                                    ? (isDark ? Colors.white : const Color(0xFF0F172A))
+                                    : Colors.grey,
+                              ),
+                            ),
+                            const Icon(Icons.calendar_today_rounded, size: 16, color: Color(0xFF3B82F6)),
+                          ],
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 12),
 

@@ -544,8 +544,11 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
                               ],
                               const SizedBox(height: 8),
 
-                              // Bottom Row (Assigned By & Assignees)
-                              Row(
+                              // Bottom Area (Assigned By & Assignees)
+                              Wrap(
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                spacing: 4,
+                                runSpacing: 4,
                                 children: [
                                   Text(
                                     '${s.assignedByLabel}: ',
@@ -560,31 +563,49 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
                                     ),
                                   ),
                                   if (item.assignees.isNotEmpty) ...[
-                                    const SizedBox(width: 6),
+                                    const SizedBox(width: 4),
                                     Text(
                                       '${s.assigneesLabel}: ',
                                       style: const TextStyle(fontSize: 7, fontWeight: FontWeight.bold, color: Colors.grey),
                                     ),
-                                    Wrap(
-                                      spacing: 4,
-                                      children: item.assignees.map((a) {
-                                        return Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1.5),
+                                    ...item.assignees.take(2).map((a) {
+                                      return Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF3866D6).withValues(alpha: 0.12),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          a.name,
+                                          style: const TextStyle(
+                                            fontSize: 8,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF3866D6),
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      );
+                                    }),
+                                    if (item.assignees.length > 2)
+                                      Tooltip(
+                                        message: item.assignees.skip(2).map((e) => e.name).join(', '),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFF3866D6).withValues(alpha: 0.12),
+                                            color: isDark ? Colors.white12 : const Color(0xFFE2E8F0),
                                             borderRadius: BorderRadius.circular(6),
                                           ),
                                           child: Text(
-                                            a.name,
-                                            style: const TextStyle(
+                                            '+${item.assignees.length - 2}',
+                                            style: TextStyle(
                                               fontSize: 8,
                                               fontWeight: FontWeight.bold,
-                                              color: Color(0xFF3866D6),
+                                              color: isDark ? Colors.white70 : const Color(0xFF475569),
                                             ),
                                           ),
-                                        );
-                                      }).toList(),
-                                    ),
+                                        ),
+                                      ),
                                   ],
                                 ],
                               ),

@@ -1,3 +1,4 @@
+import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/localization/app_strings.dart';
@@ -12,6 +13,8 @@ import '../bloc/organization_state.dart';
 import '../models/organization_data_model.dart';
 import '../models/trends_model.dart';
 import '../../dashboard/models/dashboard_stats.dart';
+import '../../auth/bloc/auth_bloc.dart';
+import '../../auth/bloc/auth_state.dart';
 
 class OrganizationOverviewScreen extends StatefulWidget {
   const OrganizationOverviewScreen({super.key});
@@ -27,6 +30,20 @@ class _OrganizationOverviewScreenState extends State<OrganizationOverviewScreen>
   Widget build(BuildContext context) {
     final s = AppStrings.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final authState = context.watch<AuthBloc>().state;
+    bool isPrincipal = false;
+    if (authState is AuthenticatedState) {
+      final role = authState.userProfile.role.toLowerCase();
+      final roleLabel = authState.userProfile.roleLabel.toLowerCase();
+      if (role.contains('principal') ||
+          role.contains('center_head') ||
+          role.contains('campus_head') ||
+          roleLabel.contains('principal') ||
+          roleLabel.contains('center head') ||
+          roleLabel.contains('campus head')) {
+        isPrincipal = true;
+      }
+    }
 
     return BlocProvider(
       create: (context) => OrganizationBloc()..add(FetchOrganizationDataEvent()),
@@ -40,6 +57,7 @@ class _OrganizationOverviewScreenState extends State<OrganizationOverviewScreen>
           }
         },
         child: Scaffold(
+          floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/org-overview'),
           appBar: const CustomAppBar(),
           body: BlocBuilder<OrganizationBloc, OrganizationState>(
@@ -85,7 +103,7 @@ class _OrganizationOverviewScreenState extends State<OrganizationOverviewScreen>
                       children: [
                         // Page Header
                         Text(
-                          s.organizationOverview,
+                          isPrincipal ? s.campusOverview : s.organizationOverview,
                           style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,

@@ -51,31 +51,13 @@ class AppStringsKn extends AppStrings {
   @override
   String get resetPasswordButton => 'ಪಾಸ್‌ವರ್ಡ್ ಮರುಹೊಂದಿಸಿ';
 
-  @override
-  String get directorVamsi => 'ವಂಶಿ (ನಿರ್ದೇಶಕರು)';
-  @override
-  String get principalMadhumathi => 'ಮಧುಮತಿ (ಪ್ರಾಂಶುಪಾಲರು)';
-  @override
-  String get managerMurali => 'ಮುರಳಿ (ಮ್ಯಾನೇಜರ್)';
-  @override
-  String get managerSwapnika => 'ಸ್ವಪ್ನಿಕಾ (ಮ್ಯಾನೇಜರ್)';
-  @override
-  String get teamLeadNarasimha => 'ನರಸಿಂಹ (ಟೀಮ್ ಲೀಡ್)';
-  @override
-  String get executiveAnamika => 'ಅನಾಮಿಕಾ (ಎಕ್ಸಿಕ್ಯೂಟಿವ್)';
-  @override
-  String get executiveGyapika => 'ಜ್ಞಾಪಿಕಾ (ಎಕ್ಸಿಕ್ಯೂಟಿವ್)';
-  @override
-  String get teamLeadAkash => 'ಆಕಾಶ್ (ಟೀಮ್‌ ಲೀಡ್)';
-  @override
-  String get managerSandeep => 'ಸಂದೀಪ್ (ಮ್ಯಾನೇಜರ್)';
-  @override
-  String get centerHeadCharan => 'ಚರಣ್ (ಸೆಂಟರ್ ಹೆಡ್ / ಪ್ರಿನ್ಸಿಪಾಲ್)';
 
   @override
   String get dashboard => 'ಡ್ಯಾಶ್‌ಬೋರ್ಡ್';
   @override
   String get organizationOverview => 'ಸಂಸ್ಥೆಯ ವಿವರಣೆ';
+  @override
+  String get campusOverview => 'ಕ್ಯಾಂಪಸ್ ಅವಲೋಕನ';
   @override
   String get tasksHeader => 'ಕಾರ್ಯಗಳು';
   @override
@@ -150,6 +132,175 @@ class AppStringsKn extends AppStrings {
   String get administratorRole => 'ಆಡಳಿತಗಾರ (Administrator)';
   @override
   String get administratorBadgeScope => 'ಸಂಪೂರ್ಣ ಸಂಸ್ಥೆಯ ವೀಕ್ಷಣೆ — ಪ್ರತಿಯೊಂದು ಕ್ಯಾಂಪಸ್ & ವಿಭಾಗ.';
+  @override
+  String get branchesAndDepartmentsSubtitle => 'ಶಾಖೆಗಳು ಮತ್ತು ವಿಭಾಗಗಳನ್ನು ಸೇರಿಸಿ ಮತ್ತು ಮರುನಾಮಕರಣ ಮಾಡಿ, ಮತ್ತು ಪ್ರತಿಯೊಂದಕ್ಕೂ ಲಿಂಕ್ ಮಾಡಲಾದ ಬಳಕೆದಾರರನ್ನು ನೋಡಿ.';
+  @override
+  String get branchesHeader => 'ಶಾಖೆಗಳು (Branches)';
+  @override
+  String get departmentsHeader => 'ವಿಭಾಗಗಳು (Departments)';
+  @override
+  String get codePlaceholder => 'ಕೋಡ್';
+  @override
+  String get branchNamePlaceholder => 'ಶಾಖೆಯ ಹೆಸರು';
+  @override
+  String get newDepartmentPlaceholder => 'ಹೊಸ ವಿಭಾಗ';
+  @override
+  String get editButton => 'ಸಂಪಾದಿಸಿ (Edit)';
+  @override
+  String get saveButton => 'ಉಳಿಸಿ';
+  @override
+  String get cancelEditButton => 'ರದ್ದುಮಾಡಿ';
+  @override
+  String get reportingStructureSubtitle => 'ಸಂಘಟನೆಯಲ್ಲಿ ಯಾರು ಯಾರಿಗೆ ವರದಿ ಮಾಡುತ್ತಾರೆ';
+  @override
+  String get personColumn => 'ವ್ಯಕ್ತಿ';
+  @override
+  String get reportsToColumn => 'ವರದಿ ಮಾಡುತ್ತಾರೆ (ಪ್ರಾಥಮಿಕ)';
+  @override
+  String get dottedLineColumn => 'ಡಾಟೆಡ್-ಲೈನ್ (ದ್ವಿತೀಯ)';
+  @override
+  String get addManagerLabel => '+ ಮ್ಯಾನೇಜರ್ ಸೇರಿಸಿ...';
+  @override
+  String get addDottedLabel => '+ ಡಾಟೆಡ್ ಸೇರಿಸಿ...';
+  @override
+  String get noReportingDataFound => 'ರಿಪೋರ್ಟಿಂಗ್ ಡೇಟಾ ಕಂಡುಬಂದಿಲ್ಲ.';
+  @override
+  String get rolesAndPermissionsSubtitle => 'ಪ್ರತಿ ಪಾತ್ರ ಏನು ನೋಡಬಹುದು ಮತ್ತು ಏನು ಮಾಡಬಹುದು';
+  @override
+  String get addRoleButton => '+ ಪಾತ್ರ ಸೇರಿಸಿ';
+  @override
+  String rolesCount(int count) => '$count ಪಾತ್ರಗಳು';
+  @override
+  String get levelLabel => 'ಮಟ್ಟ';
+  @override
+  String get permissionsLabel => 'ಅನುಮತಿಗಳು';
+  @override
+  String get usersLabel => 'ಬಳಕೆದಾರರು';
+  @override
+  String get savePermissionsButton => 'ಅನುಮತಿಗಳನ್ನು ಉಳಿಸಿ';
+  @override
+  String get addRoleTitle => 'ಹೊಸ ಪಾತ್ರ ಸೇರಿಸಿ';
+  @override
+  String get roleLabelField => 'ಪಾತ್ರ ಲೇಬಲ್ (ಪ್ರದರ್ಶನ ಹೆಸರು)';
+  @override
+  String get roleKeyField => 'ಪಾತ್ರ ಕೀ (ಸಿಸ್ಟಮ್ ಹೆಸರು)';
+  @override
+  String get roleLevelField => 'ಮಟ್ಟ (1–5)';
+  @override
+  String get noRolesFound => 'ಯಾವ ಪಾತ್ರಗಳೂ ಕಂಡುಬಂದಿಲ್ಲ.';
+
+  // Role Badges
+  @override
+  String get academicExecutiveRole => 'ಶೈಕ್ಷಣಿಕ ಕಾರ್ಯನಿರ್ವಾಹಕ (Academic Executive)';
+  @override
+  String get academicExecutiveScope => 'ಕಾರ್ಯಾಚರಣೆಯ ವ್ಯಾಪ್ತಿ — ನಿಮ್ಮ ಸ್ವಂತ ಕಾರ್ಯಗಳು ಮತ್ತು ವರದಿಗಳು.';
+
+  // New Drawer Headers & Nav Items
+  @override
+  String get adminOrgChart => 'ನಿರ್ವಾಹಕ ಸಂಸ್ಥೆಯ ಚಾರ್ಟ್';
+  @override
+  String get myReportingStructure => 'ನನ್ನ ವರದಿ ಮಾಡುವ ರಚನೆ';
+  @override
+  String get rolesAndResponsibilitiesHeader => 'ಪಾತ್ರಗಳು ಮತ್ತು ಜವಾಬ್ದಾರಿಗಳು';
+  @override
+  String get myResponsibilities => 'ನನ್ನ ಜವಾಬ್ದಾರಿಗಳು';
+  @override
+  String get myAuditsHeader => 'ನನ್ನ ಆಡಿಟ್‌ಗಳು';
+  @override
+  String get asAnInternalAuditor => 'ಆಂತರಿಕ ಲೆಕ್ಕಪರಿಶೋಧಕರಾಗಿ';
+  @override
+  String get asAnAuditee => 'ಲೆಕ್ಕಪರಿಶೋಧಿತರಾಗಿ';
+
+  // Admin Org Chart Screen
+  @override
+  String get adminOrgChartSubtitle => 'ಆಡಳಿತ ತಂಡದ ವರದಿ ರಚನೆ — ಪ್ರಕಟಿತ ಸಂಸ್ಥೆ ಚಾರ್ಟ್‌ನಿಂದ ಪ್ರತಿಬಿಂಬಿಸಲಾಗಿದೆ.';
+  @override
+  String peopleCount(int count) => '$count ಜನರು';
+  @override
+  String get primaryReportingLegend => 'ಪ್ರಾಥಮಿಕ ವರದಿ (ಘನ)';
+  @override
+  String get secondaryReportingLegend => 'ದ್ವಿತೀಯ / ಚುಕ್ಕೆಗಳ ರೇಖೆ';
+  @override
+  String get reportsToPrefix => 'ವರದಿ ಮಾಡುತ್ತಾರೆ';
+  @override
+  String get dottedPrefix => 'ಡಾಟೆಡ್:';
+  @override
+  String get youBadge => 'ನೀವು';
+  @override
+  String get noOrgChartDataFound => 'ಯಾವುದೇ ಸಂಸ್ಥೆಯ ಚಾರ್ಟ್ ಡೇಟಾ ಕಂಡುಬಂದಿಲ್ಲ.';
+
+  // My Reporting Structure Screen
+  @override
+  String get myReportingSubtitle => 'ನೀವು ಯಾರಿಗೆ ವರದಿ ಮಾಡುತ್ತೀರಿ, ಮತ್ತು ಯಾರು ನಿಮಗೆ ವರದಿ ಮಾಡುತ್ತಾರೆ.';
+  @override
+  String get meSectionTitle => 'ನಾನು';
+  @override
+  String get iReportToSectionTitle => 'ನಾನು ವರದಿ ಮಾಡುತ್ತೇನೆ';
+  @override
+  String get reportsToMeSectionTitle => 'ನನಗೆ ವರದಿ ಮಾಡುತ್ತಾರೆ';
+  @override
+  String get peersSectionTitle => 'ಸಹೋದ್ಯೋಗಿಗಳು';
+  @override
+  String get shareManagerSubtitle => 'ಮ್ಯಾನೇಜರ್ ಅನ್ನು ಹಂಚಿಕೊಳ್ಳುತ್ತಾರೆ';
+  @override
+  String get primarySolidLegend => 'ಪ್ರಾಥಮಿಕ (ಘನ)';
+  @override
+  String get secondaryDottedLegend => 'ದ್ವಿತೀಯ (ಡಾಟೆಡ್)';
+  @override
+  String get noneText => 'ಯಾವುದೂ ಇಲ್ಲ.';
+  @override
+  String get noReportingStructureFound => 'ವರದಿ ಮಾಡುವ ರಚನೆ ಕಂಡುಬಂದಿಲ್ಲ.';
+
+  // My Responsibilities Screen
+  @override
+  String get myResponsibilitiesSubtitle => 'ನಿಮ್ಮ ಪ್ರಾಥಮಿಕ ಮತ್ತು ದ್ವಿತೀಯ ಜವಾಬ್ದಾರಿಯ ಕ್ಷೇತ್ರಗಳು.';
+  @override
+  String get primaryResponsibilitiesTitle => 'ಪ್ರಾಥಮಿಕ';
+  @override
+  String get secondaryResponsibilitiesTitle => 'ದ್ವಿತೀಯ';
+  @override
+  String get addPrimaryResponsibilityPlaceholder => 'ಪ್ರಾಥಮಿಕ ಜವಾಬ್ದಾರಿಯನ್ನು ಸೇರಿಸಿ...';
+  @override
+  String get addSecondaryResponsibilityPlaceholder => 'ದ್ವಿತೀಯ ಜವಾಬ್ದಾರಿಯನ್ನು ಸೇರಿಸಿ...';
+  @override
+  String get noneYetText => 'ಇನ್ನೂ ಯಾವುದೂ ಇಲ್ಲ.';
+  @override
+  String get noResponsibilitiesFound => 'ಯಾವುದೇ ಜವಾಬ್ದಾರಿಗಳು ಕಂಡುಬಂದಿಲ್ಲ.';
+
+  // My Audits Screens
+  @override
+  String get auditsAuditeeTitle => 'ನನ್ನ ಆಡಿಟ್‌ಗಳು — ಪರಿಶೋಧಿತರಾಗಿ';
+  @override
+  String get auditsAuditeeSubtitle => 'ನಿಮ್ಮ ಮೇಲೆ, ನಿಮ್ಮ ಇಲಾಖೆ ಅಥವಾ ಶಾಖೆಯ ಮೇಲೆ ನಡೆಸಲಾದ ಲೆಕ್ಕಪರಿಶೋಧನೆಗಳು.';
+  @override
+  String get noAuditsInvolveYouYet => 'ಇನ್ನೂ ಯಾವುದೇ ಆಡಿಟ್‌ಗಳು ನಿಮ್ಮನ್ನು ಒಳಗೊಂಡಿಲ್ಲ.';
+  @override
+  String get auditsAuditorTitle => 'ನನ್ನ ಆಡಿಟ್‌ಗಳು — ಆಂತರಿಕ ಲೆಕ್ಕಪರಿಶೋಧಕರಾಗಿ';
+  @override
+  String get auditsAuditorSubtitle => 'ನೀವು ನಡೆಸುತ್ತಿರುವ ಅಥವಾ ಭಾಗವಹಿಸುತ್ತಿರುವ ಆಡಿಟ್‌ಗಳು.';
+  @override
+  String get noAuditsAssignedYet => 'ಇನ್ನೂ ನಿಮಗೆ ಯಾವುದೇ ಆಡಿಟ್‌ಗಳನ್ನು ನಿಯೋಜಿಸಲಾಗಿಲ್ಲ.';
+
+  // Audit Log Screen
+  @override
+  String get auditLogSubtitle => 'ಬಳಕೆದಾರ ರಚನೆ, ಪಾಸ್‌ವರ್ಡ್ ಬದಲಾವಣೆಗಳು ಮತ್ತು ಲಾಗಿನ್ / ಲಾಗ್‌ಔಟ್ ಚಟುವಟಿಕೆ.';
+  @override
+  String get allActivityFilter => 'ಎಲ್ಲಾ ಚಟುವಟಿಕೆಗಳು';
+  @override
+  String get loginAction => 'ಲಾಗಿನ್';
+  @override
+  String get logoutAction => 'ಲಾಗ್‌ಔಟ್';
+  @override
+  String get passwordChangedAction => 'ಪಾಸ್‌ವರ್ಡ್ ಬದಲಾಯಿಸಲಾಗಿದೆ';
+  @override
+  String get noAuditLogsFound => 'ಯಾವುದೇ ಆಡಿಟ್ ಲಾಗ್‌ಗಳು ಕಂಡುಬಂದಿಲ್ಲ.';
+
+  // Calendar Navigation
+  @override
+  String get previousMonth => 'ಹಿಂದಿನ ತಿಂಗಳು';
+  @override
+  String get nextMonth => 'ಮುಂದಿನ ತಿಂಗಳು';
+
   @override
   String get aiAndSettingsHeader => 'ಎಐ ಮತ್ತು ಸೆಟ್ಟಿಂಗ್‌ಗಳು';
   @override

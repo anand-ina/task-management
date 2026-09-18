@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../repository/meetings_repository.dart';
 import 'meetings_event.dart';
@@ -15,6 +17,37 @@ class MeetingsBloc extends Bloc<MeetingsEvent, MeetingsState> {
     on<FetchMeetingCalendarEvent>(_onFetchMeetingCalendar);
   }
 
+  String _parseError(dynamic e) {
+    if (e is DioException) {
+      final data = e.response?.data;
+      if (data is Map) {
+        final msg = data['message'];
+        if (msg != null) {
+          if (msg is List) return msg.join(', ');
+          if (msg.toString().trim().isNotEmpty) return msg.toString();
+        }
+        final err = data['error'];
+        if (err != null && err.toString().trim().isNotEmpty) return err.toString();
+      } else if (data is String && data.trim().isNotEmpty) {
+        try {
+          final decoded = jsonDecode(data);
+          if (decoded is Map) {
+            final msg = decoded['message'];
+            if (msg != null) {
+              if (msg is List) return msg.join(', ');
+              if (msg.toString().trim().isNotEmpty) return msg.toString();
+            }
+          }
+        } catch (_) {
+          return data;
+        }
+      }
+    }
+    final str = e.toString();
+    if (str.startsWith('Exception: ')) return str.substring(11);
+    return str;
+  }
+
   Future<void> _onFetchOneOnOnePending(
     FetchOneOnOnePendingEvent event,
     Emitter<MeetingsState> emit,
@@ -24,7 +57,7 @@ class MeetingsBloc extends Bloc<MeetingsEvent, MeetingsState> {
       final pending = await repository.getOneOnOnePending();
       emit(OneOnOnePendingLoadedState(pending));
     } catch (e) {
-      emit(MeetingsErrorState(e.toString()));
+      emit(MeetingsErrorState(_parseError(e)));
     }
   }
 
@@ -37,7 +70,7 @@ class MeetingsBloc extends Bloc<MeetingsEvent, MeetingsState> {
       final meetings = await repository.getMyScheduledMeetings();
       emit(MyScheduledMeetingsLoadedState(meetings));
     } catch (e) {
-      emit(MeetingsErrorState(e.toString()));
+      emit(MeetingsErrorState(_parseError(e)));
     }
   }
 
@@ -50,7 +83,7 @@ class MeetingsBloc extends Bloc<MeetingsEvent, MeetingsState> {
       final meetings = await repository.getMeetingsViewAll();
       emit(MeetingCalendarLoadedState(meetings));
     } catch (e) {
-      emit(MeetingsErrorState(e.toString()));
+      emit(MeetingsErrorState(_parseError(e)));
     }
   }
 
@@ -62,7 +95,7 @@ class MeetingsBloc extends Bloc<MeetingsEvent, MeetingsState> {
       final data = await repository.getScheduleLookups(atTime: event.atTime);
       emit(ScheduleLookupsLoadedState(data));
     } catch (e) {
-      emit(MeetingsErrorState(e.toString()));
+      emit(MeetingsErrorState(_parseError(e)));
     }
   }
 }

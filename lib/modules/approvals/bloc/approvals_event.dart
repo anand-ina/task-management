@@ -24,3 +24,13 @@ class DecideApprovalEvent extends ApprovalsEvent {
   @override
   List<Object?> get props => [id, decision];
 }
+
+class DecideBudgetEvent extends ApprovalsEvent {
+  final int id;
+  final String decision; // 'approve' or 'reject'
+
+  const DecideBudgetEvent({required this.id, required this.decision});
+
+  @override
+  List<Object?> get props => [id, decision];
+}

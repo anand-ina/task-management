@@ -14,6 +14,7 @@ class ApprovalsBloc extends Bloc<ApprovalsEvent, ApprovalsState> {
     on<FetchMeetingApprovalsDataEvent>(_onFetchMeetingApprovalsData);
     on<FetchBudgetApprovalsDataEvent>(_onFetchBudgetApprovalsData);
     on<DecideApprovalEvent>(_onDecideApproval);
+    on<DecideBudgetEvent>(_onDecideBudget);
   }
 
   Future<void> _onFetchTaskApprovalsData(
@@ -114,5 +115,13 @@ class ApprovalsBloc extends Bloc<ApprovalsEvent, ApprovalsState> {
   ) async {
     await repository.decideApproval(event.id, event.decision);
     add(FetchTaskApprovalsDataEvent());
+  }
+
+  Future<void> _onDecideBudget(
+    DecideBudgetEvent event,
+    Emitter<ApprovalsState> emit,
+  ) async {
+    await repository.decideBudget(event.id, event.decision);
+    add(FetchBudgetApprovalsDataEvent());
   }
 }

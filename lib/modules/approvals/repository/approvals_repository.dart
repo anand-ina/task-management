@@ -125,4 +125,35 @@ class ApprovalsRepository {
       return false;
     }
   }
+
+  Future<bool> decideBudget(int id, String decision) async {
+    try {
+      final response = await _dioClient.dio.post(
+        '${ApiConstants.baseUrl}/budget/$id/decide',
+        data: {'decision': decision},
+      );
+      debugPrint('[ApprovalsRepository] decideBudget URL: ${ApiConstants.baseUrl}/budget/$id/decide, payload: {"decision": "$decision"}, response: ${response.data}');
+      return true;
+    } catch (e) {
+      debugPrint('[ApprovalsRepository] decideBudget /budget/$id/decide failed: $e, trying fallback');
+      try {
+        final response = await _dioClient.dio.post(
+          '${ApiConstants.baseUrl}/approvals/$id/decide',
+          data: {'decision': decision},
+        );
+        debugPrint('[ApprovalsRepository] decideBudget fallback /approvals/$id/decide response: ${response.data}');
+        return true;
+      } catch (_) {
+        try {
+          final response = await _dioClient.dio.patch(
+            '${ApiConstants.baseUrl}/budget/$id',
+            data: {'status': decision == 'approve' ? 'approved' : 'rejected'},
+          );
+          debugPrint('[ApprovalsRepository] decideBudget fallback /budget/$id PATCH response: ${response.data}');
+          return true;
+        } catch (_) {}
+      }
+      return false;
+    }
+  }
 }

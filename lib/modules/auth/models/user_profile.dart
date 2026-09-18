@@ -12,11 +12,17 @@ class BranchInfo {
   });
 
   factory BranchInfo.fromJson(Map<String, dynamic> json) {
+    final codeVal = json['code']?.toString() ?? json['branch_code']?.toString() ?? '';
+    final nameVal = json['name']?.toString() ??
+        json['branch_name']?.toString() ??
+        json['branchName']?.toString() ??
+        json['title']?.toString() ??
+        '';
     return BranchInfo(
-      id: json['id'] as int? ?? 0,
-      code: json['code'] as String? ?? '',
-      name: json['name'] as String? ?? '',
-      isAll: json['is_all'] as bool? ?? false,
+      id: json['id'] as int? ?? (int.tryParse(json['id']?.toString() ?? '0') ?? 0),
+      code: codeVal,
+      name: nameVal.isNotEmpty ? nameVal : (codeVal.isNotEmpty ? codeVal : 'Head Office'),
+      isAll: json['is_all'] as bool? ?? json['isAll'] as bool? ?? false,
     );
   }
 
@@ -89,6 +95,7 @@ class UserProfile {
   final bool isTaskCreator;
   final bool confidentialAccess;
   final BranchInfo? branch;
+  final List<BranchInfo> branches;
   final DepartmentInfo? department;
   final List<String> permissions;
   final UserScope? scope;
@@ -103,22 +110,111 @@ class UserProfile {
     required this.isTaskCreator,
     required this.confidentialAccess,
     this.branch,
+    this.branches = const [],
     this.department,
     required this.permissions,
     this.scope,
   });
 
+  String get firstBranchName {
+    if (branch != null && branch!.name.isNotEmpty) {
+      return branch!.name;
+    }
+    if (branches.isNotEmpty && branches.first.name.isNotEmpty) {
+      return branches.first.name;
+    }
+    return '';
+  }
+
   factory UserProfile.fromJson(Map<String, dynamic> json) {
+    // Dynamically resolve role and roleLabel from possible response formats
+    final dynamic rawRole = json['role'] ?? json['user_role'] ?? json['role_name'];
+    String roleStr = '';
+    if (rawRole is String) {
+      roleStr = rawRole;
+    } else if (rawRole is Map<String, dynamic>) {
+      roleStr = rawRole['name']?.toString() ?? rawRole['role']?.toString() ?? '';
+    }
+
+    final dynamic rawRoleLabel = json['roleLabel'] ??
+        json['role_label'] ??
+        json['role_title'] ??
+        json['designation'] ??
+        json['designation_name'];
+    String roleLabelStr = '';
+    if (rawRoleLabel is String) {
+      roleLabelStr = rawRoleLabel;
+    } else if (rawRole is Map<String, dynamic>) {
+      roleLabelStr = rawRole['label']?.toString() ?? rawRole['role_label']?.toString() ?? '';
+    }
+
+    if (roleLabelStr.isEmpty && roleStr.isNotEmpty) {
+      roleLabelStr = roleStr;
+    }
+    if (roleStr.isEmpty && roleLabelStr.isNotEmpty) {
+      roleStr = roleLabelStr;
+    }
+
+    String resolvedName = json['name']?.toString() ?? json['username']?.toString() ?? '';
+    if (resolvedName.isEmpty) {
+      final fName = json['first_name']?.toString() ?? '';
+      final lName = json['last_name']?.toString() ?? '';
+      resolvedName = ('$fName $lName').trim();
+    }
+
+    // Extract branches / branch from response (first item if list)
+    List<BranchInfo> parsedBranches = [];
+    final rawBranches = json['branches'];
+    if (rawBranches is List) {
+      for (final item in rawBranches) {
+        if (item is Map<String, dynamic>) {
+          parsedBranches.add(BranchInfo.fromJson(item));
+        } else if (item != null && item.toString().isNotEmpty) {
+          parsedBranches.add(BranchInfo(id: 0, code: '', name: item.toString(), isAll: false));
+        }
+      }
+    }
+
+    BranchInfo? resolvedBranch;
+    final rawBranch = json['branch'];
+    if (rawBranch is List) {
+      for (final item in rawBranch) {
+        if (item is Map<String, dynamic>) {
+          parsedBranches.add(BranchInfo.fromJson(item));
+        } else if (item != null && item.toString().isNotEmpty) {
+          parsedBranches.add(BranchInfo(id: 0, code: '', name: item.toString(), isAll: false));
+        }
+      }
+    } else if (rawBranch is Map<String, dynamic>) {
+      resolvedBranch = BranchInfo.fromJson(rawBranch);
+    } else if (rawBranch is String && rawBranch.isNotEmpty) {
+      resolvedBranch = BranchInfo(id: 0, code: '', name: rawBranch, isAll: false);
+    }
+
+    if (resolvedBranch == null && parsedBranches.isNotEmpty) {
+      resolvedBranch = parsedBranches.first;
+    }
+
+    if (resolvedBranch == null && json['primary_branch'] != null) {
+      final pb = json['primary_branch'];
+      if (pb is Map<String, dynamic>) {
+        resolvedBranch = BranchInfo.fromJson(pb);
+      } else if (pb is String && pb.isNotEmpty) {
+        resolvedBranch = BranchInfo(id: 0, code: '', name: pb, isAll: false);
+      }
+    }
+
     return UserProfile(
-      id: json['id'] as int? ?? 0,
-      name: json['name'] as String? ?? '',
-      email: json['email'] as String? ?? '',
-      role: json['role'] as String? ?? '',
-      roleLabel: json['roleLabel'] as String? ?? '',
+      id: json['id'] as int? ?? (int.tryParse(json['id']?.toString() ?? '0') ?? 0),
+      name: resolvedName,
+      email: json['email']?.toString() ?? '',
+      role: roleStr,
+      roleLabel: roleLabelStr,
       level: json['level'] as int? ?? 0,
-      isTaskCreator: json['isTaskCreator'] as bool? ?? false,
-      confidentialAccess: json['confidentialAccess'] as bool? ?? false,
-      branch: json['branch'] is Map<String, dynamic> ? BranchInfo.fromJson(json['branch'] as Map<String, dynamic>) : null,
+      isTaskCreator: json['isTaskCreator'] as bool? ?? json['is_task_creator'] as bool? ?? false,
+      confidentialAccess: json['confidentialAccess'] as bool? ?? json['confidential_access'] as bool? ?? false,
+      branch: resolvedBranch,
+      branches: parsedBranches,
       department: json['department'] is Map<String, dynamic> ? DepartmentInfo.fromJson(json['department'] as Map<String, dynamic>) : null,
       permissions: (json['permissions'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       scope: json['scope'] is Map<String, dynamic> ? UserScope.fromJson(json['scope'] as Map<String, dynamic>) : null,
@@ -135,6 +231,7 @@ class UserProfile {
         'isTaskCreator': isTaskCreator,
         'confidentialAccess': confidentialAccess,
         'branch': branch?.toJson(),
+        'branches': branches.map((b) => b.toJson()).toList(),
         'department': department?.toJson(),
         'permissions': permissions,
         'scope': scope?.toJson(),

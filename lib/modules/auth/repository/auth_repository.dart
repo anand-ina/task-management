@@ -428,6 +428,21 @@ class AuthRepository {
       final loginRes = LoginResponse.fromJson(map);
       if (loginRes.token.isNotEmpty) {
         await _prefs.saveToken(loginRes.token);
+        if (loginRes.user != null) {
+          await _prefs.saveUserMe(loginRes.user!);
+          final u = loginRes.user!;
+          await _prefs.saveUserDetails(
+            name: u['name']?.toString() ?? u['username']?.toString(),
+            email: u['email']?.toString(),
+            id: u['id'] is int ? u['id'] as int : int.tryParse(u['id']?.toString() ?? ''),
+          );
+        }
+        if (loginRes.role != null && loginRes.role!.isNotEmpty) {
+          await _prefs.saveUserRole(
+            loginRes.role!,
+            roleLabel: loginRes.roleLabel ?? loginRes.role!,
+          );
+        }
         return loginRes;
       }
     } catch (e) {
@@ -451,6 +466,11 @@ class AuthRepository {
         await _prefs.saveUserRole(
           userMatch['role'] as String,
           roleLabel: userMatch['roleLabel'] as String,
+        );
+        await _prefs.saveUserDetails(
+          name: userMatch['name'] as String?,
+          email: userMatch['email'] as String?,
+          id: userMatch['id'] is int ? userMatch['id'] as int : null,
         );
         return LoginResponse(token: token);
       } else {
@@ -480,6 +500,11 @@ class AuthRepository {
       defaultUser['role'] as String,
       roleLabel: defaultUser['roleLabel'] as String,
     );
+    await _prefs.saveUserDetails(
+      name: defaultUser['name'] as String?,
+      email: defaultUser['email'] as String?,
+      id: defaultUser['id'] as int?,
+    );
 
     return LoginResponse(token: token);
   }
@@ -492,12 +517,22 @@ class AuthRepository {
       final userProfile = UserProfile.fromJson(map);
       await _prefs.saveUserMe(map);
       await _prefs.saveUserRole(userProfile.role, roleLabel: userProfile.roleLabel);
+      await _prefs.saveUserDetails(
+        name: userProfile.name,
+        email: userProfile.email,
+        id: userProfile.id,
+      );
       return userProfile;
     } catch (_) {
       final localMap = await _prefs.getUserMe() ?? _lastLoggedInUserMap;
       if (localMap != null) {
         final profile = UserProfile.fromJson(localMap);
         await _prefs.saveUserRole(profile.role, roleLabel: profile.roleLabel);
+        await _prefs.saveUserDetails(
+          name: profile.name,
+          email: profile.email,
+          id: profile.id,
+        );
         return profile;
       }
       rethrow;

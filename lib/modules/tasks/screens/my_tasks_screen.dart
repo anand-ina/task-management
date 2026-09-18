@@ -1,3 +1,4 @@
+import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/localization/app_strings.dart';
@@ -12,6 +13,7 @@ import '../../../shared_widgets/export_service.dart';
 import '../../../shared_widgets/dialogs/bulk_upload_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
 import '../../../core/constants/api_constants.dart';
+import 'package:intl/intl.dart';
 import '../../../core/network/dio_client.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/bloc/auth_state.dart';
@@ -33,6 +35,7 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
   String _selectedPriorityFilter = 'all';
   String _searchQuery = '';
   String _selectedView = 'list';
+  DateTime _selectedMonthDate = DateTime(2026, 8, 1);
   final Set<int> _selectedTaskIds = {};
 
   final Map<String, String> _statusOptions = {
@@ -64,8 +67,7 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
     if (authState is AuthenticatedState) {
       final role = authState.userProfile.role.toLowerCase();
       final roleLabel = authState.userProfile.roleLabel.toLowerCase();
-      final email = authState.userProfile.email.toLowerCase();
-      if (role.contains('executive') || role.contains('ae') || roleLabel.contains('executive') || roleLabel.contains('ae') || email.contains('sushma')) {
+      if (role.contains('executive') || role.contains('ae') || roleLabel.contains('executive') || roleLabel.contains('ae')) {
         isAcademicExecutive = true;
       }
     }
@@ -82,6 +84,7 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
           }
         },
         child: Scaffold(
+          floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/my-tasks'),
           appBar: const CustomAppBar(),
           body: BlocBuilder<AllTasksBloc, AllTasksState>(
@@ -1364,6 +1367,11 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
   // Calendar View matching Image 2
   Widget _buildCalendarView(BuildContext context, AppStrings s, List<TaskItemModel> items) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final firstDayOfMonth = DateTime(_selectedMonthDate.year, _selectedMonthDate.month, 1);
+    final daysInMonth = DateUtils.getDaysInMonth(_selectedMonthDate.year, _selectedMonthDate.month);
+    final startDayOffset = firstDayOfMonth.weekday % 7; // Sunday = 0
+    final totalGridCells = ((startDayOffset + daysInMonth) / 7).ceil() * 7;
+    final now = DateTime.now();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1373,7 +1381,7 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'August 2026',
+              DateFormat('MMMM yyyy').format(_selectedMonthDate),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -1383,7 +1391,16 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
             Row(
               children: [
                 OutlinedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    setState(() {
+                      final prevMonth = _selectedMonthDate.month - 1;
+                      final year = prevMonth < 1 ? _selectedMonthDate.year - 1 : _selectedMonthDate.year;
+                      final month = prevMonth < 1 ? 12 : prevMonth;
+                      final dim = DateUtils.getDaysInMonth(year, month);
+                      final day = _selectedMonthDate.day > dim ? dim : _selectedMonthDate.day;
+                      _selectedMonthDate = DateTime(year, month, day);
+                    });
+                  },
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     visualDensity: VisualDensity.compact,
@@ -1393,17 +1410,28 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
                 ),
                 const SizedBox(width: 4),
                 OutlinedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    setState(() => _selectedMonthDate = DateTime.now());
+                  },
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     visualDensity: VisualDensity.compact,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
                   ),
-                  child: const Text('Today', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                  child: Text(s.todayButton, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                 ),
                 const SizedBox(width: 4),
                 OutlinedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    setState(() {
+                      final nextMonth = _selectedMonthDate.month + 1;
+                      final year = nextMonth > 12 ? _selectedMonthDate.year + 1 : _selectedMonthDate.year;
+                      final month = nextMonth > 12 ? 1 : nextMonth;
+                      final dim = DateUtils.getDaysInMonth(year, month);
+                      final day = _selectedMonthDate.day > dim ? dim : _selectedMonthDate.day;
+                      _selectedMonthDate = DateTime(year, month, day);
+                    });
+                  },
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     visualDensity: VisualDensity.compact,
@@ -1417,13 +1445,9 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
         ),
         const SizedBox(height: 12),
 
-        // Grid of 35 Days (August 2026 starting on Saturday 1st)
+        // Grid of Days
         LayoutBuilder(
           builder: (context, constraints) {
-            final daysInMonth = 31;
-            final startDayOffset = 6; // Aug 1 2026 is Saturday
-            final totalGridCells = 35;
-
             final weekdays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
             return SingleChildScrollView(
@@ -1465,20 +1489,25 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
                         final dayNum = index - startDayOffset + 1;
                         final isValidDay = dayNum >= 1 && dayNum <= daysInMonth;
 
-                        // Find tasks for this day in August 2026
+                        // Find tasks for this day in selected month
                         final dayTasks = isValidDay
                             ? items.where((t) {
                                 if (t.dueDate.isEmpty) return false;
                                 try {
                                   final dt = DateTime.parse(t.dueDate);
-                                  return dt.day == dayNum && dt.month == 8;
+                                  return dt.year == _selectedMonthDate.year &&
+                                      dt.month == _selectedMonthDate.month &&
+                                      dt.day == dayNum;
                                 } catch (_) {
                                   return false;
                                 }
                               }).toList()
                             : <TaskItemModel>[];
 
-                        final isCurrentTodayDay = dayNum == 21;
+                        final isCurrentTodayDay = isValidDay &&
+                            now.day == dayNum &&
+                            now.month == _selectedMonthDate.month &&
+                            now.year == _selectedMonthDate.year;
 
                         return Container(
                           padding: const EdgeInsets.all(4),

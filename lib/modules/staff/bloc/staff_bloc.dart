@@ -10,6 +10,8 @@ class StaffBloc extends Bloc<StaffEvent, StaffState> {
       : repository = staffRepository ?? StaffRepository(),
         super(StaffInitialState()) {
     on<FetchStaffEvent>(_onFetchStaff);
+    on<UpdateStaffEvent>(_onUpdateStaff);
+    on<DeleteStaffEvent>(_onDeleteStaff);
   }
 
   Future<void> _onFetchStaff(
@@ -22,6 +24,44 @@ class StaffBloc extends Bloc<StaffEvent, StaffState> {
       emit(StaffLoadedState(data));
     } catch (e) {
       emit(StaffErrorState(e.toString()));
+    }
+  }
+
+  void _onUpdateStaff(
+    UpdateStaffEvent event,
+    Emitter<StaffState> emit,
+  ) {
+    if (state is StaffLoadedState) {
+      final currentData = (state as StaffLoadedState).data;
+      final updatedList = currentData.staffList
+          .map((s) => s.id == event.staff.id ? event.staff : s)
+          .toList();
+      final newData = StaffOverviewData(
+        staffList: updatedList,
+        departments: currentData.departments,
+        roles: currentData.roles,
+        branches: currentData.branches,
+      );
+      emit(StaffLoadedState(newData));
+    }
+  }
+
+  void _onDeleteStaff(
+    DeleteStaffEvent event,
+    Emitter<StaffState> emit,
+  ) {
+    if (state is StaffLoadedState) {
+      final currentData = (state as StaffLoadedState).data;
+      final updatedList = currentData.staffList
+          .where((s) => s.id != event.staffId)
+          .toList();
+      final newData = StaffOverviewData(
+        staffList: updatedList,
+        departments: currentData.departments,
+        roles: currentData.roles,
+        branches: currentData.branches,
+      );
+      emit(StaffLoadedState(newData));
     }
   }
 }

@@ -1,3 +1,4 @@
+import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/localization/app_strings.dart';
@@ -39,8 +40,7 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
     if (authState is AuthenticatedState) {
       final role = authState.userProfile.role.toLowerCase();
       final roleLabel = authState.userProfile.roleLabel.toLowerCase();
-      final email = authState.userProfile.email.toLowerCase();
-      if (role.contains('executive') || role.contains('ae') || roleLabel.contains('executive') || roleLabel.contains('ae') || email.contains('sushma')) {
+      if (role.contains('executive') || role.contains('ae') || roleLabel.contains('executive') || roleLabel.contains('ae')) {
         isAcademicExecutive = true;
       }
       if (roleLabel.contains('team lead') || roleLabel.contains('tl') || role.contains('team_lead') || role.contains('tl')) {
@@ -50,7 +50,8 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
     bool isReadOnlyUser = isAcademicExecutive || isTeamLead;
 
     return Scaffold(
-      drawer: const CustomLeftDrawer(currentRoute: '/approvals/tasks'),
+      floatingActionButton: const TodoFloatingActionButton(),
+          drawer: const CustomLeftDrawer(currentRoute: '/approvals/tasks'),
       appBar: const CustomAppBar(),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -482,7 +483,12 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
                             const SizedBox(width: 16),
                           ],
                           InkWell(
-                            onTap: () => TaskDetailDialog.show(context, taskId: item.taskId ?? 0, isReadOnly: isReadOnlyUser),
+                            onTap: () async {
+                              await TaskDetailDialog.show(context, taskId: item.taskId ?? 0, isReadOnly: isReadOnlyUser);
+                              if (context.mounted) {
+                                context.read<ApprovalsBloc>().add(FetchTaskApprovalsDataEvent());
+                              }
+                            },
                             child: Text(
                               'View →',
                               style: TextStyle(

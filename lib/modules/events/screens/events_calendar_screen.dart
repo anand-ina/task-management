@@ -1,3 +1,4 @@
+import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/localization/app_strings.dart';
@@ -42,6 +43,7 @@ class _EventsCalendarScreenState extends State<EventsCalendarScreen> {
           }
         },
         child: Scaffold(
+          floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/events-calendar'),
           appBar: const CustomAppBar(),
           body: BlocBuilder<EventsBloc, EventsState>(
@@ -123,10 +125,14 @@ class _EventsCalendarScreenState extends State<EventsCalendarScreen> {
                                 IconButton(
                                   onPressed: () {
                                     setState(() {
-                                      _selectedDate = DateTime(_selectedDate.year, _selectedDate.month - 1, 1);
+                                      final prevMonth = _selectedDate.month - 1;
+                                      final year = prevMonth < 1 ? _selectedDate.year - 1 : _selectedDate.year;
+                                      final month = prevMonth < 1 ? 12 : prevMonth;
+                                      _selectedDate = DateTime(year, month, 1);
                                     });
                                   },
                                   icon: const Icon(Icons.chevron_left_rounded, size: 20),
+                                  tooltip: s.previousMonth,
                                   padding: EdgeInsets.zero,
                                   constraints: const BoxConstraints(),
                                 ),
@@ -145,10 +151,14 @@ class _EventsCalendarScreenState extends State<EventsCalendarScreen> {
                                 IconButton(
                                   onPressed: () {
                                     setState(() {
-                                      _selectedDate = DateTime(_selectedDate.year, _selectedDate.month + 1, 1);
+                                      final nextMonth = _selectedDate.month + 1;
+                                      final year = nextMonth > 12 ? _selectedDate.year + 1 : _selectedDate.year;
+                                      final month = nextMonth > 12 ? 1 : nextMonth;
+                                      _selectedDate = DateTime(year, month, 1);
                                     });
                                   },
                                   icon: const Icon(Icons.chevron_right_rounded, size: 20),
+                                  tooltip: s.nextMonth,
                                   padding: EdgeInsets.zero,
                                   constraints: const BoxConstraints(),
                                 ),
@@ -201,6 +211,8 @@ class _EventsCalendarScreenState extends State<EventsCalendarScreen> {
     final firstDayOfMonth = DateTime(_selectedDate.year, _selectedDate.month, 1);
     final daysInMonth = DateTime(_selectedDate.year, _selectedDate.month + 1, 0).day;
     final startingWeekday = firstDayOfMonth.weekday % 7; // Sunday = 0
+    final numRows = ((startingWeekday + daysInMonth) / 7).ceil();
+    final now = DateTime.now();
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -225,7 +237,7 @@ class _EventsCalendarScreenState extends State<EventsCalendarScreen> {
             ),
 
             // Calendar Grid Rows
-            ...List.generate(5, (weekIndex) {
+            ...List.generate(numRows, (weekIndex) {
               return TableRow(
                 children: List.generate(7, (dayOfWeek) {
                   final dayNumber = weekIndex * 7 + dayOfWeek - startingWeekday + 1;
@@ -233,7 +245,7 @@ class _EventsCalendarScreenState extends State<EventsCalendarScreen> {
                     return const SizedBox(height: 70);
                   }
 
-                  final isToday = dayNumber == 20 && _selectedDate.month == 8 && _selectedDate.year == 2026;
+                  final isToday = dayNumber == now.day && _selectedDate.month == now.month && _selectedDate.year == now.year;
 
                   final matchingEvents = events.where((e) {
                     try {

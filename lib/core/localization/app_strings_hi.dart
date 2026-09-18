@@ -51,31 +51,13 @@ class AppStringsHi extends AppStrings {
   @override
   String get resetPasswordButton => 'पासवर्ड रीसेट करें';
 
-  @override
-  String get directorVamsi => 'वामसी (निदेशक)';
-  @override
-  String get principalMadhumathi => 'मधुमति (प्राचार्य)';
-  @override
-  String get managerMurali => 'मुरली (प्रबंधक)';
-  @override
-  String get managerSwapnika => 'स्वप्निका (प्रबंधक)';
-  @override
-  String get teamLeadNarasimha => 'नरसिम्हा (टीम लीड)';
-  @override
-  String get executiveAnamika => 'अनामका (कार्यकारी)';
-  @override
-  String get executiveGyapika => 'ज्ञापिका (कार्यकारी)';
-  @override
-  String get teamLeadAkash => 'आकाश (टीम लीड)';
-  @override
-  String get managerSandeep => 'संदीप (मैनेजर)';
-  @override
-  String get centerHeadCharan => 'चरण (सेंटर हेड / प्रिंसिपल)';
 
   @override
   String get dashboard => 'डैशबोर्ड';
   @override
   String get organizationOverview => 'संगठन अवलोकन';
+  @override
+  String get campusOverview => 'परिसर अवलोकन';
   @override
   String get tasksHeader => 'कार्य (TASKS)';
   @override
@@ -150,6 +132,175 @@ class AppStringsHi extends AppStrings {
   String get administratorRole => 'प्रशासक (Administrator)';
   @override
   String get administratorBadgeScope => 'पूरा संगठन अवलोकन — प्रत्येक परिसर और विभाग।';
+  @override
+  String get branchesAndDepartmentsSubtitle => 'शाखाओं और विभागों को जोड़ें और उनका नाम बदलें, और प्रत्येक से जुड़े उपयोगकर्ताओं को देखें।';
+  @override
+  String get branchesHeader => 'शाखाएं (Branches)';
+  @override
+  String get departmentsHeader => 'विभाग (Departments)';
+  @override
+  String get codePlaceholder => 'कोड';
+  @override
+  String get branchNamePlaceholder => 'शाखा का नाम';
+  @override
+  String get newDepartmentPlaceholder => 'नया विभाग';
+  @override
+  String get editButton => 'संपादित करें (Edit)';
+  @override
+  String get saveButton => 'सहेजें';
+  @override
+  String get cancelEditButton => 'रद्द करें';
+  @override
+  String get reportingStructureSubtitle => 'संगठन में कौन किसे रिपोर्ट करता है';
+  @override
+  String get personColumn => 'व्यक्ति';
+  @override
+  String get reportsToColumn => 'रिपोर्ट करता है (प्राथमिक)';
+  @override
+  String get dottedLineColumn => 'डॉटेड-लाइन (द्वितीयक)';
+  @override
+  String get addManagerLabel => '+ प्रबंधक जोड़ें...';
+  @override
+  String get addDottedLabel => '+ डॉटेड जोड़ें...';
+  @override
+  String get noReportingDataFound => 'कोई रिपोर्टिंग डेटा नहीं मिला।';
+  @override
+  String get rolesAndPermissionsSubtitle => 'प्रत्येक भूमिका क्या देख और कर सकती है';
+  @override
+  String get addRoleButton => '+ भूमिका जोड़ें';
+  @override
+  String rolesCount(int count) => '$count भूमिकाएं';
+  @override
+  String get levelLabel => 'स्तर';
+  @override
+  String get permissionsLabel => 'अनुमतियाँ';
+  @override
+  String get usersLabel => 'उपयोगकर्ता';
+  @override
+  String get savePermissionsButton => 'अनुमतियाँ सहेजें';
+  @override
+  String get addRoleTitle => 'नई भूमिका जोड़ें';
+  @override
+  String get roleLabelField => 'भूमिका लेबल (प्रदर्शन नाम)';
+  @override
+  String get roleKeyField => 'भूमिका कुंजी (सिस्टम नाम)';
+  @override
+  String get roleLevelField => 'स्तर (1–5)';
+  @override
+  String get noRolesFound => 'कोई भूमिका नहीं मिली।';
+
+  // Role Badges
+  @override
+  String get academicExecutiveRole => 'अकादमिक कार्यकारी (Academic Executive)';
+  @override
+  String get academicExecutiveScope => 'परिचालन दायरा — आपके अपने कार्य और रिपोर्ट।';
+
+  // New Drawer Headers & Nav Items
+  @override
+  String get adminOrgChart => 'व्यवस्थापक संगठनात्मक चार्ट';
+  @override
+  String get myReportingStructure => 'मेरी रिपोर्टिंग संरचना';
+  @override
+  String get rolesAndResponsibilitiesHeader => 'भूमिकाएं और जिम्मेदारियां';
+  @override
+  String get myResponsibilities => 'मेरी जिम्मेदारियां';
+  @override
+  String get myAuditsHeader => 'मेरे ऑडिट';
+  @override
+  String get asAnInternalAuditor => 'आंतरिक लेखा परीक्षक के रूप में';
+  @override
+  String get asAnAuditee => 'एक लेखा परीक्षार्थी के रूप में';
+
+  // Admin Org Chart Screen
+  @override
+  String get adminOrgChartSubtitle => 'प्रशासन टीम की रिपोर्टिंग संरचना — प्रकाशित संगठन चार्ट से प्रतिबिंबित।';
+  @override
+  String peopleCount(int count) => '$count लोग';
+  @override
+  String get primaryReportingLegend => 'प्राथमिक रिपोर्टिंग (ठोस)';
+  @override
+  String get secondaryReportingLegend => 'द्वितीयक / डॉटेड लाइन';
+  @override
+  String get reportsToPrefix => 'रिपोर्ट करता है';
+  @override
+  String get dottedPrefix => 'डॉटेड:';
+  @override
+  String get youBadge => 'आप';
+  @override
+  String get noOrgChartDataFound => 'कोई संगठन चार्ट डेटा नहीं मिला।';
+
+  // My Reporting Structure Screen
+  @override
+  String get myReportingSubtitle => 'आप किसे रिपोर्ट करते हैं, और कौन आपको रिपोर्ट करता है।';
+  @override
+  String get meSectionTitle => 'मैं';
+  @override
+  String get iReportToSectionTitle => 'मैं रिपोर्ट करता हूँ';
+  @override
+  String get reportsToMeSectionTitle => 'मुझे रिपोर्ट करते हैं';
+  @override
+  String get peersSectionTitle => 'सहकर्मी';
+  @override
+  String get shareManagerSubtitle => 'एक प्रबंधक साझा करते हैं';
+  @override
+  String get primarySolidLegend => 'प्राथमिक (ठोस)';
+  @override
+  String get secondaryDottedLegend => 'माध्यमिक (बिंदीदार)';
+  @override
+  String get noneText => 'कोई नहीं।';
+  @override
+  String get noReportingStructureFound => 'कोई रिपोर्टिंग संरचना नहीं मिली।';
+
+  // My Responsibilities Screen
+  @override
+  String get myResponsibilitiesSubtitle => 'आपकी प्राथमिक और द्वितीयक जिम्मेदारी के क्षेत्र।';
+  @override
+  String get primaryResponsibilitiesTitle => 'प्राथमिक';
+  @override
+  String get secondaryResponsibilitiesTitle => 'द्वितीयक';
+  @override
+  String get addPrimaryResponsibilityPlaceholder => 'एक प्राथमिक जिम्मेदारी जोड़ें...';
+  @override
+  String get addSecondaryResponsibilityPlaceholder => 'एक द्वितीयक जिम्मेदारी जोड़ें...';
+  @override
+  String get noneYetText => 'अभी तक कोई नहीं।';
+  @override
+  String get noResponsibilitiesFound => 'कोई जिम्मेदारी नहीं मिली।';
+
+  // My Audits Screens
+  @override
+  String get auditsAuditeeTitle => 'मेरे ऑडिट — एक परीक्षार्थी के रूप में';
+  @override
+  String get auditsAuditeeSubtitle => 'आप पर, आपके विभाग या शाखा पर किए गए ऑडिट। निष्कर्षों का जवाब दें और उन्हें हल करें।';
+  @override
+  String get noAuditsInvolveYouYet => 'अभी तक कोई ऑडिट आप पर नहीं है।';
+  @override
+  String get auditsAuditorTitle => 'मेरे ऑडिट — एक आंतरिक लेखा परीक्षक के रूप में';
+  @override
+  String get auditsAuditorSubtitle => 'वे ऑडिट जिन्हें आप संचालित कर रहे हैं या जिनमें भाग ले रहे हैं।';
+  @override
+  String get noAuditsAssignedYet => 'अभी तक आपको कोई ऑडिट नहीं सौंपा गया है।';
+
+  // Audit Log Screen
+  @override
+  String get auditLogSubtitle => 'उपयोगकर्ता निर्माण, पासवर्ड परिवर्तन और लॉगिन / लॉगआउट गतिविधि।';
+  @override
+  String get allActivityFilter => 'सभी गतिविधि';
+  @override
+  String get loginAction => 'लॉगिन';
+  @override
+  String get logoutAction => 'लॉगआउट';
+  @override
+  String get passwordChangedAction => 'पासवर्ड बदला गया';
+  @override
+  String get noAuditLogsFound => 'कोई ऑडिट लॉग नहीं मिला।';
+
+  // Calendar Navigation
+  @override
+  String get previousMonth => 'पिछला महीना';
+  @override
+  String get nextMonth => 'अगला महीना';
+
   @override
   String get aiAndSettingsHeader => 'एआई और सेटिंग्स';
   @override

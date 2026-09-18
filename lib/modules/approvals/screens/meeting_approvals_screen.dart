@@ -1,3 +1,4 @@
+import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
@@ -36,14 +37,14 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
     if (authState is AuthenticatedState) {
       final role = authState.userProfile.role.toLowerCase();
       final roleLabel = authState.userProfile.roleLabel.toLowerCase();
-      final email = authState.userProfile.email.toLowerCase();
-      if (role.contains('executive') || role.contains('ae') || roleLabel.contains('executive') || roleLabel.contains('ae') || email.contains('sushma')) {
+      if (role.contains('executive') || role.contains('ae') || roleLabel.contains('executive') || roleLabel.contains('ae')) {
         isAcademicExecutive = true;
       }
     }
 
     return Scaffold(
-      drawer: const CustomLeftDrawer(currentRoute: '/approvals/meetings'),
+      floatingActionButton: const TodoFloatingActionButton(),
+          drawer: const CustomLeftDrawer(currentRoute: '/approvals/meetings'),
       appBar: const CustomAppBar(),
       body: RefreshIndicator(
         onRefresh: () async {

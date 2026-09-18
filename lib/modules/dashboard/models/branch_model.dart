@@ -14,12 +14,23 @@ class BranchModel {
   factory BranchModel.fromJson(Map<String, dynamic> json) {
     final idVal = json['id'] as int? ?? 0;
     final codeVal = json['code'] as String? ?? '';
-    final isAllApi = json['is_all'] as bool?;
+    final nameVal = json['name'] as String? ?? '';
     return BranchModel(
       id: idVal,
       code: codeVal,
-      name: json['name'] as String? ?? '',
-      isAll: isAllApi ?? (idVal == 0 || codeVal.toUpperCase() == 'ALL'),
+      name: nameVal,
+      isAll: idVal == 0 || codeVal.toUpperCase() == 'ALL' || nameVal.toLowerCase() == 'all branches',
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BranchModel &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          code == other.code;
+
+  @override
+  int get hashCode => id.hashCode ^ code.hashCode;
 }

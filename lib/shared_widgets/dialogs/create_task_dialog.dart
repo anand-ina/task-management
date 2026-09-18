@@ -985,7 +985,7 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
                   icon: _isSaving
                       ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                       : const Icon(Icons.check, size: 18),
-                  label: Text(_isSaving ? 'Saving...' : '✓ Save Task', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                  label: Text(_isSaving ? 'Saving...' : 'Save Task', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                   onPressed: _isSaving ? null : _submitTask,
                 ),
               ],

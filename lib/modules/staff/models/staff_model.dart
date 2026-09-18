@@ -53,6 +53,62 @@ class StaffModel {
     this.isPasswordPending = true,
   });
 
+  StaffModel copyWith({
+    int? id,
+    String? name,
+    String? firstName,
+    String? lastName,
+    String? email,
+    String? phone,
+    String? countryCode,
+    String? designation,
+    String? employmentType,
+    String? responsibilities,
+    bool? isTaskCreator,
+    bool? confidentialAccess,
+    String? avatarColor,
+    String? initials,
+    String? department,
+    int? departmentId,
+    String? branchCode,
+    String? branchName,
+    String? roleLabel,
+    String? roleName,
+    int? created,
+    int? assigned,
+    int? done,
+    String? fines,
+    bool? isPasswordPending,
+  }) {
+    return StaffModel(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      firstName: firstName ?? this.firstName,
+      lastName: lastName ?? this.lastName,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      countryCode: countryCode ?? this.countryCode,
+      designation: designation ?? this.designation,
+      employmentType: employmentType ?? this.employmentType,
+      responsibilities: responsibilities ?? this.responsibilities,
+      isTaskCreator: isTaskCreator ?? this.isTaskCreator,
+      confidentialAccess: confidentialAccess ?? this.confidentialAccess,
+      avatarColor: avatarColor ?? this.avatarColor,
+      initials: initials ?? this.initials,
+      department: department ?? this.department,
+      departmentId: departmentId ?? this.departmentId,
+      branchCode: branchCode ?? this.branchCode,
+      branchName: branchName ?? this.branchName,
+      roleLabel: roleLabel ?? this.roleLabel,
+      roleName: roleName ?? this.roleName,
+      created: created ?? this.created,
+      assigned: assigned ?? this.assigned,
+      done: done ?? this.done,
+      fines: fines ?? this.fines,
+      isPasswordPending: isPasswordPending ?? this.isPasswordPending,
+    );
+  }
+
   bool get hasMissingContact =>
       phone.trim().isEmpty ||
       phone == '0' ||

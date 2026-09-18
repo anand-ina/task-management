@@ -1,3 +1,4 @@
+import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/localization/app_strings.dart';
@@ -28,6 +29,7 @@ class PerformanceSettingsScreen extends StatelessWidget {
           }
         },
         child: Scaffold(
+          floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/performance-settings'),
           appBar: const CustomAppBar(),
           body: BlocBuilder<FinesBloc, FinesState>(

@@ -51,31 +51,13 @@ class AppStringsEn extends AppStrings {
   @override
   String get resetPasswordButton => 'Reset password';
 
-  @override
-  String get directorVamsi => 'Vamsi (Director)';
-  @override
-  String get principalMadhumathi => 'Madhumathi (Principal)';
-  @override
-  String get managerMurali => 'Murali (Manager)';
-  @override
-  String get managerSwapnika => 'Swapnika (Manager)';
-  @override
-  String get teamLeadNarasimha => 'Narasimha (Team Lead)';
-  @override
-  String get executiveAnamika => 'Anamika (Executive)';
-  @override
-  String get executiveGyapika => 'Gyapika (Executive)';
-  @override
-  String get teamLeadAkash => 'Akash (Team Lead)';
-  @override
-  String get managerSandeep => 'Sandeep (Manager)';
-  @override
-  String get centerHeadCharan => 'Charan (Center Head / Principal)';
 
   @override
   String get dashboard => 'Dashboard';
   @override
   String get organizationOverview => 'Organization Overview';
+  @override
+  String get campusOverview => 'Campus Overview';
   @override
   String get tasksHeader => 'TASKS';
   @override
@@ -150,6 +132,175 @@ class AppStringsEn extends AppStrings {
   String get administratorRole => 'Administrator';
   @override
   String get administratorBadgeScope => 'Full organization view — every campus & department.';
+  @override
+  String get branchesAndDepartmentsSubtitle => 'Add and rename branches and departments, and see the users linked to each. Used across every login.';
+  @override
+  String get branchesHeader => 'Branches';
+  @override
+  String get departmentsHeader => 'Departments';
+  @override
+  String get codePlaceholder => 'Code';
+  @override
+  String get branchNamePlaceholder => 'Branch name';
+  @override
+  String get newDepartmentPlaceholder => 'New department';
+  @override
+  String get editButton => 'Edit';
+  @override
+  String get saveButton => 'Save';
+  @override
+  String get cancelEditButton => 'Cancel';
+  @override
+  String get reportingStructureSubtitle => 'Who reports to whom across the organisation';
+  @override
+  String get personColumn => 'PERSON';
+  @override
+  String get reportsToColumn => 'REPORTS TO (PRIMARY)';
+  @override
+  String get dottedLineColumn => 'DOTTED-LINE (SECONDARY)';
+  @override
+  String get addManagerLabel => '+ add manager...';
+  @override
+  String get addDottedLabel => '+ add dotted...';
+  @override
+  String get noReportingDataFound => 'No reporting structure data found.';
+  @override
+  String get rolesAndPermissionsSubtitle => 'Define what each role can see and do';
+  @override
+  String get addRoleButton => '+ Add Role';
+  @override
+  String rolesCount(int count) => '$count roles';
+  @override
+  String get levelLabel => 'Level';
+  @override
+  String get permissionsLabel => 'permissions';
+  @override
+  String get usersLabel => 'users';
+  @override
+  String get savePermissionsButton => 'Save permissions';
+  @override
+  String get addRoleTitle => 'Add New Role';
+  @override
+  String get roleLabelField => 'Role Label (display name)';
+  @override
+  String get roleKeyField => 'Role Key (system name)';
+  @override
+  String get roleLevelField => 'Level (1–5)';
+  @override
+  String get noRolesFound => 'No roles found.';
+
+  // Role Badges
+  @override
+  String get academicExecutiveRole => 'Academic Executive';
+  @override
+  String get academicExecutiveScope => 'Operational scope — your own tasks & reports.';
+
+  // New Drawer Headers & Nav Items
+  @override
+  String get adminOrgChart => 'Admin Org Chart';
+  @override
+  String get myReportingStructure => 'My Reporting Structure';
+  @override
+  String get rolesAndResponsibilitiesHeader => 'ROLES & RESPONSIBILITIES';
+  @override
+  String get myResponsibilities => 'My Responsibilities';
+  @override
+  String get myAuditsHeader => 'MY AUDITS';
+  @override
+  String get asAnInternalAuditor => 'As an Internal Auditor';
+  @override
+  String get asAnAuditee => 'As an Auditee';
+
+  // Admin Org Chart Screen
+  @override
+  String get adminOrgChartSubtitle => "The Administration team's reporting structure — mirrored from the published org chart.";
+  @override
+  String peopleCount(int count) => '$count people';
+  @override
+  String get primaryReportingLegend => 'Primary reporting (solid)';
+  @override
+  String get secondaryReportingLegend => 'Secondary / dotted line';
+  @override
+  String get reportsToPrefix => 'reports to';
+  @override
+  String get dottedPrefix => 'dotted:';
+  @override
+  String get youBadge => 'You';
+  @override
+  String get noOrgChartDataFound => 'No organization chart data found.';
+
+  // My Reporting Structure Screen
+  @override
+  String get myReportingSubtitle => 'Who you report to, and who reports to you.';
+  @override
+  String get meSectionTitle => 'Me';
+  @override
+  String get iReportToSectionTitle => 'I report to';
+  @override
+  String get reportsToMeSectionTitle => 'Reports to me';
+  @override
+  String get peersSectionTitle => 'Peers';
+  @override
+  String get shareManagerSubtitle => 'share a manager';
+  @override
+  String get primarySolidLegend => 'primary (solid)';
+  @override
+  String get secondaryDottedLegend => 'secondary (dotted)';
+  @override
+  String get noneText => 'None.';
+  @override
+  String get noReportingStructureFound => 'No reporting structure found.';
+
+  // My Responsibilities Screen
+  @override
+  String get myResponsibilitiesSubtitle => 'Your primary and secondary areas of responsibility.';
+  @override
+  String get primaryResponsibilitiesTitle => 'Primary';
+  @override
+  String get secondaryResponsibilitiesTitle => 'Secondary';
+  @override
+  String get addPrimaryResponsibilityPlaceholder => 'Add a primary responsibility...';
+  @override
+  String get addSecondaryResponsibilityPlaceholder => 'Add a secondary responsibility...';
+  @override
+  String get noneYetText => 'None yet.';
+  @override
+  String get noResponsibilitiesFound => 'No responsibilities found.';
+
+  // My Audits Screens
+  @override
+  String get auditsAuditeeTitle => 'My Audits — As an Auditee';
+  @override
+  String get auditsAuditeeSubtitle => 'Audits carried out on you, your department or branch. Respond to findings and mark them resolved.';
+  @override
+  String get noAuditsInvolveYouYet => 'No audits involve you yet.';
+  @override
+  String get auditsAuditorTitle => 'My Audits — As an Internal Auditor';
+  @override
+  String get auditsAuditorSubtitle => 'Audits you are conducting or participating in.';
+  @override
+  String get noAuditsAssignedYet => 'No audits assigned to you yet.';
+
+  // Audit Log Screen
+  @override
+  String get auditLogSubtitle => 'User created, password changes and login / logout activity.';
+  @override
+  String get allActivityFilter => 'All activity';
+  @override
+  String get loginAction => 'Login';
+  @override
+  String get logoutAction => 'Logout';
+  @override
+  String get passwordChangedAction => 'Password changed';
+  @override
+  String get noAuditLogsFound => 'No audit logs found.';
+
+  // Calendar Navigation
+  @override
+  String get previousMonth => 'Previous Month';
+  @override
+  String get nextMonth => 'Next Month';
+
   @override
   String get aiAndSettingsHeader => 'AI & SETTINGS';
   @override

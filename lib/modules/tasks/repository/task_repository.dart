@@ -53,4 +53,21 @@ class TaskRepository {
     final response = await _dioClient.dio.get('${ApiConstants.tasks}/$taskId');
     return TaskDetailModel.fromJson(response.data);
   }
+
+  Future<TaskDetailModel> reviewTask({
+    required int taskId,
+    required String decision,
+    required int pointsDelta,
+    required String note,
+  }) async {
+    final response = await _dioClient.dio.post(
+      ApiConstants.taskReview(taskId),
+      data: {
+        'decision': decision,
+        'pointsDelta': pointsDelta,
+        'note': note,
+      },
+    );
+    return TaskDetailModel.fromJson(response.data);
+  }
 }

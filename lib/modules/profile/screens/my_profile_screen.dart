@@ -1,3 +1,4 @@
+import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/localization/app_strings.dart';
@@ -39,6 +40,7 @@ class MyProfileScreen extends StatelessWidget {
       child: BlocProvider(
         create: (_) => ProfileBloc()..add(LoadProfileEvent()),
         child: Scaffold(
+          floatingActionButton: const TodoFloatingActionButton(),
           appBar: const CustomAppBar(),
           drawer: const CustomLeftDrawer(currentRoute: '/profile'),
           body: BlocBuilder<ProfileBloc, ProfileState>(

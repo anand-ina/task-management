@@ -1,3 +1,4 @@
+import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/localization/app_strings.dart';
@@ -39,8 +40,7 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
     if (authState is AuthenticatedState) {
       final role = authState.userProfile.role.toLowerCase();
       final roleLabel = authState.userProfile.roleLabel.toLowerCase();
-      final email = authState.userProfile.email.toLowerCase();
-      if (role.contains('executive') || role.contains('ae') || roleLabel.contains('executive') || roleLabel.contains('ae') || email.contains('sushma')) {
+      if (role.contains('executive') || role.contains('ae') || roleLabel.contains('executive') || roleLabel.contains('ae')) {
         isAcademicExecutive = true;
       }
       if (roleLabel.contains('team lead') || roleLabel.contains('tl') || role.contains('team_lead') || role.contains('tl')) {
@@ -50,7 +50,8 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
     bool isReadOnlyUser = isAcademicExecutive || isTeamLead;
 
     return Scaffold(
-      drawer: const CustomLeftDrawer(currentRoute: '/approvals/escalations'),
+      floatingActionButton: const TodoFloatingActionButton(),
+          drawer: const CustomLeftDrawer(currentRoute: '/approvals/escalations'),
       appBar: const CustomAppBar(),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -101,7 +102,12 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                       ),
                       const SizedBox(height: 10),
                       ElevatedButton.icon(
-                        onPressed: () => RaiseEscalationDialog.show(context),
+                        onPressed: () async {
+                          final res = await RaiseEscalationDialog.show(context);
+                          if (res == true && context.mounted) {
+                            context.read<ApprovalsBloc>().add(FetchEscalationsDataEvent());
+                          }
+                        },
                         label: const Text('+ Raise escalation', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF0F172A),
@@ -398,7 +404,12 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                           ),
                           const Spacer(),
                           InkWell(
-                            onTap: () => TaskDetailDialog.show(context, taskId: item.taskId ?? 0, isReadOnly: isReadOnlyUser),
+                            onTap: () async {
+                              await TaskDetailDialog.show(context, taskId: item.taskId ?? 0, isReadOnly: isReadOnlyUser);
+                              if (context.mounted) {
+                                context.read<ApprovalsBloc>().add(FetchEscalationsDataEvent());
+                              }
+                            },
                             child: Row(
                               children: [
                                 Text(

@@ -1,10 +1,16 @@
+import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/add_staff_dialog.dart';
+import '../../../shared_widgets/dialogs/edit_user_dialog.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../../core/constants/api_constants.dart';
+import '../../../core/network/dio_client.dart';
+import '../../../shared_widgets/dialogs/temporary_password_dialog.dart';
+import '../../../shared_widgets/dialogs/remove_staff_dialog.dart';
 import '../bloc/staff_bloc.dart';
 import '../bloc/staff_event.dart';
 import '../bloc/staff_state.dart';
@@ -47,6 +53,7 @@ class _StaffScreenState extends State<StaffScreen> {
           }
         },
         child: Scaffold(
+          floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/staff'),
           appBar: const CustomAppBar(),
           body: BlocBuilder<StaffBloc, StaffState>(
@@ -199,7 +206,7 @@ class _StaffScreenState extends State<StaffScreen> {
                         const SizedBox(height: 20),
 
                         // Staff Cards Grid
-                        _buildStaffGrid(context, s, state.data.staffList),
+                        _buildStaffGrid(context, s, state.data),
                       ] else
                         const SizedBox.shrink(),
                       const SizedBox(height: 40),
@@ -317,8 +324,9 @@ class _StaffScreenState extends State<StaffScreen> {
     );
   }
 
-  Widget _buildStaffGrid(BuildContext context, AppStrings s, List<StaffModel> staffList) {
+  Widget _buildStaffGrid(BuildContext context, AppStrings s, StaffOverviewData data) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final staffList = data.staffList;
 
     // Filter staff list
     final query = _searchController.text.trim().toLowerCase();
@@ -504,7 +512,15 @@ class _StaffScreenState extends State<StaffScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       OutlinedButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          EditUserDialog.show(
+                            context,
+                            user: staff,
+                            departments: data.departments,
+                            roles: data.roles,
+                            branches: data.branches,
+                          );
+                        },
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                           minimumSize: Size.zero,
@@ -522,7 +538,7 @@ class _StaffScreenState extends State<StaffScreen> {
                       ),
                       const SizedBox(width: 5),
                       OutlinedButton(
-                        onPressed: () {},
+                        onPressed: () => _handleResetPassword(context, staff),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                           minimumSize: Size.zero,
@@ -540,7 +556,23 @@ class _StaffScreenState extends State<StaffScreen> {
                       ),
                       const SizedBox(width: 5),
                       OutlinedButton(
-                        onPressed: () {},
+                        onPressed: () async {
+                          final removed = await RemoveStaffDialog.show(
+                            context,
+                            staff: staff,
+                            staffList: data.staffList,
+                          );
+                          if (removed == true && context.mounted) {
+                            context.read<StaffBloc>().add(DeleteStaffEvent(staff.id));
+                            context.read<StaffBloc>().add(FetchStaffEvent());
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Staff member "${staff.name}" removed successfully'),
+                                backgroundColor: Colors.green.shade700,
+                              ),
+                            );
+                          }
+                        },
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                           minimumSize: Size.zero,
@@ -605,6 +637,130 @@ class _StaffScreenState extends State<StaffScreen> {
         ),
       ],
     );
+  }
+
+  Future<void> _handleResetPassword(BuildContext parentContext, StaffModel staff) async {
+    final isDark = Theme.of(parentContext).brightness == Brightness.dark;
+
+    final confirmed = await showDialog<bool>(
+      context: parentContext,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+          title: Text(
+            'Reset password',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : const Color(0xFF0F172A),
+            ),
+          ),
+          content: RichText(
+            text: TextSpan(
+              style: TextStyle(
+                fontSize: 14,
+                color: isDark ? Colors.white70 : const Color(0xFF334155),
+                height: 1.4,
+              ),
+              children: [
+                const TextSpan(text: 'Generate a new temporary password for '),
+                TextSpan(
+                  text: staff.name,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  ),
+                ),
+                const TextSpan(text: '? Their current password stops working.'),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: isDark ? Colors.white70 : const Color(0xFF64748B),
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF132A50),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 0,
+              ),
+              child: const Text('Reset Password'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+    if (!mounted) return;
+
+    // Show loading dialog
+    showDialog(
+      context: parentContext,
+      barrierDismissible: false,
+      builder: (ctx) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    try {
+      final dio = DioClient().dio;
+      final response = await dio.post(
+        '${ApiConstants.staff}/${staff.id}/reset-password',
+      );
+
+      if (mounted) {
+        Navigator.of(parentContext, rootNavigator: true).pop();
+      }
+
+      final data = response.data;
+      String? tempPassword;
+      if (data is Map<String, dynamic>) {
+        tempPassword = data['tempPassword'] as String? ?? data['temp_password'] as String?;
+      }
+
+      if (tempPassword != null && tempPassword.isNotEmpty) {
+        if (mounted) {
+          await TemporaryPasswordDialog.show(
+            parentContext,
+            name: staff.name,
+            tempPassword: tempPassword,
+          );
+          if (mounted) {
+            parentContext.read<StaffBloc>().add(FetchStaffEvent());
+          }
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(parentContext).showSnackBar(
+            const SnackBar(
+              content: Text('Password reset successfully, but no temporary password returned.'),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(parentContext, rootNavigator: true).pop();
+        ScaffoldMessenger.of(parentContext).showSnackBar(
+          SnackBar(
+            content: Text('Failed to reset password: $e'),
+            backgroundColor: Colors.red.shade700,
+          ),
+        );
+      }
+    }
   }
 
   Color _hexToColor(String? hex) {

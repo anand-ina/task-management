@@ -5,8 +5,9 @@ import 'package:intl/intl.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
-import '../../../shared_widgets/dialogs/todo_today_dialog.dart';
 import '../../../shared_widgets/dialogs/tasks_due_today_dialog.dart';
+import '../../../shared_widgets/dialogs/todo_today_dialog.dart';
+import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/bloc/auth_state.dart';
@@ -42,7 +43,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         final user = authState.userProfile;
         final role = user.role.toLowerCase();
         final roleLabel = user.roleLabel.toLowerCase();
-        if (!role.contains('director') && !roleLabel.contains('director') && !user.email.contains('vamsi')) {
+        if (!role.contains('director') && !roleLabel.contains('director')) {
           mineVal = 1;
         }
       }
@@ -57,26 +58,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final currentDateStr = DateFormat('EEEE, d MMMM yyyy').format(DateTime.now());
 
     final authState = context.watch<AuthBloc>().state;
-    String userName = 'Vamsi';
-    String roleName = 'DIRECTOR';
+    String userName = 'User';
+    String roleName = '';
     String branchName = 'HEAD OFFICE';
 
     bool isExecutive = false;
     bool isDirector = false;
     if (authState is AuthenticatedState) {
-      userName = authState.userProfile.name;
-      roleName = authState.userProfile.role.toUpperCase();
-      branchName = authState.userProfile.branch?.name ?? 'HEAD OFFICE';
-
       final user = authState.userProfile;
+      userName = user.name.isNotEmpty ? user.name : (user.email.split('@').first);
+      roleName = user.roleLabel.isNotEmpty ? user.roleLabel.toUpperCase() : user.role.toUpperCase();
+      branchName = user.branch?.name ?? 'HEAD OFFICE';
+
       final role = user.role.toLowerCase();
       final roleLabel = user.roleLabel.toLowerCase();
-      if (role.contains('director') || roleLabel.contains('director') || user.email.contains('vamsi')) {
+      if (role.contains('director') || roleLabel.contains('director')) {
         isDirector = true;
       }
-      if (user.email == 'sushma@samskar.edu' ||
-          roleLabel.contains('executive') ||
-          role.contains('executive')) {
+      if (roleLabel.contains('executive') ||
+          role.contains('executive') ||
+          role.contains('ae') ||
+          roleLabel.contains('ae')) {
         isExecutive = true;
       }
     }
@@ -300,38 +302,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
 
         // Floating Action Button
-        floatingActionButton: Stack(
-          children: [
-            FloatingActionButton(
-              backgroundColor: const Color(0xFF0F172A),
-              foregroundColor: Colors.white,
-              onPressed: () => TodoTodayDialog.show(context),
-              child: const Icon(Icons.calendar_month_rounded),
-            ),
-            if (openTodosCount > 0)
-              Positioned(
-                right: 0,
-                top: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                  ),
-                  constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
-                  child: Text(
-                    '$openTodosCount',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-          ],
-        ),
+        floatingActionButton: const TodoFloatingActionButton(),
       ),
     );
   }
@@ -352,7 +323,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F172A),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF0F172A),
+            Color(0xFF1E40AF),
+          ],
+        ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: const [
           BoxShadow(
@@ -861,6 +839,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildActionCenterCard(
       BuildContext context, AppStrings s, DashboardActionCenter actionCenter) {
+    final maxCount = [
+      actionCenter.approvals,
+      actionCenter.overdue,
+      actionCenter.dueToday,
+      actionCenter.emergencyHigh,
+    ].reduce((a, b) => a > b ? a : b);
+
+    final approvalsProgress = (maxCount > 0 && actionCenter.approvals > 0)
+        ? (actionCenter.approvals / maxCount).clamp(0.0, 1.0)
+        : 0.0;
+    final overdueProgress = (maxCount > 0 && actionCenter.overdue > 0)
+        ? (actionCenter.overdue / maxCount).clamp(0.0, 1.0)
+        : 0.0;
+    final dueTodayProgress = (maxCount > 0 && actionCenter.dueToday > 0)
+        ? (actionCenter.dueToday / maxCount).clamp(0.0, 1.0)
+        : 0.0;
+    final emergencyHighProgress = (maxCount > 0 && actionCenter.emergencyHigh > 0)
+        ? (actionCenter.emergencyHigh / maxCount).clamp(0.0, 1.0)
+        : 0.0;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -884,7 +882,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _buildActionCenterRow(
               s.approvalsToReview,
               '${actionCenter.approvals}',
-              0.1,
+              approvalsProgress,
               Colors.orange,
               onTap: () => TasksDueTodayDialog.show(
                 context,
@@ -896,7 +894,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _buildActionCenterRow(
               s.overdueTasks,
               '${actionCenter.overdue}',
-              0.6,
+              overdueProgress,
               Colors.red,
               onTap: () => TasksDueTodayDialog.show(
                 context,
@@ -909,7 +907,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _buildActionCenterRow(
               s.dueToday,
               '${actionCenter.dueToday}',
-              0.1,
+              dueTodayProgress,
               Colors.amber,
               onTap: () => TasksDueTodayDialog.show(
                 context,
@@ -922,7 +920,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _buildActionCenterRow(
               s.emergencyHighOpen,
               '${actionCenter.emergencyHigh}',
-              0.8,
+              emergencyHighProgress,
               Colors.red.shade700,
               onTap: () => TasksDueTodayDialog.show(
                 context,
