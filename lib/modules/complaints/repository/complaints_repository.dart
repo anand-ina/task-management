@@ -1,0 +1,366 @@
+import 'dart:convert';
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+import '../../../core/constants/api_constants.dart';
+import '../../../core/network/dio_client.dart';
+import '../models/batch_ticket_request.dart';
+import '../models/batch_ticket_response.dart';
+import '../models/create_ticket_request.dart';
+import '../models/lookup_models.dart';
+import '../models/ticket_insights_model.dart';
+import '../models/ticket_meta_model.dart';
+import '../models/ticket_model.dart';
+
+class ComplaintsRepository {
+  final DioClient _dioClient = DioClient();
+
+  dynamic _safeParse(dynamic data) {
+    if (data is String) {
+      try {
+        return jsonDecode(data);
+      } catch (_) {
+        return null;
+      }
+    }
+    return data;
+  }
+
+  void _logServiceCall({
+    required String serviceMethod,
+    required String url,
+    dynamic payload,
+    dynamic response,
+  }) {
+    debugPrint('---------------- [ComplaintsService: $serviceMethod] ----------------');
+    debugPrint('Service URL: $url');
+    if (payload != null) {
+      debugPrint('Service Payload: $payload');
+    }
+    if (response != null) {
+      debugPrint('Service Response: $response');
+    }
+    debugPrint('---------------------------------------------------------------------');
+  }
+
+  Future<TicketListResponse> getTickets({
+    String? status,
+    String? type,
+    String? source,
+    String? category,
+    String? mine,
+    String? q,
+    int? branchId,
+  }) async {
+    final Map<String, dynamic> queryParams = {};
+    if (status != null && status.isNotEmpty && status != 'all') {
+      queryParams['status'] = status;
+    }
+    if (type != null && type.isNotEmpty && type != 'All types') {
+      queryParams['type'] = type;
+    }
+    if (source != null && source.isNotEmpty && source != 'Parents & students') {
+      queryParams['source'] = source;
+    }
+    if (category != null && category.isNotEmpty && category != 'All categories') {
+      queryParams['category'] = category;
+    }
+    if (mine != null && mine.isNotEmpty && mine != "Everyone's") {
+      queryParams['mine'] = mine;
+    }
+    if (q != null && q.trim().isNotEmpty) {
+      queryParams['q'] = q.trim();
+    }
+    if (branchId != null && branchId > 0) {
+      queryParams['branchId'] = branchId;
+    }
+
+    final uri = Uri.parse(ApiConstants.tickets).replace(
+      queryParameters: queryParams.isNotEmpty
+          ? queryParams.map((k, v) => MapEntry(k, v.toString()))
+          : null,
+    );
+    final url = uri.toString();
+
+    _logServiceCall(
+      serviceMethod: 'getTickets',
+      url: url,
+      payload: queryParams,
+    );
+
+    try {
+      final res = await _dioClient.dio.get(url);
+      final parsedData = _safeParse(res.data);
+
+      _logServiceCall(
+        serviceMethod: 'getTickets',
+        url: url,
+        response: parsedData,
+      );
+
+      if (parsedData is Map<String, dynamic>) {
+        return TicketListResponse.fromJson(parsedData);
+      }
+      return const TicketListResponse(items: [], counts: TicketCountsModel());
+    } catch (e, stack) {
+      debugPrint('[ComplaintsRepository] getTickets error: $e\n$stack');
+      rethrow;
+    }
+  }
+
+  Future<BatchTicketResponse> createBatchTickets(BatchTicketRequest request) async {
+    const url = ApiConstants.ticketBatch;
+    final payload = request.toJson();
+
+    _logServiceCall(
+      serviceMethod: 'createBatchTickets',
+      url: url,
+      payload: payload,
+    );
+
+    try {
+      final res = await _dioClient.dio.post(url, data: payload);
+      final parsedData = _safeParse(res.data);
+
+      _logServiceCall(
+        serviceMethod: 'createBatchTickets',
+        url: url,
+        response: parsedData,
+      );
+
+      if (parsedData is Map<String, dynamic>) {
+        return BatchTicketResponse.fromJson(parsedData);
+      }
+      return const BatchTicketResponse(created: []);
+    } on DioException catch (e) {
+      final errorData = e.response?.data;
+      String errorMsg = e.message ?? 'Server error occurred';
+      if (errorData is Map<String, dynamic> && errorData['message'] != null) {
+        errorMsg = errorData['message'].toString();
+      }
+      debugPrint('[ComplaintsRepository] createBatchTickets DioException: $errorMsg');
+      throw Exception(errorMsg);
+    } catch (e, stack) {
+      debugPrint('[ComplaintsRepository] createBatchTickets error: $e\n$stack');
+      rethrow;
+    }
+  }
+
+  Future<TicketMetaModel> getTicketMeta({int? branchId}) async {
+    String url = ApiConstants.ticketMeta;
+    if (branchId != null && branchId > 0) {
+      url = ApiConstants.ticketMetaBranch(branchId);
+    }
+
+    _logServiceCall(
+      serviceMethod: 'getTicketMeta',
+      url: url,
+      payload: {'branchId': branchId},
+    );
+
+    try {
+      final res = await _dioClient.dio.get(url);
+      final parsedData = _safeParse(res.data);
+
+      _logServiceCall(
+        serviceMethod: 'getTicketMeta',
+        url: url,
+        response: parsedData,
+      );
+
+      if (parsedData is Map<String, dynamic>) {
+        return TicketMetaModel.fromJson(parsedData);
+      }
+      return const TicketMetaModel();
+    } catch (e, stack) {
+      debugPrint('[ComplaintsRepository] getTicketMeta error: $e\n$stack');
+      rethrow;
+    }
+  }
+
+  Future<TicketInsightsResponse> getTicketInsights({int? year, int? branchId}) async {
+    final Map<String, dynamic> queryParams = {};
+    if (year != null) {
+      queryParams['year'] = year;
+    }
+    if (branchId != null && branchId > 0) {
+      queryParams['branchId'] = branchId;
+    }
+
+    const url = ApiConstants.ticketInsights;
+    _logServiceCall(
+      serviceMethod: 'getTicketInsights',
+      url: url,
+      payload: queryParams,
+    );
+
+    try {
+      final res = await _dioClient.dio.get(url, queryParameters: queryParams.isNotEmpty ? queryParams : null);
+      final parsedData = _safeParse(res.data);
+
+      _logServiceCall(
+        serviceMethod: 'getTicketInsights',
+        url: url,
+        response: parsedData,
+      );
+
+      if (parsedData is Map<String, dynamic>) {
+        return TicketInsightsResponse.fromJson(parsedData);
+      }
+      return const TicketInsightsResponse();
+    } on DioException catch (e) {
+      final errorData = e.response?.data;
+      String errorMsg = e.message ?? 'Server error occurred';
+      if (errorData is Map<String, dynamic> && errorData['message'] != null) {
+        errorMsg = errorData['message'].toString();
+      }
+      debugPrint('[ComplaintsRepository] getTicketInsights DioException: $errorMsg');
+      throw Exception(errorMsg);
+    } catch (e, stack) {
+      debugPrint('[ComplaintsRepository] getTicketInsights error: $e\n$stack');
+      rethrow;
+    }
+  }
+
+  Future<List<LookupDepartmentModel>> getDepartments() async {
+    const url = ApiConstants.departments;
+    _logServiceCall(serviceMethod: 'getDepartments', url: url);
+
+    try {
+      final res = await _dioClient.dio.get(url);
+      final parsedData = _safeParse(res.data);
+
+      _logServiceCall(
+        serviceMethod: 'getDepartments',
+        url: url,
+        response: parsedData,
+      );
+
+      if (parsedData is List) {
+        return parsedData
+            .map((e) => LookupDepartmentModel.fromJson(e is Map<String, dynamic> ? e : {}))
+            .toList();
+      }
+      return [];
+    } catch (e, stack) {
+      debugPrint('[ComplaintsRepository] getDepartments error: $e\n$stack');
+      return [];
+    }
+  }
+
+  Future<List<LookupBranchModel>> getBranches() async {
+    const url = ApiConstants.branches;
+    _logServiceCall(serviceMethod: 'getBranches', url: url);
+
+    try {
+      final res = await _dioClient.dio.get(url);
+      final parsedData = _safeParse(res.data);
+
+      _logServiceCall(
+        serviceMethod: 'getBranches',
+        url: url,
+        response: parsedData,
+      );
+
+      if (parsedData is List) {
+        return parsedData
+            .map((e) => LookupBranchModel.fromJson(e is Map<String, dynamic> ? e : {}))
+            .toList();
+      }
+      return [];
+    } catch (e, stack) {
+      debugPrint('[ComplaintsRepository] getBranches error: $e\n$stack');
+      return [];
+    }
+  }
+
+  Future<List<LookupAssigneeModel>> getAssignees() async {
+    const url = ApiConstants.assignees;
+    _logServiceCall(serviceMethod: 'getAssignees', url: url);
+
+    try {
+      final res = await _dioClient.dio.get(url);
+      final parsedData = _safeParse(res.data);
+
+      _logServiceCall(
+        serviceMethod: 'getAssignees',
+        url: url,
+        response: parsedData,
+      );
+
+      if (parsedData is List) {
+        return parsedData
+            .map((e) => LookupAssigneeModel.fromJson(e is Map<String, dynamic> ? e : {}))
+            .toList();
+      }
+      return [];
+    } catch (e, stack) {
+      debugPrint('[ComplaintsRepository] getAssignees error: $e\n$stack');
+      return [];
+    }
+  }
+
+  Future<TicketAttachmentModel> uploadFile({
+    required String filePath,
+    required String filename,
+  }) async {
+    const url = ApiConstants.uploads;
+    _logServiceCall(
+      serviceMethod: 'uploadFile',
+      url: url,
+      payload: {'filePath': filePath, 'filename': filename},
+    );
+
+    try {
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(filePath, filename: filename),
+      });
+
+      final res = await _dioClient.dio.post(url, data: formData);
+      final parsedData = _safeParse(res.data);
+
+      _logServiceCall(
+        serviceMethod: 'uploadFile',
+        url: url,
+        response: parsedData,
+      );
+
+      if (parsedData is Map<String, dynamic>) {
+        return TicketAttachmentModel.fromJson(parsedData);
+      }
+      throw Exception('Invalid upload response structure');
+    } catch (e, stack) {
+      debugPrint('[ComplaintsRepository] uploadFile error: $e\n$stack');
+      rethrow;
+    }
+  }
+
+  Future<TicketItemModel> createTicket(CreateTicketRequest request) async {
+    const url = ApiConstants.tickets;
+    final payload = request.toJson();
+
+    _logServiceCall(
+      serviceMethod: 'createTicket',
+      url: url,
+      payload: payload,
+    );
+
+    try {
+      final res = await _dioClient.dio.post(url, data: payload);
+      final parsedData = _safeParse(res.data);
+
+      _logServiceCall(
+        serviceMethod: 'createTicket',
+        url: url,
+        response: parsedData,
+      );
+
+      if (parsedData is Map<String, dynamic>) {
+        return TicketItemModel.fromJson(parsedData);
+      }
+      throw Exception('Failed to create ticket: unexpected response');
+    } catch (e, stack) {
+      debugPrint('[ComplaintsRepository] createTicket error: $e\n$stack');
+      rethrow;
+    }
+  }
+}

@@ -1,43 +1,48 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../core/localization/app_strings.dart';
-import '../../modules/meetings/screens/monthly_one_on_one_pending_screen.dart';
-import '../../modules/meetings/screens/my_scheduled_meetings_screen.dart';
-import '../../modules/organization/screens/organization_overview_screen.dart';
-import '../../modules/settings/screens/settings_screen.dart';
-import '../../modules/tasks/screens/all_tasks_screen.dart';
-import '../../modules/tasks/screens/my_tasks_screen.dart';
-import '../../modules/tasks/screens/recurring_tasks_screen.dart';
-import '../../modules/approvals/screens/task_approvals_screen.dart';
-import '../../modules/approvals/screens/escalations_screen.dart';
-import '../../modules/approvals/screens/meeting_approvals_screen.dart';
-import '../../modules/approvals/screens/budget_approvals_screen.dart';
-import '../../modules/meetings/screens/meeting_calendar_screen.dart';
-import '../../modules/events/screens/events_screen.dart';
-import '../../modules/events/screens/events_calendar_screen.dart';
-import '../../modules/reports/screens/reports_dashboard_screen.dart';
-import '../../modules/reports/screens/status_reports_screen.dart';
-import '../../modules/todos/screens/today_screen.dart';
-import '../../modules/todos/screens/todo_history_screen.dart';
-import '../../modules/performance/screens/leaderboard_screen.dart';
-import '../../modules/performance/screens/team_performance_screen.dart';
-import '../../modules/fines/screens/fines_rewards_screen.dart';
-import '../../modules/fines/screens/performance_settings_screen.dart';
-import '../../modules/staff/screens/staff_screen.dart';
+import '../../modules/admin/screens/admin_audit_log_screen.dart';
 import '../../modules/admin/screens/admin_branches_departments_screen.dart';
 import '../../modules/admin/screens/admin_reporting_structure_screen.dart';
 import '../../modules/admin/screens/admin_roles_permissions_screen.dart';
-import '../../modules/admin/screens/admin_audit_log_screen.dart';
-import '../../modules/organization/screens/admin_org_chart_screen.dart';
-import '../../modules/organization/screens/my_reporting_structure_screen.dart';
-import '../../modules/responsibilities/screens/my_responsibilities_screen.dart';
+import '../../modules/admin/screens/admin_section_screen.dart';
+import '../../modules/approvals/screens/budget_approvals_screen.dart';
+import '../../modules/approvals/screens/escalations_screen.dart';
+import '../../modules/approvals/screens/meeting_approvals_screen.dart';
+import '../../modules/approvals/screens/task_approvals_screen.dart';
 import '../../modules/audits/screens/audits_screen.dart';
-import '../../modules/sutra/screens/sutra_ai_screen.dart';
-import '../../modules/preferences/screens/my_preferences_screen.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../modules/auth/bloc/auth_bloc.dart';
 import '../../modules/auth/bloc/auth_state.dart';
-import '../../modules/profile/screens/my_profile_screen.dart';
+import '../../modules/complaints/screens/complaints_history_insights_screen.dart';
+import '../../modules/complaints/screens/complaints_screen.dart';
+import '../../modules/complaints/screens/suggestion_box_entry_screen.dart';
+import '../../modules/dashboard/screens/dashboard_screen.dart';
+import '../../modules/events/screens/events_calendar_screen.dart';
+import '../../modules/events/screens/events_screen.dart';
 import '../../modules/faq/screens/faq_screen.dart';
+import '../../modules/fines/screens/fines_rewards_screen.dart';
+import '../../modules/fines/screens/performance_settings_screen.dart';
+import '../../modules/meetings/screens/meeting_calendar_screen.dart';
+import '../../modules/meetings/screens/monthly_one_on_one_pending_screen.dart';
+import '../../modules/meetings/screens/my_scheduled_meetings_screen.dart';
+import '../../modules/organization/screens/admin_org_chart_screen.dart';
+import '../../modules/organization/screens/my_reporting_structure_screen.dart';
+import '../../modules/organization/screens/organization_overview_screen.dart';
+import '../../modules/performance/screens/leaderboard_screen.dart';
+import '../../modules/performance/screens/team_performance_screen.dart';
+import '../../modules/preferences/screens/my_preferences_screen.dart';
+import '../../modules/profile/screens/my_profile_screen.dart';
+import '../../modules/reports/screens/reports_dashboard_screen.dart';
+import '../../modules/reports/screens/status_reports_screen.dart';
+import '../../modules/responsibilities/screens/my_responsibilities_screen.dart';
+import '../../modules/staff/screens/staff_screen.dart';
+import '../../modules/sutra/screens/sutra_ai_screen.dart';
+import '../../modules/tasks/screens/all_tasks_screen.dart';
+import '../../modules/tasks/screens/my_tasks_screen.dart';
+import '../../modules/tasks/screens/recurring_tasks_screen.dart';
+import '../../modules/todos/screens/today_screen.dart';
+import '../../modules/todos/screens/todo_history_screen.dart';
 
 class CustomLeftDrawer extends StatelessWidget {
   final String currentRoute;
@@ -50,11 +55,11 @@ class CustomLeftDrawer extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final authState = context.watch<AuthBloc>().state;
-    bool isExecutive = false;
-    bool isTeamLead = false;
-    bool isManager = false;
-    bool isPrincipal = false;
     bool isAdmin = false;
+    bool isDirector = false;
+    bool isPrincipal = false;
+    bool isAcademicExecutive = false;
+
     String roleTitle = s.directorRole;
     String roleScope = s.directorBadgeScope;
 
@@ -69,34 +74,48 @@ class CustomLeftDrawer extends StatelessWidget {
         isAdmin = true;
         roleTitle = s.administratorRole;
         roleScope = s.administratorBadgeScope;
-      } else if (roleLabelLower.contains('executive') ||
+      } else if (roleLower.contains('director') ||
+          roleLabelLower.contains('director')) {
+        isDirector = true;
+        roleTitle = s.directorRole;
+        roleScope = s.directorBadgeScope;
+      } else if (roleLower.contains('principal') ||
+          roleLower.contains('center_head') ||
+          roleLower.contains('campus_head') ||
+          roleLower.contains('center head') ||
+          roleLower.contains('campus head') ||
+          roleLabelLower.contains('principal') ||
+          roleLabelLower.contains('center head') ||
+          roleLabelLower.contains('campus head')) {
+        isPrincipal = true;
+        roleTitle = s.centerHeadPrincipalRole;
+        final visibleCount = (user.scope?.visibleUsers != null && user.scope!.visibleUsers!.isNotEmpty)
+            ? user.scope!.visibleUsers!.length
+            : 5;
+        roleScope = s.centerHeadPrincipalScope(visibleCount);
+      } else if (roleLower.contains('team_lead') ||
+          roleLower.contains('team lead') ||
+          roleLower.contains('lead') ||
+          roleLabelLower.contains('team lead') ||
+          roleLabelLower.contains('team_lead')) {
+        roleTitle = s.teamLeadRole;
+        roleScope = s.operationalScopeYourOwn;
+      } else if (roleLower.contains('academic_executive') ||
+          roleLower.contains('academic executive') ||
           roleLower.contains('executive') ||
           roleLower.contains('ae') ||
-          roleLabelLower.contains('ae')) {
-        isExecutive = true;
-        roleTitle = user.roleLabel.isNotEmpty ? user.roleLabel : s.academicExecutiveRole;
+          roleLabelLower.contains('academic executive') ||
+          roleLabelLower.contains('executive')) {
+        isAcademicExecutive = true;
+        roleTitle = s.academicExecutiveRole;
         roleScope = s.academicExecutiveScope;
-      } else if (roleLabelLower.contains('manager') ||
-          roleLower.contains('manager')) {
-        isManager = true;
-        roleTitle = 'Manager';
-        roleScope = 'Operational scope — your own tasks & reports.';
-      } else if (roleLabelLower.contains('principal') ||
-          roleLabelLower.contains('center head') ||
-          roleLower.contains('principal') ||
-          roleLower.contains('center_head')) {
-        isPrincipal = true;
-        roleTitle = 'Center Head / Principal';
-        roleScope = 'Team scope — 24 people in view.';
-      } else if (roleLabelLower.contains('lead') ||
-          roleLower.contains('lead') ||
-          roleLower.contains('tl') ||
-          user.email.contains('tl')) {
-        isTeamLead = true;
-        roleTitle = 'Team Lead';
-        roleScope = 'Team scope — 23 people in view.';
+      } else if (roleLower.contains('manager') ||
+          roleLabelLower.contains('manager')) {
+        roleTitle = s.managerRole;
+        roleScope = s.operationalScopeYourOwn;
       } else {
         roleTitle = user.roleLabel.isNotEmpty ? user.roleLabel : s.directorRole;
+        roleScope = s.operationalScopeYourOwn;
       }
     }
 
@@ -107,7 +126,7 @@ class CustomLeftDrawer extends StatelessWidget {
           children: [
             // Drawer Logo Header
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               child: Row(
                 children: [
                   ClipOval(
@@ -157,305 +176,439 @@ class CustomLeftDrawer extends StatelessWidget {
             // Navigation Items List
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 children: [
+                  // ADMIN EXCLUSIVE SECTION (When Admin Logged In)
                   if (isAdmin) ...[
-                    // ADMINISTRATION / USER MANAGEMENT
-                    _buildSectionHeader(context, s.administrationHeader),
-                    _buildNavItem(
+                    _buildSectionCard(
                       context,
-                      icon: Icons.person_outline_rounded,
-                      title: s.userManagement,
-                      isSelected: currentRoute == '/staff',
-                      onTap: () => _navigate(context, '/staff'),
+                      title: s.administrationHeader,
+                      children: [
+                        _buildNavItem(
+                          context,
+                          icon: Icons.person_outline_rounded,
+                          title: s.userManagement,
+                          isSelected: currentRoute == '/staff',
+                          onTap: () => _navigate(context, '/staff'),
+                        ),
+                        _buildNavItem(
+                          context,
+                          icon: Icons.folder_open_outlined,
+                          title: s.branchesAndDepartments,
+                          isSelected: currentRoute == '/admin/access',
+                          onTap: () => _navigate(context, '/admin/access'),
+                        ),
+                        _buildNavItem(
+                          context,
+                          icon: Icons.alt_route_rounded,
+                          title: s.reportingStructure,
+                          isSelected: currentRoute == '/admin/reporting',
+                          onTap: () => _navigate(context, '/admin/reporting'),
+                        ),
+                        _buildNavItem(
+                          context,
+                          icon: Icons.shield_outlined,
+                          title: s.rolesAndPermissions,
+                          isSelected: currentRoute == '/admin/roles',
+                          onTap: () => _navigate(context, '/admin/roles'),
+                        ),
+                        _buildNavItem(
+                          context,
+                          icon: Icons.tag_rounded,
+                          title: s.taskIdSettings,
+                          isSelected: currentRoute == '/admin/task-ids',
+                          onTap: () => _navigate(context, '/admin/task-ids'),
+                        ),
+                        _buildNavItem(
+                          context,
+                          icon: Icons.receipt_long_outlined,
+                          title: s.auditLog,
+                          isSelected: currentRoute == '/admin/audit',
+                          onTap: () => _navigate(context, '/admin/audit'),
+                        ),
+                      ],
                     ),
-                    _buildNavItem(
-                      context,
-                      icon: Icons.folder_open_outlined,
-                      title: s.branchesAndDepartments,
-                      isSelected: currentRoute == '/admin/access',
-                      onTap: () => _navigate(context, '/admin/access'),
-                    ),
-                    _buildNavItem(
-                      context,
-                      icon: Icons.alt_route_rounded,
-                      title: s.reportingStructure,
-                      isSelected: currentRoute == '/admin/reporting',
-                      onTap: () => _navigate(context, '/admin/reporting'),
-                    ),
-                    _buildNavItem(
-                      context,
-                      icon: Icons.shield_outlined,
-                      title: s.rolesAndPermissions,
-                      isSelected: currentRoute == '/admin/roles',
-                      onTap: () => _navigate(context, '/admin/roles'),
-                    ),
-                    _buildNavItem(
-                      context,
-                      icon: Icons.receipt_long_outlined,
-                      title: s.auditLog,
-                      isSelected: currentRoute == '/admin/audit',
-                      onTap: () => _navigate(context, '/admin/audit'),
-                    ),
-                    const SizedBox(height: 20),
                   ] else ...[
-                    // DASHBOARD
-                    _buildNavItem(
+                    // ALL OTHER ROLES (Center Head / Principal, Team Lead, Academic Executive, Manager, Director)
+
+                    // CARD 1: DASHBOARD & OVERVIEW
+                    _buildSectionCard(
                       context,
-                      icon: Icons.grid_view_rounded,
-                      title: s.dashboard,
-                      isSelected: currentRoute == '/dashboard',
-                      onTap: () => _navigate(context, '/dashboard'),
+                      children: [
+                        _buildNavItem(
+                          context,
+                          icon: Icons.grid_view_rounded,
+                          title: s.dashboard,
+                          isSelected: currentRoute == '/dashboard',
+                          onTap: () => _navigate(context, '/dashboard'),
+                        ),
+                        if (isDirector)
+                          _buildNavItem(
+                            context,
+                            icon: Icons.table_chart_outlined,
+                            title: s.organizationOverview,
+                            isSelected: currentRoute == '/org-overview',
+                            onTap: () => _navigate(context, '/org-overview'),
+                          ),
+                        if (isPrincipal)
+                          _buildNavItem(
+                            context,
+                            icon: Icons.table_chart_outlined,
+                            title: s.campusOverview,
+                            isSelected: currentRoute == '/campus-overview' || currentRoute == '/org-overview',
+                            onTap: () => _navigate(context, '/campus-overview'),
+                          ),
+                      ],
                     ),
-                    if (isPrincipal || (!isExecutive && !isManager && !isTeamLead))
-                      _buildNavItem(
+
+                    // CARD 2: TASKS
+                    _buildSectionCard(
+                      context,
+                      title: s.tasksHeader,
+                      children: [
+                        _buildNavItem(
+                          context,
+                          icon: Icons.check_circle_outline,
+                          title: s.allTasks,
+                          isSelected: currentRoute == '/tasks',
+                          onTap: () => _navigate(context, '/tasks'),
+                        ),
+                        _buildNavItem(
+                          context,
+                          icon: Icons.check_box_outlined,
+                          title: s.myTasks,
+                          isSelected: currentRoute == '/my-tasks',
+                          onTap: () => _navigate(context, '/my-tasks'),
+                        ),
+                        _buildNavItem(
+                          context,
+                          icon: Icons.autorenew_rounded,
+                          title: s.recurringTasks,
+                          isSelected: currentRoute == '/recurring',
+                          onTap: () => _navigate(context, '/recurring'),
+                        ),
+                      ],
+                    ),
+
+                    // CARD 3: COMPLAINTS & FEEDBACK
+                    _buildSectionCard(
+                      context,
+                      title: s.complaintsAndFeedbackHeader,
+                      children: [
+                        _buildNavItem(
+                          context,
+                          icon: Icons.confirmation_number_outlined,
+                          title: s.complaintsTracker,
+                          isSelected: currentRoute == '/complaints',
+                          onTap: () => _navigate(context, '/complaints'),
+                        ),
+                        _buildNavItem(
+                          context,
+                          icon: Icons.how_to_vote_outlined,
+                          title: s.suggestionBoxEntry,
+                          isSelected: currentRoute == '/complaints/suggestion-box',
+                          onTap: () => _navigate(context, '/complaints/suggestion-box'),
+                        ),
+                        _buildNavItem(
+                          context,
+                          icon: Icons.view_headline_rounded,
+                          title: s.historyAndInsights,
+                          isSelected: currentRoute == '/complaints/history',
+                          onTap: () => _navigate(context, '/complaints/history'),
+                        ),
+                      ],
+                    ),
+
+                    // CARD 4: REPORTS
+                    _buildSectionCard(
+                      context,
+                      title: s.reportsHeader,
+                      children: [
+                        _buildNavItem(
+                          context,
+                          icon: Icons.article_outlined,
+                          title: s.statusReports,
+                          isSelected: currentRoute == '/reports',
+                          onTap: () => _navigate(context, '/reports'),
+                        ),
+                        _buildNavItem(
+                          context,
+                          icon: Icons.bar_chart_rounded,
+                          title: s.reportsDashboard,
+                          isSelected: currentRoute == '/reports-dashboard',
+                          onTap: () => _navigate(context, '/reports-dashboard'),
+                        ),
+                      ],
+                    ),
+
+                    // CARD 5: TO-DO
+                    _buildSectionCard(
+                      context,
+                      title: s.todoHeader,
+                      children: [
+                        _buildNavItem(
+                          context,
+                          icon: Icons.pie_chart_outline_rounded,
+                          title: s.today,
+                          isSelected: currentRoute == '/todo',
+                          onTap: () => _navigate(context, '/todo'),
+                        ),
+                        _buildNavItem(
+                          context,
+                          icon: Icons.history_rounded,
+                          title: s.history,
+                          isSelected: currentRoute == '/todo-history',
+                          onTap: () => _navigate(context, '/todo-history'),
+                        ),
+                      ],
+                    ),
+
+                    // CARD 6: REQUESTS & APPROVALS
+                    _buildSectionCard(
+                      context,
+                      title: s.approvalsHeader,
+                      children: [
+                        _buildNavItem(
+                          context,
+                          icon: Icons.check_circle_rounded,
+                          title: s.taskApprovals,
+                          iconColor: Colors.green,
+                          isSelected: currentRoute == '/approvals/tasks',
+                          onTap: () => _navigate(context, '/approvals/tasks'),
+                        ),
+                        _buildNavItem(
+                          context,
+                          icon: Icons.outlined_flag_rounded,
+                          title: s.escalations,
+                          isSelected: currentRoute == '/approvals/escalations',
+                          onTap: () => _navigate(context, '/approvals/escalations'),
+                        ),
+                        _buildNavItem(
+                          context,
+                          icon: Icons.calendar_today_rounded,
+                          title: s.meetingApprovals,
+                          isSelected: currentRoute == '/approvals/meetings',
+                          onTap: () => _navigate(context, '/approvals/meetings'),
+                        ),
+                        _buildNavItem(
+                          context,
+                          icon: Icons.currency_rupee_rounded,
+                          title: s.budgetApprovals,
+                          isSelected: currentRoute == '/approvals/budget',
+                          onTap: () => _navigate(context, '/approvals/budget'),
+                        ),
+                      ],
+                    ),
+
+                    // CARD 7: MEETINGS
+                    _buildSectionCard(
+                      context,
+                      title: s.meetingsHeader,
+                      children: [
+                        _buildNavItem(
+                          context,
+                          icon: Icons.access_time_rounded,
+                          title: s.myScheduledMeetings,
+                          isSelected: currentRoute == '/my-meetings' || currentRoute == '/meetings',
+                          onTap: () => _navigate(context, '/my-meetings'),
+                        ),
+                        _buildNavItem(
+                          context,
+                          icon: Icons.calendar_month_outlined,
+                          title: s.meetingCalendar,
+                          isSelected: currentRoute == '/meetings-calendar',
+                          onTap: () => _navigate(context, '/meetings-calendar'),
+                        ),
+                      ],
+                    ),
+
+                    // CARD 8: EVENTS
+                    _buildSectionCard(
+                      context,
+                      title: s.eventsHeader,
+                      children: [
+                        _buildNavItem(
+                          context,
+                          icon: Icons.star_border_rounded,
+                          title: s.events,
+                          isSelected: currentRoute == '/events',
+                          onTap: () => _navigate(context, '/events'),
+                        ),
+                        _buildNavItem(
+                          context,
+                          icon: Icons.calendar_today_outlined,
+                          title: s.eventsCalendar,
+                          isSelected: currentRoute == '/events-calendar',
+                          onTap: () => _navigate(context, '/events-calendar'),
+                        ),
+                      ],
+                    ),
+
+                    // CARD 9: PERFORMANCE
+                    _buildSectionCard(
+                      context,
+                      title: s.performanceHeader,
+                      children: [
+                        _buildNavItem(
+                          context,
+                          icon: Icons.emoji_events_outlined,
+                          title: s.leaderboard,
+                          isSelected: currentRoute == '/leaderboard',
+                          onTap: () => _navigate(context, '/leaderboard'),
+                        ),
+                        if (!isAcademicExecutive)
+                          _buildNavItem(
+                            context,
+                            icon: Icons.people_alt_outlined,
+                            title: s.teamPerformance,
+                            isSelected: currentRoute == '/team-performance',
+                            onTap: () => _navigate(context, '/team-performance'),
+                          ),
+                        _buildNavItem(
+                          context,
+                          icon: Icons.diamond_outlined,
+                          title: s.finesAndRewards,
+                          isSelected: currentRoute == '/fines-rewards' || currentRoute == '/fines',
+                          onTap: () => _navigate(context, '/fines-rewards'),
+                        ),
+                      ],
+                    ),
+
+                    // CARD 10: ADMINISTRATION (Director Only)
+                    if (isDirector)
+                      _buildSectionCard(
                         context,
-                        icon: Icons.table_chart_outlined,
-                        title: isPrincipal ? s.campusOverview : s.organizationOverview,
-                        isSelected: currentRoute == '/org-overview',
-                        onTap: () => _navigate(context, '/org-overview'),
+                        title: s.administrationHeader,
+                        children: [
+                          _buildNavItem(
+                            context,
+                            icon: Icons.person_outline_rounded,
+                            title: s.userManagement,
+                            isSelected: currentRoute == '/staff',
+                            onTap: () => _navigate(context, '/staff'),
+                          ),
+                          _buildNavItem(
+                            context,
+                            icon: Icons.folder_open_outlined,
+                            title: s.branchesAndDepartments,
+                            isSelected: currentRoute == '/admin/access',
+                            onTap: () => _navigate(context, '/admin/access'),
+                          ),
+                          _buildNavItem(
+                            context,
+                            icon: Icons.alt_route_rounded,
+                            title: s.reportingStructure,
+                            isSelected: currentRoute == '/admin/reporting',
+                            onTap: () => _navigate(context, '/admin/reporting'),
+                          ),
+                          _buildNavItem(
+                            context,
+                            icon: Icons.shield_outlined,
+                            title: s.rolesAndPermissions,
+                            isSelected: currentRoute == '/admin/roles',
+                            onTap: () => _navigate(context, '/admin/roles'),
+                          ),
+                          _buildNavItem(
+                            context,
+                            icon: Icons.tag_rounded,
+                            title: s.taskIdSettings,
+                            isSelected: currentRoute == '/admin/task-ids',
+                            onTap: () => _navigate(context, '/admin/task-ids'),
+                          ),
+                          _buildNavItem(
+                            context,
+                            icon: Icons.receipt_long_outlined,
+                            title: s.auditLog,
+                            isSelected: currentRoute == '/admin/audit',
+                            onTap: () => _navigate(context, '/admin/audit'),
+                          ),
+                        ],
                       ),
-                    const SizedBox(height: 12),
 
-                    // TASKS
-                    _buildSectionHeader(context, s.tasksHeader),
-                    if (!isExecutive && !isManager && !isTeamLead && !isPrincipal)
-                      _buildNavItem(
-                        context,
-                        icon: Icons.check_circle_outline,
-                        title: s.allTasks,
-                        isSelected: currentRoute == '/tasks',
-                        onTap: () => _navigate(context, '/tasks'),
-                      ),
-                    _buildNavItem(
+                    // CARD 11: ORGANIZATION
+                    _buildSectionCard(
                       context,
-                      icon: Icons.check_box_outlined,
-                      title: s.myTasks,
-                      isSelected: currentRoute == '/my-tasks',
-                      onTap: () => _navigate(context, '/my-tasks'),
+                      title: s.organizationHeader,
+                      children: [
+                        _buildNavItem(
+                          context,
+                          icon: Icons.corporate_fare_rounded,
+                          title: s.adminOrgChart,
+                          isSelected: currentRoute == '/org-chart',
+                          onTap: () => _navigate(context, '/org-chart'),
+                        ),
+                        _buildNavItem(
+                          context,
+                          icon: Icons.subdirectory_arrow_right_rounded,
+                          title: s.myReportingStructure,
+                          isSelected: currentRoute == '/my-reporting',
+                          onTap: () => _navigate(context, '/my-reporting'),
+                        ),
+                      ],
                     ),
-                    _buildNavItem(
-                      context,
-                      icon: Icons.autorenew_rounded,
-                      title: s.recurringTasks,
-                      isSelected: currentRoute == '/recurring',
-                      onTap: () => _navigate(context, '/recurring'),
-                    ),
-                    const SizedBox(height: 12),
 
-                    // APPROVALS
-                    _buildSectionHeader(context, s.approvalsHeader),
-                    _buildNavItem(
+                    // CARD 12: ROLES & RESPONSIBILITIES
+                    _buildSectionCard(
                       context,
-                      icon: Icons.check_circle_rounded,
-                      title: s.taskApprovals,
-                      iconColor: Colors.green,
-                      isSelected: currentRoute == '/approvals/tasks',
-                      onTap: () => _navigate(context, '/approvals/tasks'),
+                      title: s.rolesAndResponsibilitiesHeader,
+                      children: [
+                        _buildNavItem(
+                          context,
+                          icon: Icons.pie_chart_outline_rounded,
+                          title: s.myResponsibilities,
+                          isSelected: currentRoute == '/responsibilities',
+                          onTap: () => _navigate(context, '/responsibilities'),
+                        ),
+                      ],
                     ),
-                    _buildNavItem(
-                      context,
-                      icon: Icons.outlined_flag_rounded,
-                      title: s.escalations,
-                      isSelected: currentRoute == '/approvals/escalations',
-                      onTap: () => _navigate(context, '/approvals/escalations'),
-                    ),
-                    _buildNavItem(
-                      context,
-                      icon: Icons.calendar_today_rounded,
-                      title: s.meetingApprovals,
-                      isSelected: currentRoute == '/approvals/meetings',
-                      onTap: () => _navigate(context, '/approvals/meetings'),
-                    ),
-                    _buildNavItem(
-                      context,
-                      icon: Icons.currency_rupee_rounded,
-                      title: s.budgetApprovals,
-                      isSelected: currentRoute == '/approvals/budget',
-                      onTap: () => _navigate(context, '/approvals/budget'),
-                    ),
-                    const SizedBox(height: 12),
 
-                    // MEETINGS
-                    _buildSectionHeader(context, s.meetingsHeader),
-                    if (!isExecutive && !isManager && !isTeamLead && !isPrincipal)
-                      _buildNavItem(
-                        context,
-                        icon: Icons.person_outline_rounded,
-                        title: s.monthlyOneOnOnePending,
-                        isSelected: currentRoute == '/one-on-one-pending' || currentRoute == '/one-on-one',
-                        onTap: () => _navigate(context, '/one-on-one-pending'),
-                      ),
-                    _buildNavItem(
+                    // CARD 13: MY AUDITS
+                    _buildSectionCard(
                       context,
-                      icon: Icons.access_time_rounded,
-                      title: s.myScheduledMeetings,
-                      isSelected: currentRoute == '/my-meetings' || currentRoute == '/meetings',
-                      onTap: () => _navigate(context, '/my-meetings'),
+                      title: s.myAuditsHeader,
+                      children: [
+                        _buildNavItem(
+                          context,
+                          icon: Icons.search_rounded,
+                          title: s.asAnInternalAuditor,
+                          isSelected: currentRoute == '/audits/auditor',
+                          onTap: () => _navigate(context, '/audits/auditor'),
+                        ),
+                        _buildNavItem(
+                          context,
+                          icon: Icons.assignment_outlined,
+                          title: s.asAnAuditee,
+                          isSelected: currentRoute == '/audits/auditee',
+                          onTap: () => _navigate(context, '/audits/auditee'),
+                        ),
+                      ],
                     ),
-                    _buildNavItem(
-                      context,
-                      icon: Icons.calendar_month_outlined,
-                      title: s.meetingCalendar,
-                      isSelected: currentRoute == '/meetings-calendar',
-                      onTap: () => _navigate(context, '/meetings-calendar'),
-                    ),
-                    const SizedBox(height: 12),
 
-                    // EVENTS
-                    _buildSectionHeader(context, s.eventsHeader),
-                    _buildNavItem(
+                    // CARD 14: AI & SETTINGS
+                    _buildSectionCard(
                       context,
-                      icon: Icons.star_border_rounded,
-                      title: s.events,
-                      isSelected: currentRoute == '/events',
-                      onTap: () => _navigate(context, '/events'),
+                      title: s.aiAndSettingsHeader,
+                      children: [
+                        _buildNavItem(
+                          context,
+                          icon: Icons.auto_awesome_rounded,
+                          title: s.sutraAi,
+                          iconColor: Colors.amber,
+                          isSelected: currentRoute == '/sutra',
+                          onTap: () => _navigate(context, '/sutra'),
+                        ),
+                        _buildNavItem(
+                          context,
+                          icon: Icons.tune_rounded,
+                          title: s.myPreferences,
+                          isSelected: currentRoute == '/my-preferences' || currentRoute == '/preferences',
+                          onTap: () => _navigate(context, '/my-preferences'),
+                        ),
+                      ],
                     ),
-                    _buildNavItem(
-                      context,
-                      icon: Icons.calendar_today_outlined,
-                      title: s.eventsCalendar,
-                      isSelected: currentRoute == '/events-calendar',
-                      onTap: () => _navigate(context, '/events-calendar'),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // REPORTS
-                    _buildSectionHeader(context, s.reportsHeader),
-                    _buildNavItem(
-                      context,
-                      icon: Icons.article_outlined,
-                      title: s.statusReports,
-                      isSelected: currentRoute == '/reports',
-                      onTap: () => _navigate(context, '/reports'),
-                    ),
-                    _buildNavItem(
-                      context,
-                      icon: Icons.bar_chart_rounded,
-                      title: s.reportsDashboard,
-                      isSelected: currentRoute == '/reports-dashboard',
-                      onTap: () => _navigate(context, '/reports-dashboard'),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // TO-DO
-                    _buildSectionHeader(context, s.todoHeader),
-                    _buildNavItem(
-                      context,
-                      icon: Icons.pie_chart_outline_rounded,
-                      title: s.today,
-                      isSelected: currentRoute == '/todo',
-                      onTap: () => _navigate(context, '/todo'),
-                    ),
-                    _buildNavItem(
-                      context,
-                      icon: Icons.history_rounded,
-                      title: s.history,
-                      isSelected: currentRoute == '/todo-history',
-                      onTap: () => _navigate(context, '/todo-history'),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // PERFORMANCE
-                    _buildSectionHeader(context, s.performanceHeader),
-                    _buildNavItem(
-                      context,
-                      icon: Icons.emoji_events_outlined,
-                      title: s.leaderboard,
-                      isSelected: currentRoute == '/leaderboard',
-                      onTap: () => _navigate(context, '/leaderboard'),
-                    ),
-                    if (!isExecutive)
-                      _buildNavItem(
-                        context,
-                        icon: Icons.people_alt_outlined,
-                        title: s.teamPerformance,
-                        isSelected: currentRoute == '/team-performance',
-                        onTap: () => _navigate(context, '/team-performance'),
-                      ),
-                    _buildNavItem(
-                      context,
-                      icon: Icons.diamond_outlined,
-                      title: s.finesAndRewards,
-                      isSelected: currentRoute == '/fines-rewards' || currentRoute == '/fines',
-                      onTap: () => _navigate(context, '/fines-rewards'),
-                    ),
-                    if (!isExecutive && !isTeamLead && !isManager && !isPrincipal)
-                      _buildNavItem(
-                        context,
-                        icon: Icons.settings_outlined,
-                        title: s.settings,
-                        isSelected: currentRoute == '/performance-settings' || currentRoute == '/perf-settings',
-                        onTap: () => _navigate(context, '/performance-settings'),
-                      ),
-                    const SizedBox(height: 12),
-
-                    // ORGANIZATION
-                    _buildSectionHeader(context, s.organizationHeader),
-                    _buildNavItem(
-                      context,
-                      icon: Icons.corporate_fare_rounded,
-                      title: s.adminOrgChart,
-                      isSelected: currentRoute == '/org-chart',
-                      onTap: () => _navigate(context, '/org-chart'),
-                    ),
-                    _buildNavItem(
-                      context,
-                      icon: Icons.subdirectory_arrow_right_rounded,
-                      title: s.myReportingStructure,
-                      isSelected: currentRoute == '/my-reporting',
-                      onTap: () => _navigate(context, '/my-reporting'),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // ROLES & RESPONSIBILITIES
-                    _buildSectionHeader(context, s.rolesAndResponsibilitiesHeader),
-                    _buildNavItem(
-                      context,
-                      icon: Icons.pie_chart_outline_rounded,
-                      title: s.myResponsibilities,
-                      isSelected: currentRoute == '/responsibilities',
-                      onTap: () => _navigate(context, '/responsibilities'),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // MY AUDITS
-                    _buildSectionHeader(context, s.myAuditsHeader),
-                    _buildNavItem(
-                      context,
-                      icon: Icons.search_rounded,
-                      title: s.asAnInternalAuditor,
-                      isSelected: currentRoute == '/audits/auditor',
-                      onTap: () => _navigate(context, '/audits/auditor'),
-                    ),
-                    _buildNavItem(
-                      context,
-                      icon: Icons.assignment_outlined,
-                      title: s.asAnAuditee,
-                      isSelected: currentRoute == '/audits/auditee',
-                      onTap: () => _navigate(context, '/audits/auditee'),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // AI & SETTINGS
-                    _buildSectionHeader(context, s.aiAndSettingsHeader),
-                    _buildNavItem(
-                      context,
-                      icon: Icons.auto_awesome_rounded,
-                      title: s.sutraAi,
-                      iconColor: Colors.amber,
-                      isSelected: currentRoute == '/sutra',
-                      onTap: () => _navigate(context, '/sutra'),
-                    ),
-                    _buildNavItem(
-                      context,
-                      icon: Icons.tune_rounded,
-                      title: s.myPreferences,
-                      isSelected: currentRoute == '/my-preferences' || currentRoute == '/preferences',
-                      onTap: () => _navigate(context, '/my-preferences'),
-                    ),
-                    const SizedBox(height: 20),
                   ],
+
+                  const SizedBox(height: 12),
                 ],
               ),
             ),
@@ -463,10 +616,13 @@ class CustomLeftDrawer extends StatelessWidget {
             // Role Footer Badge
             Container(
               padding: const EdgeInsets.all(12),
-              margin: const EdgeInsets.all(12),
+              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                ),
               ),
               child: Row(
                 children: [
@@ -502,17 +658,42 @@ class CustomLeftDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 8, bottom: 6, top: 4),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 1.0,
-          color: Colors.grey.shade600,
+  Widget _buildSectionCard(
+    BuildContext context, {
+    String? title,
+    required List<Widget> children,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF131D31) : const Color(0xFFF1F5F9).withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
         ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (title != null && title.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.only(left: 8, top: 4, bottom: 6),
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.0,
+                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                ),
+              ),
+            ),
+          ],
+          ...children,
+        ],
       ),
     );
   }
@@ -526,16 +707,17 @@ class CustomLeftDrawer extends StatelessWidget {
     Color? iconColor,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final activeBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFEFF6FF);
+    final activeBg = isDark ? const Color(0xFF1E3A8A).withValues(alpha: 0.35) : const Color(0xFFDBEAFE);
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+        margin: const EdgeInsets.symmetric(vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected ? activeBg : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
           children: [
@@ -543,8 +725,8 @@ class CustomLeftDrawer extends StatelessWidget {
               icon,
               size: 18,
               color: isSelected
-                  ? const Color(0xFFB91C1C)
-                  : (iconColor ?? (isDark ? Colors.white70 : Colors.black87)),
+                  ? (isDark ? Colors.white : const Color(0xFF1E3A8A))
+                  : (iconColor ?? (isDark ? Colors.grey.shade400 : Colors.grey.shade600)),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -554,8 +736,8 @@ class CustomLeftDrawer extends StatelessWidget {
                   fontSize: 13,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                   color: isSelected
-                      ? const Color(0xFFB91C1C)
-                      : (isDark ? Colors.white70 : Colors.black87),
+                      ? (isDark ? Colors.white : const Color(0xFF1E3A8A))
+                      : (isDark ? Colors.white70 : const Color(0xFF334155)),
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -569,21 +751,69 @@ class CustomLeftDrawer extends StatelessWidget {
   void _navigate(BuildContext context, String route) {
     final navigator = Navigator.of(context);
     final isDrawerOpen = Scaffold.maybeOf(context)?.isDrawerOpen ?? false;
+    final s = AppStrings.of(context);
+
+    // Suggestion Box Entry
+    if (route == '/complaints/suggestion-box') {
+      if (currentRoute == '/complaints/suggestion-box') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const SuggestionBoxEntryScreen()),
+      );
+      return;
+    }
+
+    // Complaints & Feedback Module
+    if (route == '/complaints') {
+      if (currentRoute == '/complaints') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const ComplaintsScreen()),
+      );
+      return;
+    }
+
+    if (route == '/complaints/history') {
+      if (currentRoute == '/complaints/history') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const ComplaintsHistoryInsightsScreen()),
+      );
+      return;
+    }
 
     if (route == '/preferences') {
-      if (currentRoute == '/preferences') {
+      if (currentRoute == '/preferences' || currentRoute == '/my-preferences') {
         if (isDrawerOpen) navigator.pop();
         return;
       }
       if (isDrawerOpen) navigator.pop();
       navigator.push(
-        MaterialPageRoute(builder: (context) => const SettingsScreen()),
+        MaterialPageRoute(builder: (context) => const MyPreferencesScreen()),
       );
       return;
     }
 
-    if (route == '/org-overview') {
-      if (currentRoute == '/org-overview') {
+    if (route == '/org-overview' || route == '/campus-overview') {
+      if (currentRoute == '/org-overview' || currentRoute == '/campus-overview') {
         if (isDrawerOpen) navigator.pop();
         return;
       }
@@ -642,8 +872,8 @@ class CustomLeftDrawer extends StatelessWidget {
       return;
     }
 
-    if (route == '/one-on-one-pending') {
-      if (currentRoute == '/one-on-one-pending') {
+    if (route == '/one-on-one-pending' || route == '/one-on-one') {
+      if (currentRoute == '/one-on-one-pending' || currentRoute == '/one-on-one') {
         if (isDrawerOpen) navigator.pop();
         return;
       }
@@ -657,8 +887,8 @@ class CustomLeftDrawer extends StatelessWidget {
       return;
     }
 
-    if (route == '/my-meetings') {
-      if (currentRoute == '/my-meetings') {
+    if (route == '/my-meetings' || route == '/meetings') {
+      if (currentRoute == '/my-meetings' || currentRoute == '/meetings') {
         if (isDrawerOpen) navigator.pop();
         return;
       }
@@ -743,6 +973,21 @@ class CustomLeftDrawer extends StatelessWidget {
       }
       navigator.push(
         MaterialPageRoute(builder: (context) => const BudgetApprovalsScreen()),
+      );
+      return;
+    }
+
+    if (route == '/approvals/appreciations') {
+      if (currentRoute == '/approvals/appreciations') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const TaskApprovalsScreen()),
       );
       return;
     }
@@ -963,6 +1208,27 @@ class CustomLeftDrawer extends StatelessWidget {
       return;
     }
 
+    if (route == '/admin/task-ids') {
+      if (currentRoute == '/admin/task-ids') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(
+          builder: (context) => AdminSectionScreen(
+            title: s.taskIdSettings,
+            route: '/admin/task-ids',
+            icon: Icons.tag_rounded,
+          ),
+        ),
+      );
+      return;
+    }
+
     if (route == '/admin/audit') {
       if (currentRoute == '/admin/audit') {
         if (isDrawerOpen) navigator.pop();
@@ -1096,6 +1362,21 @@ class CustomLeftDrawer extends StatelessWidget {
       }
       navigator.push(
         MaterialPageRoute(builder: (context) => const MyProfileScreen()),
+      );
+      return;
+    }
+
+    if (route == '/dashboard') {
+      if (currentRoute == '/dashboard') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const DashboardScreen()),
       );
       return;
     }

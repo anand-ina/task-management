@@ -12,14 +12,28 @@ class AllTasksLoadedState extends AllTasksState {
   final String activeScope;
   final String? activeStatus;
   final String? activePriority;
+  final String? activeOwner;
+  final String? activeDueFrom;
+  final String? activeDueTo;
+  final int? activeProgressMin;
+  final int? activeProgressMax;
+  final String? activeCategory;
   final String? activeSearch;
+  final int? activeBranchId;
 
   AllTasksLoadedState({
     required this.response,
     this.activeScope = 'all',
     this.activeStatus,
     this.activePriority,
+    this.activeOwner,
+    this.activeDueFrom,
+    this.activeDueTo,
+    this.activeProgressMin,
+    this.activeProgressMax,
+    this.activeCategory,
     this.activeSearch,
+    this.activeBranchId,
   });
 }
 

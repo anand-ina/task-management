@@ -1192,4 +1192,385 @@ class AppStringsHi extends AppStrings {
   @override
   String get whoButton => 'कौन?';
 
+  // Complaints & Feedback Module Strings
+  @override
+  String get complaintsAndFeedbackHeader => 'शिकायतें और प्रतिक्रिया';
+  @override
+  String get complaintsTracker => 'शिकायत ट्रैकर';
+  @override
+  String get suggestionBoxEntry => 'सुझाव पेटी प्रविष्टि';
+  @override
+  String get historyAndInsights => 'इतिहास और अंतर्दृष्टि';
+  @override
+  String get appreciationApprovals => 'प्रशंसा अनुमोदन';
+
+  @override
+  String get complaintsAndFeedbackTitle => 'शिकायतें और प्रतिक्रिया';
+  @override
+  String get complaintsAndFeedbackSubtitle => 'माता-पिता और छात्रों से शिकायतें, प्रतिक्रिया और प्रशंसाएं — प्रत्येक को समाधान तक ट्रैक किया जाता है।';
+  @override
+  String get suggestionBoxEntryButton => 'सुझाव पेटी प्रविष्टि';
+  @override
+  String get historyAndInsightsButton => 'इतिहास और अंतर्दृष्टि';
+  @override
+  String get raiseRequestButton => '+ अनुरोध दर्ज करें';
+
+  @override
+  String get statNewNotPickedUp => 'नई — अभी शुरू नहीं हुई';
+  @override
+  String get statInProgress => 'प्रगति पर है';
+  @override
+  String get statPastTargetDate => 'लक्ष्य तिथि बीत चुकी';
+  @override
+  String get statResolvedThisMonth => 'इस माह में हल की गईं';
+  @override
+  String get statAwaitingDirectorApproval => 'निदेशक के अनुमोदन की प्रतीक्षा';
+  @override
+  String get statAvgTimeToResolve => 'औसत समाधान समय';
+
+  @override
+  String get tabOpen => 'खुली हुई';
+  @override
+  String get tabPastTargetDate => 'लक्ष्य तिथि बीत चुकी';
+  @override
+  String get tabResolved => 'हल की गईं';
+  @override
+  String get tabAll => 'सभी';
+
+  @override
+  String get searchTicketsPlaceholder => 'टिकट संख्या, छात्र, स्टाफ खोजें...';
+  @override
+  String get filterAllTypes => 'सभी प्रकार';
+  @override
+  String get filterParentsAndStudents => 'माता-पिता और छात्र';
+  @override
+  String get filterAllCategories => 'सभी श्रेणियां';
+  @override
+  String get filterEveryones => 'सभी का';
+
+  @override
+  String get colTicket => 'टिकट';
+  @override
+  String get colType => 'प्रकार';
+  @override
+  String get colFrom => 'प्रेषक';
+  @override
+  String get colStudent => 'छात्र';
+  @override
+  String get colAbout => 'विषय';
+  @override
+  String get colCategory => 'श्रेणी';
+  @override
+  String get colStatus => 'स्थिति';
+  @override
+  String get colWith => 'किसके पास';
+  @override
+  String get colReceived => 'प्राप्त';
+  @override
+  String get colTask => 'कार्य';
+  @override
+  String get noTicketsFound => 'आपके मानदंडों से मेल खाने वाला कोई टिकट नहीं मिला।';
+
+  @override
+  String get raiseARequestTitle => 'अनुरोध दर्ज करें';
+  @override
+  String get typeLabel => 'प्रकार *';
+  @override
+  String get typeComplaint => 'शिकायत';
+  @override
+  String get typeFeedbackSuggestion => 'प्रतिक्रिया / सुझाव';
+  @override
+  String get typeAppreciation => 'प्रशंसा';
+  @override
+  String get receivedFromLabel => 'कहाँ से प्राप्त *';
+  @override
+  String get receivedFromParent => 'अभिभावक';
+  @override
+  String get receivedFromStudent => 'छात्र';
+  @override
+  String get channelLabel => 'माध्यम *';
+  @override
+  String get whichGroupPlaceLabel => 'कौन सा समूह / स्थान (वैकल्पिक)';
+  @override
+  String get whichGroupPlaceHint => 'उदा. कक्षा 6B अभिभावक';
+  @override
+  String get receivedOnLabel => 'प्राप्ति तिथि *';
+
+  @override
+  String get studentNameLabel => 'छात्र का नाम *';
+  @override
+  String get studentNameHint => 'उदा. आरव रेड्डी';
+  @override
+  String get classSectionLabel => 'कक्षा और अनुभाग *';
+  @override
+  String get classSectionHint => 'उदा. 6-B';
+  @override
+  String get admissionNoLabel => 'प्रवेश संख्या';
+  @override
+  String get admissionNoHint => 'वैकल्पिक';
+  @override
+  String get parentNameLabel => 'अभिभावक का नाम';
+  @override
+  String get parentNameHint => 'उदा. श्रीमती कविता रेड्डी';
+  @override
+  String get parentMobileLabel => 'अभिभावक का मोबाइल (टिकट नंबर यहाँ भेजा जाएगा)';
+  @override
+  String get parentMobileHint => '10-अंकों का नंबर';
+  @override
+  String get keepParentAnonymous => 'अभिभावक की पहचान गुप्त रखें';
+  @override
+  String get keepParentAnonymousSubtext => 'नाम, मोबाइल और साक्ष्य केवल कैंपस हेड और डायरेक्टर को दिखाई देंगे। टिकट नंबर भेजा जाएगा।';
+  @override
+  String get aboutLabel => 'के बारे में *';
+  @override
+  String get aboutStaffMember => 'स्टाफ सदस्य';
+  @override
+  String get aboutDepartment => 'विभाग';
+  @override
+  String get aboutTransport => 'परिवहन';
+  @override
+  String get aboutFacility => 'सुविधा';
+  @override
+  String get aboutGeneral => 'सामान्य';
+  @override
+  String get staffMemberSubtext => 'स्टाफ सदस्य (यदि नाम नहीं बताना चाहते तो "नाम नहीं बताया" रहने दें)';
+  @override
+  String get notNamedOption => 'नाम नहीं बताया — वे नहीं बताना चाहते';
+
+  @override
+  String get priorityLabel => 'प्राथमिकता';
+  @override
+  String get priorityEmergency => 'आपातकालीन';
+  @override
+  String get priorityTopMost => 'सर्वोच्च';
+  @override
+  String get priorityHigh => 'उच्च';
+  @override
+  String get priorityMedium => 'मध्यम';
+  @override
+  String get priorityLow => 'कम';
+  @override
+  String targetDateDaysFromToday(int days) => 'लक्ष्य तिथि: आज से $days दिन।';
+  @override
+  String get visibilityLabel => 'दृश्यता *';
+  @override
+  String get visibilityGeneral => 'सामान्य — सभी कर्मचारियों को दृश्यमान';
+  @override
+  String get visibilityConfidential => 'गोपनीय';
+  @override
+  String get whatWasSaidLabel => 'क्या कहा गया? *';
+  @override
+  String get whatWasSaidHint => 'क्या हुआ, कब हुआ, और अभिभावक/छात्र क्या चाहते हैं?';
+  @override
+  String get evidenceLabel => 'साक्ष्य * (व्हाट्सएप स्क्रीनशॉट, रसीद या पत्र की फोटो)';
+  @override
+  String get addFileButton => 'फ़ाइल जोड़ें';
+  @override
+  String get fileUploadedSuccess => 'फ़ाइल सफलतापूर्वक संलग्न की गई';
+  @override
+  String get uploadingFile => 'फ़ाइल अपलोड हो रही है...';
+  @override
+  String bannerTicketTaskCreated(String ticketNo, String taskNo, String ownerName) =>
+      'टिकट $ticketNo और कार्य $taskNo बनाया जाएगा और $ownerName को सौंपा जाएगा। अभिभावक को व्हाट्सएप पर टिकट नंबर प्राप्त होगा।';
+  @override
+  String get registerComplaintButton => 'शिकायत दर्ज करें';
+  @override
+  String get complaintRegisteredTitle => 'शिकायत दर्ज की गई';
+  @override
+  String get ticketNumberLabel => 'टिकट संख्या';
+  @override
+  String get shareNumberNotice => 'फॉलो अप के लिए यह नंबर साझा करें।';
+  @override
+  String get whatHappensNext => 'आगे क्या होगा';
+  @override
+  String taskAssignedNotice(String taskNo, String owner, String due) =>
+      'कार्य $taskNo $owner को सौंपा गया · देय तिथि $due';
+  @override
+  String whatsappTicketSentNotice(String mobile) =>
+      '$mobile पर टिकट नंबर के साथ व्हाट्सएप भेजा गया।';
+  @override
+  String get doneButton => 'संपन्न';
+  @override
+  String get openTicketButton => 'टिकट खोलें';
+  @override
+  String get fillRequiredFieldsError => 'कृपया सभी आवश्यक फ़ील्ड भरें।';
+  @override
+  String get invalidMobileNumberError => 'कृपया एक वैध 10-अंकों का मोबाइल नंबर दर्ज करें।';
+
+  // Suggestion Box & Filters
+
+  @override
+  String get assignedByMe => 'मेरे द्वारा सौंपे गए';
+  @override
+  String get suggestionBoxEntryTitle => 'सुझाव पेटी प्रविष्टि';
+  @override
+  String get backToTracker => '← ट्रैकर पर वापस जाएं';
+  @override
+  String get suggestionBoxSub =>
+      'प्रति पर्ची एक पंक्ति। बिना छात्र नाम की पंक्तियां अज्ञात के रूप में दर्ज की जाती हैं। शिकायतें और प्रतिक्रिया कैंपस प्रमुख के लिए एक कार्य बनाती हैं; प्रशंसाएं दर्ज की जाती हैं।';
+  @override
+  String get boxOpenedLabel => 'पेटी खोली गई';
+  @override
+  String get branchPlaceholder => 'शाखा…';
+  @override
+  String get addRowButton => '＋ पंक्ति जोड़ें';
+  @override
+  String saveRequestsButton(int count) =>
+      '${count > 0 ? "$count " : ""}अनुरोध सहेजें';
+  @override
+  String get savingRequests => 'सहेजा जा रहा है…';
+  @override
+  String get typeAtLeastOneSlipWarning =>
+      'सहेजने से पहले कम से कम एक पर्ची टाइप करें।';
+  @override
+  String attachPhotoWarning(int count) =>
+      'प्रत्येक पर्ची की एक तस्वीर संलग्न करें — $count अभी भी बाकी ${count == 1 ? "है" : "हैं"}।';
+  @override
+  String registeredBannerTitle(int count) => 'पंजीकृत ($count)';
+  @override
+  String slipTitle(int index) => 'पर्ची $index';
+  @override
+  String get removeButton => '✕ हटाएं';
+  @override
+  String get studentBlankAnonymous => 'छात्र (खाली = अज्ञात)';
+  @override
+  String get anonymousHint => 'अज्ञात';
+  @override
+  String get classLabel => 'कक्षा';
+  @override
+  String get classPlaceholder => '8-A';
+  @override
+  String get aboutLabelSimple => 'के बारे में';
+  @override
+  String get generalOption => 'सामान्य';
+  @override
+  String get staffMemberOption => 'स्टाफ सदस्य';
+  @override
+  String get transportOption => 'परिवहन';
+  @override
+  String get facilityOption => 'सुविधा';
+
+  @override
+  String get categoryLabelSimple => 'श्रेणी';
+  @override
+  String get whatSlipSays => 'पर्ची में क्या लिखा है *';
+  @override
+  String get typeSlipPlaceholder => 'पर्ची टाइप करें…';
+  @override
+  String get photoOfSlip => 'पर्ची की तस्वीर *';
+  @override
+  String get addPhotoButton => '📎 तस्वीर जोड़ें';
+  @override
+  String get uploadingPhoto => 'अपलोड हो रहा है…';
+  @override
+  String suggestionBoxFootnote(String ownerName, int points) =>
+      'टिकट चयनित शाखा के $ownerName के पास जाते हैं। स्टाफ सदस्य का नाम देने वाली प्रशंसा पर $points इनाम अंक मिलते हैं; बिना नाम के निदेशक निर्णय लेते हैं।';
+
+  // History & Insights
+  @override
+  String get voiceOfParentsAndStudents => 'अभिभावकों और छात्रों की आवाज़';
+  @override
+  String academicYearSubtitle(String year) => 'शैक्षणिक वर्ष $year · जून से मई';
+  @override
+  String get receivedPerMonth => 'प्रति माह प्राप्त';
+  @override
+  String get complaintsByCategory => 'श्रेणी के अनुसार शिकायतें';
+  @override
+  String get byStaffMemberDirectorOnly => 'स्टाफ सदस्य के अनुसार · केवल निदेशक';
+  @override
+  String get byStudentFamily => 'छात्र / परिवार के अनुसार';
+  @override
+  String get statTotalReceived => 'कुल प्राप्त';
+  @override
+  String get staffHeader => 'स्टाफ';
+  @override
+  String get studentHeader => 'छात्र';
+  @override
+  String get classHeader => 'कक्षा';
+  @override
+  String get lastActivityLabel => 'अंतिम गतिविधि';
+  @override
+  String get noDataAvailable => 'कोई डेटा उपलब्ध नहीं है';
+
+  // Task Stats & Filters
+  @override
+  String get statTotalCard => 'कुल';
+  @override
+  String get statNeedsReview => 'समीक्षा आवश्यक';
+  @override
+  String get statAwaitingSignOff => 'हस्ताक्षर की प्रतीक्षा है';
+  @override
+  String get statAcrossStatuses => 'सभी स्थितियों में';
+  @override
+  String get statFootnotePrefix => 'फ़िल्टर करने के लिए कार्ड पर क्लिक करें। शुरू होने वाले + प्रगति में + समीक्षा आवश्यक + पूर्ण + छोड़े गए = कुल। ';
+  @override
+  String get statFootnoteOverdue => 'अतिदेय';
+  @override
+  String get statFootnoteSuffix => ' एक ओवरले है — अपनी तिथि पार कर चुके खुले कार्य (समीक्षाधीन वाले नहीं), जो ऊपर पहले से गिने गए हैं।';
+  @override
+  String get createdByAssignedToAll => 'निर्मित / सौंपे गए: सभी';
+  @override
+  String get createdByMe => 'मेरे द्वारा बनाए गए';
+  @override
+  String get assignedToMe => 'मुझे सौंपे गए';
+  @override
+  String get anyCompletionPercent => 'कोई भी पूर्णता %';
+  @override
+  String get toLabel => 'तक';
+  @override
+  String selectAllWithCount(int count) => 'सभी चुनें ($count)';
+  @override
+  String byAuthor(String name) => '$name द्वारा';
+  @override
+  String subtasksCountBadge(int done, int total) => '$done/$total उप-कार्य';
+  @override
+  String get taskNoPrefix => 'कार्य आईडी ';
+  @override
+  String get completion0 => '0%';
+  @override
+  String get completion1To25 => '1-25%';
+  @override
+  String get completion26To50 => '26-50%';
+  @override
+  String get completion51To75 => '51-75%';
+  @override
+  String get completion76To99 => '76-99%';
+  @override
+  String get completion100 => '100%';
+  @override
+  String get newRecurringButton => '+ नया आवर्ती कार्य';
+  @override
+  String get newTaskButton => '+ नया कार्य';
+  @override
+  String get bulkUploadButton => 'थोक अपलोड';
+  @override
+  String get categoryAll => 'सभी';
+  @override
+  String get categoryConfidential => 'गोपनीय';
+  @override
+  String get categoryGeneral => 'सामान्य';
+  @override
+  String get viewList => 'सूची';
+  @override
+  String get viewBoard => 'बोर्ड';
+  @override
+  String get viewCalendar => 'कैलेंडर';
+  @override
+  String get statComplaints => 'शिकायतें';
+  @override
+  String get statFeedback => 'प्रतिक्रिया';
+  @override
+  String get statAppreciations => 'प्रशंसा';
+  @override
+  String get taskIdSettings => 'कार्य आईडी सेटिंग्स';
+  @override
+  String get centerHeadPrincipalRole => 'सेंटर हेड / प्रिंसिपल';
+  @override
+  String get teamLeadRole => 'टीम लीड';
+  @override
+  String get managerRole => 'प्रबंधक';
+  @override
+  String centerHeadPrincipalScope(int count) => 'टीम दायरा — $count लोग दृश्य में हैं।';
+  @override
+  String get operationalScopeYourOwn => 'परिचालन दायरा — आपके अपने कार्य और रिपोर्ट।';
 }

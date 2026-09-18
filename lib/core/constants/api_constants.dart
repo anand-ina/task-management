@@ -69,5 +69,13 @@ class ApiConstants {
   static const String adminReporting = '$baseUrl/admin/reporting';
   static const String adminRoles = '$baseUrl/admin/roles';
   static String taskReview(int taskId) => '$baseUrl/tasks/$taskId/review';
+
+  // Complaints & Tickets Endpoints
+  static const String tickets = '$baseUrl/tickets';
+  static const String ticketMeta = '$baseUrl/tickets/meta';
+  static const String ticketBatch = '$baseUrl/tickets/batch';
+  static const String ticketInsights = '$baseUrl/tickets/insights';
+  static const String uploads = '$baseUrl/uploads';
+  static String ticketMetaBranch(int branchId) => '$baseUrl/tickets/meta?branchId=$branchId';
 }
 

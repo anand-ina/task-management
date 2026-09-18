@@ -29,7 +29,14 @@ class AllTasksBloc extends Bloc<AllTasksEvent, AllTasksState> {
         offset: event.offset,
         status: event.status,
         priority: event.priority,
+        owner: event.owner,
+        dueFrom: event.dueFrom,
+        dueTo: event.dueTo,
+        progressMin: event.progressMin,
+        progressMax: event.progressMax,
+        category: event.category,
         search: event.search,
+        branchId: event.branchId,
       );
 
       if (event.offset > 0 && state is AllTasksLoadedState) {
@@ -39,6 +46,12 @@ class AllTasksBloc extends Bloc<AllTasksEvent, AllTasksState> {
         final combinedResponse = TasksResponseModel(
           items: combinedItems,
           total: response.total > 0 ? response.total : currentState.response.total,
+          inProgress: response.inProgress > 0 ? response.inProgress : currentState.response.inProgress,
+          needsAction: response.needsAction > 0 ? response.needsAction : currentState.response.needsAction,
+          needsReview: response.needsReview > 0 ? response.needsReview : currentState.response.needsReview,
+          overdue: response.overdue > 0 ? response.overdue : currentState.response.overdue,
+          completed: response.completed > 0 ? response.completed : currentState.response.completed,
+          dropped: response.dropped > 0 ? response.dropped : currentState.response.dropped,
           limit: response.limit,
           offset: response.offset,
         );
@@ -47,7 +60,14 @@ class AllTasksBloc extends Bloc<AllTasksEvent, AllTasksState> {
           activeScope: event.scope,
           activeStatus: event.status,
           activePriority: event.priority,
+          activeOwner: event.owner,
+          activeDueFrom: event.dueFrom,
+          activeDueTo: event.dueTo,
+          activeProgressMin: event.progressMin,
+          activeProgressMax: event.progressMax,
+          activeCategory: event.category,
           activeSearch: event.search,
+          activeBranchId: event.branchId,
         ));
       } else {
         emit(AllTasksLoadedState(
@@ -55,7 +75,14 @@ class AllTasksBloc extends Bloc<AllTasksEvent, AllTasksState> {
           activeScope: event.scope,
           activeStatus: event.status,
           activePriority: event.priority,
+          activeOwner: event.owner,
+          activeDueFrom: event.dueFrom,
+          activeDueTo: event.dueTo,
+          activeProgressMin: event.progressMin,
+          activeProgressMax: event.progressMax,
+          activeCategory: event.category,
           activeSearch: event.search,
+          activeBranchId: event.branchId,
         ));
       }
     } catch (e) {

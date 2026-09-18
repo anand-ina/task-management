@@ -79,21 +79,23 @@ class _BudgetApprovalsScreenState extends State<BudgetApprovalsScreen> {
               ),
               const SizedBox(height: 16),
 
-              // + New budget request Button
-              ElevatedButton.icon(
-                onPressed: () => NewBudgetRequestDialog.show(context),
-                 label: const Text('+ New budget request', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0F172A),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              // + New budget request Button (Hidden for Director)
+              if (!isDirector) ...[
+                ElevatedButton.icon(
+                  onPressed: () => NewBudgetRequestDialog.show(context),
+                  label: const Text('+ New budget request', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0F172A),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 20),
+                const SizedBox(height: 20),
+              ],
 
-              // Segmented Pill Tabs (Only visible when NOT Academic Executive)
-              if (!isAcademicExecutive) ...[
+              // Segmented Pill Tabs (Only visible when NOT Academic Executive and NOT Director)
+              if (!isAcademicExecutive && !isDirector) ...[
                 BlocBuilder<ApprovalsBloc, ApprovalsState>(
                   builder: (context, state) {
                     int receivedCount = 0;
@@ -162,11 +164,13 @@ class _BudgetApprovalsScreenState extends State<BudgetApprovalsScreen> {
                   }
 
                   if (state is ApprovalsLoadedState) {
-                    final items = isAcademicExecutive
-                        ? [...state.budgetReceived, ...state.budgetInitiated]
-                        : (_selectedTabIndex == 0
-                            ? state.budgetReceived
-                            : state.budgetInitiated);
+                    final items = isDirector
+                        ? state.budgetReceived
+                        : (isAcademicExecutive
+                            ? [...state.budgetReceived, ...state.budgetInitiated]
+                            : (_selectedTabIndex == 0
+                                ? state.budgetReceived
+                                : state.budgetInitiated));
 
                     if (items.isEmpty) {
                       return _buildEmptyState();

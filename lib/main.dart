@@ -13,6 +13,7 @@ import 'modules/auth/screens/login_screen.dart';
 
 import 'modules/dashboard/bloc/dashboard_bloc.dart';
 import 'modules/approvals/bloc/approvals_bloc.dart';
+import 'modules/complaints/bloc/complaints_bloc.dart';
 import 'modules/settings/bloc/language_cubit.dart';
 import 'shared_widgets/dialogs/no_internet_dialog.dart';
 
@@ -82,6 +83,7 @@ class _MyAppState extends State<MyApp> {
         ),
         BlocProvider<DashboardBloc>(create: (context) => DashboardBloc()),
         BlocProvider<ApprovalsBloc>(create: (context) => ApprovalsBloc()),
+        BlocProvider<ComplaintsBloc>(create: (context) => ComplaintsBloc()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeMode>(
         builder: (context, themeMode) {

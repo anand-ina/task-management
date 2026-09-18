@@ -1192,4 +1192,385 @@ class AppStringsEn extends AppStrings {
   @override
   String get whoButton => 'Who?';
 
+  // Complaints & Feedback Module Strings
+  @override
+  String get complaintsAndFeedbackHeader => 'COMPLAINTS & FEEDBACK';
+  @override
+  String get complaintsTracker => 'Complaints Tracker';
+  @override
+  String get suggestionBoxEntry => 'Suggestion Box Entry';
+  @override
+  String get historyAndInsights => 'History & Insights';
+  @override
+  String get appreciationApprovals => 'Appreciation Approvals';
+
+  @override
+  String get complaintsAndFeedbackTitle => 'Complaints & Feedback';
+  @override
+  String get complaintsAndFeedbackSubtitle => 'Complaints, feedback and appreciations from parents and students — each one tracked to closure.';
+  @override
+  String get suggestionBoxEntryButton => 'Suggestion box entry';
+  @override
+  String get historyAndInsightsButton => 'History & insights';
+  @override
+  String get raiseRequestButton => '+ Raise Request';
+
+  @override
+  String get statNewNotPickedUp => 'New — not picked up';
+  @override
+  String get statInProgress => 'In progress';
+  @override
+  String get statPastTargetDate => 'Past target date';
+  @override
+  String get statResolvedThisMonth => 'Resolved this month';
+  @override
+  String get statAwaitingDirectorApproval => 'Awaiting Director approval';
+  @override
+  String get statAvgTimeToResolve => 'Avg. time to resolve';
+
+  @override
+  String get tabOpen => 'Open';
+  @override
+  String get tabPastTargetDate => 'Past target date';
+  @override
+  String get tabResolved => 'Resolved';
+  @override
+  String get tabAll => 'All';
+
+  @override
+  String get searchTicketsPlaceholder => 'Search ticket no., student, staff...';
+  @override
+  String get filterAllTypes => 'All types';
+  @override
+  String get filterParentsAndStudents => 'Parents & students';
+  @override
+  String get filterAllCategories => 'All categories';
+  @override
+  String get filterEveryones => "Everyone's";
+
+  @override
+  String get colTicket => 'TICKET';
+  @override
+  String get colType => 'TYPE';
+  @override
+  String get colFrom => 'FROM';
+  @override
+  String get colStudent => 'STUDENT';
+  @override
+  String get colAbout => 'ABOUT';
+  @override
+  String get colCategory => 'CATEGORY';
+  @override
+  String get colStatus => 'STATUS';
+  @override
+  String get colWith => 'WITH';
+  @override
+  String get colReceived => 'RECEIVED';
+  @override
+  String get colTask => 'TASK';
+  @override
+  String get noTicketsFound => 'No tickets found matching your criteria.';
+
+  @override
+  String get raiseARequestTitle => 'Raise a Request';
+  @override
+  String get typeLabel => 'Type *';
+  @override
+  String get typeComplaint => 'Complaint';
+  @override
+  String get typeFeedbackSuggestion => 'Feedback / Suggestion';
+  @override
+  String get typeAppreciation => 'Appreciation';
+  @override
+  String get receivedFromLabel => 'Received from *';
+  @override
+  String get receivedFromParent => 'Parent';
+  @override
+  String get receivedFromStudent => 'Student';
+  @override
+  String get channelLabel => 'Channel *';
+  @override
+  String get whichGroupPlaceLabel => 'Which group / place (optional)';
+  @override
+  String get whichGroupPlaceHint => 'e.g. Class 6B Parents';
+  @override
+  String get receivedOnLabel => 'Received on *';
+
+  @override
+  String get studentNameLabel => 'Student name *';
+  @override
+  String get studentNameHint => 'e.g. Aarav Reddy';
+  @override
+  String get classSectionLabel => 'Class & section *';
+  @override
+  String get classSectionHint => 'e.g. 6-B';
+  @override
+  String get admissionNoLabel => 'Admission no.';
+  @override
+  String get admissionNoHint => 'optional';
+  @override
+  String get parentNameLabel => 'Parent name';
+  @override
+  String get parentNameHint => 'e.g. Mrs. Kavitha Reddy';
+  @override
+  String get parentMobileLabel => 'Parent mobile (the ticket number is sent here)';
+  @override
+  String get parentMobileHint => '10-digit number';
+  @override
+  String get keepParentAnonymous => 'Keep the parent anonymous';
+  @override
+  String get keepParentAnonymousSubtext => 'Name, mobile and evidence stay visible to the campus head and Director only. The ticket number is still sent.';
+  @override
+  String get aboutLabel => 'About *';
+  @override
+  String get aboutStaffMember => 'Staff member';
+  @override
+  String get aboutDepartment => 'Department';
+  @override
+  String get aboutTransport => 'Transport';
+  @override
+  String get aboutFacility => 'Facility';
+  @override
+  String get aboutGeneral => 'General';
+  @override
+  String get staffMemberSubtext => 'Staff member (leave as "not named" if they don\'t want to say)';
+  @override
+  String get notNamedOption => "Not named — they don't want to say";
+
+  @override
+  String get priorityLabel => 'Priority';
+  @override
+  String get priorityEmergency => 'Emergency';
+  @override
+  String get priorityTopMost => 'Top Most';
+  @override
+  String get priorityHigh => 'High';
+  @override
+  String get priorityMedium => 'Medium';
+  @override
+  String get priorityLow => 'Low';
+  @override
+  String targetDateDaysFromToday(int days) => 'Target date: $days days from today.';
+  @override
+  String get visibilityLabel => 'Visibility *';
+  @override
+  String get visibilityGeneral => 'General — visible to all staff';
+  @override
+  String get visibilityConfidential => 'Confidential';
+  @override
+  String get whatWasSaidLabel => 'What was said? *';
+  @override
+  String get whatWasSaidHint => 'What happened, when, and what does the parent / student want?';
+  @override
+  String get evidenceLabel => 'Evidence * (WhatsApp screenshot, photo of the slip or letter)';
+  @override
+  String get addFileButton => 'Add file';
+  @override
+  String get fileUploadedSuccess => 'File attached successfully';
+  @override
+  String get uploadingFile => 'Uploading file...';
+  @override
+  String bannerTicketTaskCreated(String ticketNo, String taskNo, String ownerName) =>
+      'Ticket $ticketNo and task $taskNo will be created and assigned to $ownerName. The parent gets the ticket number on WhatsApp.';
+  @override
+  String get registerComplaintButton => 'Register Complaint';
+  @override
+  String get complaintRegisteredTitle => 'Complaint registered';
+  @override
+  String get ticketNumberLabel => 'TICKET NUMBER';
+  @override
+  String get shareNumberNotice => 'Share this number if the parent or student follows up.';
+  @override
+  String get whatHappensNext => 'What happens next';
+  @override
+  String taskAssignedNotice(String taskNo, String owner, String due) =>
+      'Task $taskNo assigned to $owner · due $due';
+  @override
+  String whatsappTicketSentNotice(String mobile) =>
+      'WhatsApp with the ticket number sent to $mobile.';
+  @override
+  String get doneButton => 'Done';
+  @override
+  String get openTicketButton => 'Open ticket';
+  @override
+  String get fillRequiredFieldsError => 'Please fill all required fields.';
+  @override
+  String get invalidMobileNumberError => 'Please enter a valid 10-digit mobile number.';
+
+  // Suggestion Box & Filters
+
+  @override
+  String get assignedByMe => 'Assigned by me';
+  @override
+  String get suggestionBoxEntryTitle => 'Suggestion Box Entry';
+  @override
+  String get backToTracker => '← Back to tracker';
+  @override
+  String get suggestionBoxSub =>
+      'One row per slip. Rows without a student name are recorded as anonymous. Complaints and feedback create a task for the campus head; appreciations are recorded.';
+  @override
+  String get boxOpenedLabel => 'Box opened';
+  @override
+  String get branchPlaceholder => 'Branch…';
+  @override
+  String get addRowButton => '＋ Add row';
+  @override
+  String saveRequestsButton(int count) =>
+      'Save ${count > 0 ? "$count " : ""}request${count == 1 ? "" : "s"}';
+  @override
+  String get savingRequests => 'Saving…';
+  @override
+  String get typeAtLeastOneSlipWarning =>
+      'Type at least one slip before saving.';
+  @override
+  String attachPhotoWarning(int count) =>
+      'Attach a photo of every slip — $count still ${count == 1 ? "needs" : "need"} one.';
+  @override
+  String registeredBannerTitle(int count) => 'REGISTERED ($count)';
+  @override
+  String slipTitle(int index) => 'SLIP $index';
+  @override
+  String get removeButton => '✕ Remove';
+  @override
+  String get studentBlankAnonymous => 'Student (blank = anonymous)';
+  @override
+  String get anonymousHint => 'Anonymous';
+  @override
+  String get classLabel => 'Class';
+  @override
+  String get classPlaceholder => '8-A';
+  @override
+  String get aboutLabelSimple => 'About';
+  @override
+  String get generalOption => 'General';
+  @override
+  String get staffMemberOption => 'Staff member';
+  @override
+  String get transportOption => 'Transport';
+  @override
+  String get facilityOption => 'Facility';
+
+  @override
+  String get categoryLabelSimple => 'Category';
+  @override
+  String get whatSlipSays => 'What the slip says *';
+  @override
+  String get typeSlipPlaceholder => 'Type the slip…';
+  @override
+  String get photoOfSlip => 'Photo of the slip *';
+  @override
+  String get addPhotoButton => '📎 Add photo';
+  @override
+  String get uploadingPhoto => 'Uploading…';
+  @override
+  String suggestionBoxFootnote(String ownerName, int points) =>
+      'Tickets go to $ownerName of the selected branch. Appreciations naming a staff member add $points reward points; without a name the Director decides.';
+
+  // History & Insights
+  @override
+  String get voiceOfParentsAndStudents => 'Voice of Parents & Students';
+  @override
+  String academicYearSubtitle(String year) => 'Academic year $year · June to May';
+  @override
+  String get receivedPerMonth => 'RECEIVED PER MONTH';
+  @override
+  String get complaintsByCategory => 'COMPLAINTS BY CATEGORY';
+  @override
+  String get byStaffMemberDirectorOnly => 'BY STAFF MEMBER · Director only';
+  @override
+  String get byStudentFamily => 'BY STUDENT / FAMILY';
+  @override
+  String get statTotalReceived => 'Total received';
+  @override
+  String get staffHeader => 'STAFF';
+  @override
+  String get studentHeader => 'STUDENT';
+  @override
+  String get classHeader => 'CLASS';
+  @override
+  String get lastActivityLabel => 'Last activity';
+  @override
+  String get noDataAvailable => 'No data available';
+
+  // Task Stats & Filters
+  @override
+  String get statTotalCard => 'Total';
+  @override
+  String get statNeedsReview => 'Needs Review';
+  @override
+  String get statAwaitingSignOff => 'awaiting for sign-off';
+  @override
+  String get statAcrossStatuses => 'across statuses';
+  @override
+  String get statFootnotePrefix => 'Click a card to filter. To be Started + In Progress + Needs Review + Completed + Dropped = Total. ';
+  @override
+  String get statFootnoteOverdue => 'Overdue';
+  @override
+  String get statFootnoteSuffix => ' is an overlay — open tasks past their date (not those awaiting review), already counted above.';
+  @override
+  String get createdByAssignedToAll => 'Created by / Assigned to: All';
+  @override
+  String get createdByMe => 'Created by me';
+  @override
+  String get assignedToMe => 'Assigned to me';
+  @override
+  String get anyCompletionPercent => 'Any completion %';
+  @override
+  String get toLabel => 'to';
+  @override
+  String selectAllWithCount(int count) => 'Select all ($count)';
+  @override
+  String byAuthor(String name) => 'By $name';
+  @override
+  String subtasksCountBadge(int done, int total) => '$done/$total sub-tasks';
+  @override
+  String get taskNoPrefix => 'Task ID ';
+  @override
+  String get completion0 => '0%';
+  @override
+  String get completion1To25 => '1-25%';
+  @override
+  String get completion26To50 => '26-50%';
+  @override
+  String get completion51To75 => '51-75%';
+  @override
+  String get completion76To99 => '76-99%';
+  @override
+  String get completion100 => '100%';
+  @override
+  String get newRecurringButton => '+ New Recurring';
+  @override
+  String get newTaskButton => 'New Task';
+  @override
+  String get bulkUploadButton => 'Bulk Upload';
+  @override
+  String get categoryAll => 'All';
+  @override
+  String get categoryConfidential => 'Confidential';
+  @override
+  String get categoryGeneral => 'General';
+  @override
+  String get viewList => 'List';
+  @override
+  String get viewBoard => 'Board';
+  @override
+  String get viewCalendar => 'Calendar';
+  @override
+  String get statComplaints => 'Complaints';
+  @override
+  String get statFeedback => 'Feedback';
+  @override
+  String get statAppreciations => 'Appreciations';
+  @override
+  String get taskIdSettings => 'Task ID Settings';
+  @override
+  String get centerHeadPrincipalRole => 'Center Head / Principal';
+  @override
+  String get teamLeadRole => 'Team Lead';
+  @override
+  String get managerRole => 'Manager';
+  @override
+  String centerHeadPrincipalScope(int count) => 'Team scope — $count people in view.';
+  @override
+  String get operationalScopeYourOwn => 'Operational scope — your own tasks & reports.';
 }

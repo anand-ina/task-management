@@ -232,9 +232,9 @@ class _AdminBranchesDepartmentsScreenState
   Widget _branchEditRow(BuildContext context, AppStrings s, AdminBranchModel b, bool isDark) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [
-        SizedBox(width: 80, height: 36, child: _editField(_editCodeController, s.codePlaceholder, isDark, autofocus: true)),
+        SizedBox(width: 80, height: 50, child: _editField(_editCodeController, s.codePlaceholder, isDark, autofocus: true)),
         const SizedBox(width: 8),
-        Expanded(child: SizedBox(height: 36, child: _editField(_editBranchNameController, s.branchNamePlaceholder, isDark))),
+        Expanded(child: SizedBox(height: 50, child: _editField(_editBranchNameController, s.branchNamePlaceholder, isDark))),
       ]),
       const SizedBox(height: 8),
       _saveCancelRow(s, onCancel: _cancelEditBranch, onSave: () => _saveBranch(context, b.id), isDark: isDark),
@@ -243,9 +243,9 @@ class _AdminBranchesDepartmentsScreenState
 
   Widget _addBranchRow(BuildContext context, AppStrings s, bool isDark) {
     return Row(children: [
-      SizedBox(width: 80, height: 38, child: _addField(_codeController, s.codePlaceholder, isDark)),
+      SizedBox(width: 80, height: 50, child: _addField(_codeController, s.codePlaceholder, isDark)),
       const SizedBox(width: 8),
-      Expanded(child: SizedBox(height: 38, child: _addField(_branchNameController, s.branchNamePlaceholder, isDark))),
+      Expanded(child: SizedBox(height: 50, child: _addField(_branchNameController, s.branchNamePlaceholder, isDark))),
       const SizedBox(width: 8),
       SizedBox(height: 38, child: _addBtn(s.addButton, onPressed: () {
         final code = _codeController.text.trim();
@@ -466,7 +466,7 @@ class _AdminBranchesDepartmentsScreenState
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(fontSize: 12),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         isDense: true,
         filled: true,
         fillColor: isDark ? const Color(0xFF0F172A) : Colors.white,
@@ -484,7 +484,7 @@ class _AdminBranchesDepartmentsScreenState
       style: ElevatedButton.styleFrom(
         backgroundColor: const Color(0xFF0F172A),
         foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       child: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),

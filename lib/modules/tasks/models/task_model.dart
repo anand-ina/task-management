@@ -69,6 +69,7 @@ class TaskTimelineItem {
 class TaskItemModel {
   final int id;
   final String taskNo;
+  final String? legacyTaskNo;
   final String fy;
   final String title;
   final String description;
@@ -91,10 +92,15 @@ class TaskItemModel {
   final String branchCode;
   final String branchName;
   final List<TaskAssigneeModel> assignees;
+  final int? ticketId;
+  final String? ticketNo;
+  final int subtasksTotal;
+  final int subtasksCompleted;
 
   TaskItemModel({
     required this.id,
     required this.taskNo,
+    this.legacyTaskNo,
     required this.fy,
     required this.title,
     required this.description,
@@ -117,12 +123,40 @@ class TaskItemModel {
     required this.branchCode,
     required this.branchName,
     required this.assignees,
+    this.ticketId,
+    this.ticketNo,
+    this.subtasksTotal = 0,
+    this.subtasksCompleted = 0,
   });
 
   factory TaskItemModel.fromJson(Map<String, dynamic> json) {
+    int totalSubtasks = 0;
+    int doneSubtasks = 0;
+    if (json['checklist'] is List) {
+      final list = json['checklist'] as List;
+      totalSubtasks = list.length;
+      doneSubtasks = list.where((e) => e is Map && (e['is_completed'] == true || e['completed'] == true || e['status'] == 'completed' || e['done'] == true)).length;
+    } else if (json['subtasks'] is List) {
+      final list = json['subtasks'] as List;
+      totalSubtasks = list.length;
+      doneSubtasks = list.where((e) => e is Map && (e['is_completed'] == true || e['completed'] == true || e['status'] == 'completed' || e['done'] == true)).length;
+    } else {
+      totalSubtasks = json['subtasks_total'] as int? ?? json['subtask_count'] as int? ?? json['subtasks_count'] as int? ?? 0;
+      doneSubtasks = json['subtasks_completed'] as int? ?? json['subtask_completed_count'] as int? ?? json['subtasks_completed_count'] as int? ?? 0;
+    }
+
+    String? ticketNumber = json['ticket_no']?.toString() ??
+        (json['ticket'] is Map ? json['ticket']['ticket_no']?.toString() ?? json['ticket']['code']?.toString() : null) ??
+        json['ticket_code']?.toString();
+    int? ticketIdentifier = json['ticket_id'] as int? ?? (json['ticket'] is Map ? json['ticket']['id'] as int? : null);
+    if (ticketNumber == null && ticketIdentifier != null) {
+      ticketNumber = 'TKT-$ticketIdentifier';
+    }
+
     return TaskItemModel(
       id: json['id'] as int? ?? 0,
       taskNo: json['task_no'] as String? ?? '',
+      legacyTaskNo: json['legacy_task_no']?.toString(),
       fy: json['fy'] as String? ?? '2025-26',
       title: json['title'] as String? ?? '',
       description: json['description'] as String? ?? '',
@@ -148,12 +182,17 @@ class TaskItemModel {
               ?.map((e) => TaskAssigneeModel.fromJson(e))
               .toList() ??
           [],
+      ticketId: ticketIdentifier,
+      ticketNo: ticketNumber,
+      subtasksTotal: totalSubtasks,
+      subtasksCompleted: doneSubtasks,
     );
   }
 
   Map<String, dynamic> toJson() => {
         'id': id,
         'task_no': taskNo,
+        'legacy_task_no': legacyTaskNo,
         'fy': fy,
         'title': title,
         'description': description,
@@ -176,6 +215,10 @@ class TaskItemModel {
         'branch_code': branchCode,
         'branch_name': branchName,
         'assignees': assignees.map((e) => e.toJson()).toList(),
+        'ticket_id': ticketId,
+        'ticket_no': ticketNo,
+        'subtasks_total': subtasksTotal,
+        'subtasks_completed': subtasksCompleted,
       };
 }
 
@@ -254,12 +297,24 @@ class TaskDetailModel extends TaskItemModel {
 class TasksResponseModel {
   final List<TaskItemModel> items;
   final int total;
+  final int inProgress;
+  final int needsAction;
+  final int needsReview;
+  final int overdue;
+  final int completed;
+  final int dropped;
   final int limit;
   final int offset;
 
   TasksResponseModel({
     required this.items,
     required this.total,
+    this.inProgress = 0,
+    this.needsAction = 0,
+    this.needsReview = 0,
+    this.overdue = 0,
+    this.completed = 0,
+    this.dropped = 0,
     required this.limit,
     required this.offset,
   });
@@ -271,7 +326,13 @@ class TasksResponseModel {
               .toList() ??
           [],
       total: json['total'] as int? ?? 0,
-      limit: json['limit'] as int? ?? 50,
+      inProgress: json['inProgress'] as int? ?? json['in_progress'] as int? ?? 0,
+      needsAction: json['needsAction'] as int? ?? json['needs_action'] as int? ?? json['to_be_started'] as int? ?? 0,
+      needsReview: json['needsReview'] as int? ?? json['needs_review'] as int? ?? 0,
+      overdue: json['overdue'] as int? ?? 0,
+      completed: json['completed'] as int? ?? 0,
+      dropped: json['dropped'] as int? ?? 0,
+      limit: json['limit'] as int? ?? 80,
       offset: json['offset'] as int? ?? 0,
     );
   }

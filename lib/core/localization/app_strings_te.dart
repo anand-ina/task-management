@@ -1192,4 +1192,385 @@ class AppStringsTe extends AppStrings {
   @override
   String get whoButton => 'ఎవరు?';
 
+  // Complaints & Feedback Module Strings
+  @override
+  String get complaintsAndFeedbackHeader => 'ఫిర్యాదులు & అభిప్రాయం';
+  @override
+  String get complaintsTracker => 'ఫిర్యాదుల ట్రాకర్';
+  @override
+  String get suggestionBoxEntry => 'సూచనల పెట్టె నమోదు';
+  @override
+  String get historyAndInsights => 'చరిత్ర & అంతర్దృష్టులు';
+  @override
+  String get appreciationApprovals => 'ప్రశంసల ఆమోదాలు';
+
+  @override
+  String get complaintsAndFeedbackTitle => 'ఫిర్యాదులు & అభిప్రాయం';
+  @override
+  String get complaintsAndFeedbackSubtitle => 'తల్లిదండ్రులు మరియు విద్యార్థుల నుండి ఫిర్యాదులు, అభిప్రాయాలు మరియు ప్రశంసలు — ప్రతి ఒక్కటి పరిష్కారం వరకు ట్రాక్ చేయబడతాయి.';
+  @override
+  String get suggestionBoxEntryButton => 'సూచనల పెట్టె నమోదు';
+  @override
+  String get historyAndInsightsButton => 'చరిత్ర & అంతర్దృష్టులు';
+  @override
+  String get raiseRequestButton => '+ అభ్యర్థనను సమర్పించండి';
+
+  @override
+  String get statNewNotPickedUp => 'కొత్తవి — ఇంకా ప్రారంభించలేదు';
+  @override
+  String get statInProgress => 'పురోగతిలో ఉంది';
+  @override
+  String get statPastTargetDate => 'లక్ష్య తేదీ దాటినవి';
+  @override
+  String get statResolvedThisMonth => 'ఈ నెలలో పరిష్కరించబడినవి';
+  @override
+  String get statAwaitingDirectorApproval => 'డైరెక్టర్ ఆమోదం కోసం వేచి ఉంది';
+  @override
+  String get statAvgTimeToResolve => 'సగటు పరిష్కార సమయం';
+
+  @override
+  String get tabOpen => 'తెరిచి ఉన్నవి';
+  @override
+  String get tabPastTargetDate => 'లక్ష్య తేదీ దాటినవి';
+  @override
+  String get tabResolved => 'పరిష్కరించబడినవి';
+  @override
+  String get tabAll => 'అన్ని';
+
+  @override
+  String get searchTicketsPlaceholder => 'టికెట్ నం, విద్యార్థి, సిబ్బందిని శోధించండి...';
+  @override
+  String get filterAllTypes => 'అన్ని రకాలు';
+  @override
+  String get filterParentsAndStudents => 'తల్లిదండ్రులు & విద్యార్థులు';
+  @override
+  String get filterAllCategories => 'అన్ని విభాగాలు';
+  @override
+  String get filterEveryones => 'అందరివి';
+
+  @override
+  String get colTicket => 'టికెట్';
+  @override
+  String get colType => 'రకం';
+  @override
+  String get colFrom => 'నుండి';
+  @override
+  String get colStudent => 'విద్యార్థి';
+  @override
+  String get colAbout => 'గురించి';
+  @override
+  String get colCategory => 'విభాగం';
+  @override
+  String get colStatus => 'స్థితి';
+  @override
+  String get colWith => 'ఎవరి వద్ద';
+  @override
+  String get colReceived => 'స్వీకరించబడింది';
+  @override
+  String get colTask => 'టాస్క్';
+  @override
+  String get noTicketsFound => 'మీ శోధనకు సరిపోలే టిక్కెట్‌లు ఏవీ కనుగొనబడలేదు.';
+
+  @override
+  String get raiseARequestTitle => 'అభ్యర్థనను సమర్పించండి';
+  @override
+  String get typeLabel => 'రకం *';
+  @override
+  String get typeComplaint => 'ఫిర్యాదు';
+  @override
+  String get typeFeedbackSuggestion => 'అభిప్రాయం / సూచన';
+  @override
+  String get typeAppreciation => 'ప్రశంస';
+  @override
+  String get receivedFromLabel => 'ఎవరి నుండి వచ్చింది *';
+  @override
+  String get receivedFromParent => 'తల్లిదండ్రులు';
+  @override
+  String get receivedFromStudent => 'విద్యార్థి';
+  @override
+  String get channelLabel => 'మాధ్యమం *';
+  @override
+  String get whichGroupPlaceLabel => 'ఏ సమూహం / ప్రదేశం (ఐచ్ఛికం)';
+  @override
+  String get whichGroupPlaceHint => 'ఉదా. క్లాస్ 6B పేరెంట్స్';
+  @override
+  String get receivedOnLabel => 'స్వీకరించిన తేదీ *';
+
+  @override
+  String get studentNameLabel => 'విద్యార్థి పేరు *';
+  @override
+  String get studentNameHint => 'ఉదా. ఆరవ్ రెడ్డి';
+  @override
+  String get classSectionLabel => 'తరగతి & విభాగం *';
+  @override
+  String get classSectionHint => 'ఉదా. 6-B';
+  @override
+  String get admissionNoLabel => 'అడ్మిషన్ నంబర్';
+  @override
+  String get admissionNoHint => 'ఐచ్ఛికం';
+  @override
+  String get parentNameLabel => 'తల్లిదండ్రుల పేరు';
+  @override
+  String get parentNameHint => 'ఉదా. శ్రీమతి కవితా రెడ్డి';
+  @override
+  String get parentMobileLabel => 'తల్లిదండ్రుల మొబైల్ (టికెట్ నంబర్ ఇక్కడికి పంపబడుతుంది)';
+  @override
+  String get parentMobileHint => '10-అంకెల సంఖ్య';
+  @override
+  String get keepParentAnonymous => 'తల్లిదండ్రుల వివరాలను అనామకంగా ఉంచండి';
+  @override
+  String get keepParentAnonymousSubtext => 'పేరు, మొబైల్ మరియు ఆధారాలు క్యాంపస్ హెడ్ మరియు డైరెక్టర్‌కు మాత్రమే కనిపిస్తాయి. టికెట్ నంబర్ పంపబడుతుంది.';
+  @override
+  String get aboutLabel => 'దేని గురించి *';
+  @override
+  String get aboutStaffMember => 'సిబ్బంది సభ్యుడు';
+  @override
+  String get aboutDepartment => 'విభాగం';
+  @override
+  String get aboutTransport => 'రవాణా';
+  @override
+  String get aboutFacility => 'సౌకర్యం';
+  @override
+  String get aboutGeneral => 'సాధారణ';
+  @override
+  String get staffMemberSubtext => 'సిబ్బంది సభ్యుడు (పేరు చెప్పకూడదనుకుంటే "పేరు లేదు" అని వదిలేయండి)';
+  @override
+  String get notNamedOption => 'పేరు లేదు — వారు చెప్పకూడదనుకుంటున్నారు';
+
+  @override
+  String get priorityLabel => 'ప్రాధాన్యత';
+  @override
+  String get priorityEmergency => 'అత్యవసరం';
+  @override
+  String get priorityTopMost => 'అత్యున్నత';
+  @override
+  String get priorityHigh => 'ఎక్కువ';
+  @override
+  String get priorityMedium => 'మధ్యస్థం';
+  @override
+  String get priorityLow => 'తక్కువ';
+  @override
+  String targetDateDaysFromToday(int days) => 'లక్ష్య తేదీ: నేటి నుండి $days రోజులు.';
+  @override
+  String get visibilityLabel => 'దృశ్యత *';
+  @override
+  String get visibilityGeneral => 'సాధారణ — సిబ్బంది అందరికీ కనిపిస్తుంది';
+  @override
+  String get visibilityConfidential => 'రహస్యమైనది';
+  @override
+  String get whatWasSaidLabel => 'ఏమి చెప్పారు? *';
+  @override
+  String get whatWasSaidHint => 'ఏమి జరిగింది, ఎప్పుడు జరిగింది, మరియు వారు ఏమి కోరుకుంటున్నారు?';
+  @override
+  String get evidenceLabel => 'సాక్ష్యం * (వాట్సాప్ స్క్రీన్‌షాట్, స్లిప్ లేదా లేఖ ఫోటో)';
+  @override
+  String get addFileButton => 'ఫైల్‌ను జోడించండి';
+  @override
+  String get fileUploadedSuccess => 'ఫైల్ విజయవంతంగా జోడించబడింది';
+  @override
+  String get uploadingFile => 'ఫైల్ అప్‌లోడ్ అవుతోంది...';
+  @override
+  String bannerTicketTaskCreated(String ticketNo, String taskNo, String ownerName) =>
+      'టికెట్ $ticketNo మరియు టాస్క్ $taskNo సృష్టించబడి $ownerNameకి కేటాయించబడతాయి. తల్లిదండ్రులు వాట్సాప్‌లో టికెట్ నంబర్‌ను పొందుతారు.';
+  @override
+  String get registerComplaintButton => 'ఫిర్యాదును నమోదు చేయండి';
+  @override
+  String get complaintRegisteredTitle => 'ఫిర్యాదు నమోదు చేయబడింది';
+  @override
+  String get ticketNumberLabel => 'టికెట్ సంఖ్య';
+  @override
+  String get shareNumberNotice => 'ఫాలో అప్ కోసం ఈ నంబర్‌ను ఉపయోగించండి.';
+  @override
+  String get whatHappensNext => 'తరువాత ఏమి జరుగుతుంది';
+  @override
+  String taskAssignedNotice(String taskNo, String owner, String due) =>
+      'టాస్క్ $taskNo $ownerకి కేటాయించబడింది · గడువు $due';
+  @override
+  String whatsappTicketSentNotice(String mobile) =>
+      '$mobile నంబర్‌కు టికెట్ వివరాలు వాట్సాప్ ద్వారా పంపబడ్డాయి.';
+  @override
+  String get doneButton => 'పూర్తయింది';
+  @override
+  String get openTicketButton => 'టికెట్ తెరవండి';
+  @override
+  String get fillRequiredFieldsError => 'దయచేసి అన్ని అవసరమైన ఫీల్డ్‌లను పూరించండి.';
+  @override
+  String get invalidMobileNumberError => 'దయచేసి సరైన 10-అంకెల మొబైల్ నంబర్‌ను నమోదు చేయండి.';
+
+  // Suggestion Box & Filters
+
+  @override
+  String get assignedByMe => 'నేను కేటాయించినవి';
+  @override
+  String get suggestionBoxEntryTitle => 'సలహా పెట్టె నమోదు';
+  @override
+  String get backToTracker => '← ట్రాకర్‌కు తిరిగి వెళ్లండి';
+  @override
+  String get suggestionBoxSub =>
+      'ప్రతి స్లిప్‌కు ఒక వరుస. విద్యార్థి పేరు లేని వరుసలు అనామకంగా నమోదు చేయబడతాయి. ఫిర్యాదులు మరియు ఫీడ్‌బ్యాక్ క్యాంపస్ హెడ్‌కు టాస్క్‌ను సృష్టిస్తాయి; ప్రశంసలు నమోదు చేయబడతాయి.';
+  @override
+  String get boxOpenedLabel => 'పెట్టె తెరిచిన తేదీ';
+  @override
+  String get branchPlaceholder => 'శాఖ…';
+  @override
+  String get addRowButton => '＋ వరుసను జోడించండి';
+  @override
+  String saveRequestsButton(int count) =>
+      '${count > 0 ? "$count " : ""}అభ్యర్థన${count == 1 ? "" : "లను"} సేవ్ చేయండి';
+  @override
+  String get savingRequests => 'సేవ్ చేస్తోంది…';
+  @override
+  String get typeAtLeastOneSlipWarning =>
+      'సేవ్ చేయడానికి ముందు కనీసం ఒక స్లిప్‌ను టైప్ చేయండి.';
+  @override
+  String attachPhotoWarning(int count) =>
+      'ప్రతి స్లిప్ ఫోటోను జత చేయండి — ఇంకా $count ఫోటో అవసరం.';
+  @override
+  String registeredBannerTitle(int count) => 'నమోదైనవి ($count)';
+  @override
+  String slipTitle(int index) => 'స్లిప్ $index';
+  @override
+  String get removeButton => '✕ తొలగించండి';
+  @override
+  String get studentBlankAnonymous => 'విద్యార్థి (ఖాళీగా ఉంటే = అనామక)';
+  @override
+  String get anonymousHint => 'అనామక';
+  @override
+  String get classLabel => 'తరగతి';
+  @override
+  String get classPlaceholder => '8-A';
+  @override
+  String get aboutLabelSimple => 'గురించి';
+  @override
+  String get generalOption => 'సాధారణ';
+  @override
+  String get staffMemberOption => 'సిబ్బంది సభ్యుడు';
+  @override
+  String get transportOption => 'రవాణా';
+  @override
+  String get facilityOption => 'సౌకర్యం';
+
+  @override
+  String get categoryLabelSimple => 'వర్గం';
+  @override
+  String get whatSlipSays => 'స్లిప్‌లో ఉన్నది ఏమిటి *';
+  @override
+  String get typeSlipPlaceholder => 'స్లిప్‌లో ఉన్నది టైప్ చేయండి…';
+  @override
+  String get photoOfSlip => 'స్లిప్ ఫోటో *';
+  @override
+  String get addPhotoButton => '📎 ఫోటోను జోడించండి';
+  @override
+  String get uploadingPhoto => 'అప్‌లోడ్ చేస్తోంది…';
+  @override
+  String suggestionBoxFootnote(String ownerName, int points) =>
+      'టికెట్లు ఎంచుకున్న శాఖకు చెందిన $ownerName కు వెళ్తాయి. సిబ్బంది సభ్యుని పేరు ఉన్న ప్రశంసలకు $points రివార్డ్ పాయింట్లు లభిస్తాయి; పేరు లేకపోతే డైరెక్టర్ నిర్ణయిస్తారు.';
+
+  // History & Insights
+  @override
+  String get voiceOfParentsAndStudents => 'తల్లిదండ్రులు & విద్యార్థుల స్వరం';
+  @override
+  String academicYearSubtitle(String year) => 'విద్యా సంవత్సరం $year · జూన్ నుండి మే వరకు';
+  @override
+  String get receivedPerMonth => 'నెలకు అందినవి';
+  @override
+  String get complaintsByCategory => 'వర్గం వారీగా ఫిర్యాదులు';
+  @override
+  String get byStaffMemberDirectorOnly => 'సిబ్బంది సభ్యుల వారీగా · డైరెక్టర్ మాత్రమే';
+  @override
+  String get byStudentFamily => 'విద్యార్థి / కుటుంబం వారీగా';
+  @override
+  String get statTotalReceived => 'మొత్తం అందినవి';
+  @override
+  String get staffHeader => 'సిబ్బంది';
+  @override
+  String get studentHeader => 'విద్యార్థి';
+  @override
+  String get classHeader => 'తరగతి';
+  @override
+  String get lastActivityLabel => 'చివరి కార్యాచరణ';
+  @override
+  String get noDataAvailable => 'డేటా అందుబాటులో లేదు';
+
+  // Task Stats & Filters
+  @override
+  String get statTotalCard => 'మొత్తం';
+  @override
+  String get statNeedsReview => 'సమీక్ష అవసరం';
+  @override
+  String get statAwaitingSignOff => 'సంతకం కోసం వేచి ఉంది';
+  @override
+  String get statAcrossStatuses => 'అన్ని స్థితులలో';
+  @override
+  String get statFootnotePrefix => 'ఫిల్టర్ చేయడానికి కార్డ్ పై క్లిక్ చేయండి. ప్రారంభించాల్సినవి + పురోగతిలో ఉన్నవి + సమీక్ష అవసరమైనవి + పూర్తయినవి + రద్దు చేయబడినవి = మొత్తం. ';
+  @override
+  String get statFootnoteOverdue => 'గడువు ముగిసినవి';
+  @override
+  String get statFootnoteSuffix => ' అనేది ఓవర్‌లే — గడువు తేదీ దాటిన తెరిచిన టాస్క్‌లు (సమీక్షలో ఉన్నవి కావు), ఇప్పటికే పైన లెక్కించబడ్డాయి.';
+  @override
+  String get createdByAssignedToAll => 'రూపొందించినవి / కేటాయించినవి: అన్నీ';
+  @override
+  String get createdByMe => 'నేను సృష్టించినవి';
+  @override
+  String get assignedToMe => 'నాకు కేటాయించినవి';
+  @override
+  String get anyCompletionPercent => 'ఏదైనా పూర్తయిన %';
+  @override
+  String get toLabel => 'వరకు';
+  @override
+  String selectAllWithCount(int count) => 'అన్నీ ఎంచుకోండి ($count)';
+  @override
+  String byAuthor(String name) => 'ద్వారా $name';
+  @override
+  String subtasksCountBadge(int done, int total) => '$done/$total ఉప-టాస్క్‌లు';
+  @override
+  String get taskNoPrefix => 'టాస్క్ ID ';
+  @override
+  String get completion0 => '0%';
+  @override
+  String get completion1To25 => '1-25%';
+  @override
+  String get completion26To50 => '26-50%';
+  @override
+  String get completion51To75 => '51-75%';
+  @override
+  String get completion76To99 => '76-99%';
+  @override
+  String get completion100 => '100%';
+  @override
+  String get newRecurringButton => '+ కొత్త పునరావృత టాస్క్';
+  @override
+  String get newTaskButton => '+ కొత్త టాస్క్';
+  @override
+  String get bulkUploadButton => 'బల్క్ అప్‌లోడ్';
+  @override
+  String get categoryAll => 'అన్నీ';
+  @override
+  String get categoryConfidential => 'గోప్యమైనది';
+  @override
+  String get categoryGeneral => 'సాధారణ';
+  @override
+  String get viewList => 'జాబితా';
+  @override
+  String get viewBoard => 'బోర్డు';
+  @override
+  String get viewCalendar => 'క్యాలెండర్';
+  @override
+  String get statComplaints => 'ఫిర్యాదులు';
+  @override
+  String get statFeedback => 'అభిప్రాయాలు';
+  @override
+  String get statAppreciations => 'ప్రశంసలు';
+  @override
+  String get taskIdSettings => 'టాస్క్ ID సెట్టింగ్‌లు';
+  @override
+  String get centerHeadPrincipalRole => 'సెంటర్ హెడ్ / ప్రిన్సిపాల్';
+  @override
+  String get teamLeadRole => 'టీమ్ లీడ్';
+  @override
+  String get managerRole => 'మేనేజర్';
+  @override
+  String centerHeadPrincipalScope(int count) => 'టీమ్ పరిధి — $count వ్యక్తులు వీక్షణలో ఉన్నారు.';
+  @override
+  String get operationalScopeYourOwn => 'కార్యాచరణ పరిధి — మీ స్వంత పనులు & నివేదికలు.';
 }

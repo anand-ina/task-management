@@ -20,6 +20,7 @@ import '../dialogs/create_task_dialog.dart';
 import '../dialogs/create_todo_dialog.dart';
 import '../dialogs/schedule_meeting_dialog.dart';
 import '../dialogs/create_event_dialog.dart';
+import '../../modules/complaints/dialogs/raise_complaint_dialog.dart';
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   const CustomAppBar({super.key});
@@ -281,6 +282,8 @@ class _CustomAppBarState extends State<CustomAppBar> {
                       ScheduleMeetingDialog.show(context);
                     } else if (value == 'event') {
                       CreateEventDialog.show(context);
+                    } else if (value == 'raise_request') {
+                      RaiseComplaintDialog.show(context);
                     }
                   },
                   itemBuilder: (context) => [
@@ -314,6 +317,14 @@ class _CustomAppBarState extends State<CustomAppBar> {
                         const Icon(Icons.star_rounded, size: 18, color: Colors.amber),
                         const SizedBox(width: 8),
                         Text(s.newEvent),
+                      ]),
+                    ),
+                    PopupMenuItem(
+                      value: 'raise_request',
+                      child: Row(children: [
+                        const Icon(Icons.feedback_outlined, size: 18, color: Color(0xFF8B1D24)),
+                        const SizedBox(width: 8),
+                        Text(s.raiseRequestButton),
                       ]),
                     ),
                   ],
