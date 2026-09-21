@@ -6,7 +6,6 @@ import '../../../core/localization/app_strings.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/dialogs/tasks_due_today_dialog.dart';
-import '../../../shared_widgets/dialogs/todo_today_dialog.dart';
 import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
 import '../../auth/bloc/auth_bloc.dart';
@@ -75,6 +74,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (role.contains('director') || roleLabel.contains('director')) {
         isDirector = true;
       }
+      if (role.contains('principal') ||
+          role.contains('center_head') ||
+          role.contains('campus_head') ||
+          role.contains('center head') ||
+          role.contains('campus head') ||
+          roleLabel.contains('principal') ||
+          roleLabel.contains('center head') ||
+          roleLabel.contains('campus head')) {
+        // Center Head / Principal
+      }
       if (roleLabel.contains('executive') ||
           role.contains('executive') ||
           role.contains('ae') ||
@@ -88,10 +97,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       branchName = dashState.selectedBranch!.name;
     }
 
-    int openTodosCount = 0;
-    if (dashState is DashboardLoadedState) {
-      openTodosCount = dashState.todos.where((t) => !t.isCompleted).length;
-    }
 
     return PopScope(
       canPop: false,
@@ -464,35 +469,65 @@ class _DashboardScreenState extends State<DashboardScreen> {
               dayStr,
               performance.day,
               color: Colors.green,
-              onTap: () => TasksDueTodayDialog.show(context, period: 'day'),
+              onTap: () => TasksDueTodayDialog.show(
+                context,
+                scope: 'mine',
+                period: 'day',
+                customTitle: '${s.dayWise} Tasks',
+                badgeColor: Colors.green,
+              ),
             ),
             _buildProgressCard(
               s.weekWise,
               'This week',
               performance.week,
               color: const Color(0xFF1E3A8A),
-              onTap: () => TasksDueTodayDialog.show(context, period: 'week'),
+              onTap: () => TasksDueTodayDialog.show(
+                context,
+                scope: 'mine',
+                period: 'week',
+                customTitle: '${s.weekWise} Tasks',
+                badgeColor: const Color(0xFF1E3A8A),
+              ),
             ),
             _buildProgressCard(
               s.monthWise,
               monthStr,
               performance.month,
               color: Colors.orange,
-              onTap: () => TasksDueTodayDialog.show(context, period: 'month'),
+              onTap: () => TasksDueTodayDialog.show(
+                context,
+                scope: 'mine',
+                period: 'month',
+                customTitle: '${s.monthWise} Tasks',
+                badgeColor: Colors.orange,
+              ),
             ),
             _buildProgressCard(
               s.quarterly,
               'This quarter',
               performance.quarter,
               color: const Color(0xFF1E3A8A),
-              onTap: () => TasksDueTodayDialog.show(context, period: 'quarter'),
+              onTap: () => TasksDueTodayDialog.show(
+                context,
+                scope: 'mine',
+                period: 'quarter',
+                customTitle: '${s.quarterly} Tasks',
+                badgeColor: const Color(0xFF1E3A8A),
+              ),
             ),
             _buildProgressCard(
               s.yearly,
               'FY ${now.year - 1}–${now.year.toString().substring(2)}',
               performance.year,
               color: Colors.green,
-              onTap: () => TasksDueTodayDialog.show(context, period: 'year'),
+              onTap: () => TasksDueTodayDialog.show(
+                context,
+                scope: 'mine',
+                period: null,
+                customTitle: '${s.yearly} Tasks',
+                badgeColor: Colors.green,
+              ),
             ),
           ],
         );
@@ -580,6 +615,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     });
                     TasksDueTodayDialog.show(
                       context,
+                      scope: 'mine',
                       customTitle: '${s.emergencyPriority} tasks',
                       priority: 'emergency',
                       badgeColor: Colors.red,
@@ -598,6 +634,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     });
                     TasksDueTodayDialog.show(
                       context,
+                      scope: 'mine',
                       customTitle: '${s.topMostPriority} tasks',
                       priority: 'top_most',
                       badgeColor: Colors.orange,
@@ -616,6 +653,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     });
                     TasksDueTodayDialog.show(
                       context,
+                      scope: 'mine',
                       customTitle: '${s.highPriority} tasks',
                       priority: 'high',
                       badgeColor: Colors.amber.shade700,
@@ -634,6 +672,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     });
                     TasksDueTodayDialog.show(
                       context,
+                      scope: 'mine',
                       customTitle: '${s.mediumPriority} tasks',
                       priority: 'medium',
                       badgeColor: Colors.blue,
@@ -652,6 +691,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     });
                     TasksDueTodayDialog.show(
                       context,
+                      scope: 'mine',
                       customTitle: '${s.lowPriority} tasks',
                       priority: 'low',
                       badgeColor: Colors.grey,
@@ -747,42 +787,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
               s.totalTasks,
               subtitle: 'FY 2025–26',
               color: Colors.blue,
-              onTap: () => TasksDueTodayDialog.show(context, customTitle: 'All Tasks', badgeColor: Colors.blue),
+              onTap: () => TasksDueTodayDialog.show(context, scope: 'mine', customTitle: 'All Tasks', badgeColor: Colors.blue),
             ),
             _buildStatCard(
               '${stats.completed}',
               s.completed,
               subtitle: '${stats.completionRate}% completion',
               color: Colors.green,
-              onTap: () => TasksDueTodayDialog.show(context, customTitle: 'Completed Tasks', status: 'completed', badgeColor: Colors.green),
+              onTap: () => TasksDueTodayDialog.show(context, scope: 'mine', customTitle: 'Completed Tasks', status: 'completed', badgeColor: Colors.green),
             ),
             _buildStatCard(
               '${stats.inProgress}',
               s.inProgress,
               subtitle: s.workUnderway,
               color: Colors.blue.shade700,
-              onTap: () => TasksDueTodayDialog.show(context, customTitle: 'In Progress Tasks', status: 'in_progress', badgeColor: Colors.blue.shade700),
+              onTap: () => TasksDueTodayDialog.show(context, scope: 'mine', customTitle: 'In Progress Tasks', status: 'in_progress', badgeColor: Colors.blue.shade700),
             ),
             _buildStatCard(
               '${stats.overdue}',
               s.overdue,
               subtitle: s.needsAttention,
               color: Colors.red,
-              onTap: () => TasksDueTodayDialog.show(context, customTitle: 'Overdue Tasks', overdue: true, badgeColor: Colors.red),
+              onTap: () => TasksDueTodayDialog.show(context, scope: 'mine', customTitle: 'Overdue Tasks', overdue: true, badgeColor: Colors.red),
             ),
             _buildStatCard(
               '${stats.toBeStarted}',
               s.toBeStarted,
               subtitle: s.notYetPickedUp,
               color: Colors.indigo,
-              onTap: () => TasksDueTodayDialog.show(context, customTitle: 'To be Started Tasks', status: 'to_be_started', badgeColor: Colors.indigo),
+              onTap: () => TasksDueTodayDialog.show(context, scope: 'mine', customTitle: 'To be Started Tasks', status: 'to_be_started', badgeColor: Colors.indigo),
             ),
             _buildStatCard(
               '${stats.dropped}',
               s.dropped,
               subtitle: s.closedWithoutCompletion,
               color: Colors.grey,
-              onTap: () => TasksDueTodayDialog.show(context, customTitle: 'Dropped Tasks', status: 'dropped', badgeColor: Colors.grey),
+              onTap: () => TasksDueTodayDialog.show(context, scope: 'mine', customTitle: 'Dropped Tasks', status: 'dropped', badgeColor: Colors.grey),
             ),
           ],
         );
@@ -886,6 +926,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Colors.orange,
               onTap: () => TasksDueTodayDialog.show(
                 context,
+                scope: 'mine',
                 customTitle: s.approvalsToReview,
                 badgeColor: Colors.orange,
               ),
@@ -898,6 +939,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Colors.red,
               onTap: () => TasksDueTodayDialog.show(
                 context,
+                scope: 'mine',
                 customTitle: 'Overdue Tasks',
                 overdue: true,
                 badgeColor: Colors.red,
@@ -911,6 +953,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Colors.amber,
               onTap: () => TasksDueTodayDialog.show(
                 context,
+                scope: 'mine',
                 customTitle: s.tasksDueTodayTitle,
                 period: 'day',
                 badgeColor: Colors.green,
@@ -924,6 +967,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Colors.red.shade700,
               onTap: () => TasksDueTodayDialog.show(
                 context,
+                scope: 'mine',
                 customTitle: 'Emergency + High (open)',
                 priority: 'emergency',
                 badgeColor: Colors.red.shade700,

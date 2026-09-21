@@ -45,6 +45,7 @@ class ComplaintsRepository {
   Future<TicketListResponse> getTickets({
     String? status,
     String? type,
+    String? types,
     String? source,
     String? category,
     String? mine,
@@ -52,10 +53,12 @@ class ComplaintsRepository {
     int? branchId,
   }) async {
     final Map<String, dynamic> queryParams = {};
-    if (status != null && status.isNotEmpty && status != 'all') {
+    if (status != null && status.isNotEmpty && status != 'all' && status != 'everything') {
       queryParams['status'] = status;
     }
-    if (type != null && type.isNotEmpty && type != 'All types') {
+    if (types != null && types.isNotEmpty) {
+      queryParams['types'] = types;
+    } else if (type != null && type.isNotEmpty && type != 'All types') {
       queryParams['type'] = type;
     }
     if (source != null && source.isNotEmpty && source != 'Parents & students') {
@@ -363,4 +366,198 @@ class ComplaintsRepository {
       rethrow;
     }
   }
+
+  Future<Map<String, dynamic>> getNotifications() async {
+    const url = ApiConstants.notifications;
+    _logServiceCall(serviceMethod: 'getNotifications', url: url);
+
+    try {
+      final res = await _dioClient.dio.get(url);
+      final parsedData = _safeParse(res.data);
+
+      _logServiceCall(
+        serviceMethod: 'getNotifications',
+        url: url,
+        response: parsedData,
+      );
+
+      if (parsedData is Map<String, dynamic>) {
+        return parsedData;
+      }
+      return {};
+    } catch (e, stack) {
+      debugPrint('[ComplaintsRepository] getNotifications error: $e\n$stack');
+      return {};
+    }
+  }
+
+  Future<TicketItemModel> getTicketById(int id) async {
+    final url = '${ApiConstants.tickets}/$id';
+    _logServiceCall(
+      serviceMethod: 'getTicketById',
+      url: url,
+      payload: null,
+    );
+
+    try {
+      final res = await _dioClient.dio.get(url);
+      final parsedData = _safeParse(res.data);
+
+      _logServiceCall(
+        serviceMethod: 'getTicketById',
+        url: url,
+        response: parsedData,
+      );
+
+      if (parsedData is Map<String, dynamic>) {
+        return TicketItemModel.fromJson(parsedData);
+      }
+      throw Exception('Failed to load ticket details: unexpected response');
+    } catch (e, stack) {
+      debugPrint('[ComplaintsRepository] getTicketById error: $e\n$stack');
+      rethrow;
+    }
+  }
+
+  Future<TicketItemModel> assignTicket(
+    int id, {
+    required List<int> assigneeIds,
+    required String note,
+  }) async {
+    final url = '${ApiConstants.tickets}/$id/assign';
+    final payload = {
+      'assigneeIds': assigneeIds,
+      'note': note,
+    };
+
+    _logServiceCall(
+      serviceMethod: 'assignTicket',
+      url: url,
+      payload: payload,
+    );
+
+    try {
+      final res = await _dioClient.dio.post(url, data: payload);
+      final parsedData = _safeParse(res.data);
+
+      _logServiceCall(
+        serviceMethod: 'assignTicket',
+        url: url,
+        response: parsedData,
+      );
+
+      if (parsedData is Map<String, dynamic>) {
+        return TicketItemModel.fromJson(parsedData);
+      }
+      throw Exception('Failed to assign ticket: unexpected response');
+    } catch (e, stack) {
+      debugPrint('[ComplaintsRepository] assignTicket error: $e\n$stack');
+      rethrow;
+    }
+  }
+
+  Future<TicketItemModel> resolveTicket(
+    int id, {
+    required String resolution,
+    bool notifyParent = false,
+  }) async {
+    final url = '${ApiConstants.tickets}/$id/resolve';
+    final payload = {
+      'resolution': resolution,
+      'notifyParent': notifyParent,
+    };
+
+    _logServiceCall(
+      serviceMethod: 'resolveTicket',
+      url: url,
+      payload: payload,
+    );
+
+    try {
+      final res = await _dioClient.dio.post(url, data: payload);
+      final parsedData = _safeParse(res.data);
+
+      _logServiceCall(
+        serviceMethod: 'resolveTicket',
+        url: url,
+        response: parsedData,
+      );
+
+      if (parsedData is Map<String, dynamic>) {
+        return TicketItemModel.fromJson(parsedData);
+      }
+      throw Exception('Failed to resolve ticket: unexpected response');
+    } catch (e, stack) {
+      debugPrint('[ComplaintsRepository] resolveTicket error: $e\n$stack');
+      rethrow;
+    }
+  }
+
+  Future<TicketItemModel> rejectTicket(
+    int id, {
+    required String reason,
+  }) async {
+    final url = '${ApiConstants.tickets}/$id/reject';
+    final payload = {
+      'reason': reason,
+    };
+
+    _logServiceCall(
+      serviceMethod: 'rejectTicket',
+      url: url,
+      payload: payload,
+    );
+
+    try {
+      final res = await _dioClient.dio.post(url, data: payload);
+      final parsedData = _safeParse(res.data);
+
+      _logServiceCall(
+        serviceMethod: 'rejectTicket',
+        url: url,
+        response: parsedData,
+      );
+
+      if (parsedData is Map<String, dynamic>) {
+        return TicketItemModel.fromJson(parsedData);
+      }
+      throw Exception('Failed to reject ticket: unexpected response');
+    } catch (e, stack) {
+      debugPrint('[ComplaintsRepository] rejectTicket error: $e\n$stack');
+      rethrow;
+    }
+  }
+
+  Future<TicketItemModel> updateTicket(
+    int id,
+    Map<String, dynamic> data,
+  ) async {
+    final url = '${ApiConstants.tickets}/$id';
+
+    _logServiceCall(
+      serviceMethod: 'updateTicket',
+      url: url,
+      payload: data,
+    );
+
+    try {
+      final res = await _dioClient.dio.put(url, data: data);
+      final parsedData = _safeParse(res.data);
+
+      _logServiceCall(
+        serviceMethod: 'updateTicket',
+        url: url,
+        response: parsedData,
+      );
+
+      if (parsedData is Map<String, dynamic>) {
+        return TicketItemModel.fromJson(parsedData);
+      }
+      throw Exception('Failed to update ticket: unexpected response');
+    } catch (e, stack) {
+      debugPrint('[ComplaintsRepository] updateTicket error: $e\n$stack');
+      rethrow;
+    }
+  }
 }
+

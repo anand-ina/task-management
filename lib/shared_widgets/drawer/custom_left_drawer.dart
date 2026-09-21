@@ -6,7 +6,7 @@ import '../../modules/admin/screens/admin_audit_log_screen.dart';
 import '../../modules/admin/screens/admin_branches_departments_screen.dart';
 import '../../modules/admin/screens/admin_reporting_structure_screen.dart';
 import '../../modules/admin/screens/admin_roles_permissions_screen.dart';
-import '../../modules/admin/screens/admin_section_screen.dart';
+import '../../modules/admin/screens/task_id_settings_screen.dart';
 import '../../modules/approvals/screens/budget_approvals_screen.dart';
 import '../../modules/approvals/screens/escalations_screen.dart';
 import '../../modules/approvals/screens/meeting_approvals_screen.dart';
@@ -14,8 +14,10 @@ import '../../modules/approvals/screens/task_approvals_screen.dart';
 import '../../modules/audits/screens/audits_screen.dart';
 import '../../modules/auth/bloc/auth_bloc.dart';
 import '../../modules/auth/bloc/auth_state.dart';
+import '../../modules/complaints/screens/appreciations_screen.dart';
 import '../../modules/complaints/screens/complaints_history_insights_screen.dart';
 import '../../modules/complaints/screens/complaints_screen.dart';
+import '../../modules/complaints/screens/source_complaints_screen.dart';
 import '../../modules/complaints/screens/suggestion_box_entry_screen.dart';
 import '../../modules/dashboard/screens/dashboard_screen.dart';
 import '../../modules/events/screens/events_calendar_screen.dart';
@@ -58,6 +60,8 @@ class CustomLeftDrawer extends StatelessWidget {
     bool isAdmin = false;
     bool isDirector = false;
     bool isPrincipal = false;
+    bool isTeamLead = false;
+    bool isManager = false;
     bool isAcademicExecutive = false;
 
     String roleTitle = s.directorRole;
@@ -98,6 +102,7 @@ class CustomLeftDrawer extends StatelessWidget {
           roleLower.contains('lead') ||
           roleLabelLower.contains('team lead') ||
           roleLabelLower.contains('team_lead')) {
+        isTeamLead = true;
         roleTitle = s.teamLeadRole;
         roleScope = s.operationalScopeYourOwn;
       } else if (roleLower.contains('academic_executive') ||
@@ -111,6 +116,7 @@ class CustomLeftDrawer extends StatelessWidget {
         roleScope = s.academicExecutiveScope;
       } else if (roleLower.contains('manager') ||
           roleLabelLower.contains('manager')) {
+        isManager = true;
         roleTitle = s.managerRole;
         roleScope = s.operationalScopeYourOwn;
       } else {
@@ -291,33 +297,48 @@ class CustomLeftDrawer extends StatelessWidget {
                     ),
 
                     // CARD 3: COMPLAINTS & FEEDBACK
-                    _buildSectionCard(
-                      context,
-                      title: s.complaintsAndFeedbackHeader,
-                      children: [
-                        _buildNavItem(
-                          context,
-                          icon: Icons.confirmation_number_outlined,
-                          title: s.complaintsTracker,
-                          isSelected: currentRoute == '/complaints',
-                          onTap: () => _navigate(context, '/complaints'),
-                        ),
-                        _buildNavItem(
-                          context,
-                          icon: Icons.how_to_vote_outlined,
-                          title: s.suggestionBoxEntry,
-                          isSelected: currentRoute == '/complaints/suggestion-box',
-                          onTap: () => _navigate(context, '/complaints/suggestion-box'),
-                        ),
-                        _buildNavItem(
-                          context,
-                          icon: Icons.view_headline_rounded,
-                          title: s.historyAndInsights,
-                          isSelected: currentRoute == '/complaints/history',
-                          onTap: () => _navigate(context, '/complaints/history'),
-                        ),
-                      ],
-                    ),
+                    if (isDirector || isPrincipal || isTeamLead || isManager || isAdmin)
+                      _buildSectionCard(
+                        context,
+                        title: s.complaintsAndFeedbackHeader,
+                        children: [
+                          _buildNavItem(
+                            context,
+                            icon: Icons.dashboard_outlined,
+                            title: s.complaintsDashboardTitle,
+                            isSelected: currentRoute == '/complaints/dashboard' || currentRoute == '/complaints/history',
+                            onTap: () => _navigate(context, '/complaints/dashboard'),
+                          ),
+                          _buildNavItem(
+                            context,
+                            icon: Icons.family_restroom_outlined,
+                            title: s.parentsComplaintsAndFeedbacks,
+                            isSelected: currentRoute == '/complaints/parents',
+                            onTap: () => _navigate(context, '/complaints/parents'),
+                          ),
+                          _buildNavItem(
+                            context,
+                            icon: Icons.school_outlined,
+                            title: s.studentsComplaintsAndFeedbacks,
+                            isSelected: currentRoute == '/complaints/students',
+                            onTap: () => _navigate(context, '/complaints/students'),
+                          ),
+                          _buildNavItem(
+                            context,
+                            icon: Icons.badge_outlined,
+                            title: s.staffComplaintsAndFeedbacks,
+                            isSelected: currentRoute == '/complaints/staff',
+                            onTap: () => _navigate(context, '/complaints/staff'),
+                          ),
+                          _buildNavItem(
+                            context,
+                            icon: Icons.military_tech_outlined,
+                            title: s.appreciations,
+                            isSelected: currentRoute == '/complaints/appreciations',
+                            onTap: () => _navigate(context, '/complaints/appreciations'),
+                          ),
+                        ],
+                      ),
 
                     // CARD 4: REPORTS
                     _buildSectionCard(
@@ -751,7 +772,6 @@ class CustomLeftDrawer extends StatelessWidget {
   void _navigate(BuildContext context, String route) {
     final navigator = Navigator.of(context);
     final isDrawerOpen = Scaffold.maybeOf(context)?.isDrawerOpen ?? false;
-    final s = AppStrings.of(context);
 
     // Suggestion Box Entry
     if (route == '/complaints/suggestion-box') {
@@ -785,8 +805,8 @@ class CustomLeftDrawer extends StatelessWidget {
       return;
     }
 
-    if (route == '/complaints/history') {
-      if (currentRoute == '/complaints/history') {
+    if (route == '/complaints/dashboard' || route == '/complaints/history') {
+      if (currentRoute == '/complaints/dashboard' || currentRoute == '/complaints/history') {
         if (isDrawerOpen) navigator.pop();
         return;
       }
@@ -796,6 +816,66 @@ class CustomLeftDrawer extends StatelessWidget {
       }
       navigator.push(
         MaterialPageRoute(builder: (context) => const ComplaintsHistoryInsightsScreen()),
+      );
+      return;
+    }
+
+    if (route == '/complaints/parents') {
+      if (currentRoute == '/complaints/parents') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const SourceComplaintsScreen(source: 'parent')),
+      );
+      return;
+    }
+
+    if (route == '/complaints/students') {
+      if (currentRoute == '/complaints/students') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const SourceComplaintsScreen(source: 'student')),
+      );
+      return;
+    }
+
+    if (route == '/complaints/staff') {
+      if (currentRoute == '/complaints/staff') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const SourceComplaintsScreen(source: 'staff')),
+      );
+      return;
+    }
+
+    if (route == '/complaints/appreciations') {
+      if (currentRoute == '/complaints/appreciations') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const AppreciationsScreen()),
       );
       return;
     }
@@ -1219,11 +1299,7 @@ class CustomLeftDrawer extends StatelessWidget {
       }
       navigator.push(
         MaterialPageRoute(
-          builder: (context) => AdminSectionScreen(
-            title: s.taskIdSettings,
-            route: '/admin/task-ids',
-            icon: Icons.tag_rounded,
-          ),
+          builder: (context) => const TaskIdSettingsScreen(),
         ),
       );
       return;

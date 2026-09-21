@@ -128,10 +128,17 @@ class TicketItemModel {
   final int? taskProgress;
   final List<TicketAssigneeModel> taskAssignees;
   final String? resolution;
+  final int? pointsAwarded;
+  final int? awardedUserId;
+  final String? awardedUserName;
+  final int? resolvedBy;
+  final String? resolvedByName;
+  final String? resolvedAt;
   final int? raisedBy;
   final String? raisedByName;
   final String createdAt;
   final bool parentHidden;
+  final bool attachmentsHidden;
   final bool canManage;
   final bool canAward;
   final List<TicketAttachmentModel> attachments;
@@ -177,10 +184,17 @@ class TicketItemModel {
     this.taskProgress,
     this.taskAssignees = const [],
     this.resolution,
+    this.pointsAwarded,
+    this.awardedUserId,
+    this.awardedUserName,
+    this.resolvedBy,
+    this.resolvedByName,
+    this.resolvedAt,
     this.raisedBy,
     this.raisedByName,
     required this.createdAt,
     this.parentHidden = false,
+    this.attachmentsHidden = false,
     this.canManage = true,
     this.canAward = false,
     this.attachments = const [],
@@ -249,10 +263,17 @@ class TicketItemModel {
       taskProgress: json['task_progress'] is int ? json['task_progress'] : int.tryParse(json['task_progress']?.toString() ?? ''),
       taskAssignees: assigneesList,
       resolution: json['resolution']?.toString(),
+      pointsAwarded: json['points_awarded'] is int ? json['points_awarded'] : int.tryParse(json['points_awarded']?.toString() ?? ''),
+      awardedUserId: json['awarded_user_id'] is int ? json['awarded_user_id'] : int.tryParse(json['awarded_user_id']?.toString() ?? ''),
+      awardedUserName: json['awarded_user_name']?.toString(),
+      resolvedBy: json['resolved_by'] is int ? json['resolved_by'] : int.tryParse(json['resolved_by']?.toString() ?? ''),
+      resolvedByName: json['resolved_by_name']?.toString(),
+      resolvedAt: json['resolved_at']?.toString(),
       raisedBy: json['raised_by'] is int ? json['raised_by'] : int.tryParse(json['raised_by']?.toString() ?? ''),
       raisedByName: json['raised_by_name']?.toString(),
       createdAt: json['created_at']?.toString() ?? '',
       parentHidden: json['parent_hidden'] == true || json['parent_hidden'] == 1,
+      attachmentsHidden: json['attachments_hidden'] == true || json['attachments_hidden'] == 1,
       canManage: json['can_manage'] != false,
       canAward: json['can_award'] == true,
       attachments: attachmentsList,
@@ -267,6 +288,9 @@ class TicketCountsModel {
   final int overdue;
   final int resolvedMonth;
   final int pendingReward;
+  final int allTickets;
+  final int recorded;
+  final int awarded;
   final dynamic avgDays;
 
   const TicketCountsModel({
@@ -275,6 +299,9 @@ class TicketCountsModel {
     this.overdue = 0,
     this.resolvedMonth = 0,
     this.pendingReward = 0,
+    this.allTickets = 0,
+    this.recorded = 0,
+    this.awarded = 0,
     this.avgDays,
   });
 
@@ -285,6 +312,9 @@ class TicketCountsModel {
       overdue: json['overdue'] is int ? json['overdue'] : int.tryParse(json['overdue']?.toString() ?? '0') ?? 0,
       resolvedMonth: json['resolved_month'] is int ? json['resolved_month'] : int.tryParse(json['resolved_month']?.toString() ?? '0') ?? 0,
       pendingReward: json['pending_reward'] is int ? json['pending_reward'] : int.tryParse(json['pending_reward']?.toString() ?? '0') ?? 0,
+      allTickets: json['all_tickets'] is int ? json['all_tickets'] : int.tryParse(json['all_tickets']?.toString() ?? '0') ?? 0,
+      recorded: json['recorded'] is int ? json['recorded'] : int.tryParse(json['recorded']?.toString() ?? '0') ?? 0,
+      awarded: json['awarded'] is int ? json['awarded'] : int.tryParse(json['awarded']?.toString() ?? '0') ?? 0,
       avgDays: json['avg_days'],
     );
   }

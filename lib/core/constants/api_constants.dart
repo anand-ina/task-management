@@ -68,14 +68,25 @@ class ApiConstants {
   static const String adminDepartments = '$baseUrl/admin/departments';
   static const String adminReporting = '$baseUrl/admin/reporting';
   static const String adminRoles = '$baseUrl/admin/roles';
+  static const String adminTaskCounter = '$baseUrl/admin/task-counter';
+  static const String adminTaskCounterReset = '$baseUrl/v1/admin/task-counter/reset';
   static String taskReview(int taskId) => '$baseUrl/tasks/$taskId/review';
 
   // Complaints & Tickets Endpoints
   static const String tickets = '$baseUrl/tickets';
+  static const String ticketSettings = '$baseUrl/tickets/settings';
   static const String ticketMeta = '$baseUrl/tickets/meta';
   static const String ticketBatch = '$baseUrl/tickets/batch';
   static const String ticketInsights = '$baseUrl/tickets/insights';
   static const String uploads = '$baseUrl/uploads';
   static String ticketMetaBranch(int branchId) => '$baseUrl/tickets/meta?branchId=$branchId';
+
+  // Audits Endpoints
+  static const String audits = '$baseUrl/audits';
+  static const String auditsMeta = '$baseUrl/audits/meta';
+  static const String auditsAsAuditee = '$baseUrl/audits/as-auditee';
+  static const String auditsAsAuditor = '$baseUrl/audits/as-auditor';
+  static String auditDetail(int id) => '$baseUrl/audits/$id';
+  static String closeAudit(int id) => '$baseUrl/audits/$id/close';
 }
 

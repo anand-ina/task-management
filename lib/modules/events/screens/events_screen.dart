@@ -26,8 +26,10 @@ class _EventsScreenState extends State<EventsScreen> {
   int _selectedSubTab = 1; // 0: Assigned to me, 1: Events
   final DioClient _dioClient = DioClient();
 
-  DateTime _selectedDayDate = DateTime(2026, 8, 14);
-  DateTime _selectedMonthDate = DateTime(2026, 8, 1);
+  DateTime _selectedDayDate = DateTime.now();
+  DateTime _selectedWeekDate = DateTime.now();
+  DateTime _selectedMonthDate = DateTime.now();
+  DateTime _selectedThreeMonthsDate = DateTime.now();
 
   // Map of eventId -> Map of expansion/loading state
   final Map<int, bool> _expandedChecklists = {};
@@ -200,15 +202,22 @@ class _EventsScreenState extends State<EventsScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // View Mode Switcher Controls
-                      Row(
-                        children: [
-                          _buildViewModeButton(Icons.list_rounded, s.listView, 'list'),
-                          const SizedBox(width: 8),
-                          _buildViewModeButton(Icons.history_rounded, s.dayView, 'day'),
-                          const SizedBox(width: 8),
-                          _buildViewModeButton(Icons.calendar_month_rounded, s.calendarView, 'calendar'),
-                        ],
+                      // View Mode Switcher Controls (List, Day, Week, Month, 3 Months)
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            _buildViewModeButton(Icons.menu_rounded, '☰  ${s.listViewLabel}', 'list'),
+                            const SizedBox(width: 8),
+                            _buildViewModeButton(Icons.access_time_rounded, '◔  ${s.dayView}', 'day'),
+                            const SizedBox(width: 8),
+                            _buildViewModeButton(Icons.view_week_rounded, '▥  ${s.weekView}', 'week'),
+                            const SizedBox(width: 8),
+                            _buildViewModeButton(Icons.calendar_view_month_rounded, '▤  ${s.monthView}', 'month'),
+                            const SizedBox(width: 8),
+                            _buildViewModeButton(Icons.calendar_month_rounded, '▦  ${s.threeMonthsView}', '3months'),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 16),
 
@@ -246,8 +255,12 @@ class _EventsScreenState extends State<EventsScreen> {
                             const SizedBox(height: 16),
 
                             // Render View Mode Content
-                            if (_selectedViewMode == 'calendar')
+                            if (_selectedViewMode == '3months')
+                              _buildThreeMonthsView(context, s, state.events)
+                            else if (_selectedViewMode == 'month' || _selectedViewMode == 'calendar')
                               _buildMonthCalendarView(context, s, state.events)
+                            else if (_selectedViewMode == 'week')
+                              _buildWeekView(context, s, state.events)
                             else if (_selectedViewMode == 'day')
                               _buildDayView(context, s, state.events)
                             else
@@ -836,6 +849,445 @@ class _EventsScreenState extends State<EventsScreen> {
                 ],
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWeekView(BuildContext context, AppStrings s, List<EventModel> events) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final startOfWeek = _selectedWeekDate.subtract(Duration(days: _selectedWeekDate.weekday % 7));
+    final endOfWeek = startOfWeek.add(const Duration(days: 6));
+    final headerStr = '${DateFormat('d MMM').format(startOfWeek)} – ${DateFormat('d MMM yyyy').format(endOfWeek)}';
+    final now = DateTime.now();
+
+    final weekDays = List.generate(7, (i) => startOfWeek.add(Duration(days: i)));
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.chevron_left_rounded, size: 22),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                onPressed: () {
+                  setState(() {
+                    _selectedWeekDate = _selectedWeekDate.subtract(const Duration(days: 7));
+                  });
+                },
+              ),
+              const SizedBox(width: 8),
+              Text(
+                headerStr,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.chevron_right_rounded, size: 22),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                onPressed: () {
+                  setState(() {
+                    _selectedWeekDate = _selectedWeekDate.add(const Duration(days: 7));
+                  });
+                },
+              ),
+              const Spacer(),
+              OutlinedButton(
+                onPressed: () {
+                  setState(() => _selectedWeekDate = DateTime.now());
+                },
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                child: Text(s.todayButton, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isWide = constraints.maxWidth > 700;
+              final dayWidgets = weekDays.map((day) {
+                final isToday = day.year == now.year && day.month == now.month && day.day == now.day;
+                final dayEvents = events.where((e) {
+                  try {
+                    final dt = DateTime.parse(e.eventDate);
+                    return dt.year == day.year && dt.month == day.month && dt.day == day.day;
+                  } catch (_) {
+                    return false;
+                  }
+                }).toList();
+
+                return Container(
+                  margin: const EdgeInsets.symmetric(vertical: 4),
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: isToday
+                        ? (isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9))
+                        : (isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC)),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isToday
+                          ? const Color(0xFF8B1D24)
+                          : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                      width: isToday ? 1.5 : 1,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            DateFormat('EEE, d MMM').format(day),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: isToday
+                                  ? const Color(0xFF8B1D24)
+                                  : (isDark ? Colors.white : const Color(0xFF0F172A)),
+                            ),
+                          ),
+                          if (dayEvents.isNotEmpty)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFDCFCE7),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                '${dayEvents.length}',
+                                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF15803D)),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      if (dayEvents.isEmpty)
+                        Text(
+                          s.noDataAvailable,
+                          style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                        )
+                      else
+                        ...dayEvents.map((ev) => Container(
+                              margin: const EdgeInsets.only(top: 4),
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFDCFCE7),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Text('★ ', style: TextStyle(color: Color(0xFF15803D), fontSize: 10)),
+                                  Expanded(
+                                    child: Text(
+                                      ev.title,
+                                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF15803D)),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )),
+                    ],
+                  ),
+                );
+              }).toList();
+
+              if (isWide) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: dayWidgets.map((w) => Expanded(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 3), child: w))).toList(),
+                );
+              } else {
+                return Column(children: dayWidgets);
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildThreeMonthsView(BuildContext context, AppStrings s, List<EventModel> events) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final m1 = DateTime(_selectedThreeMonthsDate.year, _selectedThreeMonthsDate.month, 1);
+    final m2 = DateTime(m1.year, m1.month + 1, 1);
+    final m3 = DateTime(m1.year, m1.month + 2, 1);
+
+    final m3End = DateTime(m3.year, m3.month + 1, 0, 23, 59, 59);
+    final threeMonthsEvents = events.where((e) {
+      try {
+        final dt = DateTime.parse(e.eventDate);
+        return !dt.isBefore(m1) && !dt.isAfter(m3End);
+      } catch (_) {
+        return false;
+      }
+    }).toList();
+
+    threeMonthsEvents.sort((a, b) {
+      final da = DateTime.tryParse(a.eventDate) ?? DateTime(1970);
+      final db = DateTime.tryParse(b.eventDate) ?? DateTime(1970);
+      return da.compareTo(db);
+    });
+
+    final headerRange = '${DateFormat('MMMM').format(m1)} – ${DateFormat('MMMM yyyy').format(m3)}';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.chevron_left_rounded, size: 22),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                onPressed: () {
+                  setState(() {
+                    _selectedThreeMonthsDate = DateTime(_selectedThreeMonthsDate.year, _selectedThreeMonthsDate.month - 3, 1);
+                  });
+                },
+              ),
+              const SizedBox(width: 8),
+              Text(
+                headerRange,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.chevron_right_rounded, size: 22),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                onPressed: () {
+                  setState(() {
+                    _selectedThreeMonthsDate = DateTime(_selectedThreeMonthsDate.year, _selectedThreeMonthsDate.month + 3, 1);
+                  });
+                },
+              ),
+              const Spacer(),
+              OutlinedButton(
+                onPressed: () {
+                  setState(() => _selectedThreeMonthsDate = DateTime.now());
+                },
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                child: Text(s.todayButton, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isWide = constraints.maxWidth > 700;
+              final cal1 = _buildSingleMiniMonth(m1, events, isDark);
+              final cal2 = _buildSingleMiniMonth(m2, events, isDark);
+              final cal3 = _buildSingleMiniMonth(m3, events, isDark);
+
+              if (isWide) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: cal1),
+                    const SizedBox(width: 16),
+                    Expanded(child: cal2),
+                    const SizedBox(width: 16),
+                    Expanded(child: cal3),
+                  ],
+                );
+              } else {
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(width: 240, child: cal1),
+                      const SizedBox(width: 12),
+                      SizedBox(width: 240, child: cal2),
+                      const SizedBox(width: 12),
+                      SizedBox(width: 240, child: cal3),
+                    ],
+                  ),
+                );
+              }
+            },
+          ),
+          const SizedBox(height: 24),
+          Text(
+            s.eventsInTheseThreeMonths,
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.6,
+              color: isDark ? Colors.grey.shade400 : const Color(0xFF64748B),
+            ),
+          ),
+          const SizedBox(height: 12),
+          if (threeMonthsEvents.isEmpty)
+            Text(
+              s.noDataAvailable,
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+            )
+          else
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: threeMonthsEvents.map((ev) {
+                String dateLabel = '';
+                try {
+                  final dt = DateTime.parse(ev.eventDate);
+                  dateLabel = DateFormat('d MMM').format(dt);
+                } catch (_) {
+                  dateLabel = ev.eventDate;
+                }
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF064E3B).withOpacity(0.4) : const Color(0xFFDCFCE7),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: isDark ? const Color(0xFF059669) : const Color(0xFF86EFAC),
+                    ),
+                  ),
+                  child: Text(
+                    '★ $dateLabel - ${ev.title}',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? const Color(0xFF6EE7B7) : const Color(0xFF15803D),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSingleMiniMonth(DateTime monthDate, List<EventModel> events, bool isDark) {
+    final monthName = DateFormat('MMMM yyyy').format(monthDate);
+    final daysInMonth = DateUtils.getDaysInMonth(monthDate.year, monthDate.month);
+    final firstWeekday = DateTime(monthDate.year, monthDate.month, 1).weekday % 7;
+    final numRows = ((firstWeekday + daysInMonth) / 7).ceil();
+    final dayLetters = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    final now = DateTime.now();
+
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Text(
+              monthName,
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Table(
+            children: [
+              TableRow(
+                children: dayLetters.map((d) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text(
+                      d,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              ...List.generate(numRows, (rowIndex) {
+                return TableRow(
+                  children: List.generate(7, (colIndex) {
+                    final dayNum = rowIndex * 7 + colIndex - firstWeekday + 1;
+                    if (dayNum < 1 || dayNum > daysInMonth) {
+                      return const SizedBox(height: 22);
+                    }
+                    final isToday = dayNum == now.day &&
+                        monthDate.month == now.month &&
+                        monthDate.year == now.year;
+                    final hasEvent = events.any((e) {
+                      try {
+                        final dt = DateTime.parse(e.eventDate);
+                        return dt.year == monthDate.year &&
+                            dt.month == monthDate.month &&
+                            dt.day == dayNum;
+                      } catch (_) {
+                        return false;
+                      }
+                    });
+
+                    return Container(
+                      height: 22,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: hasEvent
+                            ? (isDark ? const Color(0xFF065F46) : const Color(0xFFBBF7D0))
+                            : (isToday ? (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)) : Colors.transparent),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        '$dayNum',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: hasEvent || isToday ? FontWeight.bold : FontWeight.normal,
+                          color: hasEvent
+                              ? (isDark ? Colors.white : const Color(0xFF15803D))
+                              : (isDark ? Colors.white70 : Colors.black87),
+                        ),
+                      ),
+                    );
+                  }),
+                );
+              }),
+            ],
           ),
         ],
       ),

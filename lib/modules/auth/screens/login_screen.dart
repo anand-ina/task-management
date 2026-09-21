@@ -39,23 +39,11 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isPasswordVisible = false;
   bool _showFeaturesOnMobile = false;
   bool _isLoadingForgot = false;
+  bool _isCheckingInternet = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkConnectivityOnStart();
-    });
-  }
-
-  Future<void> _checkConnectivityOnStart() async {
-    final isConnected = await NetworkConnectivityService().checkConnection();
-    if (!mounted) return;
-    if (!isConnected) {
-      NoInternetDialog.show(context, onRetry: () {
-        _checkConnectivityOnStart();
-      });
-    }
   }
 
   @override
@@ -70,15 +58,30 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _submitLogin() async {
+    debugPrint('[_submitLogin] Sign In button tapped');
+    if (_isCheckingInternet) return;
+    setState(() {
+      _isCheckingInternet = true;
+    });
+
+    // 1. FIRST: Check if device is connected to the internet
     final isConnected = await NetworkConnectivityService().checkConnection();
-    if (!mounted) return;
-    if (!isConnected) {
-      NoInternetDialog.show(context, onRetry: () {
-        _submitLogin();
+    debugPrint('[_submitLogin] checkConnection returned: $isConnected');
+    if (mounted) {
+      setState(() {
+        _isCheckingInternet = false;
       });
+    }
+
+    if (!mounted) return;
+
+    if (!isConnected) {
+      debugPrint('[_submitLogin] Offline detected. Showing NoInternetDialog...');
+      NoInternetDialog.show(context);
       return;
     }
 
+    // 2. Validate input fields
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
     if (email.isEmpty || password.isEmpty) {
@@ -97,6 +100,7 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
+    // 3. Dispatch login API event
     context.read<AuthBloc>().add(
           LoginRequestedEvent(email: email, password: password),
         );
@@ -106,9 +110,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final isConnected = await NetworkConnectivityService().checkConnection();
     if (!mounted) return;
     if (!isConnected) {
-      NoInternetDialog.show(context, onRetry: () {
-        _onSendResetCode();
-      });
+      NoInternetDialog.show(context);
       return;
     }
 
@@ -144,9 +146,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final isConnected = await NetworkConnectivityService().checkConnection();
     if (!mounted) return;
     if (!isConnected) {
-      NoInternetDialog.show(context, onRetry: () {
-        _onResetPasswordSubmitted();
-      });
+      NoInternetDialog.show(context);
       return;
     }
 
@@ -802,16 +802,29 @@ class _LoginScreenState extends State<LoginScreen> {
               }
             }
             if (state is AuthErrorState) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: Colors.red,
-                ),
-              );
+              final msg = state.message.toLowerCase();
+              final isNetworkError = msg.contains('connection') ||
+                  msg.contains('socket') ||
+                  msg.contains('internet') ||
+                  msg.contains('network') ||
+                  msg.contains('timed out') ||
+                  msg.contains('failed host lookup') ||
+                  msg.contains('host lookup');
+              if (isNetworkError) {
+                NoInternetDialog.show(context);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(state.message.replaceAll('Exception: ', '')),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
             }
           },
           builder: (context, state) {
             final isLoading = state is AuthLoadingState;
+            final isBusy = isLoading || _isCheckingInternet;
 
             return SizedBox(
               width: double.infinity,
@@ -825,8 +838,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                onPressed: isLoading ? null : _submitLogin,
-                child: isLoading
+                onPressed: isBusy ? null : _submitLogin,
+                child: isBusy
                     ? const SizedBox(
                         width: 22,
                         height: 22,

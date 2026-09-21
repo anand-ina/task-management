@@ -16,6 +16,7 @@ import '../bloc/staff_event.dart';
 import '../bloc/staff_state.dart';
 import '../models/staff_model.dart';
 import '../repository/staff_repository.dart';
+import '../../../shared_widgets/dropdowns/searchable_filter_dropdown.dart';
 
 class StaffScreen extends StatefulWidget {
   const StaffScreen({super.key});
@@ -244,63 +245,47 @@ class _StaffScreenState extends State<StaffScreen> {
       ),
     );
 
-    Widget buildDropdown<T>({
-      required T? value,
-      required String hint,
-      required List<DropdownMenuItem<T?>> items,
-      required ValueChanged<T?> onChanged,
-    }) {
-      return Container(
-        height: 38,
-        padding: const EdgeInsets.symmetric(horizontal: 10),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E293B) : Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
-        ),
-        child: DropdownButtonHideUnderline(
-          child: DropdownButton<T?>(
-            value: value,
-            isDense: true,
-            hint: Text(hint, style: const TextStyle(fontSize: 12)),
-            items: items,
-            onChanged: onChanged,
-          ),
-        ),
-      );
-    }
-
     return Wrap(
       spacing: 10,
       runSpacing: 10,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         searchBox,
-        buildDropdown<int?>(
+        SearchableFilterDropdown<int?>(
           value: _selectedDepartmentIdFilter,
           hint: s.departmentLabel,
+          searchHint: 'Search department...',
           items: [
-            DropdownMenuItem<int?>(value: null, child: Text('Department', style: const TextStyle(fontSize: 12))),
-            ...data.departments.map((d) => DropdownMenuItem<int?>(value: d.id, child: Text(d.name, style: const TextStyle(fontSize: 12)))),
+            const SearchableDropdownItem<int?>(value: null, label: 'All Departments'),
+            ...data.departments.map(
+              (d) => SearchableDropdownItem<int?>(value: d.id, label: d.name),
+            ),
           ],
           onChanged: (val) => setState(() => _selectedDepartmentIdFilter = val),
         ),
-        buildDropdown<String?>(
+        SearchableFilterDropdown<String?>(
           value: _selectedStaffTypeFilter,
           hint: s.staffTypeHeader,
+          searchHint: 'Search staff type...',
           items: [
-            DropdownMenuItem<String?>(value: null, child: Text('Staff Type', style: const TextStyle(fontSize: 12))),
-            DropdownMenuItem<String?>(value: 'teaching', child: Text(s.teachingOption, style: const TextStyle(fontSize: 12))),
-            DropdownMenuItem<String?>(value: 'non_teaching', child: Text(s.nonTeachingOption, style: const TextStyle(fontSize: 12))),
+            const SearchableDropdownItem<String?>(value: null, label: 'All Staff Types'),
+            SearchableDropdownItem<String?>(value: 'teaching', label: s.teachingOption),
+            SearchableDropdownItem<String?>(value: 'non_teaching', label: s.nonTeachingOption),
           ],
           onChanged: (val) => setState(() => _selectedStaffTypeFilter = val),
         ),
-        buildDropdown<int?>(
+        SearchableFilterDropdown<int?>(
           value: _selectedRoleFilter,
           hint: s.rbacRoleHeader,
+          searchHint: 'Search role...',
           items: [
-            DropdownMenuItem<int?>(value: null, child: Text('Role', style: const TextStyle(fontSize: 12))),
-            ...data.roles.map((r) => DropdownMenuItem<int?>(value: r.id, child: Text(r.label.isNotEmpty ? r.label : r.name, style: const TextStyle(fontSize: 12)))),
+            const SearchableDropdownItem<int?>(value: null, label: 'All Roles'),
+            ...data.roles.map(
+              (r) => SearchableDropdownItem<int?>(
+                value: r.id,
+                label: r.label.isNotEmpty ? r.label : r.name,
+              ),
+            ),
           ],
           onChanged: (val) => setState(() => _selectedRoleFilter = val),
         ),
@@ -341,6 +326,14 @@ class _StaffScreenState extends State<StaffScreen> {
       }
       if (_selectedStaffTypeFilter != null && staff.employmentType != _selectedStaffTypeFilter) {
         return false;
+      }
+      if (_selectedRoleFilter != null) {
+        final selectedRole = data.roles.where((r) => r.id == _selectedRoleFilter).firstOrNull;
+        if (selectedRole != null) {
+          final matchesName = staff.roleName.toLowerCase() == selectedRole.name.toLowerCase();
+          final matchesLabel = staff.roleLabel.toLowerCase() == selectedRole.label.toLowerCase();
+          if (!matchesName && !matchesLabel) return false;
+        }
       }
       return true;
     }).toList();

@@ -8,6 +8,7 @@ import '../bloc/admin_reporting_bloc.dart';
 import '../bloc/admin_reporting_event.dart';
 import '../bloc/admin_reporting_state.dart';
 import '../models/reporting_person_model.dart';
+import '../../../shared_widgets/dropdowns/searchable_filter_dropdown.dart';
 
 class AdminReportingStructureScreen extends StatelessWidget {
   const AdminReportingStructureScreen({super.key});
@@ -550,120 +551,94 @@ class _PersonReportingCard extends StatelessWidget {
               },
             )),
         if (availablePeople.isNotEmpty)
-          PopupMenuButton<int>(
-            offset: const Offset(0, 36),
-            color: isDark ? const Color(0xFF1E293B) : Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(
-                color:
-                    isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-              ),
-            ),
-            elevation: 4,
-            onSelected: (selectedManagerId) {
-              context.read<AdminReportingBloc>().add(
-                    AddManagerEvent(
-                      personId: person.id,
-                      managerId: selectedManagerId,
-                      isPrimary: isPrimary,
+          SearchableFilterDropdown<int?>(
+            value: null,
+            hint: addLabel,
+            searchHint: 'Search manager...',
+            maxVisibleCount: 4,
+            minPopupWidth: 260,
+            items: availablePeople.map((p) {
+              return SearchableDropdownItem<int?>(
+                value: p.id,
+                label: p.name,
+                subtitle: p.levelLabel,
+                leading: CircleAvatar(
+                  radius: 12,
+                  backgroundColor: _hexToColor(p.avatarColor),
+                  child: Text(
+                    p.initials,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
                     ),
-                  );
+                  ),
+                ),
+              );
+            }).toList(),
+            onChanged: (selectedManagerId) {
+              if (selectedManagerId != null) {
+                context.read<AdminReportingBloc>().add(
+                      AddManagerEvent(
+                        personId: person.id,
+                        managerId: selectedManagerId,
+                        isPrimary: isPrimary,
+                      ),
+                    );
+              }
             },
-            itemBuilder: (context) {
-              return availablePeople.map((p) {
-                return PopupMenuItem<int>(
-                  value: p.id,
-                  height: 42,
+            customTrigger: (context, onTap, isOpen) {
+              return InkWell(
+                onTap: onTap,
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? const Color(0xFF1E293B)
+                        : const Color(0xFFF8FAFC),
+                    border: Border.all(
+                      color: isOpen
+                          ? const Color(0xFF991B1B)
+                          : (isDark
+                              ? const Color(0xFF475569)
+                              : const Color(0xFFCBD5E1)),
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                   child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      CircleAvatar(
-                        radius: 12,
-                        backgroundColor: _hexToColor(p.avatarColor),
-                        child: Text(
-                          p.initials,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      Icon(
+                        Icons.add_rounded,
+                        size: 14,
+                        color:
+                            isDark ? Colors.white70 : const Color(0xFF475569),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        addLabel,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color:
+                              isDark ? Colors.white70 : const Color(0xFF475569),
                         ),
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              p.name,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: isDark
-                                    ? Colors.white
-                                    : const Color(0xFF0F172A),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            Text(
-                              p.levelLabel,
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: isDark
-                                    ? Colors.white54
-                                    : const Color(0xFF64748B),
-                              ),
-                            ),
-                          ],
-                        ),
+                      const SizedBox(width: 2),
+                      Icon(
+                        isOpen
+                            ? Icons.arrow_drop_up_rounded
+                            : Icons.arrow_drop_down_rounded,
+                        size: 16,
+                        color: isDark ? Colors.white54 : Colors.grey.shade600,
                       ),
                     ],
                   ),
-                );
-              }).toList();
-            },
-            child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? const Color(0xFF1E293B)
-                    : const Color(0xFFF8FAFC),
-                border: Border.all(
-                  color: isDark
-                      ? const Color(0xFF475569)
-                      : const Color(0xFFCBD5E1),
                 ),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.add_rounded,
-                    size: 14,
-                    color: isDark ? Colors.white70 : const Color(0xFF475569),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    addLabel,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      color: isDark ? Colors.white70 : const Color(0xFF475569),
-                    ),
-                  ),
-                  const SizedBox(width: 2),
-                  Icon(
-                    Icons.arrow_drop_down_rounded,
-                    size: 16,
-                    color: isDark ? Colors.white54 : Colors.grey.shade600,
-                  ),
-                ],
-              ),
-            ),
+              );
+            },
           ),
       ],
     );

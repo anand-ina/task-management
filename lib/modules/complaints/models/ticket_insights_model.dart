@@ -1,3 +1,20 @@
+int _toInt(dynamic value, [int defaultValue = 0]) {
+  if (value == null) return defaultValue;
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  if (value is String) {
+    return int.tryParse(value) ?? (double.tryParse(value)?.toInt() ?? defaultValue);
+  }
+  return defaultValue;
+}
+
+num? _toNum(dynamic value) {
+  if (value == null) return null;
+  if (value is num) return value;
+  if (value is String) return num.tryParse(value);
+  return null;
+}
+
 class TicketInsightsResponse {
   final int year;
   final List<InsightsMonthItem> byMonth;
@@ -17,21 +34,21 @@ class TicketInsightsResponse {
 
   factory TicketInsightsResponse.fromJson(Map<String, dynamic> json) {
     return TicketInsightsResponse(
-      year: json['year'] as int? ?? DateTime.now().year,
+      year: _toInt(json['year'], DateTime.now().year),
       byMonth: (json['byMonth'] as List<dynamic>?)
-              ?.map((e) => InsightsMonthItem.fromJson(e as Map<String, dynamic>))
+              ?.map((e) => InsightsMonthItem.fromJson(e is Map<String, dynamic> ? e : {}))
               .toList() ??
           [],
       byCategory: (json['byCategory'] as List<dynamic>?)
-              ?.map((e) => InsightsCategoryItem.fromJson(e as Map<String, dynamic>))
+              ?.map((e) => InsightsCategoryItem.fromJson(e is Map<String, dynamic> ? e : {}))
               .toList() ??
           [],
       byStaff: (json['byStaff'] as List<dynamic>?)
-              ?.map((e) => InsightsStaffItem.fromJson(e as Map<String, dynamic>))
+              ?.map((e) => InsightsStaffItem.fromJson(e is Map<String, dynamic> ? e : {}))
               .toList() ??
           [],
       byStudent: (json['byStudent'] as List<dynamic>?)
-              ?.map((e) => InsightsStudentItem.fromJson(e as Map<String, dynamic>))
+              ?.map((e) => InsightsStudentItem.fromJson(e is Map<String, dynamic> ? e : {}))
               .toList() ??
           [],
       totals: json['totals'] is Map<String, dynamic>
@@ -70,9 +87,9 @@ class InsightsMonthItem {
   factory InsightsMonthItem.fromJson(Map<String, dynamic> json) {
     return InsightsMonthItem(
       month: json['month']?.toString() ?? '',
-      complaints: json['complaints'] as int? ?? 0,
-      feedback: json['feedback'] as int? ?? 0,
-      appreciations: json['appreciations'] as int? ?? 0,
+      complaints: _toInt(json['complaints']),
+      feedback: _toInt(json['feedback']),
+      appreciations: _toInt(json['appreciations']),
     );
   }
 
@@ -98,7 +115,7 @@ class InsightsCategoryItem {
   factory InsightsCategoryItem.fromJson(Map<String, dynamic> json) {
     return InsightsCategoryItem(
       category: json['category']?.toString() ?? '',
-      count: json['n'] as int? ?? (json['count'] as int? ?? 0),
+      count: _toInt(json['n'] ?? json['count']),
     );
   }
 
@@ -127,11 +144,11 @@ class InsightsStaffItem {
 
   factory InsightsStaffItem.fromJson(Map<String, dynamic> json) {
     return InsightsStaffItem(
-      id: json['id'] as int? ?? 0,
+      id: _toInt(json['id']),
       name: json['name']?.toString() ?? '',
-      appreciations: json['appreciations'] as int? ?? 0,
-      complaints: json['complaints'] as int? ?? 0,
-      feedback: json['feedback'] as int? ?? 0,
+      appreciations: _toInt(json['appreciations']),
+      complaints: _toInt(json['complaints']),
+      feedback: _toInt(json['feedback']),
     );
   }
 
@@ -167,9 +184,9 @@ class InsightsStudentItem {
     return InsightsStudentItem(
       studentName: json['student_name']?.toString() ?? json['studentName']?.toString() ?? '',
       classSection: json['class_section']?.toString() ?? json['classSection']?.toString() ?? '',
-      complaints: json['complaints'] as int? ?? 0,
-      feedback: json['feedback'] as int? ?? 0,
-      appreciations: json['appreciations'] as int? ?? 0,
+      complaints: _toInt(json['complaints']),
+      feedback: _toInt(json['feedback']),
+      appreciations: _toInt(json['appreciations']),
       lastAt: json['last_at']?.toString() ?? json['lastAt']?.toString() ?? '',
     );
   }
@@ -194,6 +211,11 @@ class InsightsTotalsItem {
   final int resolved;
   final int pendingReward;
   final num? avgDays;
+  final int fromParents;
+  final int fromStudents;
+  final int fromStaff;
+  final int open;
+  final int overdue;
 
   const InsightsTotalsItem({
     this.total = 0,
@@ -203,17 +225,27 @@ class InsightsTotalsItem {
     this.resolved = 0,
     this.pendingReward = 0,
     this.avgDays,
+    this.fromParents = 0,
+    this.fromStudents = 0,
+    this.fromStaff = 0,
+    this.open = 0,
+    this.overdue = 0,
   });
 
   factory InsightsTotalsItem.fromJson(Map<String, dynamic> json) {
     return InsightsTotalsItem(
-      total: json['total'] as int? ?? 0,
-      complaints: json['complaints'] as int? ?? 0,
-      feedback: json['feedback'] as int? ?? 0,
-      appreciations: json['appreciations'] as int? ?? 0,
-      resolved: json['resolved'] as int? ?? 0,
-      pendingReward: json['pending_reward'] as int? ?? 0,
-      avgDays: json['avg_days'] as num?,
+      total: _toInt(json['total']),
+      complaints: _toInt(json['complaints']),
+      feedback: _toInt(json['feedback']),
+      appreciations: _toInt(json['appreciations']),
+      resolved: _toInt(json['resolved']),
+      pendingReward: _toInt(json['pending_reward']),
+      avgDays: _toNum(json['avg_days']),
+      fromParents: _toInt(json['from_parents']),
+      fromStudents: _toInt(json['from_students']),
+      fromStaff: _toInt(json['from_staff']),
+      open: _toInt(json['open']),
+      overdue: _toInt(json['overdue']),
     );
   }
 
@@ -226,6 +258,11 @@ class InsightsTotalsItem {
       'resolved': resolved,
       'pending_reward': pendingReward,
       'avg_days': avgDays,
+      'from_parents': fromParents,
+      'from_students': fromStudents,
+      'from_staff': fromStaff,
+      'open': open,
+      'overdue': overdue,
     };
   }
 }

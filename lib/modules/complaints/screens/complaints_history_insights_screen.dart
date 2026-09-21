@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/localization/app_strings.dart';
@@ -7,9 +8,12 @@ import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/dialogs/no_internet_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../../shared_widgets/dropdowns/searchable_filter_dropdown.dart';
+import '../bloc/complaints_bloc.dart';
+import '../bloc/complaints_event.dart';
+import '../bloc/complaints_state.dart';
 import '../models/lookup_models.dart';
 import '../models/ticket_insights_model.dart';
-import '../repository/complaints_repository.dart';
 import 'complaints_screen.dart';
 
 class ComplaintsHistoryInsightsScreen extends StatefulWidget {
@@ -20,91 +24,34 @@ class ComplaintsHistoryInsightsScreen extends StatefulWidget {
 }
 
 class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsightsScreen> {
-  final ComplaintsRepository _repository = ComplaintsRepository();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   int _selectedYear = 2026;
-  int? _selectedBranchId; // null or 0 = All branches
-  List<LookupBranchModel> _branches = [];
-  TicketInsightsResponse _insights = const TicketInsightsResponse();
-  bool _isLoading = true;
-  String? _errorMessage;
-
+  int? _selectedBranchId; // null = All branches
   final List<int> _academicYears = [2026, 2025, 2024];
 
   @override
   void initState() {
     super.initState();
-    _loadInitialData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchDashboard();
+    });
   }
 
-  Future<void> _loadInitialData() async {
+  Future<void> _fetchDashboard() async {
     final hasNet = await NetworkConnectivityService().checkConnection();
     if (!hasNet && mounted) {
       NoInternetDialog.showForceLogout(context);
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      final branches = await _repository.getBranches();
-      final insights = await _repository.getTicketInsights(
-        year: _selectedYear,
-        branchId: _selectedBranchId,
-      );
-
-      if (mounted) {
-        setState(() {
-          _branches = branches;
-          _insights = insights;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = e.toString().replaceFirst('Exception: ', '');
-        });
-      }
-    }
-  }
-
-  Future<void> _fetchInsightsOnly() async {
-    final hasNet = await NetworkConnectivityService().checkConnection();
-    if (!hasNet && mounted) {
-      NoInternetDialog.showForceLogout(context);
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      final insights = await _repository.getTicketInsights(
-        year: _selectedYear,
-        branchId: _selectedBranchId,
-      );
-
-      if (mounted) {
-        setState(() {
-          _insights = insights;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = e.toString().replaceFirst('Exception: ', '');
-        });
-      }
+    if (mounted) {
+      context.read<ComplaintsBloc>().add(
+            FetchComplaintsDashboardEvent(
+              year: _selectedYear,
+              branchId: _selectedBranchId,
+            ),
+          );
     }
   }
 
@@ -150,96 +97,114 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
       child: Scaffold(
         key: _scaffoldKey,
         appBar: const CustomAppBar(),
-        drawer: const CustomLeftDrawer(currentRoute: '/complaints/history'),
+        drawer: const CustomLeftDrawer(currentRoute: '/complaints/dashboard'),
         backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
         body: SafeArea(
-          child: RefreshIndicator(
-            color: const Color(0xFF8B1D24),
-            onRefresh: _fetchInsightsOnly,
-            child: _isLoading
-                ? const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(40),
-                      child: CircularProgressIndicator(color: Color(0xFF8B1D24)),
-                    ),
-                  )
-                : SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isMobile ? 12 : 20,
-                      vertical: 16,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Header: Title, Academic Year, Branch Selector, Back button
-                        _buildHeader(s, isDark, isMobile),
-                        const SizedBox(height: 16),
+          child: BlocBuilder<ComplaintsBloc, ComplaintsState>(
+            builder: (context, state) {
+              TicketInsightsResponse insights = const TicketInsightsResponse();
+              List<LookupBranchModel> branches = [];
+              bool isLoading = false;
+              String? errorMessage;
 
-                        if (_errorMessage != null) ...[
-                          _buildErrorBanner(_errorMessage!, isDark),
-                          const SizedBox(height: 16),
-                        ],
+              if (state is ComplaintsLoadingState) {
+                isLoading = true;
+              } else if (state is ComplaintsDashboardLoadedState) {
+                insights = state.insights;
+                branches = state.branches;
+                isLoading = state.isLoading;
+                errorMessage = state.errorMessage;
+              } else if (state is ComplaintsLoadedState) {
+                branches = state.branches;
+              }
 
-                        // Summary Stat Cards
-                        _buildStatCardsRow(s, isDark),
-                        const SizedBox(height: 20),
+              return RefreshIndicator(
+                color: const Color(0xFF8B1D24),
+                onRefresh: _fetchDashboard,
+                child: isLoading && insights.byMonth.isEmpty && insights.totals.total == 0
+                    ? const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(40),
+                          child: CircularProgressIndicator(color: Color(0xFF8B1D24)),
+                        ),
+                      )
+                    : SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isMobile ? 12 : 20,
+                          vertical: 16,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Header: Title, Subtitle, Academic Year, Searchable Branch, All tickets
+                            _buildHeader(s, isDark, isMobile, branches),
+                            const SizedBox(height: 16),
 
-                        // Middle Visuals: Received Per Month (Stacked Bar Chart) & Complaints By Category
-                        if (isMobile) ...[
-                          _buildMonthlyChartCard(s, isDark),
-                          const SizedBox(height: 16),
-                          _buildCategoryProgressCard(s, isDark),
-                        ] else ...[
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                flex: 6,
-                                child: _buildMonthlyChartCard(s, isDark),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                flex: 5,
-                                child: _buildCategoryProgressCard(s, isDark),
+                            if (errorMessage != null) ...[
+                              _buildErrorBanner(errorMessage, isDark),
+                              const SizedBox(height: 16),
+                            ],
+
+                            // Row 1: 5 Stat Cards (Open right now, Past target date, From parents, From students, From staff)
+                            _buildTopRowStatCards(insights.totals, s, isDark),
+                            const SizedBox(height: 12),
+
+                            // Row 2: 6 Stat Cards (Total received, Complaints, Feedback, Appreciations, Awaiting Director approval, Avg. days)
+                            _buildSecondRowStatCards(insights.totals, s, isDark),
+                            const SizedBox(height: 20),
+
+                            // Middle Visuals: Stacked Bar Chart & Category Progress
+                            if (isMobile) ...[
+                              _buildMonthlyChartCard(insights.byMonth, s, isDark),
+                              const SizedBox(height: 16),
+                              _buildCategoryProgressCard(insights.byCategory, s, isDark),
+                            ] else ...[
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    flex: 6,
+                                    child: _buildMonthlyChartCard(insights.byMonth, s, isDark),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    flex: 5,
+                                    child: _buildCategoryProgressCard(insights.byCategory, s, isDark),
+                                  ),
+                                ],
                               ),
                             ],
-                          ),
-                        ],
-                        const SizedBox(height: 20),
+                            const SizedBox(height: 20),
 
-                        // Bottom Section: Staff Table & Student/Family Container List
-                        if (isMobile) ...[
-                          _buildStaffTableCard(s, isDark),
-                          const SizedBox(height: 16),
-                          _buildStudentContainerListCard(s, isDark),
-                        ] else ...[
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                flex: 6,
-                                child: _buildStaffTableCard(s, isDark),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                flex: 5,
-                                child: _buildStudentContainerListCard(s, isDark),
-                              ),
+                            // Bottom Section: BY STUDENT / FAMILY Table
+                            _buildStudentFamilyTableCard(insights.byStudent, s, isDark),
+                            const SizedBox(height: 20),
+
+                            // BY STAFF MEMBER Table (if staff insights exist)
+                            if (insights.byStaff.isNotEmpty) ...[
+                              _buildStaffTableCard(insights.byStaff, s, isDark),
+                              const SizedBox(height: 20),
                             ],
-                          ),
-                        ],
-                        const SizedBox(height: 40),
-                      ],
-                    ),
-                  ),
+
+                            const SizedBox(height: 30),
+                          ],
+                        ),
+                      ),
+              );
+            },
           ),
         ),
       ),
     );
   }
 
-  Widget _buildHeader(AppStrings s, bool isDark, bool isMobile) {
+  Widget _buildHeader(
+    AppStrings s,
+    bool isDark,
+    bool isMobile,
+    List<LookupBranchModel> branches,
+  ) {
     final yearDisplay = '$_selectedYear–${(_selectedYear + 1).toString().substring(2)}';
 
     return Column(
@@ -253,7 +218,7 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    s.voiceOfParentsAndStudents,
+                    s.complaintsAndFeedbacksDashboard,
                     style: TextStyle(
                       fontSize: isMobile ? 18 : 22,
                       fontWeight: FontWeight.bold,
@@ -262,7 +227,7 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    s.academicYearSubtitle(yearDisplay),
+                    s.complaintsDashboardSubtitle(yearDisplay),
                     style: TextStyle(
                       fontSize: 12.5,
                       color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
@@ -272,19 +237,23 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
               ),
             ),
             if (!isMobile) ...[
-              _buildHeaderControls(s, isDark),
+              _buildHeaderControls(s, isDark, branches),
             ],
           ],
         ),
         if (isMobile) ...[
           const SizedBox(height: 12),
-          _buildHeaderControls(s, isDark),
+          _buildHeaderControls(s, isDark, branches),
         ],
       ],
     );
   }
 
-  Widget _buildHeaderControls(AppStrings s, bool isDark) {
+  Widget _buildHeaderControls(
+    AppStrings s,
+    bool isDark,
+    List<LookupBranchModel> branches,
+  ) {
     final yearOptions = _academicYears.map((y) {
       final label = '$y–${(y + 1).toString().substring(2)}';
       return DropdownMenuItem<int>(
@@ -300,7 +269,7 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
       children: [
         // Year Dropdown
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E293B) : Colors.white,
             borderRadius: BorderRadius.circular(8),
@@ -309,9 +278,10 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
           child: DropdownButtonHideUnderline(
             child: DropdownButton<int>(
               value: _selectedYear,
-              icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 16),
+              icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 18),
               style: TextStyle(
                 fontSize: 12,
+                fontWeight: FontWeight.w500,
                 color: isDark ? Colors.white : const Color(0xFF0F172A),
               ),
               dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
@@ -321,70 +291,50 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
                   setState(() {
                     _selectedYear = val;
                   });
-                  _fetchInsightsOnly();
+                  _fetchDashboard();
                 }
               },
             ),
           ),
         ),
 
-        // Branch Dropdown
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E293B) : Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<int?>(
-              value: _selectedBranchId,
-              icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 16),
-              style: TextStyle(
-                fontSize: 12,
-                color: isDark ? Colors.white : const Color(0xFF0F172A),
-              ),
-              dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-              items: [
-                DropdownMenuItem<int?>(
-                  value: null,
-                  child: Text(s.allBranches, style: const TextStyle(fontSize: 12)),
-                ),
-                ..._branches.map((b) {
-                  return DropdownMenuItem<int?>(
-                    value: b.id,
-                    child: Text(b.name, style: const TextStyle(fontSize: 12)),
-                  );
-                }),
-              ],
-              onChanged: (val) {
-                setState(() {
-                  _selectedBranchId = val;
-                });
-                _fetchInsightsOnly();
-              },
+        // Searchable Branch Dropdown
+        SearchableFilterDropdown<int?>(
+          value: _selectedBranchId,
+          hint: s.allBranches,
+          searchHint: 'Search branch...',
+          items: [
+            SearchableDropdownItem<int?>(value: null, label: s.allBranches),
+            ...branches.map(
+              (b) => SearchableDropdownItem<int?>(value: b.id, label: b.name),
             ),
-          ),
+          ],
+          onChanged: (val) {
+            setState(() {
+              _selectedBranchId = val;
+            });
+            _fetchDashboard();
+          },
         ),
 
-        // Back to tracker Button
+        // "All tickets" Button
         OutlinedButton.icon(
           onPressed: () {
-            if (Navigator.of(context).canPop()) {
-              Navigator.of(context).pop();
-            } else {
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (_) => const ComplaintsScreen()),
-              );
-            }
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const ComplaintsScreen()),
+            );
           },
-          icon: const Icon(Icons.arrow_back_rounded, size: 14),
-          label: Text(s.backToTracker, style: const TextStyle(fontSize: 12)),
+          icon: const Icon(Icons.confirmation_number_outlined, size: 15),
+          label: Text(
+            s.allTicketsButton,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+          ),
           style: OutlinedButton.styleFrom(
-            foregroundColor: isDark ? Colors.white70 : const Color(0xFF334155),
-            side: BorderSide(color: isDark ? Colors.grey.shade700 : const Color(0xFFCBD5E1)),
+            foregroundColor: isDark ? Colors.white : const Color(0xFF1E293B),
+            backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+            side: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
         ),
       ],
@@ -415,9 +365,56 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
     );
   }
 
-  Widget _buildStatCardsRow(AppStrings s, bool isDark) {
-    final totals = _insights.totals;
+  /// Row 1: 5 Stat Cards (Open right now, Past target date, From parents, From students, From staff)
+  Widget _buildTopRowStatCards(InsightsTotalsItem totals, AppStrings s, bool isDark) {
+    final cards = [
+      _buildStatCard(
+        count: totals.open.toString(),
+        label: s.openRightNow,
+        accentColor: const Color(0xFF10B981),
+        isDark: isDark,
+      ),
+      _buildStatCard(
+        count: totals.overdue.toString(),
+        label: s.pastTargetDate,
+        accentColor: const Color(0xFFEF4444),
+        isDark: isDark,
+      ),
+      _buildStatCard(
+        count: totals.fromParents.toString(),
+        label: s.fromParents,
+        accentColor: const Color(0xFFF59E0B),
+        isDark: isDark,
+      ),
+      _buildStatCard(
+        count: totals.fromStudents.toString(),
+        label: s.fromStudents,
+        accentColor: const Color(0xFF3B82F6),
+        isDark: isDark,
+      ),
+      _buildStatCard(
+        count: totals.fromStaff.toString(),
+        label: s.fromStaff,
+        accentColor: const Color(0xFF8B5CF6),
+        isDark: isDark,
+      ),
+    ];
 
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: cards
+            .map((card) => Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: card,
+                ))
+            .toList(),
+      ),
+    );
+  }
+
+  /// Row 2: 6 Stat Cards (Total received, Complaints, Feedback, Appreciations, Awaiting Director approval, Avg. days to resolve)
+  Widget _buildSecondRowStatCards(InsightsTotalsItem totals, AppStrings s, bool isDark) {
     final cards = [
       _buildStatCard(
         count: totals.total.toString(),
@@ -451,7 +448,7 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
       ),
       _buildStatCard(
         count: totals.avgDays != null ? '${totals.avgDays}d' : '—',
-        label: s.statAvgTimeToResolve,
+        label: s.avgDaysToResolve,
         accentColor: const Color(0xFF06B6D4),
         isDark: isDark,
       ),
@@ -477,7 +474,7 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
     required bool isDark,
   }) {
     return Container(
-      width: 145,
+      width: 148,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
@@ -531,9 +528,7 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
     );
   }
 
-  Widget _buildMonthlyChartCard(AppStrings s, bool isDark) {
-    final months = _insights.byMonth;
-
+  Widget _buildMonthlyChartCard(List<InsightsMonthItem> months, AppStrings s, bool isDark) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -586,7 +581,7 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
             )
           else
             SizedBox(
-              height: 170,
+              height: 190,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: months.map((m) {
@@ -612,7 +607,7 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
                         // Stacked Bar
                         Container(
                           width: 24,
-                          height: (total * 18.0).clamp(20.0, 130.0),
+                          height: (total * 22.0).clamp(20.0, 130.0),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(4),
                           ),
@@ -676,8 +671,7 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
     );
   }
 
-  Widget _buildCategoryProgressCard(AppStrings s, bool isDark) {
-    final categories = _insights.byCategory;
+  Widget _buildCategoryProgressCard(List<InsightsCategoryItem> categories, AppStrings s, bool isDark) {
     final maxCount = categories.isNotEmpty
         ? categories.map((e) => e.count).reduce((a, b) => a > b ? a : b)
         : 1;
@@ -761,12 +755,16 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Text(
-                        '${cat.count}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white70 : const Color(0xFF334155),
+                      SizedBox(
+                        width: 28,
+                        child: Text(
+                          '${cat.count}',
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          ),
                         ),
                       ),
                     ],
@@ -779,10 +777,176 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
     );
   }
 
-  Widget _buildStaffTableCard(AppStrings s, bool isDark) {
-    final staffList = _insights.byStaff;
-
+  /// BY STUDENT / FAMILY Table matching the exact screenshot
+  Widget _buildStudentFamilyTableCard(List<InsightsStudentItem> students, AppStrings s, bool isDark) {
     return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                s.byStudentFamily,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                  color: isDark ? Colors.grey.shade300 : const Color(0xFF475569),
+                ),
+              ),
+              if (students.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '${students.length}',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white70 : const Color(0xFF475569),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          if (students.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 28),
+              child: Center(
+                child: Text(
+                  s.noDataAvailable,
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                ),
+              ),
+            )
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: students.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              itemBuilder: (context, index) {
+                final st = students[index];
+                final initial = st.studentName.isNotEmpty
+                    ? st.studentName.trim()[0].toUpperCase()
+                    : '?';
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 18,
+                        backgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFE0E7FF),
+                        child: Text(
+                          initial,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : const Color(0xFF3730A3),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    st.studentName.isNotEmpty ? st.studentName : '—',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                if (st.classSection.isNotEmpty) ...[
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: isDark ? const Color(0xFF1E293B) : const Color(0xFFEDE9FE),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      st.classSection,
+                                      style: TextStyle(
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: isDark ? Colors.white70 : const Color(0xFF6D28D9),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                            if (st.lastAt != null && st.lastAt!.isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Icon(Icons.access_time_rounded, size: 10, color: isDark ? Colors.grey.shade500 : Colors.grey.shade400),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${s.lastRecordedLabel}: ${_formatDate(st.lastAt)}',
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      color: isDark ? Colors.grey.shade400 : Colors.grey.shade500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 3),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        alignment: WrapAlignment.end,
+                        children: [
+                          _buildCountBadge(st.complaints, const Color(0xFFEF4444), isDark),
+                          _buildCountBadge(st.feedback, const Color(0xFF3B82F6), isDark),
+                          _buildCountBadge(st.appreciations, const Color(0xFF10B981), isDark),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStaffTableCard(List<InsightsStaffItem> staffList, AppStrings s, bool isDark) {
+    return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
@@ -793,6 +957,7 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 s.byStaffMemberDirectorOnly,
@@ -824,8 +989,8 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
                 headingRowHeight: 36,
                 dataRowMinHeight: 42,
                 dataRowMaxHeight: 46,
-                horizontalMargin: 4,
-                columnSpacing: 18,
+                horizontalMargin: 8,
+                columnSpacing: 22,
                 columns: [
                   DataColumn(
                     label: Text(
@@ -908,227 +1073,6 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
           fontWeight: FontWeight.bold,
           color: color,
         ),
-      ),
-    );
-  }
-
-  /// By Student / Family Card rendered as a container list (NOT a table format) per user instruction
-  Widget _buildStudentContainerListCard(AppStrings s, bool isDark) {
-    final students = _insights.byStudent;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                s.byStudentFamily,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
-                  color: isDark ? Colors.grey.shade300 : const Color(0xFF475569),
-                ),
-              ),
-              if (students.isNotEmpty)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    '${students.length}',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white70 : const Color(0xFF475569),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 14),
-
-          if (students.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24),
-              child: Center(
-                child: Text(
-                  s.noDataAvailable,
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
-                ),
-              ),
-            )
-          else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: students.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 10),
-              itemBuilder: (context, index) {
-                final student = students[index];
-                return _buildStudentContainerItem(student, s, isDark);
-              },
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStudentContainerItem(InsightsStudentItem student, AppStrings s, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Top row: Student name, class badge
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 14,
-                backgroundColor: const Color(0xFF8B1D24).withOpacity(0.12),
-                child: Text(
-                  student.studentName.isNotEmpty ? student.studentName[0].toUpperCase() : 'S',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF8B1D24),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  student.studentName.isNotEmpty ? student.studentName : s.anonymousHint,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : const Color(0xFF0F172A),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              if (student.classSection.isNotEmpty)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    '${s.classHeader} ${student.classSection}',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white70 : const Color(0xFF334155),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 8),
-
-          // Last activity timestamp
-          if (student.lastAt.isNotEmpty) ...[
-            Row(
-              children: [
-                Icon(
-                  Icons.access_time_rounded,
-                  size: 12,
-                  color: isDark ? Colors.grey.shade500 : Colors.grey.shade400,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  '${s.lastActivityLabel}: ${_formatDate(student.lastAt)}',
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-          ],
-
-          // Counts Pills Row
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              _buildStudentPill(
-                label: s.statComplaints,
-                count: student.complaints,
-                color: const Color(0xFFEF4444),
-                isDark: isDark,
-              ),
-              _buildStudentPill(
-                label: s.statFeedback,
-                count: student.feedback,
-                color: const Color(0xFF3B82F6),
-                isDark: isDark,
-              ),
-              _buildStudentPill(
-                label: s.statAppreciations,
-                count: student.appreciations,
-                color: const Color(0xFF10B981),
-                isDark: isDark,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStudentPill({
-    required String label,
-    required int count,
-    required Color color,
-    required bool isDark,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withOpacity(isDark ? 0.18 : 0.1),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            '$label: ',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w500,
-              color: isDark ? Colors.grey.shade300 : const Color(0xFF334155),
-            ),
-          ),
-          Text(
-            '$count',
-            style: TextStyle(
-              fontSize: 10.5,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-        ],
       ),
     );
   }

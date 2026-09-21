@@ -12,6 +12,7 @@ import '../models/lookup_models.dart';
 import '../models/ticket_meta_model.dart';
 import '../models/ticket_model.dart';
 import '../repository/complaints_repository.dart';
+import '../../../shared_widgets/dropdowns/searchable_filter_dropdown.dart';
 import 'complaint_registered_dialog.dart';
 
 class RaiseComplaintDialog extends StatefulWidget {
@@ -419,16 +420,16 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
                                   children: [
                                     _buildLabel(s.channelLabel),
                                     const SizedBox(height: 6),
-                                    DropdownButtonFormField<String>(
+                                    SearchableFilterDropdown<String>(
                                       value: _selectedChannel,
-                                      isExpanded: true,
-                                      decoration: _inputDecoration(isDark),
-                                      items: _meta.channels.map((c) {
-                                        return DropdownMenuItem<String>(
-                                          value: c.value,
-                                          child: Text(c.label, style: const TextStyle(fontSize: 13)),
-                                        );
-                                      }).toList(),
+                                      hint: s.channelLabel,
+                                      searchHint: 'Search channel...',
+                                      items: _meta.channels
+                                          .map((c) => SearchableDropdownItem<String>(
+                                                value: c.value,
+                                                label: c.label,
+                                              ))
+                                          .toList(),
                                       onChanged: (val) {
                                         if (val != null) setState(() => _selectedChannel = val);
                                       },
@@ -502,21 +503,19 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
                                   children: [
                                     _buildLabel(s.branchLabel),
                                     const SizedBox(height: 6),
-                                    DropdownButtonFormField<int>(
+                                    SearchableFilterDropdown<int>(
                                       value: _selectedBranchId,
-                                      isExpanded: true,
-                                      decoration: _inputDecoration(isDark),
-                                      items: _branches.map((b) {
-                                        return DropdownMenuItem<int>(
-                                          value: b.id,
-                                          child: Text(
-                                            '${b.code} - ${b.name}',
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(fontSize: 13),
-                                          ),
-                                        );
-                                      }).toList(),
-                                      onChanged: _onBranchChanged,
+                                      hint: s.branchLabel,
+                                      searchHint: 'Search branch...',
+                                      items: _branches
+                                          .map((b) => SearchableDropdownItem<int>(
+                                                value: b.id,
+                                                label: '${b.code} - ${b.name}',
+                                              ))
+                                          .toList(),
+                                      onChanged: (val) {
+                                        if (val != null) _onBranchChanged(val);
+                                      },
                                     ),
                                   ],
                                 ),
@@ -706,23 +705,21 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
                           if (_selectedAboutKind == 'staff') ...[
                             _buildLabel(s.staffMemberSubtext),
                             const SizedBox(height: 6),
-                            DropdownButtonFormField<int?>(
+                            SearchableFilterDropdown<int?>(
                               value: _selectedAboutUserId,
-                              isExpanded: true,
-                              decoration: _inputDecoration(isDark),
+                              hint: s.staffMemberSubtext,
+                              searchHint: 'Search staff member...',
                               items: [
-                                DropdownMenuItem<int?>(
+                                SearchableDropdownItem<int?>(
                                   value: null,
-                                  child: Text(s.notNamedOption, style: const TextStyle(fontSize: 13)),
+                                  label: s.notNamedOption,
                                 ),
                                 ..._assignees.map((a) {
-                                  return DropdownMenuItem<int?>(
+                                  return SearchableDropdownItem<int?>(
                                     value: a.id,
-                                    child: Text(
-                                      '${a.name} (${a.department ?? ""})',
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontSize: 13),
-                                    ),
+                                    label: a.department?.isNotEmpty == true
+                                        ? '${a.name} (${a.department})'
+                                        : a.name,
                                   );
                                 }),
                               ],
@@ -732,19 +729,19 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
                           ] else if (_selectedAboutKind == 'department') ...[
                             _buildLabel(s.departmentLabel),
                             const SizedBox(height: 6),
-                            DropdownButtonFormField<int?>(
+                            SearchableFilterDropdown<int?>(
                               value: _selectedAboutDepartmentId,
-                              isExpanded: true,
-                              decoration: _inputDecoration(isDark),
+                              hint: s.departmentLabel,
+                              searchHint: 'Search department...',
                               items: [
-                                DropdownMenuItem<int?>(
+                                SearchableDropdownItem<int?>(
                                   value: null,
-                                  child: Text(s.notNamedOption, style: const TextStyle(fontSize: 13)),
+                                  label: s.notNamedOption,
                                 ),
                                 ..._departments.map((d) {
-                                  return DropdownMenuItem<int?>(
+                                  return SearchableDropdownItem<int?>(
                                     value: d.id,
-                                    child: Text(d.name, style: const TextStyle(fontSize: 13)),
+                                    label: d.name,
                                   );
                                 }),
                               ],
@@ -756,18 +753,15 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
                           // Category
                           _buildLabel(s.categoryLabel),
                           const SizedBox(height: 6),
-                          DropdownButtonFormField<String>(
+                          SearchableFilterDropdown<String>(
                             value: _meta.categories.contains(_selectedCategory)
                                 ? _selectedCategory
                                 : (_meta.categories.isNotEmpty ? _meta.categories.first : 'Other'),
-                            isExpanded: true,
-                            decoration: _inputDecoration(isDark),
-                            items: _meta.categories.map((cat) {
-                              return DropdownMenuItem<String>(
-                                value: cat,
-                                child: Text(cat, style: const TextStyle(fontSize: 13)),
-                              );
-                            }).toList(),
+                            hint: s.categoryLabel,
+                            searchHint: 'Search category...',
+                            items: _meta.categories
+                                .map((cat) => SearchableDropdownItem<String>(value: cat, label: cat))
+                                .toList(),
                             onChanged: (v) {
                               if (v != null) setState(() => _selectedCategory = v);
                             },

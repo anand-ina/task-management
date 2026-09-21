@@ -528,12 +528,12 @@ class AppStringsHi extends AppStrings {
   String get clickGroupForMembers => 'सदस्यों के लिए समूह पर क्लिक करें';
 
   @override
-  String get noInternetTitle => 'कोई इंटरनेट कनेक्शन नहीं';
+  String get noInternetTitle => 'कृपया इंटरनेट कनेक्ट करें';
   @override
-  String get noInternetMessage => 'कृपया अपने इंटरनेट कनेक्शन की जाँच करें और पुनः प्रयास करें।';
+  String get noInternetMessage => 'कोई इंटरनेट कनेक्शन नहीं मिला। आगे बढ़ने के लिए कृपया इंटरनेट कनेक्ट करें।';
   @override
   String forceLogoutNotice(int seconds) =>
-      'कोई इंटरनेट कनेक्शन नहीं है, कृपया कनेक्ट करें। $seconds सेकंड में बलपूर्वक लॉग आउट कर दिया जाएगा...';
+      'कृपया इंटरनेट कनेक्ट करें। $seconds सेकंड में बलपूर्वक लॉग आउट कर दिया जाएगा...';
   @override
   String get retryButton => 'पुनः प्रयास करें';
   @override
@@ -1467,10 +1467,40 @@ class AppStringsHi extends AppStrings {
       'टिकट चयनित शाखा के $ownerName के पास जाते हैं। स्टाफ सदस्य का नाम देने वाली प्रशंसा पर $points इनाम अंक मिलते हैं; बिना नाम के निदेशक निर्णय लेते हैं।';
 
   // History & Insights
+  // History & Insights
   @override
   String get voiceOfParentsAndStudents => 'अभिभावकों और छात्रों की आवाज़';
   @override
   String academicYearSubtitle(String year) => 'शैक्षणिक वर्ष $year · जून से मई';
+  @override
+  String get complaintsAndFeedbacksDashboard => 'शिकायत एवं प्रतिक्रिया डैशबोर्ड';
+  @override
+  String complaintsDashboardSubtitle(String year) =>
+      'अभिभावकों, छात्रों और कर्मचारियों द्वारा दी गई जानकारी · शैक्षणिक वर्ष $year (जून से मई)';
+  @override
+  String get allTicketsButton => 'सभी टिकट';
+  @override
+  String get openRightNow => 'वर्तमान में खुले';
+  @override
+  String get pastTargetDate => 'नियत तिथि समाप्त';
+  @override
+  String get fromParents => 'अभिभावकों से';
+  @override
+  String get fromStudents => 'छात्रों से';
+  @override
+  String get fromStaff => 'स्टाफ से';
+  @override
+  String get avgDaysToResolve => 'समाधान के औसत दिन';
+  @override
+  String get complaintsHeader => 'शिकायतें';
+  @override
+  String get feedbackHeader => 'प्रतिक्रिया';
+  @override
+  String get appreciationsHeader => 'प्रशंसा';
+  @override
+  String get lastHeader => 'अंतिम';
+  @override
+  String get complaintsDashboardTitle => 'डैशबोर्ड';
   @override
   String get receivedPerMonth => 'प्रति माह प्राप्त';
   @override
@@ -1488,9 +1518,58 @@ class AppStringsHi extends AppStrings {
   @override
   String get classHeader => 'कक्षा';
   @override
-  String get lastActivityLabel => 'अंतिम गतिविधि';
   @override
   String get noDataAvailable => 'कोई डेटा उपलब्ध नहीं है';
+
+  // Parents & Students Complaints
+  @override
+  String get parentsComplaintsAndFeedbacks => 'माता-पिता की शिकायतें एवं प्रतिक्रिया';
+  @override
+  String get parentsComplaintsSubtitle =>
+      'माता-पिता ने हमें जो बताया — कक्षा व्हाट्सएप ग्रुप, कॉल और व्यक्तिगत मुलाकातों से।';
+  @override
+  String get studentsComplaintsAndFeedbacks => 'छात्रों की शिकायतें एवं प्रतिक्रिया';
+  @override
+  String get studentsComplaintsSubtitle =>
+      'छात्रों ने हमें जो बताया — सुझाव बॉक्स पर्चियां और व्यक्तिगत रूप से उठाई गई बातें।';
+  @override
+  String get staffComplaintsAndFeedbacks => 'कर्मचारी शिकायतें और प्रतिक्रियाएं';
+  @override
+  String get staffComplaintsSubtitle =>
+      'कर्मचारियों ने हमें क्या बताया — प्रतिक्रिया, चिंताएं और मुद्दे।';
+  @override
+  String get appreciations => 'प्रशंसा';
+  @override
+  String get appreciationsSubtitle =>
+      'माता-पिता, छात्रों और कर्मचारियों द्वारा हमारे लोगों के लिए कहे गए हर अच्छे शब्द — एक ही स्थान पर।';
+  @override
+  String get appreciationsReceived => 'प्राप्त प्रशंसा';
+  @override
+  String get recordedBadge => 'दर्ज किया गया';
+  @override
+  String get awaitingDirectorApproval => 'निदेशक की मंजूरी की प्रतीक्षा में';
+  @override
+  String get rewardPointsGiven => 'दिए गए इनाम अंक';
+  @override
+  String get rewardLabel => 'इनाम';
+  @override
+  String get onlyDirectorCanChange => 'केवल निदेशक इसे बदल सकते हैं।';
+  @override
+  String get resolutionLabel => 'समाधान';
+  @override
+  String get everyoneScope => 'सभी';
+  @override
+  String get everyonesFilter => 'सभी का';
+  @override
+  String get tabEverything => 'सब कुछ';
+  @override
+  String get statEverythingReceived => 'कुल प्राप्त';
+  @override
+  String get filterComplaintsAndFeedback => 'शिकायतें एवं प्रतिक्रिया';
+  @override
+  String get filterComplaintsOnly => 'केवल शिकायतें';
+  @override
+  String get filterFeedbackOnly => 'केवल प्रतिक्रिया';
 
   // Task Stats & Filters
   @override
@@ -1564,6 +1643,43 @@ class AppStringsHi extends AppStrings {
   @override
   String get taskIdSettings => 'कार्य आईडी सेटिंग्स';
   @override
+  String get taskIdSettingsSubtitle =>
+      'कार्य आईडी SS01-0001/09-26 जैसी दिखती हैं — शाखा कोड, 4-अंकीय संख्या, और कार्य बनने का माह-वर्ष।';
+  @override
+  String get counterPerBranch => 'प्रति शाखा काउंटर';
+  @override
+  String get counterPerBranchSubtitle =>
+      'प्रत्येक शाखा अपने दम पर 0001 से 9999 तक गिनती है। 01 Jun 2027 को सभी अपने आप 0001 पर रीसेट हो जाते हैं।';
+  @override
+  String get resetTo0001 => '0001 पर रीसेट करें';
+  @override
+  String get resetEveryBranch => 'प्रत्येक शाखा को 0001 पर रीसेट करें';
+  @override
+  String get lastUsed => 'अंतिम उपयोग';
+  @override
+  String get nextTaskId => 'अगली कार्य आईडी';
+  @override
+  String get lastReset => 'अंतिम रीसेट';
+  @override
+  String get complaintsDeskTitle => 'शिकायत डेस्क — टिकट कौन प्राप्त करता है';
+  @override
+  String get complaintsDeskSubtitle =>
+      'स्वचालित पर शाखा की शिकायतें उसके प्रिंसिपल को जाती हैं। टिकट किसी अन्य को भेजने के लिए यहाँ नाम चुनें।';
+  @override
+  String get fallbackLabel => 'फ़ॉलबैक';
+  @override
+  String get automaticCurrentlyPrefix => 'स्वचालित — वर्तमान में';
+  @override
+  String get resetConfirmTitle => 'काउंटर रीसेट करें';
+  @override
+  String resetConfirmMessage(String branch) =>
+      'क्या आप निश्चित हैं कि $branch का काउंटर 0001 पर रीसेट करना चाहते हैं?';
+  @override
+  String get resetAllConfirmTitle => 'सभी शाखाएं रीसेट करें';
+  @override
+  String get resetAllConfirmMessage =>
+      'क्या आप सभी शाखाओं के काउंटरों को 0001 पर रीसेट करना चाहते हैं?';
+  @override
   String get centerHeadPrincipalRole => 'सेंटर हेड / प्रिंसिपल';
   @override
   String get teamLeadRole => 'टीम लीड';
@@ -1573,4 +1689,168 @@ class AppStringsHi extends AppStrings {
   String centerHeadPrincipalScope(int count) => 'टीम दायरा — $count लोग दृश्य में हैं।';
   @override
   String get operationalScopeYourOwn => 'परिचालन दायरा — आपके अपने कार्य और रिपोर्ट।';
+  @override
+  String get moreFilters => 'अधिक फ़िल्टर';
+  @override
+  String get confidentialAndGeneral => 'गोपनीय और सामान्य';
+  @override
+  String get confidentialOnly => 'केवल गोपनीय';
+  @override
+  String get generalOnly => 'केवल सामान्य';
+  @override
+  String get updateEdit => 'अपडेट / संपादित करें';
+  @override
+  String get changeStatusTitle => 'स्थिति बदलें';
+  @override
+  String get newStatusLabel => 'नई स्थिति';
+  @override
+  String get completionLabel => 'पूर्णता';
+  @override
+  String get commentRequiredLabel => 'टिप्पणी * (प्रत्येक अपडेट के लिए आवश्यक)';
+  @override
+  String get commentPlaceholder => 'एक अपडेट नोट जोड़ें... किसी का उल्लेख करने के लिए @ टाइप करें';
+  @override
+  String get addFiles => 'फ़ाइलें जोड़ें';
+  @override
+  String get attachmentsLabel => 'संलग्नक';
+  @override
+  String get commentRequiredError => 'कृपया एक अपडेट टिप्पणी दर्ज करें';
+  @override
+  String get taskUpdatedSuccess => 'कार्य सफलतापूर्वक अपडेट किया गया';
+  @override
+  String get blockedStatus => 'अवरुद्ध';
+
+  // Ticket Details & Actions Dialog Strings
+  @override
+  String get linkedTask => 'लिंक किया गया कार्य';
+  @override
+  String get openTask => 'कार्य खोलें';
+  @override
+  String get assignTo => 'सौंपें...';
+  @override
+  String get assignThisTicket => 'यह टिकट सौंपें';
+  @override
+  String get searchPeoplePlaceholder => 'लोगों को खोजें...';
+  @override
+  String get whatShouldTheyDoPlaceholder => 'उन्हें क्या करना चाहिए? (आवश्यक)';
+
+  @override
+  String get closeTheLoop => 'लूप बंद करें';
+  @override
+  String get resolveTab => 'समाधान करें';
+  @override
+  String get notValidTab => 'मान्य नहीं';
+  @override
+  String get whatWasDonePlaceholder => 'क्या किया गया, और हम माता-पिता को क्या बता रहे हैं?';
+  @override
+  String get reasonWhyNotValidPlaceholder => 'यह मान्य क्यों नहीं है इसका कारण...';
+  @override
+  String get markResolvedButton => 'समाधान चिह्नित करें';
+  @override
+  String get closeAsNotValidButton => 'अमान्य के रूप में बंद करें';
+  @override
+  String get downloadLabel => 'डाउनलोड';
+  @override
+  String get evidenceVisibleCampusHeadOnly => 'साक्ष्य केवल कैंपस प्रमुख को दिखाई देता है।';
+  @override
+  String get historyLabel => 'इतिहास';
+  @override
+  String get detailsSectionLabel => 'विवरण';
+  @override
+  String get confidentialBadge => 'गोपनीय';
+  @override
+  String get editTicketButton => 'टिकट संपादित करें';
+  @override
+  String get anonymousHidden => 'अनाम — छिपा हुआ';
+  @override
+  String get editTicketTitlePrefix => 'संपादित करें';
+
+  @override
+  String get classAndSectionLabel => 'कक्षा और अनुभाग';
+
+
+  @override
+  String get detailsLabel => 'विवरण';
+
+  @override
+  String get addEvidenceLabel => 'साक्ष्य जोड़ें';
+
+  @override
+  String get reasonForChangeLabel => 'इस बदलाव का कारण *';
+  @override
+  String get reasonForChangePlaceholder => 'उदा. अभिभावक ने सही कक्षा अनुभाग दिया';
+  @override
+  String get saveChangesButton => 'परिवर्तन सहेजें';
+
+  @override
+  String get campusHeadLabel => 'कैंपस हेड';
+
+  @override
+  String get closedSectionLabel => 'बंद किया गया';
+
+  @override
+  String get resolvedSectionLabel => 'हल किया गया';
+
+  // Audit Execution & Scheduling Strings
+  @override
+  String get scheduleAnAudit => 'ऑडिट शेड्यूल करें';
+  @override
+  String get auditTitleLabel => 'शीर्षक';
+  @override
+  String get scopeNoteLabel => 'दायरा नोट';
+  @override
+  String get auditorLabel => 'ऑडिटर';
+  @override
+  String get auditeeTypeLabel => 'ऑडिटी';
+  @override
+  String get auditeeLabel => 'ऑडिटी शाखा / व्यक्ति';
+  @override
+  String get scheduledDateLabel => 'निर्धारित तिथि';
+  @override
+  String get dueDateLabel => 'अंतिम तिथि';
+  @override
+  String get checklistOnePerLine => 'चेकलिस्ट (प्रति पंक्ति एक मद)';
+  @override
+  String get scheduleAuditButton => 'ऑडिट शेड्यूल करें';
+  @override
+  String get closeAudit => 'ऑडिट बंद करें';
+  @override
+  String get conductedBy => 'द्वारा आयोजित';
+  @override
+  String get scheduledFor => 'इसके लिए निर्धारित';
+  @override
+  String get dueOn => 'अंतिम तिथि';
+  @override
+  String get closedOn => 'बंद किया गया';
+  @override
+  String get noAuditsFound => 'कोई ऑडिट नहीं मिला।';
+  @override
+  String get threeMonthsView => '3 महीने';
+  @override
+  String get eventsInTheseThreeMonths => 'इन 3 महीनों में कार्यक्रम';
+  @override
+  String get listViewLabel => 'सूची';
+  @override
+  String get fineLabel => 'जुर्माना';
+  @override
+  String get issuedByLabel => 'द्वारा जारी किया गया';
+  @override
+  String get policyRules => 'जुर्माना एवं पुरस्कार नीतियां';
+  @override
+  String get availablePointsLabel => 'उपलब्ध अंक';
+  @override
+  String get scopeEveryone => 'सभी';
+  @override
+  String get scopeParents => 'अभिभावक';
+  @override
+  String get scopeStudents => 'छात्र';
+  @override
+  String get scopeStaff => 'कर्मचारी';
+  @override
+  String get studentFamilyListTitle => 'छात्र / परिवार द्वारा';
+  @override
+  String get lastRecordedLabel => 'अंतिम';
+  @override
+  String get branchScopeLabel => 'शाखा';
 }
+

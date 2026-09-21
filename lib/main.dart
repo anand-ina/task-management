@@ -17,11 +17,9 @@ import 'modules/complaints/bloc/complaints_bloc.dart';
 import 'modules/settings/bloc/language_cubit.dart';
 import 'shared_widgets/dialogs/no_internet_dialog.dart';
 
+import 'core/utils/app_navigator.dart';
+import 'core/utils/preferences_service.dart';
 import 'modules/auth/screens/splash_screen.dart';
-
-class AppNavigator {
-  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-}
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,19 +44,17 @@ class _MyAppState extends State<MyApp> {
       if (!mounted) return;
       NetworkConnectivityService().initialize();
 
-      _networkSubscription = NetworkConnectivityService().onConnectionChanged.listen((isConnected) {
+      _networkSubscription = NetworkConnectivityService().onConnectionChanged.listen((isConnected) async {
         if (!isConnected && mounted) {
+          final token = await PreferencesService().getToken();
+          if (!mounted) return;
           final currentContext = AppNavigator.navigatorKey.currentContext;
           if (currentContext != null && currentContext.mounted) {
             final authState = currentContext.read<AuthBloc>().state;
-            if (authState is AuthenticatedState) {
-              // User is logged in: show 3-second countdown force-logout dialog
+            final isAuthenticated = authState is AuthenticatedState || (token != null && token.isNotEmpty);
+            if (isAuthenticated) {
+              // User is logged in inside the app: show 5-second countdown force-logout dialog
               NoInternetDialog.showForceLogout(currentContext);
-            } else {
-              // User is not logged in: show standard retry dialog
-              NoInternetDialog.show(currentContext, onRetry: () {
-                NetworkConnectivityService().checkConnection();
-              });
             }
           }
         }

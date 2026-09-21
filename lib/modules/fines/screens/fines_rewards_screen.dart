@@ -1,6 +1,8 @@
 import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
+import '../models/fine_item_model.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
@@ -118,10 +120,14 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
                       ),
                       const SizedBox(height: 20),
 
-                      // Segmented Tabs Header (Overview Tab only)
+                      // Segmented Tabs Header (Overview, Summary, Audit Trail)
                       Row(
                         children: [
                           _buildTabButton(0, s.overviewTab),
+                          const SizedBox(width: 24),
+                          _buildTabButton(1, s.summaryTab),
+                          const SizedBox(width: 24),
+                          _buildTabButton(2, s.auditTrailTab),
                         ],
                       ),
                       const SizedBox(height: 16),
@@ -145,21 +151,22 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
                           ),
                         )
                       else if (state is FinesLoadedState) ...[
-                        // Policy Cards Grid
-                        _buildPolicyGrid(context, s, state.data),
-                        const SizedBox(height: 24),
+                        if (_selectedTabIndex == 0) ...[
+                          // Policy Cards Grid
+                          _buildPolicyGrid(context, s, state.data),
+                          const SizedBox(height: 24),
 
-                        // Samskar Merchandise Store Section
-                        _buildMerchandiseStore(context, s, state.data.me.points),
-                        const SizedBox(height: 30),
+                          // Samskar Merchandise Store Section
+                          _buildMerchandiseStore(context, s, state.data.me.points),
+                          const SizedBox(height: 24),
 
-                        // Empty State / History List
-                        Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(40),
-                            child: Text(s.noFinesOrRewardsYet, style: const TextStyle(color: Colors.grey, fontSize: 13)),
-                          ),
-                        ),
+                          // Fines & Rewards History List (Container Cards)
+                          _buildFinesHistoryList(context, s, state.data.fines, isDark),
+                        ] else if (_selectedTabIndex == 1) ...[
+                          _buildSummaryTab(context, s, state.data, isDark),
+                        ] else ...[
+                          _buildAuditTrailTab(context, s, state.data.fines, isDark),
+                        ],
                       ] else
                         const SizedBox.shrink(),
                       const SizedBox(height: 40),
@@ -433,6 +440,273 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildFinesHistoryList(BuildContext context, AppStrings s, List<FineItemModel> fines, bool isDark) {
+    if (fines.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(40),
+          child: Text(s.noFinesOrRewardsYet, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '${s.history} (${fines.length})',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : const Color(0xFF0F172A),
+          ),
+        ),
+        const SizedBox(height: 12),
+        ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: fines.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 10),
+          itemBuilder: (context, index) {
+            final item = fines[index];
+            final isReward = item.type.toLowerCase() == 'reward';
+            final accentColor = isReward ? const Color(0xFF16A34A) : const Color(0xFFDC2626);
+            final bgBadgeColor = isReward
+                ? (isDark ? const Color(0xFF064E3B) : const Color(0xFFDCFCE7))
+                : (isDark ? const Color(0xFF450A0A) : const Color(0xFFFEE2E2));
+
+            String formattedDate = item.createdAt;
+            try {
+              final dt = DateTime.parse(item.createdAt).toLocal();
+              formattedDate = DateFormat('d MMM yyyy, hh:mm a').format(dt);
+            } catch (_) {}
+
+            return Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: bgBadgeColor,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      isReward ? Icons.military_tech_rounded : Icons.gavel_rounded,
+                      color: accentColor,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                (item.reason != null && item.reason!.isNotEmpty)
+                                    ? item.reason!
+                                    : (item.label.isNotEmpty ? item.label : (isReward ? s.rewardLabel : s.fineLabel)),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '${isReward ? "+" : "-"}₹${item.amount}',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: accentColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 4,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            if (item.member.isNotEmpty)
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.person_outline_rounded, size: 13, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    item.member,
+                                    style: TextStyle(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w500,
+                                      color: isDark ? Colors.grey.shade300 : const Color(0xFF475569),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            if (item.issuedBy != null && item.issuedBy!.isNotEmpty)
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.verified_outlined, size: 13, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${s.issuedByLabel}: ${item.issuedBy}',
+                                    style: TextStyle(
+                                      fontSize: 11.5,
+                                      color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            if (item.taskNo != null || item.taskId != null)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+                                ),
+                                child: Text(
+                                  item.taskNo ?? '#${item.taskId}',
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDark ? Colors.grey.shade300 : const Color(0xFF334155),
+                                  ),
+                                ),
+                              ),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.access_time_rounded, size: 12, color: isDark ? Colors.grey.shade500 : Colors.grey.shade400),
+                                const SizedBox(width: 4),
+                                Text(
+                                  formattedDate,
+                                  style: TextStyle(fontSize: 11, color: isDark ? Colors.grey.shade500 : Colors.grey.shade500),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSummaryTab(BuildContext context, AppStrings s, FinesOverviewData data, bool isDark) {
+    double totalRewards = 0;
+    double totalFines = 0;
+    for (final f in data.fines) {
+      final amt = double.tryParse(f.amount) ?? 0.0;
+      if (f.type.toLowerCase() == 'reward') {
+        totalRewards += amt;
+      } else {
+        totalFines += amt;
+      }
+    }
+    final net = totalRewards - totalFines;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            _buildStatMetricCard(
+              title: s.rewardLabel,
+              amount: '+₹${totalRewards.toStringAsFixed(2)}',
+              accentColor: const Color(0xFF16A34A),
+              isDark: isDark,
+            ),
+            _buildStatMetricCard(
+              title: s.fineLabel,
+              amount: '-₹${totalFines.toStringAsFixed(2)}',
+              accentColor: const Color(0xFFDC2626),
+              isDark: isDark,
+            ),
+            _buildStatMetricCard(
+              title: 'Net Balance',
+              amount: '₹${net.toStringAsFixed(2)}',
+              accentColor: net >= 0 ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+              isDark: isDark,
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        _buildFinesHistoryList(context, s, data.fines, isDark),
+      ],
+    );
+  }
+
+  Widget _buildStatMetricCard({
+    required String title,
+    required String amount,
+    required Color accentColor,
+    required bool isDark,
+  }) {
+    return Container(
+      width: 170,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: TextStyle(fontSize: 11, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600)),
+          const SizedBox(height: 6),
+          Text(
+            amount,
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: accentColor),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAuditTrailTab(BuildContext context, AppStrings s, List<FineItemModel> fines, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          s.auditTrailTab,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : const Color(0xFF0F172A),
+          ),
+        ),
+        const SizedBox(height: 12),
+        _buildFinesHistoryList(context, s, fines, isDark),
+      ],
     );
   }
 }

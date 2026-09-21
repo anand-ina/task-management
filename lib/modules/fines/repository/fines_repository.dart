@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/dio_client.dart';
 import '../../performance/models/performance_me_model.dart';
@@ -31,12 +32,54 @@ class FinesRepository {
     return data;
   }
 
+  void _logServiceCall({
+    required String serviceMethod,
+    required String url,
+    Map<String, dynamic>? queryParams,
+    dynamic requestBody,
+    dynamic response,
+    String? error,
+  }) {
+    debugPrint('=========================================');
+    debugPrint('---------------- [FinesRepository: $serviceMethod] ----------------');
+    debugPrint('Service URL: $url');
+    if (queryParams != null && queryParams.isNotEmpty) {
+      debugPrint('Query Params: $queryParams');
+    }
+    if (requestBody != null) {
+      debugPrint('Request Body: $requestBody');
+    }
+    if (response != null) {
+      debugPrint('Service Response: $response');
+    }
+    if (error != null) {
+      debugPrint('Service Error: $error');
+    }
+    debugPrint('=========================================');
+  }
+
   Future<FinesOverviewData> getFinesOverviewData() async {
     final results = await Future.wait([
       _dioClient.dio.get(ApiConstants.fines),
       _dioClient.dio.get(ApiConstants.finesTypes),
       _dioClient.dio.get(ApiConstants.performanceMe),
     ]);
+
+    _logServiceCall(
+      serviceMethod: 'getFines',
+      url: ApiConstants.fines,
+      response: results[0].data,
+    );
+    _logServiceCall(
+      serviceMethod: 'getFineTypes',
+      url: ApiConstants.finesTypes,
+      response: results[1].data,
+    );
+    _logServiceCall(
+      serviceMethod: 'getPerformanceMe',
+      url: ApiConstants.performanceMe,
+      response: results[2].data,
+    );
 
     final res0 = _safeParse(results[0].data);
     List<FineItemModel> fines = [];

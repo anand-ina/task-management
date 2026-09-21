@@ -15,6 +15,7 @@ class TasksDueTodayDialog extends StatefulWidget {
   final String? status;
   final String? searchQuery;
   final Color? badgeColor;
+  final String scope;
 
   const TasksDueTodayDialog({
     super.key,
@@ -26,6 +27,7 @@ class TasksDueTodayDialog extends StatefulWidget {
     this.status,
     this.searchQuery,
     this.badgeColor,
+    this.scope = 'mine',
   });
 
   static Future<void> show(
@@ -38,6 +40,7 @@ class TasksDueTodayDialog extends StatefulWidget {
     String? status,
     String? searchQuery,
     Color? badgeColor,
+    String scope = 'mine',
   }) {
     return showDialog(
       context: context,
@@ -51,6 +54,7 @@ class TasksDueTodayDialog extends StatefulWidget {
         status: status,
         searchQuery: searchQuery,
         badgeColor: badgeColor,
+        scope: scope,
       ),
     );
   }
@@ -98,7 +102,7 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
       final results = await Future.wait([
         _repository.getBranches(),
         _repository.getTasks(
-          scope: 'all',
+          scope: widget.scope,
           period: widget.period,
           priority: widget.priority,
           overdue: widget.overdue,
@@ -138,7 +142,7 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
 
     try {
       final res = await _repository.getTasks(
-        scope: 'all',
+        scope: widget.scope,
         period: widget.period,
         priority: widget.priority,
         overdue: widget.overdue,

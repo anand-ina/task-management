@@ -528,12 +528,13 @@ class AppStringsEn extends AppStrings {
   String get clickGroupForMembers => 'CLICK A GROUP FOR MEMBERS';
 
   @override
-  String get noInternetTitle => 'No Internet Connection';
+  String get noInternetTitle => 'Please Connect to the Internet';
   @override
-  String get noInternetMessage => 'Please check your internet connection and try again.';
+  String get noInternetMessage =>
+      'No internet connection detected. Please connect to Wi-Fi or mobile data to continue.';
   @override
   String forceLogoutNotice(int seconds) =>
-      'No internet connection, please connect. Forcefully logging out in $seconds seconds...';
+      'Please connect to the internet. Forcefully logging out in $seconds seconds...';
   @override
   String get retryButton => 'Retry';
   @override
@@ -1472,6 +1473,35 @@ class AppStringsEn extends AppStrings {
   @override
   String academicYearSubtitle(String year) => 'Academic year $year · June to May';
   @override
+  String get complaintsAndFeedbacksDashboard => 'Complaints & Feedbacks Dashboard';
+  @override
+  String complaintsDashboardSubtitle(String year) =>
+      'Everything parents, students and staff told us · academic year $year (June to May)';
+  @override
+  String get allTicketsButton => 'All tickets';
+  @override
+  String get openRightNow => 'Open right now';
+  @override
+  String get pastTargetDate => 'Past target date';
+  @override
+  String get fromParents => 'From parents';
+  @override
+  String get fromStudents => 'From students';
+  @override
+  String get fromStaff => 'From staff';
+  @override
+  String get avgDaysToResolve => 'Avg. days to resolve';
+  @override
+  String get complaintsHeader => 'COMPLAINTS';
+  @override
+  String get feedbackHeader => 'FEEDBACK';
+  @override
+  String get appreciationsHeader => 'APPRECIATIONS';
+  @override
+  String get lastHeader => 'LAST';
+  @override
+  String get complaintsDashboardTitle => 'Dashboard';
+  @override
   String get receivedPerMonth => 'RECEIVED PER MONTH';
   @override
   String get complaintsByCategory => 'COMPLAINTS BY CATEGORY';
@@ -1488,9 +1518,58 @@ class AppStringsEn extends AppStrings {
   @override
   String get classHeader => 'CLASS';
   @override
-  String get lastActivityLabel => 'Last activity';
   @override
   String get noDataAvailable => 'No data available';
+
+  // Parents & Students Complaints
+  @override
+  String get parentsComplaintsAndFeedbacks => 'Parents Complaints & Feedbacks';
+  @override
+  String get parentsComplaintsSubtitle =>
+      'What parents told us — from the class WhatsApp groups, calls and walk-ins.';
+  @override
+  String get studentsComplaintsAndFeedbacks => 'Students Complaints & Feedbacks';
+  @override
+  String get studentsComplaintsSubtitle =>
+      'What students told us — suggestion-box slips and anything they raise in person.';
+  @override
+  String get staffComplaintsAndFeedbacks => 'Staff Complaints & Feedbacks';
+  @override
+  String get staffComplaintsSubtitle =>
+      'What staff told us — feedback, concerns and issues.';
+  @override
+  String get appreciations => 'Appreciations';
+  @override
+  String get appreciationsSubtitle =>
+      'Every good word parents, students and staff had for our people — in one place.';
+  @override
+  String get appreciationsReceived => 'Appreciations received';
+  @override
+  String get recordedBadge => 'Recorded';
+  @override
+  String get awaitingDirectorApproval => 'Awaiting Director approval';
+  @override
+  String get rewardPointsGiven => 'Reward points given';
+  @override
+  String get rewardLabel => 'REWARD';
+  @override
+  String get onlyDirectorCanChange => 'Only the Director can change this.';
+  @override
+  String get resolutionLabel => 'Resolution';
+  @override
+  String get everyoneScope => 'Everyone';
+  @override
+  String get everyonesFilter => "Everyone's";
+  @override
+  String get tabEverything => 'Everything';
+  @override
+  String get statEverythingReceived => 'Everything received';
+  @override
+  String get filterComplaintsAndFeedback => 'Complaints & feedback';
+  @override
+  String get filterComplaintsOnly => 'Complaints only';
+  @override
+  String get filterFeedbackOnly => 'Feedback only';
 
   // Task Stats & Filters
   @override
@@ -1502,7 +1581,7 @@ class AppStringsEn extends AppStrings {
   @override
   String get statAcrossStatuses => 'across statuses';
   @override
-  String get statFootnotePrefix => 'Click a card to filter. To be Started + In Progress + Needs Review + Completed + Dropped = Total. ';
+  String get statFootnotePrefix => 'Click any card to see just those tasks. Newest Task ID first.';
   @override
   String get statFootnoteOverdue => 'Overdue';
   @override
@@ -1564,6 +1643,43 @@ class AppStringsEn extends AppStrings {
   @override
   String get taskIdSettings => 'Task ID Settings';
   @override
+  String get taskIdSettingsSubtitle =>
+      'Task IDs look like SS01-0001/09-26 — branch code, a 4-digit number, and the month-year the task was created. Sub-tasks add -1, -2 ... to their main task\'s ID.';
+  @override
+  String get counterPerBranch => 'COUNTER PER BRANCH';
+  @override
+  String get counterPerBranchSubtitle =>
+      'Every branch counts on its own, from 0001 to 9999; after 9999 it starts again at 0001. All of them restart at 0001 automatically on 01 Jun 2027.';
+  @override
+  String get resetTo0001 => 'Reset to 0001';
+  @override
+  String get resetEveryBranch => 'Reset every branch to 0001';
+  @override
+  String get lastUsed => 'LAST USED';
+  @override
+  String get nextTaskId => 'NEXT TASK ID';
+  @override
+  String get lastReset => 'LAST RESET';
+  @override
+  String get complaintsDeskTitle => 'COMPLAINTS DESK — WHO RECEIVES TICKETS';
+  @override
+  String get complaintsDeskSubtitle =>
+      'On Automatic a branch\'s complaints and feedback go to its own Principal / Campus Head. Name someone here to send that branch\'s tickets to them instead. Staff complaints always go to the Director.';
+  @override
+  String get fallbackLabel => 'fallback';
+  @override
+  String get automaticCurrentlyPrefix => 'Automatic — currently';
+  @override
+  String get resetConfirmTitle => 'Reset Counter';
+  @override
+  String resetConfirmMessage(String branch) =>
+      'Are you sure you want to reset counter for $branch to 0001?';
+  @override
+  String get resetAllConfirmTitle => 'Reset All Branches';
+  @override
+  String get resetAllConfirmMessage =>
+      'Are you sure you want to reset every branch counter to 0001? This will restart numbering for all branches.';
+  @override
   String get centerHeadPrincipalRole => 'Center Head / Principal';
   @override
   String get teamLeadRole => 'Team Lead';
@@ -1573,4 +1689,168 @@ class AppStringsEn extends AppStrings {
   String centerHeadPrincipalScope(int count) => 'Team scope — $count people in view.';
   @override
   String get operationalScopeYourOwn => 'Operational scope — your own tasks & reports.';
+  @override
+  String get moreFilters => 'More filters';
+  @override
+  String get confidentialAndGeneral => 'Confidential & general';
+  @override
+  String get confidentialOnly => 'Confidential only';
+  @override
+  String get generalOnly => 'General only';
+  @override
+  String get updateEdit => 'Update / Edit';
+  @override
+  String get changeStatusTitle => 'Change Status';
+  @override
+  String get newStatusLabel => 'New Status';
+  @override
+  String get completionLabel => 'Completion';
+  @override
+  String get commentRequiredLabel => 'Comment * (required for every update)';
+  @override
+  String get commentPlaceholder => 'Add an update note... type @ to mention someone';
+  @override
+  String get addFiles => 'Add files';
+  @override
+  String get attachmentsLabel => 'Attachments';
+  @override
+  String get commentRequiredError => 'Please enter an update comment';
+  @override
+  String get taskUpdatedSuccess => 'Task updated successfully';
+  @override
+  String get blockedStatus => 'Blocked';
+
+  // Ticket Details & Actions Dialog Strings
+  @override
+  String get linkedTask => 'LINKED TASK';
+  @override
+  String get openTask => 'Open task';
+  @override
+  String get assignTo => 'Assign to...';
+  @override
+  String get assignThisTicket => 'ASSIGN THIS TICKET';
+  @override
+  String get searchPeoplePlaceholder => 'Search people...';
+  @override
+  String get whatShouldTheyDoPlaceholder => 'What should they do? (required)';
+
+  @override
+  String get closeTheLoop => 'CLOSE THE LOOP';
+  @override
+  String get resolveTab => 'Resolve';
+  @override
+  String get notValidTab => 'Not valid';
+  @override
+  String get whatWasDonePlaceholder => 'What was done, and what are we telling the parent?';
+  @override
+  String get reasonWhyNotValidPlaceholder => 'Reason why this is not valid...';
+  @override
+  String get markResolvedButton => 'Mark Resolved';
+  @override
+  String get closeAsNotValidButton => 'Close as not valid';
+  @override
+  String get downloadLabel => 'Download';
+  @override
+  String get evidenceVisibleCampusHeadOnly => 'Evidence is visible to the campus head only.';
+  @override
+  String get historyLabel => 'History';
+  @override
+  String get detailsSectionLabel => 'Details';
+  @override
+  String get confidentialBadge => 'Confidential';
+  @override
+  String get editTicketButton => 'Edit ticket';
+  @override
+  String get anonymousHidden => 'Anonymous — hidden';
+  @override
+  String get editTicketTitlePrefix => 'Edit';
+
+  @override
+  String get classAndSectionLabel => 'Class & section';
+
+
+  @override
+  String get detailsLabel => 'Details';
+
+  @override
+  String get addEvidenceLabel => 'Add evidence';
+
+  @override
+  String get reasonForChangeLabel => 'Reason for this change *';
+  @override
+  String get reasonForChangePlaceholder => 'e.g. Parent gave the correct class section';
+  @override
+  String get saveChangesButton => 'Save changes';
+
+  @override
+  String get campusHeadLabel => 'campus head';
+
+  @override
+  String get closedSectionLabel => 'Closed';
+
+  @override
+  String get resolvedSectionLabel => 'Resolved';
+
+  // Audit Execution & Scheduling Strings
+  @override
+  String get scheduleAnAudit => 'Schedule an audit';
+  @override
+  String get auditTitleLabel => 'Title';
+  @override
+  String get scopeNoteLabel => 'Scope note';
+  @override
+  String get auditorLabel => 'Auditor';
+  @override
+  String get auditeeTypeLabel => 'Auditee';
+  @override
+  String get auditeeLabel => 'Auditee Branch / Person';
+  @override
+  String get scheduledDateLabel => 'Scheduled date';
+  @override
+  String get dueDateLabel => 'Due date';
+  @override
+  String get checklistOnePerLine => 'Checklist (one item per line)';
+  @override
+  String get scheduleAuditButton => 'Schedule audit';
+  @override
+  String get closeAudit => 'Close audit';
+  @override
+  String get conductedBy => 'Conducted by';
+  @override
+  String get scheduledFor => 'Scheduled for';
+  @override
+  String get dueOn => 'Due on';
+  @override
+  String get closedOn => 'Closed on';
+  @override
+  String get noAuditsFound => 'No audits found.';
+  @override
+  String get threeMonthsView => '3 Months';
+  @override
+  String get eventsInTheseThreeMonths => 'EVENTS IN THESE 3 MONTHS';
+  @override
+  String get listViewLabel => 'List';
+  @override
+  String get fineLabel => 'Fine';
+  @override
+  String get issuedByLabel => 'Issued by';
+  @override
+  String get policyRules => 'Fine & Reward Policies';
+  @override
+  String get availablePointsLabel => 'Points Available';
+  @override
+  String get scopeEveryone => 'Everyone';
+  @override
+  String get scopeParents => 'Parents';
+  @override
+  String get scopeStudents => 'Students';
+  @override
+  String get scopeStaff => 'Staff';
+  @override
+  String get studentFamilyListTitle => 'By student / family';
+  @override
+  String get lastRecordedLabel => 'Last';
+  @override
+  String get branchScopeLabel => 'Branch';
 }
+

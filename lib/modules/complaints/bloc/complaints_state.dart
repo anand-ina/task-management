@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import '../models/batch_ticket_response.dart';
 import '../models/lookup_models.dart';
+import '../models/ticket_insights_model.dart';
 import '../models/ticket_meta_model.dart';
 import '../models/ticket_model.dart';
 
@@ -129,3 +130,211 @@ class ComplaintsErrorState extends ComplaintsState {
   @override
   List<Object?> get props => [message];
 }
+
+class ComplaintsDashboardLoadedState extends ComplaintsState {
+  final TicketInsightsResponse insights;
+  final List<LookupBranchModel> branches;
+  final int selectedYear;
+  final int? selectedBranchId;
+  final bool isLoading;
+  final String? errorMessage;
+
+  const ComplaintsDashboardLoadedState({
+    required this.insights,
+    this.branches = const [],
+    this.selectedYear = 2026,
+    this.selectedBranchId,
+    this.isLoading = false,
+    this.errorMessage,
+  });
+
+  ComplaintsDashboardLoadedState copyWith({
+    TicketInsightsResponse? insights,
+    List<LookupBranchModel>? branches,
+    int? selectedYear,
+    int? selectedBranchId,
+    bool? isLoading,
+    String? errorMessage,
+  }) {
+    return ComplaintsDashboardLoadedState(
+      insights: insights ?? this.insights,
+      branches: branches ?? this.branches,
+      selectedYear: selectedYear ?? this.selectedYear,
+      selectedBranchId: selectedBranchId ?? this.selectedBranchId,
+      isLoading: isLoading ?? this.isLoading,
+      errorMessage: errorMessage,
+    );
+  }
+
+  @override
+  List<Object?> get props => [insights, branches, selectedYear, selectedBranchId, isLoading, errorMessage];
+}
+
+class SourceComplaintsLoadedState extends ComplaintsState {
+  final String source; // 'parent' or 'student'
+  final List<TicketItemModel> items;
+  final TicketCountsModel counts;
+  final String statusTab; // 'everything', 'open', 'overdue', 'resolved'
+  final String types; // 'complaint,feedback' or specific
+  final TicketMetaModel meta;
+  final List<LookupBranchModel> branches;
+  final String searchQuery;
+  final String categoryFilter;
+  final String mineFilter;
+  final bool isLoading;
+  final String? errorMessage;
+
+  const SourceComplaintsLoadedState({
+    required this.source,
+    required this.items,
+    required this.counts,
+    this.statusTab = 'everything',
+    this.types = 'complaint,feedback',
+    this.meta = const TicketMetaModel(),
+    this.branches = const [],
+    this.searchQuery = '',
+    this.categoryFilter = 'All categories',
+    this.mineFilter = '',
+    this.isLoading = false,
+    this.errorMessage,
+  });
+
+  SourceComplaintsLoadedState copyWith({
+    String? source,
+    List<TicketItemModel>? items,
+    TicketCountsModel? counts,
+    String? statusTab,
+    String? types,
+    TicketMetaModel? meta,
+    List<LookupBranchModel>? branches,
+    String? searchQuery,
+    String? categoryFilter,
+    String? mineFilter,
+    bool? isLoading,
+    String? errorMessage,
+  }) {
+    return SourceComplaintsLoadedState(
+      source: source ?? this.source,
+      items: items ?? this.items,
+      counts: counts ?? this.counts,
+      statusTab: statusTab ?? this.statusTab,
+      types: types ?? this.types,
+      meta: meta ?? this.meta,
+      branches: branches ?? this.branches,
+      searchQuery: searchQuery ?? this.searchQuery,
+      categoryFilter: categoryFilter ?? this.categoryFilter,
+      mineFilter: mineFilter ?? this.mineFilter,
+      isLoading: isLoading ?? this.isLoading,
+      errorMessage: errorMessage,
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+        source,
+        items,
+        counts,
+        statusTab,
+        types,
+        meta,
+        branches,
+        searchQuery,
+        categoryFilter,
+        mineFilter,
+        isLoading,
+        errorMessage,
+      ];
+}
+
+class TicketDetailsLoadedState extends ComplaintsState {
+  final TicketItemModel ticket;
+  final bool isLoading;
+  final String? errorMessage;
+
+  const TicketDetailsLoadedState({
+    required this.ticket,
+    this.isLoading = false,
+    this.errorMessage,
+  });
+
+  @override
+  List<Object?> get props => [ticket, isLoading, errorMessage];
+}
+
+class TicketActionSuccessState extends ComplaintsState {
+  final String action; // 'assign', 'resolve', 'reject', 'update'
+  final TicketItemModel ticket;
+  final String message;
+
+  const TicketActionSuccessState({
+    required this.action,
+    required this.ticket,
+    required this.message,
+  });
+
+  @override
+  List<Object?> get props => [action, ticket, message];
+}
+
+class AppreciationsLoadedState extends ComplaintsState {
+  final List<TicketItemModel> items;
+  final TicketCountsModel counts;
+  final TicketMetaModel meta;
+  final List<LookupBranchModel> branches;
+  final String searchQuery;
+  final String categoryFilter;
+  final String mineFilter;
+  final bool isLoading;
+  final String? errorMessage;
+
+  const AppreciationsLoadedState({
+    required this.items,
+    required this.counts,
+    this.meta = const TicketMetaModel(),
+    this.branches = const [],
+    this.searchQuery = '',
+    this.categoryFilter = 'All categories',
+    this.mineFilter = '',
+    this.isLoading = false,
+    this.errorMessage,
+  });
+
+  AppreciationsLoadedState copyWith({
+    List<TicketItemModel>? items,
+    TicketCountsModel? counts,
+    TicketMetaModel? meta,
+    List<LookupBranchModel>? branches,
+    String? searchQuery,
+    String? categoryFilter,
+    String? mineFilter,
+    bool? isLoading,
+    String? errorMessage,
+  }) {
+    return AppreciationsLoadedState(
+      items: items ?? this.items,
+      counts: counts ?? this.counts,
+      meta: meta ?? this.meta,
+      branches: branches ?? this.branches,
+      searchQuery: searchQuery ?? this.searchQuery,
+      categoryFilter: categoryFilter ?? this.categoryFilter,
+      mineFilter: mineFilter ?? this.mineFilter,
+      isLoading: isLoading ?? this.isLoading,
+      errorMessage: errorMessage,
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+        items,
+        counts,
+        meta,
+        branches,
+        searchQuery,
+        categoryFilter,
+        mineFilter,
+        isLoading,
+        errorMessage,
+      ];
+}
+
+

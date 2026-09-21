@@ -1,4 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../models/lookup_models.dart';
+import '../models/ticket_insights_model.dart';
+import '../models/ticket_meta_model.dart';
 import '../models/ticket_model.dart';
 import '../repository/complaints_repository.dart';
 import 'complaints_event.dart';
@@ -16,6 +19,14 @@ class ComplaintsBloc extends Bloc<ComplaintsEvent, ComplaintsState> {
     on<LoadRaiseRequestMetaEvent>(_onLoadRaiseRequestMeta);
     on<CreateComplaintEvent>(_onCreateComplaint);
     on<SubmitSuggestionBoxBatchEvent>(_onSubmitSuggestionBoxBatch);
+    on<FetchComplaintsDashboardEvent>(_onFetchComplaintsDashboard);
+    on<FetchSourceComplaintsEvent>(_onFetchSourceComplaints);
+    on<GetTicketDetailsEvent>(_onGetTicketDetails);
+    on<AssignTicketEvent>(_onAssignTicket);
+    on<ResolveTicketEvent>(_onResolveTicket);
+    on<RejectTicketEvent>(_onRejectTicket);
+    on<UpdateTicketEvent>(_onUpdateTicket);
+    on<FetchAppreciationsEvent>(_onFetchAppreciations);
   }
 
   List<TicketItemModel> _applyFilters({
@@ -325,4 +336,327 @@ class ComplaintsBloc extends Bloc<ComplaintsEvent, ComplaintsState> {
       emit(s.copyWith(isSubmitting: false, errorMessage: e.toString()));
     }
   }
+
+  Future<void> _onFetchComplaintsDashboard(
+    FetchComplaintsDashboardEvent event,
+    Emitter<ComplaintsState> emit,
+  ) async {
+    final year = event.year ?? 2026;
+    final branchId = event.branchId;
+
+    if (state is ComplaintsDashboardLoadedState) {
+      final current = state as ComplaintsDashboardLoadedState;
+      emit(current.copyWith(isLoading: true, errorMessage: null, selectedYear: year, selectedBranchId: branchId));
+    } else {
+      emit(ComplaintsLoadingState());
+    }
+
+    try {
+      final branchesFuture = _repository.getBranches();
+      final insightsFuture = _repository.getTicketInsights(year: year, branchId: branchId);
+      final notificationsFuture = _repository.getNotifications();
+
+      final results = await Future.wait([
+        branchesFuture,
+        insightsFuture,
+        notificationsFuture,
+      ]);
+
+      final branches = results[0] as List<LookupBranchModel>;
+      final insights = results[1] as TicketInsightsResponse;
+
+      emit(ComplaintsDashboardLoadedState(
+        insights: insights,
+        branches: branches,
+        selectedYear: year,
+        selectedBranchId: branchId,
+        isLoading: false,
+      ));
+    } catch (e) {
+      emit(ComplaintsDashboardLoadedState(
+        insights: const TicketInsightsResponse(),
+        selectedYear: year,
+        selectedBranchId: branchId,
+        isLoading: false,
+        errorMessage: e.toString().replaceFirst('Exception: ', ''),
+      ));
+    }
+  }
+
+  Future<void> _onFetchSourceComplaints(
+    FetchSourceComplaintsEvent event,
+    Emitter<ComplaintsState> emit,
+  ) async {
+    final current = state is SourceComplaintsLoadedState
+        ? (state as SourceComplaintsLoadedState)
+        : null;
+
+    if (current != null && current.source == event.source) {
+      emit(current.copyWith(
+        isLoading: true,
+        errorMessage: null,
+        statusTab: event.statusTab,
+        types: event.types,
+        categoryFilter: event.category ?? current.categoryFilter,
+        mineFilter: event.mine ?? current.mineFilter,
+        searchQuery: event.searchQuery ?? current.searchQuery,
+      ));
+    } else {
+      emit(ComplaintsLoadingState());
+    }
+
+    try {
+      String? apiStatus;
+      if (event.statusTab == 'open') {
+        apiStatus = 'open';
+      } else if (event.statusTab == 'overdue' || event.statusTab == 'past_target_date') {
+        apiStatus = 'overdue';
+      } else if (event.statusTab == 'resolved') {
+        apiStatus = 'resolved';
+      } else {
+        // 'everything' / 'all' -> no status query param
+        apiStatus = null;
+      }
+
+      String? apiCategory;
+      if (event.category != null && event.category != 'All categories' && event.category!.isNotEmpty) {
+        apiCategory = event.category;
+      }
+
+      String? apiMine;
+      if (event.mine != null && event.mine!.isNotEmpty && event.mine != "Everyone's") {
+        if (event.mine == 'owned' || event.mine!.toLowerCase().contains('received')) {
+          apiMine = 'owned';
+        } else if (event.mine == 'raised' || event.mine!.toLowerCase().contains('assigned')) {
+          apiMine = 'raised';
+        } else {
+          apiMine = event.mine;
+        }
+      }
+
+      final ticketResponse = await _repository.getTickets(
+        status: apiStatus,
+        types: event.types,
+        source: event.source,
+        category: apiCategory,
+        mine: apiMine,
+        q: event.searchQuery,
+        branchId: event.branchId,
+      );
+
+      final meta = current?.meta.categories.isNotEmpty == true
+          ? current!.meta
+          : await _repository.getTicketMeta(branchId: event.branchId);
+
+      final branches = current?.branches.isNotEmpty == true
+          ? current!.branches
+          : await _repository.getBranches();
+
+      emit(SourceComplaintsLoadedState(
+        source: event.source,
+        items: ticketResponse.items,
+        counts: ticketResponse.counts,
+        statusTab: event.statusTab,
+        types: event.types,
+        meta: meta,
+        branches: branches,
+        searchQuery: event.searchQuery ?? '',
+        categoryFilter: event.category ?? 'All categories',
+        mineFilter: event.mine ?? '',
+        isLoading: false,
+      ));
+    } catch (e) {
+      emit(SourceComplaintsLoadedState(
+        source: event.source,
+        items: current?.items ?? const [],
+        counts: current?.counts ?? const TicketCountsModel(),
+        statusTab: event.statusTab,
+        types: event.types,
+        meta: current?.meta ?? const TicketMetaModel(),
+        branches: current?.branches ?? const [],
+        searchQuery: event.searchQuery ?? '',
+        categoryFilter: event.category ?? 'All categories',
+        mineFilter: event.mine ?? '',
+        isLoading: false,
+        errorMessage: e.toString().replaceFirst('Exception: ', ''),
+      ));
+    }
+  }
+
+  Future<void> _onGetTicketDetails(
+    GetTicketDetailsEvent event,
+    Emitter<ComplaintsState> emit,
+  ) async {
+    try {
+      final ticket = await _repository.getTicketById(event.ticketId);
+      emit(TicketDetailsLoadedState(ticket: ticket, isLoading: false));
+    } catch (e) {
+      emit(ComplaintsErrorState(e.toString().replaceFirst('Exception: ', '')));
+    }
+  }
+
+  Future<void> _onAssignTicket(
+    AssignTicketEvent event,
+    Emitter<ComplaintsState> emit,
+  ) async {
+    try {
+      final updatedTicket = await _repository.assignTicket(
+        event.ticketId,
+        assigneeIds: event.assigneeIds,
+        note: event.note,
+      );
+      emit(TicketActionSuccessState(
+        action: 'assign',
+        ticket: updatedTicket,
+        message: 'Ticket assigned successfully',
+      ));
+    } catch (e) {
+      emit(ComplaintsErrorState(e.toString().replaceFirst('Exception: ', '')));
+    }
+  }
+
+  Future<void> _onResolveTicket(
+    ResolveTicketEvent event,
+    Emitter<ComplaintsState> emit,
+  ) async {
+    try {
+      final updatedTicket = await _repository.resolveTicket(
+        event.ticketId,
+        resolution: event.resolution,
+        notifyParent: event.notifyParent,
+      );
+      emit(TicketActionSuccessState(
+        action: 'resolve',
+        ticket: updatedTicket,
+        message: 'Ticket marked as resolved',
+      ));
+    } catch (e) {
+      emit(ComplaintsErrorState(e.toString().replaceFirst('Exception: ', '')));
+    }
+  }
+
+  Future<void> _onRejectTicket(
+    RejectTicketEvent event,
+    Emitter<ComplaintsState> emit,
+  ) async {
+    try {
+      final updatedTicket = await _repository.rejectTicket(
+        event.ticketId,
+        reason: event.reason,
+      );
+      emit(TicketActionSuccessState(
+        action: 'reject',
+        ticket: updatedTicket,
+        message: 'Ticket closed as not valid',
+      ));
+    } catch (e) {
+      emit(ComplaintsErrorState(e.toString().replaceFirst('Exception: ', '')));
+    }
+  }
+
+  Future<void> _onUpdateTicket(
+    UpdateTicketEvent event,
+    Emitter<ComplaintsState> emit,
+  ) async {
+    try {
+      final updatedTicket = await _repository.updateTicket(
+        event.ticketId,
+        event.data,
+      );
+      emit(TicketActionSuccessState(
+        action: 'update',
+        ticket: updatedTicket,
+        message: 'Ticket updated successfully',
+      ));
+    } catch (e) {
+      emit(ComplaintsErrorState(e.toString().replaceFirst('Exception: ', '')));
+    }
+  }
+
+  Future<void> _onFetchAppreciations(
+    FetchAppreciationsEvent event,
+    Emitter<ComplaintsState> emit,
+  ) async {
+    final current = state is AppreciationsLoadedState
+        ? (state as AppreciationsLoadedState)
+        : null;
+
+    if (current != null) {
+      emit(current.copyWith(
+        isLoading: true,
+        errorMessage: null,
+        categoryFilter: event.category ?? current.categoryFilter,
+        mineFilter: event.mine ?? current.mineFilter,
+        searchQuery: event.searchQuery ?? current.searchQuery,
+      ));
+    } else {
+      emit(ComplaintsLoadingState());
+    }
+
+    try {
+      String? apiCategory;
+      if (event.category != null && event.category != 'All categories' && event.category!.isNotEmpty) {
+        apiCategory = event.category;
+      }
+
+      String? apiMine;
+      if (event.mine != null && event.mine!.isNotEmpty && event.mine != "Everyone's") {
+        if (event.mine == 'owned' || event.mine!.toLowerCase().contains('received')) {
+          apiMine = 'owned';
+        } else if (event.mine == 'raised' || event.mine!.toLowerCase().contains('assigned')) {
+          apiMine = 'raised';
+        } else {
+          apiMine = event.mine;
+        }
+      }
+
+      String? apiSource;
+      if (event.source != null && event.source!.isNotEmpty && event.source != 'Everyone') {
+        apiSource = event.source!.toLowerCase();
+        if (apiSource.endsWith('s') && (apiSource == 'parents' || apiSource == 'students')) {
+          apiSource = apiSource.substring(0, apiSource.length - 1); // parent, student, staff
+        }
+      }
+
+      final ticketResponse = await _repository.getTickets(
+        type: 'appreciation',
+        source: apiSource,
+        category: apiCategory,
+        mine: apiMine,
+        q: event.searchQuery,
+        branchId: event.branchId,
+      );
+
+      final meta = current?.meta.categories.isNotEmpty == true
+          ? current!.meta
+          : await _repository.getTicketMeta(branchId: event.branchId);
+
+      final branches = current?.branches.isNotEmpty == true
+          ? current!.branches
+          : await _repository.getBranches();
+
+      emit(AppreciationsLoadedState(
+        items: ticketResponse.items,
+        counts: ticketResponse.counts,
+        meta: meta,
+        branches: branches,
+        searchQuery: event.searchQuery ?? '',
+        categoryFilter: event.category ?? 'All categories',
+        mineFilter: event.mine ?? '',
+        isLoading: false,
+        errorMessage: null,
+      ));
+    } catch (e) {
+      if (current != null) {
+        emit(current.copyWith(
+          isLoading: false,
+          errorMessage: e.toString().replaceFirst('Exception: ', ''),
+        ));
+      } else {
+        emit(ComplaintsErrorState(e.toString().replaceFirst('Exception: ', '')));
+      }
+    }
+  }
 }
+
+
