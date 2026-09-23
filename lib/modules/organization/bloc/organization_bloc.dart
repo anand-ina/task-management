@@ -18,7 +18,10 @@ class OrganizationBloc extends Bloc<OrganizationEvent, OrganizationState> {
   ) async {
     emit(OrganizationLoadingState());
     try {
-      final data = await repository.getOrganizationData(bucket: event.bucket);
+      final data = await repository.getOrganizationData(
+        bucket: event.bucket,
+        branchId: event.branchId,
+      );
       emit(OrganizationLoadedState(data: data, activeBucket: event.bucket));
     } catch (e) {
       emit(OrganizationErrorState(e.toString()));

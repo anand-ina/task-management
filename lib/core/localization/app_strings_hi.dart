@@ -947,6 +947,52 @@ class AppStringsHi extends AppStrings {
   String get saveSettingsButton => 'सेटिंग्स सहेजें';
   @override
   String get resetToDefaultsButton => 'डिफ़ॉल्ट पर रीसेट करें';
+  @override
+  String get discardChangesButton => 'बदलाव छोड़ें';
+  @override
+  String get typeColumnHeader => 'प्रकार';
+  @override
+  String get rupeeAmountColumnHeader => '₹ राशि';
+  @override
+  String get pointsColumnHeader => 'अंक';
+  @override
+  String get deleteFineTypeConfirmTitle => 'जुर्माना प्रकार हटाएं';
+  @override
+  String get deleteRewardTypeConfirmTitle => 'पुरस्कार प्रकार हटाएं';
+  @override
+  String get deleteButton => 'हटाएं';
+  @override
+  String deleteFineTypeConfirmMessage(String label) =>
+      'क्या आप जुर्माना प्रकार "$label" हटाना चाहते हैं? पहले से जारी जुर्माने/पुरस्कार प्रभावित नहीं होंगे।';
+  @override
+  String deleteRewardTypeConfirmMessage(String label) =>
+      'क्या आप पुरस्कार प्रकार "$label" हटाना चाहते हैं? पहले से जारी जुर्माने/पुरस्कार प्रभावित नहीं होंगे।';
+  @override
+  String get addFineTypeDialogTitle => 'जुर्माना प्रकार जोड़ें';
+  @override
+  String get addRewardTypeDialogTitle => 'पुरस्कार प्रकार जोड़ें';
+  @override
+  String get policyNameLabel => 'नीति नाम / प्रकार';
+  @override
+  String get policyAmountLabel => 'राशि (₹)';
+  @override
+  String get policyPointsLabel => 'अंक';
+  @override
+  String get settingsSavedSuccessfully => 'सेटिंग्स सफलतापूर्वक सहेजी गईं';
+  @override
+  String get fineTypeAddedSuccessfully => 'जुर्माना प्रकार सफलतापूर्वक जोड़ा गया';
+  @override
+  String get rewardTypeAddedSuccessfully => 'पुरस्कार प्रकार सफलतापूर्वक जोड़ा गया';
+  @override
+  String get fineTypeDeletedSuccessfully => 'जुर्माना प्रकार सफलतापूर्वक हटाया गया';
+  @override
+  String get rewardTypeDeletedSuccessfully => 'पुरस्कार प्रकार सफलतापूर्वक हटाया गया';
+  @override
+  String get noChangesToSave => 'सहेजने के लिए कोई बदलाव नहीं';
+  @override
+  String get pleaseEnterValidLabel => 'कृपया एक मान्य नाम दर्ज करें';
+  @override
+  String get pleaseEnterValidAmount => 'कृपया एक मान्य राशि दर्ज करें';
 
   @override
   String get staffTitle => 'कर्मचारी';
@@ -1852,5 +1898,91 @@ class AppStringsHi extends AppStrings {
   String get lastRecordedLabel => 'अंतिम';
   @override
   String get branchScopeLabel => 'शाखा';
+
+  // ── Clone Task ─────────────────────────────────────────────────────────────
+  @override
+  String get cloneTaskTitle => 'टास्क क्लोन करें';
+  @override
+  String get cloneTaskBannerHint => 'सहेजने पर एक नई टास्क ID असाइन होगी। जो चाहें बदलें, फिर बनाएं।';
+  @override
+  String get taskIdLabel => 'टास्क ID';
+  @override
+  String get taskTitleLabel => 'टास्क शीर्षक';
+  @override
+  String get taskDescLabel => 'टास्क विवरण';
+
+  @override
+  String get schoolBranchLabel => 'स्कूल शाखा';
+
+  @override
+  String get targetDateLabel => 'लक्ष्य तिथि';
+
+  @override
+  String get confidentialLabel => 'गोपनीय';
+  @override
+  String get generalLabel => 'सामान्य';
+  @override
+  String get makeRecurringLabel => 'इसे आवर्ती टास्क बनाएं';
+  @override
+  String get assignedToLabel => 'को सौंपा';
+  @override
+  String get searchUsersHint => 'उपयोगकर्ता खोजें...';
+
+  @override
+  String get addFilesButton => 'फाइलें जोड़ें';
+  @override
+  String get taskChecklistLabel => 'टास्क चेकलिस्ट';
+  @override
+  String get generateButton => 'उत्पन्न करें';
+  @override
+  String get addItemButton => '+ आइटम जोड़ें';
+  @override
+  String get remarksLabel => 'टिप्पणियाँ';
+  @override
+  String get saveDraftButton => 'ड्राफ्ट सहेजें';
+  @override
+  String get saveTaskButton => 'टास्क सहेजें';
+
+  @override
+  String get statusLabel => 'स्थिति';
+
+  // ── Status Report PDF ──────────────────────────────────────────────────────
+  @override
+  String get savePdfButton => 'PDF सहेजें';
+  @override
+  String get statusReportPdfTitle => 'स्टेटस रिपोर्ट';
+
+  @override
+  String get submittedAtLabel => 'जमा किया गया';
+  @override
+  String get exportedOnLabel => 'निर्यात किया';
+  @override
+  String get unlockReportButton => 'रिपोर्ट अनलॉक करें';
+
+  // ── Appreciation Award Strings ─────────────────────────────────────────────
+  @override
+  String get rewardDirectorOnly => 'पुरस्कार — केवल निदेशक के लिए';
+  @override
+  String get updateFacultyAndPoints => 'संकाय और अंक अपडेट करें';
+  @override
+  String get rewardPointsLabel => 'पुरस्कार अंक';
+  @override
+  String get facultyLabel => 'संकाय *';
+  @override
+  String get reasonRequiredLabel => 'कारण *';
+  @override
+  String get whyIsThisBeingChangedHint => 'यह क्यों बदला जा रहा है?';
+  @override
+  String get pointsUpdatedSuccessfully => 'अंक सफलतापूर्वक अपडेट किए गए।';
+  @override
+  String get pleaseEnterPoints => 'कृपया पुरस्कार अंक दर्ज करें।';
+  @override
+  String get pleaseEnterReason => 'कृपया इसे बदलने का कारण दर्ज करें।';
+  @override
+  String get selectFacultyPrompt => 'कृपया संकाय का चयन करें।';
+  @override
+  String get searchFacultyPlaceholder => 'संकाय खोजें...';
+  @override
+  String get changingThisMovesPoints => 'इसे बदलने से अंक स्थानांतरित हो जाते हैं।';
 }
 

@@ -402,27 +402,7 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                               ),
                             ),
                           ),
-                          const Spacer(),
-                          InkWell(
-                            onTap: () async {
-                              await TaskDetailDialog.show(context, taskId: item.taskId ?? 0, isReadOnly: isReadOnlyUser);
-                              if (context.mounted) {
-                                context.read<ApprovalsBloc>().add(FetchEscalationsDataEvent());
-                              }
-                            },
-                            child: Row(
-                              children: [
-                                Text(
-                                  'View →',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF1E3A8A),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+
                         ],
                       ),
                       const SizedBox(height: 6),
@@ -499,7 +479,33 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 16),
+                            const SizedBox(width: 3),
+                            const Spacer(),
+                            InkWell(
+                              onTap: () async {
+                                await TaskDetailDialog.show(
+                                  context,
+                                  taskId: item.taskId ?? 0,
+                                  isReadOnly: isReadOnlyUser,
+                                  canCloneTask: true,
+                                );
+                                if (context.mounted) {
+                                  context.read<ApprovalsBloc>().add(FetchEscalationsDataEvent());
+                                }
+                              },
+                              child: Row(
+                                children: [
+                                  Text(
+                                    'View →',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF1E3A8A),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
                         ],
                       ),

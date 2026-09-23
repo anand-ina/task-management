@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/bulk_upload_dialog.dart';
+import '../../../shared_widgets/dialogs/change_status_dialog.dart';
 import '../../../shared_widgets/dialogs/create_task_dialog.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/dialogs/new_recurring_task_dialog.dart';
@@ -15,7 +16,10 @@ import '../bloc/all_tasks_event.dart';
 import '../bloc/all_tasks_state.dart';
 import '../models/task_model.dart';
 import '../../../shared_widgets/dropdowns/searchable_filter_dropdown.dart';
-import '../../../shared_widgets/dialogs/change_status_dialog.dart';
+import '../../dashboard/bloc/dashboard_bloc.dart';
+import '../../dashboard/bloc/dashboard_state.dart';
+import '../../auth/bloc/auth_bloc.dart';
+import '../../auth/bloc/auth_state.dart';
 
 class DashedRectPainter extends CustomPainter {
   final Color color;
@@ -84,12 +88,23 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
   String _searchQuery = '';
   final Set<int> _selectedTaskIds = {};
   bool _showMoreFilters = false;
+  int? _selectedBranchId;
 
   @override
   void initState() {
     super.initState();
+    final authState = context.read<AuthBloc>().state;
+    final hasMultiBranch = authState is AuthenticatedState && authState.userProfile.hasMultiBranchAccess;
+    if (hasMultiBranch) {
+      final dashState = context.read<DashboardBloc>().state;
+      if (dashState is DashboardLoadedState && dashState.selectedBranch != null && !dashState.selectedBranch!.isAll) {
+        _selectedBranchId = dashState.selectedBranch!.id;
+      }
+    } else {
+      _selectedBranchId = null;
+    }
     _allTasksBloc = AllTasksBloc()
-      ..add(FetchAllTasksEvent(scope: 'all', limit: 20, offset: 0));
+      ..add(FetchAllTasksEvent(scope: 'all', limit: 100, offset: 0, branchId: _selectedBranchId));
     _scrollController.addListener(_onScroll);
   }
 
@@ -128,6 +143,10 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
       dueToStr = '${_dueTo!.year}-${_dueTo!.month.toString().padLeft(2, '0')}-${_dueTo!.day.toString().padLeft(2, '0')}';
     }
 
+    final authState = context.read<AuthBloc>().state;
+    final hasMultiBranch = authState is AuthenticatedState && authState.userProfile.hasMultiBranchAccess;
+    final effectiveBranchId = hasMultiBranch ? _selectedBranchId : null;
+
     _allTasksBloc.add(FetchAllTasksEvent(
       scope: 'all',
       status: _selectedStatusFilter,
@@ -139,8 +158,9 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
       progressMax: _progressMax,
       category: _selectedCategory != 'all' ? _selectedCategory : null,
       search: _searchQuery,
-      limit: 80,
+      limit: 100,
       offset: offset,
+      branchId: effectiveBranchId,
     ));
   }
 
@@ -180,20 +200,44 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
 
     return BlocProvider.value(
       value: _allTasksBloc,
-      child: PopScope(
-        canPop: false,
-        onPopInvokedWithResult: (didPop, result) async {
-          if (didPop) return;
-          final shouldExit = await ExitConfirmationDialog.show(context);
-          if (shouldExit) {
-            // handled
+      child: BlocListener<DashboardBloc, DashboardState>(
+        listenWhen: (previous, current) {
+          if (current is DashboardLoadedState) {
+            if (previous is! DashboardLoadedState) return true;
+            return previous.branchChangeTimestamp != current.branchChangeTimestamp ||
+                   previous.selectedBranch?.id != current.selectedBranch?.id;
+          }
+          return false;
+        },
+        listener: (context, dashState) {
+          if (dashState is DashboardLoadedState) {
+            final authState = context.read<AuthBloc>().state;
+            final hasMultiBranch = authState is AuthenticatedState && authState.userProfile.hasMultiBranchAccess;
+            final newBranchId = (hasMultiBranch && dashState.selectedBranch != null && !dashState.selectedBranch!.isAll)
+                ? dashState.selectedBranch!.id
+                : null;
+            if (_selectedBranchId != newBranchId) {
+              setState(() {
+                _selectedBranchId = newBranchId;
+              });
+            }
+            _dispatchFetch(offset: 0);
           }
         },
-        child: Scaffold(
-          floatingActionButton: const TodoFloatingActionButton(),
-          drawer: const CustomLeftDrawer(currentRoute: '/tasks'),
-          appBar: const CustomAppBar(),
-          body: BlocBuilder<AllTasksBloc, AllTasksState>(
+        child: PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, result) async {
+            if (didPop) return;
+            final shouldExit = await ExitConfirmationDialog.show(context);
+            if (shouldExit) {
+              // handled
+            }
+          },
+          child: Scaffold(
+            floatingActionButton: const TodoFloatingActionButton(),
+            drawer: const CustomLeftDrawer(currentRoute: '/tasks'),
+            appBar: const CustomAppBar(),
+            body: BlocBuilder<AllTasksBloc, AllTasksState>(
             builder: (context, state) {
               if (state is AllTasksLoadingState) {
                 return const Center(
@@ -347,8 +391,9 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   // 7 Stat Cards Row
   Widget _buildStatCardsRow(BuildContext context, AppStrings s, TasksResponseModel response) {
@@ -672,10 +717,11 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
       SearchableDropdownItem<String?>(value: 'to_be_started', label: s.toBeStarted),
       SearchableDropdownItem<String?>(value: 'in_progress', label: s.inProgress),
       SearchableDropdownItem<String?>(value: 'paused', label: 'Paused'),
-      SearchableDropdownItem<String?>(value: 'needs_review', label: s.statNeedsReview),
+      SearchableDropdownItem<String?>(value: 'done', label: 'Done'),
       SearchableDropdownItem<String?>(value: 'completed', label: s.completed),
-      SearchableDropdownItem<String?>(value: 'dropped', label: s.dropped),
-      SearchableDropdownItem<String?>(value: 'overdue', label: 'Blocked / Overdue'),
+      SearchableDropdownItem<String?>(value: 'postponed', label: 'postponed'),
+      SearchableDropdownItem<String?>(value: ' blocked', label: 'Blocked / Overdue'),
+      SearchableDropdownItem<String?>(value: ' scrapped', label: 'scrapped'),
     ];
 
     final priorityOptions = [

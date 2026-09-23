@@ -11,11 +11,42 @@ import '../models/my_reporting_model.dart';
 class OrganizationRepository {
   final DioClient _dioClient = DioClient();
 
-  Future<OrganizationDataModel> getOrganizationData({String bucket = 'week'}) async {
+  void _logServiceCall({
+    required String serviceMethod,
+    required String url,
+    dynamic payload,
+    dynamic response,
+  }) {
+    debugPrint('---------------- [OrganizationService: $serviceMethod] ----------------');
+    debugPrint('Service URL: $url');
+    if (payload != null) {
+      debugPrint('Service Payload / QueryParams: $payload');
+    }
+    if (response != null) {
+      debugPrint('Service Response: $response');
+    }
+    debugPrint('-------------------------------------------------------------------');
+  }
+
+  Future<OrganizationDataModel> getOrganizationData({String bucket = 'week', int? branchId}) async {
+    Map<String, dynamic>? dashParams;
+    Map<String, dynamic> trendParams = {'bucket': bucket};
+    if (branchId != null && branchId > 0) {
+      dashParams = {'branchId': branchId, 'branch_id': branchId};
+      trendParams['branchId'] = branchId;
+      trendParams['branch_id'] = branchId;
+    }
+
+    _logServiceCall(
+      serviceMethod: 'getOrganizationData',
+      url: ApiConstants.dashboard,
+      payload: {'dashParams': dashParams, 'trendParams': trendParams, 'branchId': branchId},
+    );
+
     // 1. Fetch overall dashboard, trends, and branches in parallel
     final results = await Future.wait([
-      _dioClient.dio.get(ApiConstants.dashboard),
-      _dioClient.dio.get('${ApiConstants.dashboard}/trends', queryParameters: {'bucket': bucket}),
+      _dioClient.dio.get(ApiConstants.dashboard, queryParameters: dashParams),
+      _dioClient.dio.get('${ApiConstants.dashboard}/trends', queryParameters: trendParams),
       _dioClient.dio.get(ApiConstants.branches),
     ]);
 
@@ -27,11 +58,13 @@ class OrganizationRepository {
     }
 
     // 2. Fetch stats for individual branch units in parallel (e.g. branchId=1, 2, 3)
-    final branchUnitsToFetch = branches.where((b) => !b.isAll).toList();
+    final branchUnitsToFetch = branchId != null && branchId > 0
+        ? branches.where((b) => b.id == branchId).toList()
+        : branches.where((b) => !b.isAll).toList();
     final branchStatsResults = await Future.wait(
       branchUnitsToFetch.map((b) => _dioClient.dio.get(
         ApiConstants.dashboard,
-        queryParameters: {'branchId': b.id},
+        queryParameters: {'branchId': b.id, 'branch_id': b.id},
       )),
     );
 

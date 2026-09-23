@@ -13,6 +13,8 @@ import '../bloc/organization_state.dart';
 import '../models/organization_data_model.dart';
 import '../models/trends_model.dart';
 import '../../dashboard/models/dashboard_stats.dart';
+import '../../dashboard/bloc/dashboard_bloc.dart';
+import '../../dashboard/bloc/dashboard_state.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/bloc/auth_state.dart';
 
@@ -25,6 +27,29 @@ class OrganizationOverviewScreen extends StatefulWidget {
 
 class _OrganizationOverviewScreenState extends State<OrganizationOverviewScreen> {
   String _searchBranchQuery = '';
+  late final OrganizationBloc _organizationBloc;
+
+  @override
+  void initState() {
+    super.initState();
+    _organizationBloc = OrganizationBloc();
+    final authState = context.read<AuthBloc>().state;
+    final hasMultiBranch = authState is AuthenticatedState && authState.userProfile.hasMultiBranchAccess;
+    int? branchId;
+    if (hasMultiBranch) {
+      final dashState = context.read<DashboardBloc>().state;
+      if (dashState is DashboardLoadedState && dashState.selectedBranch != null && !dashState.selectedBranch!.isAll) {
+        branchId = dashState.selectedBranch!.id;
+      }
+    }
+    _organizationBloc.add(FetchOrganizationDataEvent(branchId: branchId));
+  }
+
+  @override
+  void dispose() {
+    _organizationBloc.close();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,69 +58,93 @@ class _OrganizationOverviewScreenState extends State<OrganizationOverviewScreen>
     final authState = context.watch<AuthBloc>().state;
     bool isPrincipal = false;
     if (authState is AuthenticatedState) {
-      final role = authState.userProfile.role.toLowerCase();
-      final roleLabel = authState.userProfile.roleLabel.toLowerCase();
-      if (role.contains('principal') ||
-          role.contains('center_head') ||
-          role.contains('campus_head') ||
-          roleLabel.contains('principal') ||
-          roleLabel.contains('center head') ||
-          roleLabel.contains('campus head')) {
-        isPrincipal = true;
-      }
+      isPrincipal = authState.userProfile.isPrincipal;
     }
 
-    return BlocProvider(
-      create: (context) => OrganizationBloc()..add(FetchOrganizationDataEvent()),
-      child: PopScope(
-        canPop: false,
-        onPopInvokedWithResult: (didPop, result) async {
-          if (didPop) return;
-          final shouldExit = await ExitConfirmationDialog.show(context);
-          if (shouldExit) {
-            // Handled inside dialog
+    return BlocProvider.value(
+      value: _organizationBloc,
+      child: BlocListener<DashboardBloc, DashboardState>(
+        listenWhen: (previous, current) {
+          if (current is DashboardLoadedState) {
+            if (previous is! DashboardLoadedState) return true;
+            return previous.branchChangeTimestamp != current.branchChangeTimestamp ||
+                   previous.selectedBranch?.id != current.selectedBranch?.id;
+          }
+          return false;
+        },
+        listener: (context, dashState) {
+          if (dashState is DashboardLoadedState) {
+            final authState = context.read<AuthBloc>().state;
+            final hasMultiBranch = authState is AuthenticatedState && authState.userProfile.hasMultiBranchAccess;
+            final branchId = (hasMultiBranch && dashState.selectedBranch != null && !dashState.selectedBranch!.isAll)
+                ? dashState.selectedBranch!.id
+                : null;
+            final currentOrgState = _organizationBloc.state;
+            final bucket = currentOrgState is OrganizationLoadedState ? currentOrgState.activeBucket : 'week';
+            _organizationBloc.add(FetchOrganizationDataEvent(bucket: bucket, branchId: branchId));
           }
         },
-        child: Scaffold(
-          floatingActionButton: const TodoFloatingActionButton(),
-          drawer: const CustomLeftDrawer(currentRoute: '/org-overview'),
-          appBar: const CustomAppBar(),
-          body: BlocBuilder<OrganizationBloc, OrganizationState>(
-            builder: (context, state) {
-              if (state is OrganizationLoadingState) {
-                return const Center(
-                  child: CircularProgressIndicator(color: Color(0xFFB91C1C)),
-                );
-              }
+        child: PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, result) async {
+            if (didPop) return;
+            final shouldExit = await ExitConfirmationDialog.show(context);
+            if (shouldExit) {
+              // Handled inside dialog
+            }
+          },
+          child: Scaffold(
+            floatingActionButton: const TodoFloatingActionButton(),
+            drawer: const CustomLeftDrawer(currentRoute: '/org-overview'),
+            appBar: const CustomAppBar(),
+            body: BlocBuilder<OrganizationBloc, OrganizationState>(
+              builder: (context, state) {
+                if (state is OrganizationLoadingState) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: Color(0xFFB91C1C)),
+                  );
+                }
 
-              if (state is OrganizationErrorState) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(state.message),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () {
-                          context.read<OrganizationBloc>().add(FetchOrganizationDataEvent());
-                        },
-                        child: Text(s.retryButton),
-                      ),
-                    ],
-                  ),
-                );
-              }
+                if (state is OrganizationErrorState) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(state.message),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () {
+                            final authState = context.read<AuthBloc>().state;
+                            final hasMultiBranch = authState is AuthenticatedState && authState.userProfile.hasMultiBranchAccess;
+                            final dashState = context.read<DashboardBloc>().state;
+                            final branchId = (hasMultiBranch && dashState is DashboardLoadedState && dashState.selectedBranch != null && !dashState.selectedBranch!.isAll)
+                                ? dashState.selectedBranch!.id
+                                : null;
+                            _organizationBloc.add(FetchOrganizationDataEvent(branchId: branchId));
+                          },
+                          child: Text(s.retryButton),
+                        ),
+                      ],
+                    ),
+                  );
+                }
 
-              if (state is OrganizationLoadedState) {
-                final data = state.data;
-                final stats = data.overallDashboard.stats;
-                final byDeadline = data.overallDashboard.byDeadline;
-                final performance = data.overallDashboard.performance;
+                if (state is OrganizationLoadedState) {
+                  final data = state.data;
+                  final stats = data.overallDashboard.stats;
+                  final byDeadline = data.overallDashboard.byDeadline;
+                  final performance = data.overallDashboard.performance;
 
-                return RefreshIndicator(
-                  onRefresh: () async {
-                    context.read<OrganizationBloc>().add(FetchOrganizationDataEvent(bucket: state.activeBucket));
-                  },
+                  return RefreshIndicator(
+                    onRefresh: () async {
+                      final authState = context.read<AuthBloc>().state;
+                      final hasMultiBranch = authState is AuthenticatedState && authState.userProfile.hasMultiBranchAccess;
+                      final dashState = context.read<DashboardBloc>().state;
+                      final branchId = (hasMultiBranch && dashState is DashboardLoadedState && dashState.selectedBranch != null && !dashState.selectedBranch!.isAll)
+                          ? dashState.selectedBranch!.id
+                          : null;
+                      _organizationBloc.add(FetchOrganizationDataEvent(bucket: state.activeBucket, branchId: branchId));
+                    },
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(16),
                     child: Column(
@@ -274,7 +323,7 @@ class _OrganizationOverviewScreenState extends State<OrganizationOverviewScreen>
             },
           ),
         ),
-      ),
+      ),)
     );
   }
 
@@ -681,7 +730,13 @@ class _OrganizationOverviewScreenState extends State<OrganizationOverviewScreen>
 
     return InkWell(
       onTap: () {
-        context.read<OrganizationBloc>().add(FetchOrganizationDataEvent(bucket: key));
+        final authState = context.read<AuthBloc>().state;
+        final hasMultiBranch = authState is AuthenticatedState && authState.userProfile.hasMultiBranchAccess;
+        final dashState = context.read<DashboardBloc>().state;
+        final branchId = (hasMultiBranch && dashState is DashboardLoadedState && dashState.selectedBranch != null && !dashState.selectedBranch!.isAll)
+            ? dashState.selectedBranch!.id
+            : null;
+        _organizationBloc.add(FetchOrganizationDataEvent(bucket: key, branchId: branchId));
       },
       borderRadius: BorderRadius.circular(6),
       child: Container(

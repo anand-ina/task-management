@@ -865,7 +865,7 @@ class _EventsScreenState extends State<EventsScreen> {
     final weekDays = List.generate(7, (i) => startOfWeek.add(Duration(days: i)));
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(9),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -886,8 +886,7 @@ class _EventsScreenState extends State<EventsScreen> {
                   });
                 },
               ),
-              const SizedBox(width: 8),
-              Text(
+               Text(
                 headerStr,
                 style: TextStyle(
                   fontSize: 15,
@@ -895,8 +894,7 @@ class _EventsScreenState extends State<EventsScreen> {
                   color: isDark ? Colors.white : const Color(0xFF0F172A),
                 ),
               ),
-              const SizedBox(width: 8),
-              IconButton(
+               IconButton(
                 icon: const Icon(Icons.chevron_right_rounded, size: 22),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
@@ -1053,7 +1051,7 @@ class _EventsScreenState extends State<EventsScreen> {
     final headerRange = '${DateFormat('MMMM').format(m1)} – ${DateFormat('MMMM yyyy').format(m3)}';
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(7),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -1065,7 +1063,7 @@ class _EventsScreenState extends State<EventsScreen> {
           Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.chevron_left_rounded, size: 22),
+                icon: const Icon(Icons.chevron_left_rounded, size: 19),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
                 onPressed: () {
@@ -1074,18 +1072,16 @@ class _EventsScreenState extends State<EventsScreen> {
                   });
                 },
               ),
-              const SizedBox(width: 8),
-              Text(
+               Text(
                 headerRange,
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 12,
                   fontWeight: FontWeight.bold,
                   color: isDark ? Colors.white : const Color(0xFF0F172A),
                 ),
               ),
-              const SizedBox(width: 8),
-              IconButton(
-                icon: const Icon(Icons.chevron_right_rounded, size: 22),
+               IconButton(
+                icon: const Icon(Icons.chevron_right_rounded, size: 19),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
                 onPressed: () {
@@ -1094,16 +1090,15 @@ class _EventsScreenState extends State<EventsScreen> {
                   });
                 },
               ),
-              const Spacer(),
-              OutlinedButton(
+               OutlinedButton(
                 onPressed: () {
                   setState(() => _selectedThreeMonthsDate = DateTime.now());
                 },
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 4),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
-                child: Text(s.todayButton, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                child: Text(s.todayButton, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
               ),
             ],
           ),

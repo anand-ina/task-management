@@ -14,7 +14,9 @@ import '../bloc/complaints_event.dart';
 import '../bloc/complaints_state.dart';
 import '../models/lookup_models.dart';
 import '../models/ticket_insights_model.dart';
+import 'appreciations_screen.dart';
 import 'complaints_screen.dart';
+import 'source_complaints_screen.dart';
 
 class ComplaintsHistoryInsightsScreen extends StatefulWidget {
   const ComplaintsHistoryInsightsScreen({super.key});
@@ -373,30 +375,65 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
         label: s.openRightNow,
         accentColor: const Color(0xFF10B981),
         isDark: isDark,
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const ComplaintsScreen(initialStatusTab: 'open'),
+            ),
+          );
+        },
       ),
       _buildStatCard(
         count: totals.overdue.toString(),
         label: s.pastTargetDate,
         accentColor: const Color(0xFFEF4444),
         isDark: isDark,
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const ComplaintsScreen(initialStatusTab: 'overdue'),
+            ),
+          );
+        },
       ),
       _buildStatCard(
         count: totals.fromParents.toString(),
         label: s.fromParents,
         accentColor: const Color(0xFFF59E0B),
         isDark: isDark,
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const SourceComplaintsScreen(source: 'parent'),
+            ),
+          );
+        },
       ),
       _buildStatCard(
         count: totals.fromStudents.toString(),
         label: s.fromStudents,
         accentColor: const Color(0xFF3B82F6),
         isDark: isDark,
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const SourceComplaintsScreen(source: 'student'),
+            ),
+          );
+        },
       ),
       _buildStatCard(
         count: totals.fromStaff.toString(),
         label: s.fromStaff,
         accentColor: const Color(0xFF8B5CF6),
         isDark: isDark,
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const SourceComplaintsScreen(source: 'staff'),
+            ),
+          );
+        },
       ),
     ];
 
@@ -421,36 +458,78 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
         label: s.statTotalReceived,
         accentColor: const Color(0xFF334155),
         isDark: isDark,
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const ComplaintsScreen(initialStatusTab: 'all'),
+            ),
+          );
+        },
       ),
       _buildStatCard(
         count: totals.complaints.toString(),
         label: s.statComplaints,
         accentColor: const Color(0xFFEF4444),
         isDark: isDark,
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const ComplaintsScreen(initialTypeFilter: 'complaint'),
+            ),
+          );
+        },
       ),
       _buildStatCard(
         count: totals.feedback.toString(),
         label: s.statFeedback,
         accentColor: const Color(0xFF3B82F6),
         isDark: isDark,
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const ComplaintsScreen(initialTypeFilter: 'feedback'),
+            ),
+          );
+        },
       ),
       _buildStatCard(
         count: totals.appreciations.toString(),
         label: s.statAppreciations,
         accentColor: const Color(0xFF10B981),
         isDark: isDark,
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const AppreciationsScreen(),
+            ),
+          );
+        },
       ),
       _buildStatCard(
         count: totals.pendingReward.toString(),
         label: s.statAwaitingDirectorApproval,
         accentColor: const Color(0xFFB91C1C),
         isDark: isDark,
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const AppreciationsScreen(),
+            ),
+          );
+        },
       ),
       _buildStatCard(
         count: totals.avgDays != null ? '${totals.avgDays}d' : '—',
         label: s.avgDaysToResolve,
         accentColor: const Color(0xFF06B6D4),
         isDark: isDark,
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const ComplaintsScreen(initialStatusTab: 'resolved'),
+            ),
+          );
+        },
       ),
     ];
 
@@ -472,58 +551,63 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
     required String label,
     required Color accentColor,
     required bool isDark,
+    VoidCallback? onTap,
   }) {
-    return Container(
-      width: 148,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-          width: 1,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: 148,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: double.infinity,
-            height: 3,
-            decoration: BoxDecoration(
-              color: accentColor,
-              borderRadius: BorderRadius.circular(2),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: double.infinity,
+              height: 3,
+              decoration: BoxDecoration(
+                color: accentColor,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            count,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: accentColor,
+            const SizedBox(height: 8),
+            Text(
+              count,
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: accentColor == const Color(0xFF334155) && isDark ? Colors.white : accentColor,
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              height: 1.2,
-              color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+            const SizedBox(height: 4),
+            Text(
+              label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                height: 1.2,
+                color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -904,7 +988,7 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
                                 ],
                               ],
                             ),
-                            if (st.lastAt != null && st.lastAt!.isNotEmpty) ...[
+                            if (st.lastAt.isNotEmpty) ...[
                               const SizedBox(height: 4),
                               Row(
                                 children: [

@@ -948,6 +948,52 @@ class AppStringsEn extends AppStrings {
   String get saveSettingsButton => 'Save settings';
   @override
   String get resetToDefaultsButton => 'Reset to defaults';
+  @override
+  String get discardChangesButton => 'Discard changes';
+  @override
+  String get typeColumnHeader => 'TYPE';
+  @override
+  String get rupeeAmountColumnHeader => '₹ AMOUNT';
+  @override
+  String get pointsColumnHeader => 'POINTS';
+  @override
+  String get deleteFineTypeConfirmTitle => 'Delete Fine Type';
+  @override
+  String get deleteRewardTypeConfirmTitle => 'Delete Reward Type';
+  @override
+  String get deleteButton => 'Delete';
+  @override
+  String deleteFineTypeConfirmMessage(String label) =>
+      'Delete the fine type "$label"? Fines/rewards already issued are not affected.';
+  @override
+  String deleteRewardTypeConfirmMessage(String label) =>
+      'Delete the reward type "$label"? Fines/rewards already issued are not affected.';
+  @override
+  String get addFineTypeDialogTitle => 'Add Fine Type';
+  @override
+  String get addRewardTypeDialogTitle => 'Add Reward Type';
+  @override
+  String get policyNameLabel => 'Policy Name / Type';
+  @override
+  String get policyAmountLabel => 'Amount (₹)';
+  @override
+  String get policyPointsLabel => 'Points';
+  @override
+  String get settingsSavedSuccessfully => 'Settings saved successfully';
+  @override
+  String get fineTypeAddedSuccessfully => 'Fine type added successfully';
+  @override
+  String get rewardTypeAddedSuccessfully => 'Reward type added successfully';
+  @override
+  String get fineTypeDeletedSuccessfully => 'Fine type deleted successfully';
+  @override
+  String get rewardTypeDeletedSuccessfully => 'Reward type deleted successfully';
+  @override
+  String get noChangesToSave => 'No changes to save';
+  @override
+  String get pleaseEnterValidLabel => 'Please enter a valid name';
+  @override
+  String get pleaseEnterValidAmount => 'Please enter a valid amount';
 
   @override
   String get staffTitle => 'Staff';
@@ -1195,7 +1241,7 @@ class AppStringsEn extends AppStrings {
 
   // Complaints & Feedback Module Strings
   @override
-  String get complaintsAndFeedbackHeader => 'COMPLAINTS & FEEDBACK';
+  String get complaintsAndFeedbackHeader => 'COMPLAINTS & FEEDBACKS';
   @override
   String get complaintsTracker => 'Complaints Tracker';
   @override
@@ -1206,7 +1252,7 @@ class AppStringsEn extends AppStrings {
   String get appreciationApprovals => 'Appreciation Approvals';
 
   @override
-  String get complaintsAndFeedbackTitle => 'Complaints & Feedback';
+  String get complaintsAndFeedbackTitle => 'Complaints & Feedbacks';
   @override
   String get complaintsAndFeedbackSubtitle => 'Complaints, feedback and appreciations from parents and students — each one tracked to closure.';
   @override
@@ -1852,5 +1898,91 @@ class AppStringsEn extends AppStrings {
   String get lastRecordedLabel => 'Last';
   @override
   String get branchScopeLabel => 'Branch';
+
+  // ── Clone Task ─────────────────────────────────────────────────────────────
+  @override
+  String get cloneTaskTitle => 'Clone Task';
+  @override
+  String get cloneTaskBannerHint => 'A new Task ID is assigned on save. Change anything you need, then create.';
+  @override
+  String get taskIdLabel => 'Task ID';
+  @override
+  String get taskTitleLabel => 'Task Title';
+  @override
+  String get taskDescLabel => 'Task Description';
+
+  @override
+  String get schoolBranchLabel => 'School Branch';
+
+  @override
+  String get targetDateLabel => 'Target Date';
+
+  @override
+  String get confidentialLabel => 'Confidential';
+  @override
+  String get generalLabel => 'General';
+  @override
+  String get makeRecurringLabel => 'Make this a recurring task';
+  @override
+  String get assignedToLabel => 'Assigned To';
+  @override
+  String get searchUsersHint => 'Search users...';
+
+  @override
+  String get addFilesButton => 'Add files';
+  @override
+  String get taskChecklistLabel => 'Task Checklist';
+  @override
+  String get generateButton => 'Generate';
+  @override
+  String get addItemButton => '+ Add item';
+  @override
+  String get remarksLabel => 'Remarks';
+  @override
+  String get saveDraftButton => 'Save draft';
+  @override
+  String get saveTaskButton => 'Save Task';
+
+  @override
+  String get statusLabel => 'Status';
+
+  // ── Status Report PDF ──────────────────────────────────────────────────────
+  @override
+  String get savePdfButton => 'Save PDF';
+  @override
+  String get statusReportPdfTitle => 'Status Report';
+
+  @override
+  String get submittedAtLabel => 'Submitted At';
+  @override
+  String get exportedOnLabel => 'Exported on';
+  @override
+  String get unlockReportButton => 'Unlock Report';
+
+  // ── Appreciation Award Strings ─────────────────────────────────────────────
+  @override
+  String get rewardDirectorOnly => 'REWARD — DIRECTOR ONLY';
+  @override
+  String get updateFacultyAndPoints => 'Update faculty & points';
+  @override
+  String get rewardPointsLabel => 'Reward points';
+  @override
+  String get facultyLabel => 'Faculty *';
+  @override
+  String get reasonRequiredLabel => 'Reason *';
+  @override
+  String get whyIsThisBeingChangedHint => 'Why is this being changed?';
+  @override
+  String get pointsUpdatedSuccessfully => 'Points updated successfully.';
+  @override
+  String get pleaseEnterPoints => 'Please enter reward points.';
+  @override
+  String get pleaseEnterReason => 'Please enter reason why this is being changed.';
+  @override
+  String get selectFacultyPrompt => 'Please select a faculty.';
+  @override
+  String get searchFacultyPlaceholder => 'Search faculty...';
+  @override
+  String get changingThisMovesPoints => 'Changing this moves the points.';
 }
 

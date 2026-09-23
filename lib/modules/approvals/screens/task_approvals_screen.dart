@@ -484,7 +484,12 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
                           ],
                           InkWell(
                             onTap: () async {
-                              await TaskDetailDialog.show(context, taskId: item.taskId ?? 0, isReadOnly: isReadOnlyUser);
+                              await TaskDetailDialog.show(
+                                context,
+                                taskId: item.taskId ?? 0,
+                                isReadOnly: isReadOnlyUser,
+                                canCloneTask: true,
+                              );
                               if (context.mounted) {
                                 context.read<ApprovalsBloc>().add(FetchTaskApprovalsDataEvent());
                               }

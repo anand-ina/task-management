@@ -19,6 +19,8 @@ import '../bloc/all_tasks_state.dart';
 import '../models/task_model.dart';
 import '../../../shared_widgets/dropdowns/searchable_filter_dropdown.dart';
 import '../../../shared_widgets/dialogs/change_status_dialog.dart';
+import '../../dashboard/bloc/dashboard_bloc.dart';
+import '../../dashboard/bloc/dashboard_state.dart';
 
 class DashedRectPainter extends CustomPainter {
   final Color color;
@@ -93,12 +95,23 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
 
   bool _quickCreatedByMe = false;
   bool _quickAssignedToMe = false;
+  int? _selectedBranchId;
 
   @override
   void initState() {
     super.initState();
+    final authState = context.read<AuthBloc>().state;
+    final hasMultiBranch = authState is AuthenticatedState && authState.userProfile.hasMultiBranchAccess;
+    if (hasMultiBranch) {
+      final dashState = context.read<DashboardBloc>().state;
+      if (dashState is DashboardLoadedState && dashState.selectedBranch != null && !dashState.selectedBranch!.isAll) {
+        _selectedBranchId = dashState.selectedBranch!.id;
+      }
+    } else {
+      _selectedBranchId = null;
+    }
     _allTasksBloc = AllTasksBloc()
-      ..add(FetchAllTasksEvent(scope: 'mine', limit: 80, offset: 0));
+      ..add(FetchAllTasksEvent(scope: 'mine', limit: 100, offset: 0, branchId: _selectedBranchId));
     _scrollController.addListener(_onScroll);
   }
 
@@ -138,6 +151,10 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
       dueToStr = '${_dueTo!.year}-${_dueTo!.month.toString().padLeft(2, '0')}-${_dueTo!.day.toString().padLeft(2, '0')}';
     }
 
+    final authState = context.read<AuthBloc>().state;
+    final hasMultiBranch = authState is AuthenticatedState && authState.userProfile.hasMultiBranchAccess;
+    final effectiveBranchId = hasMultiBranch ? _selectedBranchId : null;
+
     _allTasksBloc.add(FetchAllTasksEvent(
       scope: 'mine',
       status: _selectedStatusFilter,
@@ -149,8 +166,9 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
       progressMax: _progressMax,
       category: _selectedCategory != 'all' ? _selectedCategory : null,
       search: _searchQuery,
-      limit: 80,
+      limit: 100,
       offset: offset,
+      branchId: effectiveBranchId,
     ));
   }
 
@@ -217,20 +235,44 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
 
     return BlocProvider.value(
       value: _allTasksBloc,
-      child: PopScope(
-        canPop: false,
-        onPopInvokedWithResult: (didPop, result) async {
-          if (didPop) return;
-          final shouldExit = await ExitConfirmationDialog.show(context);
-          if (shouldExit) {
-            // handled
+      child: BlocListener<DashboardBloc, DashboardState>(
+        listenWhen: (previous, current) {
+          if (current is DashboardLoadedState) {
+            if (previous is! DashboardLoadedState) return true;
+            return previous.branchChangeTimestamp != current.branchChangeTimestamp ||
+                   previous.selectedBranch?.id != current.selectedBranch?.id;
+          }
+          return false;
+        },
+        listener: (context, dashState) {
+          if (dashState is DashboardLoadedState) {
+            final authState = context.read<AuthBloc>().state;
+            final hasMultiBranch = authState is AuthenticatedState && authState.userProfile.hasMultiBranchAccess;
+            final newBranchId = (hasMultiBranch && dashState.selectedBranch != null && !dashState.selectedBranch!.isAll)
+                ? dashState.selectedBranch!.id
+                : null;
+            if (_selectedBranchId != newBranchId) {
+              setState(() {
+                _selectedBranchId = newBranchId;
+              });
+            }
+            _dispatchFetch(offset: 0);
           }
         },
-        child: Scaffold(
-          floatingActionButton: const TodoFloatingActionButton(),
-          drawer: const CustomLeftDrawer(currentRoute: '/my-tasks'),
-          appBar: const CustomAppBar(),
-          body: BlocBuilder<AllTasksBloc, AllTasksState>(
+        child: PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, result) async {
+            if (didPop) return;
+            final shouldExit = await ExitConfirmationDialog.show(context);
+            if (shouldExit) {
+              // handled
+            }
+          },
+          child: Scaffold(
+            floatingActionButton: const TodoFloatingActionButton(),
+            drawer: const CustomLeftDrawer(currentRoute: '/my-tasks'),
+            appBar: const CustomAppBar(),
+            body: BlocBuilder<AllTasksBloc, AllTasksState>(
             builder: (context, state) {
               if (state is AllTasksLoadingState) {
                 return const Center(
@@ -401,8 +443,9 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   // 7 Stat Cards Row
   Widget _buildStatCardsRow(BuildContext context, AppStrings s, TasksResponseModel response) {

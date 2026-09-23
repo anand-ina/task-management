@@ -42,6 +42,10 @@ class ApiConstants {
   static const String reports = '$baseUrl/reports';
   static const String reportsStats = '$baseUrl/reports/stats';
   static const String reportsCompliance = '$baseUrl/reports/compliance';
+  static String reportDetail(int id) => '$baseUrl/reports/$id';
+
+  // Task Next ID
+  static const String tasksNextId = '$baseUrl/tasks/next-id';
 
   // To-Do History & Performance Endpoints
   static const String todosHistory = '$baseUrl/todos';
@@ -80,6 +84,7 @@ class ApiConstants {
   static const String ticketInsights = '$baseUrl/tickets/insights';
   static const String uploads = '$baseUrl/uploads';
   static String ticketMetaBranch(int branchId) => '$baseUrl/tickets/meta?branchId=$branchId';
+  static String ticketAward(int ticketId) => '$baseUrl/tickets/$ticketId/award';
 
   // Audits Endpoints
   static const String audits = '$baseUrl/audits';

@@ -17,6 +17,23 @@ class FineTypesLoadedState extends FinesState {
   FineTypesLoadedState(this.fineTypes);
 }
 
+class FineTypesSavingState extends FinesState {
+  final List<FineTypeModel> currentTypes;
+  FineTypesSavingState(this.currentTypes);
+}
+
+class FineTypesActionSuccessState extends FinesState {
+  final String message;
+  final List<FineTypeModel> fineTypes;
+  FineTypesActionSuccessState(this.message, this.fineTypes);
+}
+
+class FineTypesActionErrorState extends FinesState {
+  final String message;
+  final List<FineTypeModel> currentTypes;
+  FineTypesActionErrorState(this.message, this.currentTypes);
+}
+
 class FinesErrorState extends FinesState {
   final String message;
   FinesErrorState(this.message);

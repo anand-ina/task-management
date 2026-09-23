@@ -559,5 +559,44 @@ class ComplaintsRepository {
       rethrow;
     }
   }
+
+  Future<TicketItemModel> awardTicket({
+    required int ticketId,
+    required int userId,
+    required int points,
+    required String reason,
+  }) async {
+    final url = ApiConstants.ticketAward(ticketId);
+    final payload = {
+      'userId': userId,
+      'points': points,
+      'reason': reason,
+    };
+
+    _logServiceCall(
+      serviceMethod: 'awardTicket',
+      url: url,
+      payload: payload,
+    );
+
+    try {
+      final res = await _dioClient.dio.post(url, data: payload);
+      final parsedData = _safeParse(res.data);
+
+      _logServiceCall(
+        serviceMethod: 'awardTicket',
+        url: url,
+        response: parsedData,
+      );
+
+      if (parsedData is Map<String, dynamic>) {
+        return TicketItemModel.fromJson(parsedData);
+      }
+      throw Exception('Failed to award ticket: unexpected response');
+    } catch (e, stack) {
+      debugPrint('[ComplaintsRepository] awardTicket error: $e\n$stack');
+      rethrow;
+    }
+  }
 }
 

@@ -947,6 +947,52 @@ class AppStringsKn extends AppStrings {
   String get saveSettingsButton => 'ಸೆಟ್ಟಿಂಗ್‌ಗಳನ್ನು ಉಳಿಸಿ';
   @override
   String get resetToDefaultsButton => 'ಮರುಹೊಂದಿಸಿ';
+  @override
+  String get discardChangesButton => 'ಬದಲಾವಣೆಗಳನ್ನು ತಿರಸ್ಕರಿಸಿ';
+  @override
+  String get typeColumnHeader => 'ಪ್ರಕಾರ';
+  @override
+  String get rupeeAmountColumnHeader => '₹ ಮೊತ್ತ';
+  @override
+  String get pointsColumnHeader => 'ಅಂಕಗಳು';
+  @override
+  String get deleteFineTypeConfirmTitle => 'ದಂಡದ ಪ್ರಕಾರವನ್ನು ಅಳಿಸಿ';
+  @override
+  String get deleteRewardTypeConfirmTitle => 'ಬಹುಮಾನ ಪ್ರಕಾರವನ್ನು ಅಳಿಸಿ';
+  @override
+  String get deleteButton => 'ಅಳಿಸಿ';
+  @override
+  String deleteFineTypeConfirmMessage(String label) =>
+      '"$label" ದಂಡದ ಪ್ರಕಾರವನ್ನು ಅಳಿಸುವುದೇ? ಈಗಾಗಲೇ ನೀಡಲಾದ ದಂಡಗಳು/ಬಹುಮಾನಗಳು ಪರಿಣಾಮ ಬೀರುವುದಿಲ್ಲ.';
+  @override
+  String deleteRewardTypeConfirmMessage(String label) =>
+      '"$label" ಬಹುಮಾನ ಪ್ರಕಾರವನ್ನು ಅಳಿಸುವುದೇ? ಈಗಾಗಲೇ ನೀಡಲಾದ ದಂಡಗಳು/ಬಹುಮಾನಗಳು ಪರಿಣಾಮ ಬೀರುವುದಿಲ್ಲ.';
+  @override
+  String get addFineTypeDialogTitle => 'ದಂಡದ ಪ್ರಕಾರ ಸೇರಿಸಿ';
+  @override
+  String get addRewardTypeDialogTitle => 'ಬಹುಮಾನ ಪ್ರಕಾರ ಸೇರಿಸಿ';
+  @override
+  String get policyNameLabel => 'ನೀತಿ ಹೆಸರು / ಪ್ರಕಾರ';
+  @override
+  String get policyAmountLabel => 'ಮೊತ್ತ (₹)';
+  @override
+  String get policyPointsLabel => 'ಅಂಕಗಳು';
+  @override
+  String get settingsSavedSuccessfully => 'ಸೆಟ್ಟಿಂಗ್‌ಗಳನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಉಳಿಸಲಾಗಿದೆ';
+  @override
+  String get fineTypeAddedSuccessfully => 'ದಂಡದ ಪ್ರಕಾರವನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಸೇರಿಸಲಾಗಿದೆ';
+  @override
+  String get rewardTypeAddedSuccessfully => 'ಬಹುಮಾನ ಪ್ರಕಾರವನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಸೇರಿಸಲಾಗಿದೆ';
+  @override
+  String get fineTypeDeletedSuccessfully => 'ದಂಡದ ಪ್ರಕಾರವನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಅಳಿಸಲಾಗಿದೆ';
+  @override
+  String get rewardTypeDeletedSuccessfully => 'ಬಹುಮಾನ ಪ್ರಕಾರವನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಅಳಿಸಲಾಗಿದೆ';
+  @override
+  String get noChangesToSave => 'ಉಳಿಸಲು ಯಾವುದೇ ಬದಲಾವಣೆಗಳಿಲ್ಲ';
+  @override
+  String get pleaseEnterValidLabel => 'ದಯವಿಟ್ಟು ಮಾನ್ಯವಾದ ಹೆಸರನ್ನು ನಮೂದಿಸಿ';
+  @override
+  String get pleaseEnterValidAmount => 'ದಯವಿಟ್ಟು ಮಾನ್ಯ ಮೊತ್ತವನ್ನು ನಮೂದಿಸಿ';
 
   @override
   String get staffTitle => 'ಸಿಬ್ಬಂದಿ';
@@ -1851,5 +1897,91 @@ class AppStringsKn extends AppStrings {
   String get lastRecordedLabel => 'ಕೊನೆಯ';
   @override
   String get branchScopeLabel => 'ಶಾಖೆ';
+
+  // ── Clone Task ─────────────────────────────────────────────────────────────
+  @override
+  String get cloneTaskTitle => 'ಕಾರ್ಯ ಕ್ಲೋನ್ ಮಾಡಿ';
+  @override
+  String get cloneTaskBannerHint => 'ಉಳಿಸಿದ ನಂತರ ಹೊಸ ಕಾರ್ಯ ID ನಿಯೋಜಿಸಲಾಗುತ್ತದೆ. ಅಗತ್ಯ ಬದಲಾವಣೆಗಳನ್ನು ಮಾಡಿ, ನಂತರ ರಚಿಸಿ.';
+  @override
+  String get taskIdLabel => 'ಕಾರ್ಯ ID';
+  @override
+  String get taskTitleLabel => 'ಕಾರ್ಯ ಶೀರ್ಷಿಕೆ';
+  @override
+  String get taskDescLabel => 'ಕಾರ್ಯ ವಿವರಣೆ';
+
+  @override
+  String get schoolBranchLabel => 'ಶಾಲಾ ಶಾಖೆ';
+
+  @override
+  String get targetDateLabel => 'ಗುರಿ ದಿನಾಂಕ';
+
+  @override
+  String get confidentialLabel => 'ಗೌಪ್ಯ';
+  @override
+  String get generalLabel => 'ಸಾಮಾನ್ಯ';
+  @override
+  String get makeRecurringLabel => 'ಇದನ್ನು ಆವರ್ತಕ ಕಾರ್ಯವನ್ನಾಗಿ ಮಾಡಿ';
+  @override
+  String get assignedToLabel => 'ನಿಯೋಜಿಸಲಾದವರಿಗೆ';
+  @override
+  String get searchUsersHint => 'ಬಳಕೆದಾರರನ್ನು ಹುಡುಕಿ...';
+
+  @override
+  String get addFilesButton => 'ಫೈಲ್‌ಗಳನ್ನು ಸೇರಿಸಿ';
+  @override
+  String get taskChecklistLabel => 'ಕಾರ್ಯ ಪರಿಶೀಲನ ಪಟ್ಟಿ';
+  @override
+  String get generateButton => 'ರಚಿಸಿ';
+  @override
+  String get addItemButton => '+ ಐಟಂ ಸೇರಿಸಿ';
+  @override
+  String get remarksLabel => 'ಟಿಪ್ಪಣಿಗಳು';
+  @override
+  String get saveDraftButton => 'ಕರಡು ಉಳಿಸಿ';
+  @override
+  String get saveTaskButton => 'ಕಾರ್ಯ ಉಳಿಸಿ';
+
+  @override
+  String get statusLabel => 'ಸ್ಥಿತಿ';
+
+  // ── Status Report PDF ──────────────────────────────────────────────────────
+  @override
+  String get savePdfButton => 'PDF ಉಳಿಸಿ';
+  @override
+  String get statusReportPdfTitle => 'ಸ್ಥಿತಿ ವರದಿ';
+
+  @override
+  String get submittedAtLabel => 'ಸಲ್ಲಿಸಿದ ಸಮಯ';
+  @override
+  String get exportedOnLabel => 'ರಫ್ತು ಮಾಡಿದ ದಿನಾಂಕ';
+  @override
+  String get unlockReportButton => 'ವರದಿ ಅನ್‌ಲಾಕ್ ಮಾಡಿ';
+
+  // ── Appreciation Award Strings ─────────────────────────────────────────────
+  @override
+  String get rewardDirectorOnly => 'ಬಹುಮಾನ — ನಿರ್ದೇಶಕರಿಗೆ ಮಾತ್ರ';
+  @override
+  String get updateFacultyAndPoints => 'ಅಧ್ಯಾಪಕರು ಮತ್ತು ಅಂಕಗಳನ್ನು ನವೀಕರಿಸಿ';
+  @override
+  String get rewardPointsLabel => 'ಬಹುಮಾನದ ಅಂಕಗಳು';
+  @override
+  String get facultyLabel => 'ಅಧ್ಯಾಪಕರು *';
+  @override
+  String get reasonRequiredLabel => 'ಕಾರಣ *';
+  @override
+  String get whyIsThisBeingChangedHint => 'ಇದನ್ನು ಏಕೆ ಬದಲಾಯಿಸಲಾಗುತ್ತಿದೆ?';
+  @override
+  String get pointsUpdatedSuccessfully => 'ಅಂಕಗಳನ್ನು ಯಶಸ್ವಿಯಾಗಿ ನವೀಕರಿಸಲಾಗಿದೆ.';
+  @override
+  String get pleaseEnterPoints => 'ದಯವಿಟ್ಟು ಬಹುಮಾನದ ಅಂಕಗಳನ್ನು ನಮೂದಿಸಿ.';
+  @override
+  String get pleaseEnterReason => 'ದಯವಿಟ್ಟು ಇದನ್ನು ಬದಲಾಯಿಸಲು ಕಾರಣವನ್ನು ನಮೂದಿಸಿ.';
+  @override
+  String get selectFacultyPrompt => 'ದಯವಿಟ್ಟು ಅಧ್ಯಾಪಕರನ್ನು ಆಯ್ಕೆಮಾಡಿ.';
+  @override
+  String get searchFacultyPlaceholder => 'ಅಧ್ಯಾಪಕರನ್ನು ಹುಡುಕಿ...';
+  @override
+  String get changingThisMovesPoints => 'ಇದನ್ನು ಬದಲಾಯಿಸುವುದರಿಂದ ಅಂಕಗಳು ವರ್ಗಾವಣೆಯಾಗುತ್ತವೆ.';
 }
 

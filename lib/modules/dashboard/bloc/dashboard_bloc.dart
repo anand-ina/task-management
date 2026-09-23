@@ -21,9 +21,10 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   ) async {
     emit(DashboardLoadingState());
     try {
+      final effectiveBranchId = event.mine == 1 ? null : event.branchId;
       final results = await Future.wait([
-        _repository.getDashboardData(branchId: event.branchId, mine: event.mine),
-        _repository.getTeamData(branchId: event.branchId),
+        _repository.getDashboardData(branchId: effectiveBranchId, mine: event.mine),
+        _repository.getTeamData(branchId: effectiveBranchId, mine: event.mine),
         _repository.getNotifications(),
         _repository.getBranches(),
         _repository.getTodos(),
@@ -41,12 +42,25 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
         branchList.insert(0, BranchModel(id: 0, code: 'ALL', name: 'All Branches', isAll: true));
       }
 
+      BranchModel? selected;
+      if (effectiveBranchId != null) {
+        final match = branchList.firstWhere((b) => b.id == effectiveBranchId, orElse: () => branchList.first);
+        selected = match;
+      } else if (state is DashboardLoadedState) {
+        final prevSelected = (state as DashboardLoadedState).selectedBranch;
+        if (prevSelected != null) {
+          final match = branchList.firstWhere((b) => b.id == prevSelected.id, orElse: () => branchList.first);
+          selected = match;
+        }
+      }
+      selected ??= (branchList.isNotEmpty ? branchList.first : null);
+
       emit(DashboardLoadedState(
         dashboardData: dashboardData,
         teamData: teamData,
         notifications: notifications,
         branches: branchList,
-        selectedBranch: branchList.isNotEmpty ? branchList.first : null,
+        selectedBranch: selected,
         todos: todoList,
       ));
     } catch (e) {
@@ -58,25 +72,45 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     SelectBranchEvent event,
     Emitter<DashboardState> emit,
   ) async {
-    if (state is DashboardLoadedState) {
-      final currentState = state as DashboardLoadedState;
-      emit(DashboardLoadingState());
-      try {
-        final isAllSelected = event.branch.id == 0 || event.branch.code.toUpperCase() == 'ALL' || event.branch.isAll;
-        final targetBranchId = isAllSelected ? null : event.branch.id;
-        final results = await Future.wait([
-          _repository.getDashboardData(branchId: targetBranchId, mine: isAllSelected ? null : 1),
-          _repository.getTeamData(branchId: targetBranchId),
-        ]);
+    final currentState = state is DashboardLoadedState ? state as DashboardLoadedState : null;
+    emit(DashboardLoadingState());
+    try {
+      final isAllSelected = event.branch.id == 0 || event.branch.code.toUpperCase() == 'ALL' || event.branch.isAll;
+      final effectiveMine = event.mine ?? (isAllSelected ? null : 1);
+      final targetBranchId = (effectiveMine == 1 || isAllSelected) ? null : event.branch.id;
+      final results = await Future.wait([
+        _repository.getDashboardData(branchId: targetBranchId, mine: effectiveMine),
+        _repository.getTeamData(branchId: targetBranchId, mine: effectiveMine),
+      ]);
 
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (currentState != null) {
         emit(currentState.copyWith(
           dashboardData: results[0] as dynamic,
           teamData: results[1] as dynamic,
           selectedBranch: event.branch,
+          branchChangeTimestamp: now,
         ));
-      } catch (e) {
-        emit(DashboardErrorState(message: e.toString()));
+      } else {
+        final branchesRes = await _repository.getBranches();
+        List<BranchModel> branchList = List<BranchModel>.from(branchesRes);
+        if (!branchList.any((b) => b.id == 0 || b.code.toUpperCase() == 'ALL' || b.name.toLowerCase().contains('all branches'))) {
+          branchList.insert(0, BranchModel(id: 0, code: 'ALL', name: 'All Branches', isAll: true));
+        }
+        final notifs = await _repository.getNotifications();
+        final todos = await _repository.getTodos();
+        emit(DashboardLoadedState(
+          dashboardData: results[0] as dynamic,
+          teamData: results[1] as dynamic,
+          notifications: notifs,
+          branches: branchList,
+          selectedBranch: event.branch,
+          todos: todos,
+          branchChangeTimestamp: now,
+        ));
       }
+    } catch (e) {
+      emit(DashboardErrorState(message: e.toString()));
     }
   }
 

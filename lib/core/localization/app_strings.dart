@@ -889,6 +889,50 @@ abstract class AppStrings {
 
   String get resetToDefaultsButton;
 
+  String get discardChangesButton;
+
+  String get typeColumnHeader;
+
+  String get rupeeAmountColumnHeader;
+
+  String get pointsColumnHeader;
+
+  String get deleteFineTypeConfirmTitle;
+
+  String get deleteRewardTypeConfirmTitle;
+
+  String get deleteButton;
+
+  String deleteFineTypeConfirmMessage(String label);
+
+  String deleteRewardTypeConfirmMessage(String label);
+
+  String get addFineTypeDialogTitle;
+
+  String get addRewardTypeDialogTitle;
+
+  String get policyNameLabel;
+
+  String get policyAmountLabel;
+
+  String get policyPointsLabel;
+
+  String get settingsSavedSuccessfully;
+
+  String get fineTypeAddedSuccessfully;
+
+  String get rewardTypeAddedSuccessfully;
+
+  String get fineTypeDeletedSuccessfully;
+
+  String get rewardTypeDeletedSuccessfully;
+
+  String get noChangesToSave;
+
+  String get pleaseEnterValidLabel;
+
+  String get pleaseEnterValidAmount;
+
   // Staff Management Strings
   String get staffTitle;
 
@@ -1454,4 +1498,49 @@ abstract class AppStrings {
   String get studentFamilyListTitle;
   String get lastRecordedLabel;
   String get branchScopeLabel;
+
+  // ── Clone Task Strings ─────────────────────────────────────────────────────
+  String get cloneTaskTitle;
+  String get cloneTaskBannerHint;
+  String get taskIdLabel;
+  String get taskTitleLabel;
+  String get taskDescLabel;
+   String get schoolBranchLabel;
+   String get targetDateLabel;
+   String get confidentialLabel;
+  String get generalLabel;
+  String get makeRecurringLabel;
+  String get assignedToLabel;
+  String get searchUsersHint;
+   String get addFilesButton;
+  String get taskChecklistLabel;
+  String get generateButton;
+  String get addItemButton;
+  String get remarksLabel;
+  String get saveDraftButton;
+  String get saveTaskButton;
+
+  String get statusLabel;
+
+  // ── Status Report PDF Strings ──────────────────────────────────────────────
+  String get savePdfButton;
+  String get statusReportPdfTitle;
+
+  String get submittedAtLabel;
+  String get exportedOnLabel;
+  String get unlockReportButton;
+
+  // ── Appreciation Award Strings ─────────────────────────────────────────────
+  String get rewardDirectorOnly;
+  String get updateFacultyAndPoints;
+  String get rewardPointsLabel;
+  String get facultyLabel;
+  String get reasonRequiredLabel;
+  String get whyIsThisBeingChangedHint;
+  String get pointsUpdatedSuccessfully;
+  String get pleaseEnterPoints;
+  String get pleaseEnterReason;
+  String get selectFacultyPrompt;
+  String get searchFacultyPlaceholder;
+  String get changingThisMovesPoints;
 }

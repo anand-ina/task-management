@@ -17,9 +17,10 @@ class FetchDashboardDataEvent extends DashboardEvent {
 
 class SelectBranchEvent extends DashboardEvent {
   final BranchModel branch;
-  const SelectBranchEvent(this.branch);
+  final int? mine;
+  const SelectBranchEvent(this.branch, {this.mine});
   @override
-  List<Object?> get props => [branch];
+  List<Object?> get props => [branch, mine];
 }
 
 class AddTodoEvent extends DashboardEvent {

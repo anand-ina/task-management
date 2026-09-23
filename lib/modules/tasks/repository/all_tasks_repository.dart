@@ -50,7 +50,7 @@ class AllTasksRepository {
 
   Future<TasksResponseModel> getAllTasks({
     String scope = 'all',
-    int limit = 20,
+    int limit = 100,
     int offset = 0,
     String? status,
     String? priority,
@@ -66,8 +66,10 @@ class AllTasksRepository {
     final Map<String, dynamic> params = {
       'scope': scope,
       'limit': limit,
-      'offset': offset,
     };
+    if (offset > 0) {
+      params['offset'] = offset;
+    }
     if (status != null && status.isNotEmpty && status != 'all') {
       params['status'] = status;
     }
@@ -97,6 +99,7 @@ class AllTasksRepository {
     }
     if (branchId != null && branchId > 0) {
       params['branchId'] = branchId;
+      params['branch_id'] = branchId;
     }
 
     _logServiceCall(

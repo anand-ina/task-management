@@ -236,5 +236,34 @@ class UserProfile {
         'permissions': permissions,
         'scope': scope?.toJson(),
       };
+
+  bool get isDirector {
+    final r = role.toLowerCase();
+    final rl = roleLabel.toLowerCase();
+    return r.contains('director') || rl.contains('director');
+  }
+
+  bool get isPrincipal {
+    final r = role.toLowerCase();
+    final rl = roleLabel.toLowerCase();
+    return r.contains('principal') ||
+        r.contains('center_head') ||
+        r.contains('campus_head') ||
+        r.contains('center head') ||
+        r.contains('campus head') ||
+        rl.contains('principal') ||
+        rl.contains('center head') ||
+        rl.contains('campus head');
+  }
+
+  bool get isAdmin {
+    final r = role.toLowerCase();
+    final rl = roleLabel.toLowerCase();
+    return r.contains('admin') || rl.contains('admin');
+  }
+
+  bool get hasMultiBranchAccess {
+    return isDirector || isPrincipal || isAdmin;
+  }
 }
 

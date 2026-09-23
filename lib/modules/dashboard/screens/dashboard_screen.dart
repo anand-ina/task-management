@@ -38,15 +38,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authState = context.read<AuthBloc>().state;
       int? mineVal;
+      bool hasMultiBranch = false;
       if (authState is AuthenticatedState) {
         final user = authState.userProfile;
-        final role = user.role.toLowerCase();
-        final roleLabel = user.roleLabel.toLowerCase();
-        if (!role.contains('director') && !roleLabel.contains('director')) {
+        hasMultiBranch = user.hasMultiBranchAccess;
+        if (!user.isDirector) {
           mineVal = 1;
         }
       }
-      context.read<DashboardBloc>().add(FetchDashboardDataEvent(mine: mineVal));
+      final dashState = context.read<DashboardBloc>().state;
+      int? branchId;
+      if (hasMultiBranch && dashState is DashboardLoadedState && dashState.selectedBranch != null && !dashState.selectedBranch!.isAll) {
+        branchId = dashState.selectedBranch!.id;
+      }
+      context.read<DashboardBloc>().add(FetchDashboardDataEvent(mine: mineVal, branchId: branchId));
     });
   }
 
@@ -127,7 +132,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: () {
-                        context.read<DashboardBloc>().add(FetchDashboardDataEvent(mine: isDirector ? null : 1));
+                        final dashState = context.read<DashboardBloc>().state;
+                        final auth = context.read<AuthBloc>().state;
+                        final hasMulti = auth is AuthenticatedState && auth.userProfile.hasMultiBranchAccess;
+                        final bId = (hasMulti && dashState is DashboardLoadedState && dashState.selectedBranch != null && !dashState.selectedBranch!.isAll)
+                            ? dashState.selectedBranch!.id
+                            : null;
+                        context.read<DashboardBloc>().add(FetchDashboardDataEvent(mine: isDirector ? null : 1, branchId: bId));
                       },
                       child: Text(s.retryButton),
                     ),
@@ -147,7 +158,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               return RefreshIndicator(
                 onRefresh: () async {
-                  context.read<DashboardBloc>().add(FetchDashboardDataEvent(mine: isDirector ? null : 1));
+                  final dashState = context.read<DashboardBloc>().state;
+                  final auth = context.read<AuthBloc>().state;
+                  final hasMulti = auth is AuthenticatedState && auth.userProfile.hasMultiBranchAccess;
+                  final bId = (hasMulti && dashState is DashboardLoadedState && dashState.selectedBranch != null && !dashState.selectedBranch!.isAll)
+                      ? dashState.selectedBranch!.id
+                      : null;
+                  context.read<DashboardBloc>().add(FetchDashboardDataEvent(mine: isDirector ? null : 1, branchId: bId));
                 },
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(12),

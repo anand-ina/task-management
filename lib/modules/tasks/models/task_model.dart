@@ -226,10 +226,12 @@ class TaskDetailModel extends TaskItemModel {
   final List<TaskTimelineItem> timeline;
   final List<dynamic> attachments;
   final List<dynamic> checklist;
+  final String? ticketType;
 
   TaskDetailModel({
     required super.id,
     required super.taskNo,
+    super.legacyTaskNo,
     required super.fy,
     required super.title,
     required super.description,
@@ -252,6 +254,11 @@ class TaskDetailModel extends TaskItemModel {
     required super.branchCode,
     required super.branchName,
     required super.assignees,
+    super.ticketId,
+    super.ticketNo,
+    this.ticketType,
+    super.subtasksTotal,
+    super.subtasksCompleted,
     required this.timeline,
     required this.attachments,
     required this.checklist,
@@ -259,9 +266,14 @@ class TaskDetailModel extends TaskItemModel {
 
   factory TaskDetailModel.fromJson(Map<String, dynamic> json) {
     final baseTask = TaskItemModel.fromJson(json);
+    final String? ticketNumber = baseTask.ticketNo ?? json['ticket_no']?.toString();
+    final int? ticketIdentifier = baseTask.ticketId ?? json['ticket_id'] as int?;
+    final String? tType = json['ticket_type']?.toString();
+
     return TaskDetailModel(
       id: baseTask.id,
       taskNo: baseTask.taskNo,
+      legacyTaskNo: baseTask.legacyTaskNo,
       fy: baseTask.fy,
       title: baseTask.title,
       description: baseTask.description,
@@ -284,6 +296,11 @@ class TaskDetailModel extends TaskItemModel {
       branchCode: baseTask.branchCode,
       branchName: baseTask.branchName,
       assignees: baseTask.assignees,
+      ticketId: ticketIdentifier,
+      ticketNo: ticketNumber,
+      ticketType: tType,
+      subtasksTotal: baseTask.subtasksTotal,
+      subtasksCompleted: baseTask.subtasksCompleted,
       timeline: (json['timeline'] as List<dynamic>?)
               ?.map((e) => TaskTimelineItem.fromJson(e))
               .toList() ??

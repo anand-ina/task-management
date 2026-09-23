@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/dio_client.dart';
 import '../../../core/utils/preferences_service.dart';
@@ -36,12 +37,31 @@ class ReportsRepository {
   Future<List<StatusReportItemModel>> getReports() async {
     try {
       final response = await _dioClient.dio.get(ApiConstants.reports);
+      debugPrint('[ReportsRepository] GET ${ApiConstants.reports} → ${response.statusCode}');
       final data = _safeParse(response.data);
       if (data is List) {
         return data.map((e) => StatusReportItemModel.fromJson(e is Map<String, dynamic> ? e : {})).toList();
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[ReportsRepository] getReports error: $e');
+    }
     return [];
+  }
+
+  Future<StatusReportItemModel?> getReportDetail(int id) async {
+    final url = ApiConstants.reportDetail(id);
+    try {
+      debugPrint('[ReportsRepository] GET $url');
+      final response = await _dioClient.dio.get(url);
+      debugPrint('[ReportsRepository] getReportDetail($id) → ${response.statusCode}: ${response.data}');
+      final data = _safeParse(response.data);
+      if (data is Map<String, dynamic>) {
+        return StatusReportItemModel.fromJson(data);
+      }
+    } catch (e) {
+      debugPrint('[ReportsRepository] getReportDetail($id) error: $e');
+    }
+    return null;
   }
 
   Future<PullTasksResponseModel> pullTasks({required String type, required String date}) async {

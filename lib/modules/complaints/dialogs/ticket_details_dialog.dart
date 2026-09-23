@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/localization/app_strings.dart';
 import '../../../core/utils/network_connectivity_service.dart';
 import '../../../shared_widgets/dialogs/no_internet_dialog.dart';
+import '../../auth/bloc/auth_bloc.dart';
+import '../../auth/bloc/auth_state.dart';
 import '../../tasks/screens/all_tasks_screen.dart';
 import '../models/lookup_models.dart';
 import '../models/ticket_model.dart';
@@ -61,6 +64,12 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
   final TextEditingController _rejectReasonController = TextEditingController();
   bool _isSubmittingCloseLoop = false;
 
+  // Reward / Award Section State (for Appreciation in Director Login)
+  int? _selectedAwardFacultyId;
+  final TextEditingController _awardPointsController = TextEditingController(text: '50');
+  final TextEditingController _awardReasonController = TextEditingController();
+  bool _isSubmittingAward = false;
+
   @override
   void initState() {
     super.initState();
@@ -74,6 +83,8 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
     _assignNoteController.dispose();
     _resolutionController.dispose();
     _rejectReasonController.dispose();
+    _awardPointsController.dispose();
+    _awardReasonController.dispose();
     super.dispose();
   }
 
@@ -89,6 +100,10 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
         setState(() {
           _ticket = ticket;
           _isLoading = false;
+          _selectedAwardFacultyId ??= ticket.awardedUserId ?? ticket.aboutUserId;
+          if (ticket.pointsAwarded != null && ticket.pointsAwarded! > 0) {
+            _awardPointsController.text = ticket.pointsAwarded.toString();
+          }
         });
       }
     } catch (e) {
@@ -108,6 +123,9 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
         setState(() {
           _allAssignees = list;
           _filteredAssignees = list;
+          if (_selectedAwardFacultyId == null && _ticket != null) {
+            _selectedAwardFacultyId = _ticket!.awardedUserId ?? _ticket!.aboutUserId;
+          }
         });
       }
     } catch (_) {}
@@ -280,6 +298,196 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
         );
       }
     }
+  }
+
+  Future<void> _handleAwardPoints(AppStrings s) async {
+    final hasNet = await NetworkConnectivityService().checkConnection();
+    if (!hasNet && mounted) {
+      NoInternetDialog.showForceLogout(context);
+      return;
+    }
+
+    if (_selectedAwardFacultyId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(s.selectFacultyPrompt)),
+      );
+      return;
+    }
+
+    final points = int.tryParse(_awardPointsController.text.trim()) ?? 0;
+    if (points <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(s.pleaseEnterPoints)),
+      );
+      return;
+    }
+
+    final reason = _awardReasonController.text.trim();
+    if (reason.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(s.pleaseEnterReason)),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSubmittingAward = true;
+    });
+
+    try {
+      final updated = await _repository.awardTicket(
+        ticketId: widget.ticketId,
+        userId: _selectedAwardFacultyId!,
+        points: points,
+        reason: reason,
+      );
+
+      if (mounted) {
+        setState(() {
+          _ticket = updated;
+          _isSubmittingAward = false;
+          _awardReasonController.clear();
+        });
+        widget.onUpdated?.call();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(s.pointsUpdatedSuccessfully)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isSubmittingAward = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+        );
+      }
+    }
+  }
+
+  void _showFacultyPicker(AppStrings s, bool isDark, Color textColor, Color labelColor, Color borderColor) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) {
+        String query = '';
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final filtered = _allAssignees.where((a) {
+              if (query.trim().isEmpty) return true;
+              final q = query.toLowerCase();
+              final name = a.name.toLowerCase();
+              final dept = (a.department ?? '').toLowerCase();
+              return name.contains(q) || dept.contains(q);
+            }).toList();
+
+            return Dialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+              child: Container(
+                width: 420,
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          s.selectFacultyPrompt,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: textColor,
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.close, size: 18, color: labelColor),
+                          onPressed: () => Navigator.of(dialogCtx).pop(),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      onChanged: (val) {
+                        setModalState(() {
+                          query = val;
+                        });
+                      },
+                      style: TextStyle(fontSize: 12.5, color: textColor),
+                      decoration: InputDecoration(
+                        hintText: s.searchFacultyPlaceholder,
+                        hintStyle: TextStyle(fontSize: 12, color: labelColor),
+                        prefixIcon: Icon(Icons.search, size: 16, color: labelColor),
+                        isDense: true,
+                        filled: true,
+                        fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: borderColor),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: Color(0xFF3B82F6)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 280),
+                      child: filtered.isEmpty
+                          ? Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Text('No faculty found', style: TextStyle(fontSize: 12, color: labelColor)),
+                              ),
+                            )
+                          : ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: filtered.length,
+                              itemBuilder: (context, idx) {
+                                final f = filtered[idx];
+                                final isSelected = f.id == _selectedAwardFacultyId;
+                                final displayName = f.department?.isNotEmpty == true
+                                    ? '${f.name} · ${f.department}'
+                                    : f.name;
+
+                                return ListTile(
+                                  dense: true,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                                  tileColor: isSelected
+                                      ? (isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9))
+                                      : null,
+                                  title: Text(
+                                    displayName,
+                                    style: TextStyle(
+                                      fontSize: 12.5,
+                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                      color: textColor,
+                                    ),
+                                  ),
+                                  trailing: isSelected
+                                      ? const Icon(Icons.check, size: 16, color: Color(0xFF3B82F6))
+                                      : null,
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedAwardFacultyId = f.id;
+                                    });
+                                    Navigator.of(dialogCtx).pop();
+                                  },
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   void _openEditTicket() async {
@@ -532,11 +740,22 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
     final ticket = _ticket!;
     final isDesktop = MediaQuery.of(context).size.width > 680;
 
+    final authState = context.read<AuthBloc>().state;
+    bool isDirector = false;
+    if (authState is AuthenticatedState) {
+      final role = authState.userProfile.role.toLowerCase();
+      final roleLabel = authState.userProfile.roleLabel.toLowerCase();
+      isDirector = role.contains('director') || roleLabel.contains('director');
+    }
+
     final isAppreciation = ticket.type.toLowerCase() == 'appreciation';
     final isParent = ticket.source.toLowerCase() == 'parent';
     final isClosed = isAppreciation ||
         ticket.status.toLowerCase() == 'resolved' ||
         ticket.status.toLowerCase() == 'rejected' ||
+        ticket.status.toLowerCase() == 'closed' ||
+        ticket.status.toLowerCase() == 'not_valid' ||
+        ticket.status.toLowerCase() == 'not valid' ||
         (ticket.resolution != null && ticket.resolution!.trim().isNotEmpty);
 
     final hasAssignee = ticket.taskAssignees.isNotEmpty ||
@@ -545,9 +764,43 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
             (e.note.toLowerCase().startsWith('assigned to') ||
              e.note.toLowerCase().contains(' — ')));
 
-    final canShowAssignButton = !isAppreciation && !isParent && !isClosed && !hasAssignee && ticket.canManage;
-    final shouldShowCloseLoopSection = !isAppreciation && !isParent && !isClosed && !hasAssignee;
+    final statusLower = ticket.status.toLowerCase();
+    final isStatusNew = statusLower == 'new';
+    final isTerminal = statusLower == 'closed' ||
+        statusLower == 'not_valid' ||
+        statusLower == 'not valid' ||
+        statusLower == 'rejected' ||
+        statusLower == 'resolved';
+
+    // In Director login: Close the loop and Assign to button only when status is new, and not when closed, not valid, reject, or resolved
+    final bool canShowAssignButton;
+    final bool shouldShowCloseLoopSection;
+
+    if (isDirector) {
+      canShowAssignButton = !isAppreciation && isStatusNew && !isTerminal;
+      shouldShowCloseLoopSection = !isAppreciation && isStatusNew && !isTerminal;
+    } else {
+      canShowAssignButton = false;
+      shouldShowCloseLoopSection = false;
+    }
+
+    final hasResolution = isAppreciation ||
+        ticket.status.toLowerCase() == 'resolved' ||
+        ticket.status.toLowerCase() == 'rejected' ||
+        ticket.status.toLowerCase() == 'closed' ||
+        (ticket.resolution != null && ticket.resolution!.trim().isNotEmpty);
+
     final hasEvidence = ticket.attachmentsHidden || ticket.attachments.isNotEmpty;
+
+    final showDirectorRewardCard = isAppreciation &&
+        isDirector &&
+        (statusLower == 'recorded' || ticket.canAward);
+
+    final Widget? rewardCardWidget = (isAppreciation && isDirector)
+        ? (showDirectorRewardCard
+            ? _buildDirectorRewardCard(ticket, s, isDark, textColor, labelColor, borderColor)
+            : _buildRewardCard(ticket, s, isDark, textColor, labelColor, borderColor))
+        : null;
 
     if (isDesktop) {
       return SingleChildScrollView(
@@ -564,7 +817,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
                   _buildDescriptionCard(ticket, isDark, textColor),
                   const SizedBox(height: 18),
                   _buildDetailsSection(ticket, s, isDark, textColor, labelColor),
-                  if (isClosed) ...[
+                  if (hasResolution) ...[
                     const SizedBox(height: 18),
                     _buildClosedResolutionSection(ticket, s, isDark, textColor, labelColor, borderColor),
                   ],
@@ -585,9 +838,9 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (isAppreciation) ...[
-                    _buildRewardCard(ticket, s, isDark, textColor, labelColor, borderColor),
-                  ] else ...[
+                  if (isAppreciation && isDirector && rewardCardWidget != null) ...[
+                    rewardCardWidget,
+                  ] else if (!isAppreciation) ...[
                     _buildLinkedTaskCard(
                       ticket,
                       s,
@@ -619,10 +872,10 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (isAppreciation) ...[
-            _buildRewardCard(ticket, s, isDark, textColor, labelColor, borderColor),
+          if (isAppreciation && isDirector && rewardCardWidget != null) ...[
+            rewardCardWidget,
             const SizedBox(height: 16),
-          ] else ...[
+          ] else if (!isAppreciation) ...[
             _buildLinkedTaskCard(
               ticket,
               s,
@@ -644,7 +897,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
           _buildDescriptionCard(ticket, isDark, textColor),
           const SizedBox(height: 18),
           _buildDetailsSection(ticket, s, isDark, textColor, labelColor),
-          if (isClosed) ...[
+          if (hasResolution) ...[
             const SizedBox(height: 18),
             _buildClosedResolutionSection(ticket, s, isDark, textColor, labelColor, borderColor),
           ],
@@ -916,11 +1169,17 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
 
     if (note.isEmpty || actor.isEmpty) {
       final closeEvent = ticket.events.cast<TicketEventModel?>().firstWhere(
-        (e) => e != null && (e.kind.toLowerCase() == 'rejected' || e.kind.toLowerCase() == 'resolved'),
+        (e) => e != null && (e.kind.toLowerCase() == 'rejected' || e.kind.toLowerCase() == 'resolved' || e.kind.toLowerCase() == 'points_awarded'),
         orElse: () => null,
       );
       if (closeEvent != null) {
-        if (note.isEmpty) note = closeEvent.note;
+        if (note.isEmpty) {
+          if (closeEvent.note.contains(' — ')) {
+            note = closeEvent.note.split(' — ').last;
+          } else {
+            note = closeEvent.note;
+          }
+        }
         if (actor.isEmpty) actor = closeEvent.actor ?? '';
         timestamp ??= closeEvent.createdAt;
       }
@@ -1062,6 +1321,214 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Interactive Reward Card for Appreciation tickets in Director Login
+  Widget _buildDirectorRewardCard(
+    TicketItemModel ticket,
+    AppStrings s,
+    bool isDark,
+    Color textColor,
+    Color labelColor,
+    Color borderColor,
+  ) {
+    final points = ticket.pointsAwarded ?? 50;
+    final targetName = (ticket.awardedUserName != null && ticket.awardedUserName!.isNotEmpty)
+        ? ticket.awardedUserName!
+        : ((ticket.aboutUserName != null && ticket.aboutUserName!.isNotEmpty)
+            ? ticket.aboutUserName!
+            : 'Staff');
+
+    LookupAssigneeModel? selectedFaculty;
+    if (_selectedAwardFacultyId != null) {
+      selectedFaculty = _allAssignees.cast<LookupAssigneeModel?>().firstWhere(
+        (a) => a?.id == _selectedAwardFacultyId,
+        orElse: () => null,
+      );
+    }
+    final facultyDisplay = selectedFaculty != null
+        ? (selectedFaculty.department?.isNotEmpty == true
+            ? '${selectedFaculty.name} · ${selectedFaculty.department}'
+            : selectedFaculty.name)
+        : ((ticket.awardedUserName?.isNotEmpty == true
+            ? ticket.awardedUserName!
+            : (ticket.aboutUserName?.isNotEmpty == true ? ticket.aboutUserName! : s.selectFacultyPrompt)));
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header: REWARD — DIRECTOR ONLY
+          Text(
+            s.rewardDirectorOnly,
+            style: TextStyle(
+              fontSize: 10.5,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.8,
+              color: labelColor,
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // Subtitle: +50 points to Swapnika. Changing this moves the points.
+          RichText(
+            text: TextSpan(
+              style: TextStyle(fontSize: 11.5, color: labelColor),
+              children: [
+                TextSpan(
+                  text: '+$points points to $targetName. ',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  ),
+                ),
+                TextSpan(text: s.changingThisMovesPoints),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // Faculty *
+          Text(
+            s.facultyLabel,
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white70 : const Color(0xFF334155),
+            ),
+          ),
+          const SizedBox(height: 6),
+          InkWell(
+            onTap: () => _showFacultyPicker(s, isDark, textColor, labelColor, borderColor),
+            child: Container(
+              height: 40,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: borderColor),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      facultyDisplay,
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: textColor,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Icon(Icons.keyboard_arrow_down, size: 18, color: labelColor),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // Reward points
+          Text(
+            s.rewardPointsLabel,
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white70 : const Color(0xFF334155),
+            ),
+          ),
+          const SizedBox(height: 6),
+          SizedBox(
+            height: 40,
+            child: TextField(
+              controller: _awardPointsController,
+              keyboardType: TextInputType.number,
+              style: TextStyle(fontSize: 12.5, color: textColor),
+              decoration: InputDecoration(
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                filled: true,
+                fillColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: borderColor),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFF3B82F6)),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // Reason *
+          Text(
+            s.reasonRequiredLabel,
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white70 : const Color(0xFF334155),
+            ),
+          ),
+          const SizedBox(height: 6),
+          TextField(
+            controller: _awardReasonController,
+            maxLines: 3,
+            style: TextStyle(fontSize: 12.5, color: textColor),
+            decoration: InputDecoration(
+              hintText: s.whyIsThisBeingChangedHint,
+              hintStyle: TextStyle(fontSize: 11.5, color: labelColor),
+              filled: true,
+              fillColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: borderColor),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFF3B82F6)),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Update faculty & points Button
+          SizedBox(
+            width: double.infinity,
+            height: 40,
+            child: ElevatedButton(
+              onPressed: _isSubmittingAward ? null : () => _handleAwardPoints(s),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF132A50),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                elevation: 0,
+              ),
+              child: _isSubmittingAward
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    )
+                  : Text(
+                      s.updateFacultyAndPoints,
+                      style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold),
+                    ),
             ),
           ),
         ],

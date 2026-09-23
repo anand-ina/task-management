@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../models/lookup_models.dart';
 import '../models/ticket_insights_model.dart';
@@ -27,6 +28,7 @@ class ComplaintsBloc extends Bloc<ComplaintsEvent, ComplaintsState> {
     on<RejectTicketEvent>(_onRejectTicket);
     on<UpdateTicketEvent>(_onUpdateTicket);
     on<FetchAppreciationsEvent>(_onFetchAppreciations);
+    on<AwardTicketEvent>(_onAwardTicket);
   }
 
   List<TicketItemModel> _applyFilters({
@@ -655,6 +657,29 @@ class ComplaintsBloc extends Bloc<ComplaintsEvent, ComplaintsState> {
       } else {
         emit(ComplaintsErrorState(e.toString().replaceFirst('Exception: ', '')));
       }
+    }
+  }
+
+  Future<void> _onAwardTicket(
+    AwardTicketEvent event,
+    Emitter<ComplaintsState> emit,
+  ) async {
+    try {
+      final updatedTicket = await _repository.awardTicket(
+        ticketId: event.ticketId,
+        userId: event.userId,
+        points: event.points,
+        reason: event.reason,
+      );
+      if (state is AppreciationsLoadedState) {
+        final current = state as AppreciationsLoadedState;
+        final updatedItems = current.items.map((item) {
+          return item.id == event.ticketId ? updatedTicket : item;
+        }).toList();
+        emit(current.copyWith(items: updatedItems));
+      }
+    } catch (e) {
+      debugPrint('[ComplaintsBloc] _onAwardTicket error: $e');
     }
   }
 }

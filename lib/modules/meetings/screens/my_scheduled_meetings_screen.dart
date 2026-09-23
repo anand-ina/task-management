@@ -744,11 +744,15 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final authState = context.watch<AuthBloc>().state;
+    bool isDirector = false;
     bool isTeamLead = false;
     bool isManager = false;
     if (authState is AuthenticatedState) {
       final role = authState.userProfile.role.toLowerCase();
       final roleLabel = authState.userProfile.roleLabel.toLowerCase();
+      if (role.contains('director') || roleLabel.contains('director')) {
+        isDirector = true;
+      }
       if (role.contains('manager') || roleLabel.contains('manager')) {
         isManager = true;
       }
@@ -766,14 +770,16 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
       }
     }
 
+    final isCancelled = item.status.toLowerCase() == 'cancelled' ||
+        item.status.toLowerCase() == 'canceled';
     final isPendingCompletion = item.completionStatus?.toLowerCase() == 'pending';
     final isApprovedCompletion = item.completionStatus?.toLowerCase() == 'approved';
     final isCompleted = item.status.toLowerCase() == 'completed' ||
         isApprovedCompletion ||
         item.completionStatus?.toLowerCase() == 'completed';
-    final showMeetingHappened = item.completionStatus == null || item.completionStatus!.trim().isEmpty;
+    final showMeetingHappened = !isCancelled && (item.completionStatus == null || item.completionStatus!.trim().isEmpty);
     final isAttended = item.myAttended == true || _attendedMeetingIds.contains(item.id) || (item.rawId != null && _attendedMeetingIds.contains(item.rawId));
-    final showRsvp = !isAttended && item.myResponse != null && item.myResponse!.toLowerCase() == 'pending';
+    final showRsvp = !isCancelled && !isAttended && item.myResponse != null && item.myResponse!.toLowerCase() == 'pending';
 
     return Container(
       decoration: BoxDecoration(
@@ -796,10 +802,10 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Left Blue Accent Strip
+              // Left Blue / Red Accent Strip
               Container(
                 width: 4,
-                color: const Color(0xFF1E3A8A),
+                color: isCancelled ? const Color(0xFFDC2626) : const Color(0xFF1E3A8A),
               ),
               Expanded(
                 child: Padding(
@@ -807,8 +813,25 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Top Badge: Completion awaiting approval / Approved
-                      if (isPendingCompletion) ...[
+                      // Top Badge: Cancelled / Completion awaiting approval / Approved
+                      if (isCancelled) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFEE2E2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text(
+                            'Cancelled',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFFDC2626),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                      ] else if (isPendingCompletion) ...[
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
@@ -1000,7 +1023,7 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
                             ),
                             const SizedBox(width: 14),
                           ],
-                          if (!isTeamLead && !isCompleted) ...[
+                          if (!isTeamLead && !isCompleted && !isCancelled) ...[
                             InkWell(
                               onTap: () => _cancelMeetingReminder(context, item),
                               child: const Text(

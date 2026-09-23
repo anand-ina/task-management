@@ -22,6 +22,7 @@ class DashboardLoadedState extends DashboardState {
   final List<BranchModel> branches;
   final BranchModel? selectedBranch;
   final List<TodoItem> todos;
+  final int branchChangeTimestamp;
 
   const DashboardLoadedState({
     required this.dashboardData,
@@ -30,6 +31,7 @@ class DashboardLoadedState extends DashboardState {
     required this.branches,
     this.selectedBranch,
     required this.todos,
+    this.branchChangeTimestamp = 0,
   });
 
   DashboardLoadedState copyWith({
@@ -39,6 +41,7 @@ class DashboardLoadedState extends DashboardState {
     List<BranchModel>? branches,
     BranchModel? selectedBranch,
     List<TodoItem>? todos,
+    int? branchChangeTimestamp,
   }) {
     return DashboardLoadedState(
       dashboardData: dashboardData ?? this.dashboardData,
@@ -47,11 +50,20 @@ class DashboardLoadedState extends DashboardState {
       branches: branches ?? this.branches,
       selectedBranch: selectedBranch ?? this.selectedBranch,
       todos: todos ?? this.todos,
+      branchChangeTimestamp: branchChangeTimestamp ?? this.branchChangeTimestamp,
     );
   }
 
   @override
-  List<Object?> get props => [dashboardData, teamData, notifications, branches, selectedBranch, todos];
+  List<Object?> get props => [
+    dashboardData,
+    teamData,
+    notifications,
+    branches,
+    selectedBranch,
+    todos,
+    branchChangeTimestamp,
+  ];
 }
 
 class DashboardErrorState extends DashboardState {

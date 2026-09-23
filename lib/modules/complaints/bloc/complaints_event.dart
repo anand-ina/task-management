@@ -202,4 +202,21 @@ class FetchAppreciationsEvent extends ComplaintsEvent {
   List<Object?> get props => [category, mine, searchQuery, branchId, source];
 }
 
+class AwardTicketEvent extends ComplaintsEvent {
+  final int ticketId;
+  final int userId;
+  final int points;
+  final String reason;
+
+  const AwardTicketEvent({
+    required this.ticketId,
+    required this.userId,
+    required this.points,
+    required this.reason,
+  });
+
+  @override
+  List<Object?> get props => [ticketId, userId, points, reason];
+}
+
 

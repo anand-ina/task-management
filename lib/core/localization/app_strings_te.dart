@@ -947,6 +947,52 @@ class AppStringsTe extends AppStrings {
   String get saveSettingsButton => 'సెట్టింగ్‌లు సేవ్ చేయండి';
   @override
   String get resetToDefaultsButton => 'డిఫాల్ట్‌లకు పునరుద్ధరించండి';
+  @override
+  String get discardChangesButton => 'మార్పులను రద్దు చేయండి';
+  @override
+  String get typeColumnHeader => 'రకం';
+  @override
+  String get rupeeAmountColumnHeader => '₹ మొత్తం';
+  @override
+  String get pointsColumnHeader => 'పాయింట్లు';
+  @override
+  String get deleteFineTypeConfirmTitle => 'జరిమానా రకాన్ని తొలగించండి';
+  @override
+  String get deleteRewardTypeConfirmTitle => 'బహుమతి రకాన్ని తొలగించండి';
+  @override
+  String get deleteButton => 'తొలగించండి';
+  @override
+  String deleteFineTypeConfirmMessage(String label) =>
+      '"$label" జరిమానా రకాన్ని తొలగించాలనుకుంటున్నారా? ఇప్పటికే జారీ చేసిన జరిమానాలు/బహుమతులు ప్రభావితం కావు.';
+  @override
+  String deleteRewardTypeConfirmMessage(String label) =>
+      '"$label" బహుమతి రకాన్ని తొలగించాలనుకుంటున్నారా? ఇప్పటికే జారీ చేసిన జరిమానాలు/బహుమతులు ప్రభావితం కావు.';
+  @override
+  String get addFineTypeDialogTitle => 'జరిమానా రకం జోడించు';
+  @override
+  String get addRewardTypeDialogTitle => 'బహుమతి రకం జోడించు';
+  @override
+  String get policyNameLabel => 'విధానం పేరు / రకం';
+  @override
+  String get policyAmountLabel => 'మొత్తం (₹)';
+  @override
+  String get policyPointsLabel => 'పాయింట్లు';
+  @override
+  String get settingsSavedSuccessfully => 'సెట్టింగ్‌లు విజయవంతంగా సేవ్ చేయబడ్డాయి';
+  @override
+  String get fineTypeAddedSuccessfully => 'జరిమానా రకం విజయవంతంగా జోడించబడింది';
+  @override
+  String get rewardTypeAddedSuccessfully => 'బహుమతి రకం విజయవంతంగా జోడించబడింది';
+  @override
+  String get fineTypeDeletedSuccessfully => 'జరిమానా రకం విజయవంతంగా తొలగించబడింది';
+  @override
+  String get rewardTypeDeletedSuccessfully => 'బహుమతి రకం విజయవంతంగా తొలగించబడింది';
+  @override
+  String get noChangesToSave => 'సేవ్ చేయడానికి ఎటువంటి మార్పులు లేవు';
+  @override
+  String get pleaseEnterValidLabel => 'దయచేసి సరైన పేరును నమోదు చేయండి';
+  @override
+  String get pleaseEnterValidAmount => 'దయచేసి సరైన మొత్తాన్ని నమోదు చేయండి';
 
   @override
   String get staffTitle => 'సిబ్బంది';
@@ -1850,5 +1896,92 @@ class AppStringsTe extends AppStrings {
   String get lastRecordedLabel => 'చివరి';
   @override
   String get branchScopeLabel => 'బ్రాంచ్';
+
+  // ── Clone Task ─────────────────────────────────────────────────────────────
+  @override
+  String get cloneTaskTitle => 'టాస్క్ క్లోన్ చేయండి';
+  @override
+  String get cloneTaskBannerHint => 'సేవ్ చేసినప్పుడు కొత్త టాస్క్ ID కేటాయించబడుతుంది. అవసరమైనవి మార్చి సృష్టించండి.';
+  @override
+  String get taskIdLabel => 'టాస్క్ ID';
+  @override
+  String get taskTitleLabel => 'టాస్క్ శీర్షిక';
+  @override
+  String get taskDescLabel => 'టాస్క్ వివరణ';
+
+  @override
+  String get schoolBranchLabel => 'పాఠశాల శాఖ';
+
+  @override
+  String get targetDateLabel => 'లక్ష్య తేదీ';
+
+  @override
+  String get confidentialLabel => 'గోప్యమైన';
+  @override
+  String get generalLabel => 'సాధారణ';
+  @override
+  String get makeRecurringLabel => 'దీన్ని పునరావృత టాస్క్‌గా చేయండి';
+  @override
+  String get assignedToLabel => 'అప్పగించిన వ్యక్తి';
+  @override
+  String get searchUsersHint => 'వినియోగదారులను వెతకండి...';
+
+  @override
+  String get addFilesButton => 'ఫైళ్ళు జోడించండి';
+  @override
+  String get taskChecklistLabel => 'టాస్క్ చెక్‌లిస్ట్';
+  @override
+  String get generateButton => 'రూపొందించు';
+  @override
+  String get addItemButton => '+ అంశం జోడించు';
+  @override
+  String get remarksLabel => 'వ్యాఖ్యలు';
+  @override
+  String get saveDraftButton => 'డ్రాఫ్ట్ సేవ్ చేయి';
+  @override
+  String get saveTaskButton => 'టాస్క్ సేవ్ చేయి';
+
+  @override
+  String get statusLabel => 'స్థితి';
+
+  // ── Status Report PDF ──────────────────────────────────────────────────────
+  @override
+  String get savePdfButton => 'PDF సేవ్ చేయి';
+  @override
+  String get statusReportPdfTitle => 'స్టేటస్ నివేదిక';
+
+
+  @override
+  String get submittedAtLabel => 'సమర్పించిన సమయం';
+  @override
+  String get exportedOnLabel => 'నిర్యాత చేసిన తేదీ';
+  @override
+  String get unlockReportButton => 'నివేదిక అన్‌లాక్ చేయి';
+ 
+  // ── Appreciation Award Strings ─────────────────────────────────────────────
+  @override
+  String get rewardDirectorOnly => 'రివార్డ్ — డైరెక్టర్‌కు మాత్రమే';
+  @override
+  String get updateFacultyAndPoints => 'ఫ్యాకల్టీ & పాయింట్లను నవీకరించండి';
+  @override
+  String get rewardPointsLabel => 'రివార్డ్ పాయింట్లు';
+  @override
+  String get facultyLabel => 'ఫ్యాకల్టీ *';
+  @override
+  String get reasonRequiredLabel => 'కారణం *';
+  @override
+  String get whyIsThisBeingChangedHint => 'ఇది ఎందుకు మార్చబడుతోంది?';
+  @override
+  String get pointsUpdatedSuccessfully => 'పాయింట్లు విజయవంతంగా నవీకరించబడ్డాయి.';
+  @override
+  String get pleaseEnterPoints => 'దయచేసి రివార్డ్ పాయింట్లను నమోదు చేయండి.';
+  @override
+  String get pleaseEnterReason => 'దయచేసి దీనిని మార్చడానికి గల కారణాన్ని నమోదు చేయండి.';
+  @override
+  String get selectFacultyPrompt => 'దయచేసి ఫ్యాకల్టీని ఎంచుకోండి.';
+  @override
+  String get searchFacultyPlaceholder => 'ఫ్యాకల్టీని శోధించండి...';
+  @override
+  String get changingThisMovesPoints => 'దీన్ని మార్చడం వలన పాయింట్లు బదిలీ అవుతాయి.';
 }
 

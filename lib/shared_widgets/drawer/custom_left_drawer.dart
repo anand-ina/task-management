@@ -125,6 +125,8 @@ class CustomLeftDrawer extends StatelessWidget {
       }
     }
 
+    final isMobile = MediaQuery.of(context).size.width < 800;
+
     return Drawer(
       backgroundColor: isDark ? const Color(0xFF0D1424) : Colors.white,
       child: SafeArea(
@@ -418,6 +420,14 @@ class CustomLeftDrawer extends StatelessWidget {
                           isSelected: currentRoute == '/approvals/budget',
                           onTap: () => _navigate(context, '/approvals/budget'),
                         ),
+                        if (!isManager)
+                          _buildNavItem(
+                            context,
+                            icon: Icons.military_tech_outlined,
+                            title: s.appreciationApprovals,
+                            isSelected: currentRoute == '/approvals/appreciations',
+                            onTap: () => _navigate(context, '/approvals/appreciations'),
+                          ),
                       ],
                     ),
 
@@ -426,6 +436,14 @@ class CustomLeftDrawer extends StatelessWidget {
                       context,
                       title: s.meetingsHeader,
                       children: [
+                        if (isDirector)
+                          _buildNavItem(
+                            context,
+                            icon: Icons.person_outline_rounded,
+                            title: s.monthlyOneOnOnePending,
+                            isSelected: currentRoute == '/one-on-one-pending' || currentRoute == '/one-on-one',
+                            onTap: () => _navigate(context, '/one-on-one-pending'),
+                          ),
                         _buildNavItem(
                           context,
                           icon: Icons.access_time_rounded,
@@ -492,59 +510,17 @@ class CustomLeftDrawer extends StatelessWidget {
                           isSelected: currentRoute == '/fines-rewards' || currentRoute == '/fines',
                           onTap: () => _navigate(context, '/fines-rewards'),
                         ),
+                        if (isDirector)
+                          _buildNavItem(
+                            context,
+                            icon: Icons.settings_outlined,
+                            title: s.settings,
+                            isSelected: currentRoute == '/performance-settings' ||
+                                currentRoute == '/perf-settings',
+                            onTap: () => _navigate(context, '/performance-settings'),
+                          ),
                       ],
                     ),
-
-                    // CARD 10: ADMINISTRATION (Director Only)
-                    if (isDirector)
-                      _buildSectionCard(
-                        context,
-                        title: s.administrationHeader,
-                        children: [
-                          _buildNavItem(
-                            context,
-                            icon: Icons.person_outline_rounded,
-                            title: s.userManagement,
-                            isSelected: currentRoute == '/staff',
-                            onTap: () => _navigate(context, '/staff'),
-                          ),
-                          _buildNavItem(
-                            context,
-                            icon: Icons.folder_open_outlined,
-                            title: s.branchesAndDepartments,
-                            isSelected: currentRoute == '/admin/access',
-                            onTap: () => _navigate(context, '/admin/access'),
-                          ),
-                          _buildNavItem(
-                            context,
-                            icon: Icons.alt_route_rounded,
-                            title: s.reportingStructure,
-                            isSelected: currentRoute == '/admin/reporting',
-                            onTap: () => _navigate(context, '/admin/reporting'),
-                          ),
-                          _buildNavItem(
-                            context,
-                            icon: Icons.shield_outlined,
-                            title: s.rolesAndPermissions,
-                            isSelected: currentRoute == '/admin/roles',
-                            onTap: () => _navigate(context, '/admin/roles'),
-                          ),
-                          _buildNavItem(
-                            context,
-                            icon: Icons.tag_rounded,
-                            title: s.taskIdSettings,
-                            isSelected: currentRoute == '/admin/task-ids',
-                            onTap: () => _navigate(context, '/admin/task-ids'),
-                          ),
-                          _buildNavItem(
-                            context,
-                            icon: Icons.receipt_long_outlined,
-                            title: s.auditLog,
-                            isSelected: currentRoute == '/admin/audit',
-                            onTap: () => _navigate(context, '/admin/audit'),
-                          ),
-                        ],
-                      ),
 
                     // CARD 11: ORGANIZATION
                     _buildSectionCard(
@@ -606,27 +582,21 @@ class CustomLeftDrawer extends StatelessWidget {
                     ),
 
                     // CARD 14: AI & SETTINGS
-                    _buildSectionCard(
-                      context,
-                      title: s.aiAndSettingsHeader,
-                      children: [
-                        _buildNavItem(
-                          context,
-                          icon: Icons.auto_awesome_rounded,
-                          title: s.sutraAi,
-                          iconColor: Colors.amber,
-                          isSelected: currentRoute == '/sutra',
-                          onTap: () => _navigate(context, '/sutra'),
-                        ),
-                        _buildNavItem(
-                          context,
-                          icon: Icons.tune_rounded,
-                          title: s.myPreferences,
-                          isSelected: currentRoute == '/my-preferences' || currentRoute == '/preferences',
-                          onTap: () => _navigate(context, '/my-preferences'),
-                        ),
-                      ],
-                    ),
+                    if (!isManager)
+                      _buildSectionCard(
+                        context,
+                        title: s.sutraAi,
+                        children: [
+                          _buildNavItem(
+                            context,
+                            icon: Icons.auto_awesome_rounded,
+                            title: s.sutraAi,
+                            iconColor: Colors.amber,
+                            isSelected: currentRoute == '/sutra',
+                            onTap: () => _navigate(context, '/sutra'),
+                          ),
+                        ],
+                      ),
                   ],
 
                   const SizedBox(height: 12),

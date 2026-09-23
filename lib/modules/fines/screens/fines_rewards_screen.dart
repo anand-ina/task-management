@@ -469,7 +469,7 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: fines.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 10),
+          separatorBuilder: (context, index) => const SizedBox(height: 10),
           itemBuilder: (context, index) {
             final item = fines[index];
             final isReward = item.type.toLowerCase() == 'reward';

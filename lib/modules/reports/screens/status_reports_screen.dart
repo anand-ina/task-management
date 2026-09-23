@@ -6,11 +6,14 @@ import '../../../core/localization/app_strings.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/dialogs/new_status_report_dialog.dart';
+import '../../../shared_widgets/dialogs/status_report_view_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../../shared_widgets/status_report_pdf_service.dart';
 import '../bloc/status_reports_bloc.dart';
 import '../bloc/status_reports_event.dart';
 import '../bloc/status_reports_state.dart';
 import '../models/status_report_model.dart';
+import '../repository/reports_repository.dart';
 
 class StatusReportsScreen extends StatefulWidget {
   const StatusReportsScreen({super.key});
@@ -21,6 +24,22 @@ class StatusReportsScreen extends StatefulWidget {
 
 class _StatusReportsScreenState extends State<StatusReportsScreen> {
   int _selectedTabIndex = 0; // 0: All, 1: Daily (DSR), 2: Weekly (WSR), 3: Monthly (MSR)
+  final ReportsRepository _repository = ReportsRepository();
+  final Set<int> _pdfLoadingIds = {};
+
+  Future<void> _savePdf(BuildContext context, StatusReportItemModel item) async {
+    if (_pdfLoadingIds.contains(item.id)) return;
+    setState(() => _pdfLoadingIds.add(item.id));
+    try {
+      final detail = await _repository.getReportDetail(item.id);
+      final report = detail ?? item;
+      if (context.mounted) {
+        await StatusReportPdfService.generateAndPrint(context, report);
+      }
+    } finally {
+      if (mounted) setState(() => _pdfLoadingIds.remove(item.id));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -212,8 +231,11 @@ class _StatusReportsScreenState extends State<StatusReportsScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isSubmitted = item.status.toLowerCase() == 'submitted';
     final dateStr = _formatReportDate(item.periodDate);
+    final isPdfLoading = _pdfLoadingIds.contains(item.id);
 
-    return Container(
+    return GestureDetector(
+      onTap: () => StatusReportViewDialog.show(context, item),
+      child: Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -313,11 +335,6 @@ class _StatusReportsScreenState extends State<StatusReportsScreen> {
                 ],
               ),
 
-              // Locked Badge
-
-
-              // const Spacer(),
-
               // Period Date on Right
               Text(
                 'Period: $dateStr',
@@ -339,26 +356,63 @@ class _StatusReportsScreenState extends State<StatusReportsScreen> {
           ),
           const SizedBox(height: 8),
 
-          // Footer Row
-          Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
+          // Footer Row: submitted info + Save PDF button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                isSubmitted
-                    ? 'Submitted ${_formatSubmittedAt(item.submittedAt)}'
-                    : 'Draft',
-                style: const TextStyle(fontSize: 10, color: Colors.grey),
-              ),
-               if (item.isLocked)
-                Text(
-                  s.lockedContactDirector,
-                  style: const TextStyle(fontSize: 10, color: Colors.grey),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isSubmitted
+                          ? 'Submitted ${_formatSubmittedAt(item.submittedAt)}'
+                          : 'Draft',
+                      style: const TextStyle(fontSize: 10, color: Colors.grey),
+                    ),
+                    if (item.isLocked)
+                      Text(
+                        s.lockedContactDirector,
+                        style: const TextStyle(fontSize: 10, color: Colors.grey),
+                      ),
+                  ],
                 ),
+              ),
+              // Save PDF button
+              GestureDetector(
+                onTap: () => _savePdf(context, item),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+                  ),
+                  child: isPdfLoading
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Row(
+                          children: [
+                            const Icon(Icons.picture_as_pdf_outlined, size: 13),
+                            const SizedBox(width: 4),
+                            Text(
+                              s.savePdfButton,
+                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                ),
+              ),
             ],
           ),
         ],
       ),
+    ),
     );
   }
 

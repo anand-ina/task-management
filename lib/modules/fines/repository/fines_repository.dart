@@ -107,11 +107,115 @@ class FinesRepository {
   }
 
   Future<List<FineTypeModel>> getFineTypes() async {
-    final response = await _dioClient.dio.get(ApiConstants.finesTypes);
-    final res = _safeParse(response.data);
-    if (res is List) {
-      return res.map((e) => FineTypeModel.fromJson(e is Map<String, dynamic> ? e : {})).toList();
+    try {
+      final response = await _dioClient.dio.get(ApiConstants.finesTypes);
+      _logServiceCall(
+        serviceMethod: 'getFineTypes',
+        url: ApiConstants.finesTypes,
+        response: response.data,
+      );
+      final res = _safeParse(response.data);
+      if (res is List) {
+        return res.map((e) => FineTypeModel.fromJson(e is Map<String, dynamic> ? e : {})).toList();
+      }
+      return [];
+    } catch (e) {
+      _logServiceCall(
+        serviceMethod: 'getFineTypes',
+        url: ApiConstants.finesTypes,
+        error: e.toString(),
+      );
+      rethrow;
     }
-    return [];
+  }
+
+  Future<FineTypeModel> addFineType({
+    required String kind,
+    required String label,
+    required dynamic amount,
+  }) async {
+    final payload = {
+      'kind': kind,
+      'label': label,
+      'amount': amount,
+    };
+    try {
+      final response = await _dioClient.dio.post(
+        ApiConstants.finesTypes,
+        data: payload,
+      );
+      _logServiceCall(
+        serviceMethod: 'addFineType',
+        url: ApiConstants.finesTypes,
+        requestBody: payload,
+        response: response.data,
+      );
+      final res = _safeParse(response.data);
+      if (res is Map<String, dynamic>) {
+        return FineTypeModel.fromJson(res);
+      }
+      return FineTypeModel(id: 0, kind: kind, label: label, amount: amount.toString());
+    } catch (e) {
+      _logServiceCall(
+        serviceMethod: 'addFineType',
+        url: ApiConstants.finesTypes,
+        requestBody: payload,
+        error: e.toString(),
+      );
+      rethrow;
+    }
+  }
+
+  Future<bool> deleteFineType(int id) async {
+    final url = '${ApiConstants.finesTypes}/$id';
+    try {
+      final response = await _dioClient.dio.delete(url);
+      _logServiceCall(
+        serviceMethod: 'deleteFineType',
+        url: url,
+        response: response.data,
+      );
+      final res = _safeParse(response.data);
+      if (res is Map<String, dynamic>) {
+        return res['ok'] == true;
+      }
+      return response.statusCode == 200;
+    } catch (e) {
+      _logServiceCall(
+        serviceMethod: 'deleteFineType',
+        url: url,
+        error: e.toString(),
+      );
+      rethrow;
+    }
+  }
+
+  Future<List<FineTypeModel>> updateFineTypes(List<Map<String, dynamic>> types) async {
+    final payload = {'types': types};
+    try {
+      final response = await _dioClient.dio.put(
+        ApiConstants.finesTypes,
+        data: payload,
+      );
+      _logServiceCall(
+        serviceMethod: 'updateFineTypes',
+        url: ApiConstants.finesTypes,
+        requestBody: payload,
+        response: response.data,
+      );
+      final res = _safeParse(response.data);
+      if (res is List) {
+        return res.map((e) => FineTypeModel.fromJson(e is Map<String, dynamic> ? e : {})).toList();
+      }
+      return await getFineTypes();
+    } catch (e) {
+      _logServiceCall(
+        serviceMethod: 'updateFineTypes',
+        url: ApiConstants.finesTypes,
+        requestBody: payload,
+        error: e.toString(),
+      );
+      rethrow;
+    }
   }
 }

@@ -64,7 +64,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
     String userRoleLabel = '';
     String deptName = '';
     String userBranchName = '';
-    bool hasMultiBranchAccess = true;
+    bool hasMultiBranchAccess = false;
 
     if (authState is AuthenticatedState) {
       final user = authState.userProfile;
@@ -73,31 +73,10 @@ class _CustomAppBarState extends State<CustomAppBar> {
       userRoleLabel = user.roleLabel.isNotEmpty ? user.roleLabel : user.role;
       deptName = user.department?.name ?? '';
       userBranchName = user.firstBranchName.isNotEmpty ? user.firstBranchName : (user.branch?.name ?? '');
-      final role = user.role.toLowerCase();
-      final roleLabel = user.roleLabel.toLowerCase();
-      if (role.contains('director') || roleLabel.contains('director')) {
-        isDirector = true;
-      }
-      if (role.contains('admin') || roleLabel.contains('admin')) {
-        isAdmin = true;
-      }
-      if (role.contains('principal') ||
-          role.contains('center_head') ||
-          role.contains('campus_head') ||
-          role.contains('center head') ||
-          role.contains('campus head') ||
-          roleLabel.contains('principal') ||
-          roleLabel.contains('center head') ||
-          roleLabel.contains('campus head')) {
-        isPrincipal = true;
-      }
-      if (isDirector || isPrincipal) {
-        hasMultiBranchAccess = true;
-      } else if (isAdmin) {
-        hasMultiBranchAccess = true;
-      } else if (user.scope?.isAll == false || (user.branch != null && !user.branch!.isAll)) {
-        hasMultiBranchAccess = false;
-      }
+      isDirector = user.isDirector;
+      isPrincipal = user.isPrincipal;
+      isAdmin = user.isAdmin;
+      hasMultiBranchAccess = user.hasMultiBranchAccess;
     }
 
     final initialChar = userName.isNotEmpty ? userName[0].toUpperCase() : 'V';
@@ -352,8 +331,8 @@ class _CustomAppBarState extends State<CustomAppBar> {
                 ),
                 const SizedBox(width: 6),
 
-                // Branch Selector: if branch list inside more then one or isPrincipal or isDirector then maintain drop down otherwise direct branch name in 2 lines text
-                if (branches.length > 1 || isPrincipal || isDirector)
+                // Branch Selector: if hasMultiBranchAccess and (branches > 1 or isPrincipal or isDirector), show dropdown; otherwise direct branch name
+                if (hasMultiBranchAccess && (branches.length > 1 || isPrincipal || isDirector))
                   Flexible(
                     child: Container(
                       height: 36,
@@ -394,7 +373,12 @@ class _CustomAppBarState extends State<CustomAppBar> {
                           }).toList(),
                           onChanged: (val) {
                             if (val != null) {
-                              context.read<DashboardBloc>().add(SelectBranchEvent(val));
+                              context.read<DashboardBloc>().add(
+                                SelectBranchEvent(
+                                  val,
+                                  mine: isDirector ? null : 1,
+                                ),
+                              );
                             }
                           },
                         ),

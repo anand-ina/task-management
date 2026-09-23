@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/dio_client.dart';
@@ -22,9 +23,31 @@ class DashboardRepository {
     return data;
   }
 
+  void _logServiceCall({
+    required String serviceMethod,
+    required String url,
+    dynamic payload,
+    dynamic response,
+  }) {
+    debugPrint('---------------- [DashboardService: $serviceMethod] ----------------');
+    debugPrint('Service URL: $url');
+    if (payload != null) {
+      debugPrint('Service Payload / QueryParams: $payload');
+    }
+    if (response != null) {
+      debugPrint('Service Response: $response');
+    }
+    debugPrint('-------------------------------------------------------------------');
+  }
+
   Future<NotificationsResponse> getNotifications() async {
     try {
       final response = await _dioClient.dio.get(ApiConstants.notifications);
+      _logServiceCall(
+        serviceMethod: 'getNotifications',
+        url: ApiConstants.notifications,
+        response: response.data,
+      );
       final data = _safeParse(response.data);
       if (data is Map<String, dynamic>) {
         return NotificationsResponse.fromJson(data);
@@ -39,12 +62,20 @@ class DashboardRepository {
       if (mine != null) {
         queryParams['mine'] = mine;
       }
-      if (branchId != null && branchId > 0) {
+      // When mine == 1 (e.g. Manager login), suppress branch_id and branchId
+      if (mine != 1 && branchId != null && branchId > 0) {
         queryParams['branch_id'] = branchId;
+        queryParams['branchId'] = branchId;
       }
       final response = await _dioClient.dio.get(
         ApiConstants.dashboard,
         queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      );
+      _logServiceCall(
+        serviceMethod: 'getDashboardData',
+        url: ApiConstants.dashboard,
+        payload: queryParams,
+        response: response.data,
       );
       final data = _safeParse(response.data);
       if (data is Map<String, dynamic>) {
@@ -54,13 +85,21 @@ class DashboardRepository {
     return DashboardData.fromJson({});
   }
 
-  Future<TeamData> getTeamData({int? branchId}) async {
+  Future<TeamData> getTeamData({int? branchId, int? mine}) async {
     try {
       String url = ApiConstants.dashboardTeam;
-      if (branchId != null && branchId > 0) {
-        url = '$url?branch_id=$branchId';
+      Map<String, dynamic>? queryParams;
+      // When mine == 1 (e.g. Manager login), suppress branch_id and branchId
+      if (mine != 1 && branchId != null && branchId > 0) {
+        queryParams = {'branch_id': branchId, 'branchId': branchId};
       }
-      final response = await _dioClient.dio.get(url);
+      final response = await _dioClient.dio.get(url, queryParameters: queryParams);
+      _logServiceCall(
+        serviceMethod: 'getTeamData',
+        url: url,
+        payload: queryParams,
+        response: response.data,
+      );
       final data = _safeParse(response.data);
       if (data is Map<String, dynamic>) {
         return TeamData.fromJson(data);

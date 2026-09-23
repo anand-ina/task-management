@@ -10,12 +10,26 @@ import '../bloc/complaints_bloc.dart';
 import '../bloc/complaints_event.dart';
 import '../bloc/complaints_state.dart';
 import '../dialogs/raise_complaint_dialog.dart';
+import '../dialogs/ticket_details_dialog.dart';
 import '../models/ticket_model.dart';
 import 'complaints_history_insights_screen.dart';
 import 'suggestion_box_entry_screen.dart';
 
 class ComplaintsScreen extends StatefulWidget {
-  const ComplaintsScreen({super.key});
+  final int? initialTicketId;
+  final String? initialSearchQuery;
+  final String? initialStatusTab;
+  final String? initialTypeFilter;
+  final String? initialSourceFilter;
+
+  const ComplaintsScreen({
+    super.key,
+    this.initialTicketId,
+    this.initialSearchQuery,
+    this.initialStatusTab,
+    this.initialTypeFilter,
+    this.initialSourceFilter,
+  });
 
   @override
   State<ComplaintsScreen> createState() => _ComplaintsScreenState();
@@ -25,16 +39,46 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
 
-  final List<String> _tabs = ['open', 'overdue', 'resolved', 'all'];
+  final List<String> _tabs = ['all', 'open', 'overdue', 'resolved'];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    int initialTabIndex = 1; // default to 'open'
+    if (widget.initialStatusTab != null) {
+      final s = widget.initialStatusTab!.toLowerCase();
+      if (s == 'all' || s == 'everything') {
+        initialTabIndex = 0;
+      } else if (s == 'open') {
+        initialTabIndex = 1;
+      } else if (s == 'overdue') {
+        initialTabIndex = 2;
+      } else if (s == 'resolved') {
+        initialTabIndex = 3;
+      }
+    }
+    _tabController = TabController(length: 4, vsync: this, initialIndex: initialTabIndex);
     _tabController.addListener(_handleTabSelection);
 
+    if (widget.initialSearchQuery != null && widget.initialSearchQuery!.isNotEmpty) {
+      _searchController.text = widget.initialSearchQuery!;
+    }
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _dispatchFetchWithCurrentFilters(status: 'open');
+      final initialStatus = widget.initialStatusTab ?? 'open';
+      _dispatchFetchWithCurrentFilters(
+        status: initialStatus,
+        type: widget.initialTypeFilter,
+        source: widget.initialSourceFilter,
+        query: widget.initialSearchQuery,
+      );
+      if (widget.initialTicketId != null) {
+        TicketDetailsDialog.show(
+          context,
+          ticketId: widget.initialTicketId!,
+          onUpdated: () => _dispatchFetchWithCurrentFilters(),
+        );
+      }
     });
   }
 
@@ -286,7 +330,24 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
           currentStatus = state.statusTab;
         }
 
+        final totalCount = counts.allTickets > 0
+            ? counts.allTickets
+            : (counts.newCount + counts.inProgress + counts.overdue + counts.resolvedMonth);
+
         final cards = [
+          _buildStatCard(
+            count: totalCount.toString(),
+            label: s.statEverythingReceived,
+            accentColor: const Color(0xFF1E293B),
+            isDark: isDark,
+            isSelected: currentStatus == 'all' || currentStatus == 'everything',
+            onTap: () {
+              if (_tabController.index != 0) {
+                _tabController.animateTo(0);
+              }
+              _dispatchFetchWithCurrentFilters(status: 'all');
+            },
+          ),
           _buildStatCard(
             count: counts.newCount.toString(),
             label: s.statNewNotPickedUp,
@@ -316,8 +377,10 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
             isDark: isDark,
             isSelected: currentStatus == 'overdue',
             onTap: () {
-              final newStatus = currentStatus == 'overdue' ? _tabs[_tabController.index] : 'overdue';
-              _dispatchFetchWithCurrentFilters(status: newStatus);
+              if (_tabController.index != 2) {
+                _tabController.animateTo(2);
+              }
+              _dispatchFetchWithCurrentFilters(status: 'overdue');
             },
           ),
           _buildStatCard(
@@ -327,19 +390,10 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
             isDark: isDark,
             isSelected: currentStatus == 'resolved',
             onTap: () {
-              final newStatus = currentStatus == 'resolved' ? _tabs[_tabController.index] : 'resolved';
-              _dispatchFetchWithCurrentFilters(status: newStatus);
-            },
-          ),
-          _buildStatCard(
-            count: counts.pendingReward.toString(),
-            label: s.statAwaitingDirectorApproval,
-            accentColor: const Color(0xFFB91C1C),
-            isDark: isDark,
-            isSelected: currentStatus == 'pending_reward',
-            onTap: () {
-              final newStatus = currentStatus == 'pending_reward' ? _tabs[_tabController.index] : 'pending_reward';
-              _dispatchFetchWithCurrentFilters(status: newStatus);
+              if (_tabController.index != 3) {
+                _tabController.animateTo(3);
+              }
+              _dispatchFetchWithCurrentFilters(status: 'resolved');
             },
           ),
           _buildStatCard(
@@ -385,7 +439,9 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
           color: isDark ? const Color(0xFF1E293B) : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? accentColor : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+            color: isSelected
+                ? (accentColor == const Color(0xFF1E293B) && isDark ? Colors.white : accentColor)
+                : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
@@ -403,7 +459,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
               width: double.infinity,
               height: 3,
               decoration: BoxDecoration(
-                color: accentColor,
+                color: accentColor == const Color(0xFF1E293B) && isDark ? Colors.white70 : accentColor,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -413,7 +469,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: accentColor,
+                color: accentColor == const Color(0xFF1E293B) && isDark ? Colors.white : accentColor,
               ),
             ),
             const SizedBox(height: 4),
@@ -454,10 +510,10 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
         labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
         unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal, fontSize: 13),
         tabs: [
+          Tab(text: s.tabEverything),
           Tab(text: s.tabOpen),
           Tab(text: s.tabPastTargetDate),
           Tab(text: s.tabResolved),
-          Tab(text: s.tabAll),
         ],
       ),
     );
@@ -685,136 +741,144 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
     final statusBg = _getStatusBgColor(ticket.status, isDark);
     final statusText = _getStatusTextColor(ticket.status);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-        ),
+    return InkWell(
+      onTap: () => TicketDetailsDialog.show(
+        context,
+        ticketId: ticket.id,
+        onUpdated: () => _dispatchFetchWithCurrentFilters(),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Row 1: Ticket No & Status
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                ticket.ticketNo,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.3,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusBg,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  ticket.status.toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 10,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Row 1: Ticket No & Status
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  ticket.ticketNo,
+                  style: const TextStyle(
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: statusText,
+                    letterSpacing: 0.3,
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: statusBg,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    ticket.status.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: statusText,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
 
-          // Row 2: Type Chip & Date
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEE2E2),
-                  borderRadius: BorderRadius.circular(4),
+            // Row 2: Type Chip & Date
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEE2E2),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    ticket.type,
+                    style: const TextStyle(fontSize: 11, color: Color(0xFF991B1B), fontWeight: FontWeight.w600),
+                  ),
                 ),
-                child: Text(
-                  ticket.type,
-                  style: const TextStyle(fontSize: 11, color: Color(0xFF991B1B), fontWeight: FontWeight.w600),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    _formatDate(ticket.receivedAt),
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+
+            // Row 3: From / Student
+            Text(
+              '${s.colFrom}: ${ticket.source.toUpperCase()} ${ticket.isAnonymous ? "· Anon" : ""} | ${s.colStudent}: ${ticket.studentName ?? "—"} · ${ticket.classSection ?? ""}',
+              style: TextStyle(
+                fontSize: 12,
+                color: isDark ? Colors.grey.shade300 : const Color(0xFF334155),
+              ),
+            ),
+            const SizedBox(height: 6),
+
+            // Row 4: Description
+            if (ticket.description.isNotEmpty) ...[
+              Text(
+                ticket.description,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                  color: isDark ? Colors.white70 : Colors.black87,
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  _formatDate(ticket.receivedAt),
-                  overflow: TextOverflow.ellipsis,
+              const SizedBox(height: 8),
+            ],
+
+            const Divider(height: 1),
+            const SizedBox(height: 8),
+
+            // Row 5: Owner & Task
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.person_outline_rounded, size: 14, color: Colors.grey.shade500),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${s.colWith}: ${ticket.ownerName ?? "—"}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: isDark ? Colors.grey.shade300 : const Color(0xFF334155),
+                      ),
+                    ),
+                  ],
+                ),
+                Text(
+                  '${s.colTask}: ${ticket.taskNo ?? "—"}',
                   style: TextStyle(
                     fontSize: 11,
+                    fontWeight: FontWeight.w600,
                     color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-
-          // Row 3: From / Student
-          Text(
-            '${s.colFrom}: ${ticket.source.toUpperCase()} ${ticket.isAnonymous ? "· Anon" : ""} | ${s.colStudent}: ${ticket.studentName ?? "—"} · ${ticket.classSection ?? ""}',
-            style: TextStyle(
-              fontSize: 12,
-              color: isDark ? Colors.grey.shade300 : const Color(0xFF334155),
+              ],
             ),
-          ),
-          const SizedBox(height: 6),
-
-          // Row 4: Description
-          if (ticket.description.isNotEmpty) ...[
-            Text(
-              ticket.description,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 12,
-                fontStyle: FontStyle.italic,
-                color: isDark ? Colors.white70 : Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 8),
           ],
-
-          const Divider(height: 1),
-          const SizedBox(height: 8),
-
-          // Row 5: Owner & Task
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.person_outline_rounded, size: 14, color: Colors.grey.shade500),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${s.colWith}: ${ticket.ownerName ?? "—"}',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      color: isDark ? Colors.grey.shade300 : const Color(0xFF334155),
-                    ),
-                  ),
-                ],
-              ),
-              Text(
-                '${s.colTask}: ${ticket.taskNo ?? "—"}',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
-                ),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -853,11 +917,23 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
             final statusText = _getStatusTextColor(ticket.status);
 
             return DataRow(
+              onSelectChanged: (_) => TicketDetailsDialog.show(
+                context,
+                ticketId: ticket.id,
+                onUpdated: () => _dispatchFetchWithCurrentFilters(),
+              ),
               cells: [
                 DataCell(
-                  Text(
-                    ticket.ticketNo,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                  InkWell(
+                    onTap: () => TicketDetailsDialog.show(
+                      context,
+                      ticketId: ticket.id,
+                      onUpdated: () => _dispatchFetchWithCurrentFilters(),
+                    ),
+                    child: Text(
+                      ticket.ticketNo,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, decoration: TextDecoration.underline),
+                    ),
                   ),
                 ),
                 DataCell(
