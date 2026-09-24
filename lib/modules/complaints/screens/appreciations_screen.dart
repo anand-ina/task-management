@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../core/utils/network_connectivity_service.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/dialogs/no_internet_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../../shared_widgets/dropdowns/searchable_filter_dropdown.dart';
 import '../bloc/complaints_bloc.dart';
 import '../bloc/complaints_event.dart';
@@ -76,37 +78,37 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
     }
   }
 
-  Color _getStatusBgColor(String status, bool isDark) {
+  Color _getStatusBgColor(String status, BuildContext context) {
     switch (status.toLowerCase()) {
       case 'new':
-        return isDark ? const Color(0xFF451A03) : const Color(0xFFFEF3C7);
+        return AppColors.badgeYellowBg(context);
       case 'pending_reward':
       case 'awaiting_approval':
-        return isDark ? const Color(0xFF4C0519) : const Color(0xFFFFE4E6);
+        return AppColors.badgeRedBg(context);
       case 'awarded':
       case 'resolved':
-        return isDark ? const Color(0xFF064E3B) : const Color(0xFFDCFCE7);
+        return AppColors.badgeGreenBg(context);
       case 'recorded':
-        return isDark ? const Color(0xFF083344) : const Color(0xFFCFFAFE);
+        return AppColors.badgeBlueBg(context);
       default:
-        return isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9);
+        return AppColors.chipBg(context);
     }
   }
 
-  Color _getStatusTextColor(String status, bool isDark) {
+  Color _getStatusTextColor(String status, BuildContext context) {
     switch (status.toLowerCase()) {
       case 'new':
-        return const Color(0xFFD97706);
+        return AppColors.badgeYellowFg(context);
       case 'pending_reward':
       case 'awaiting_approval':
-        return const Color(0xFFE11D48);
+        return AppColors.badgeRedFg(context);
       case 'awarded':
       case 'resolved':
-        return const Color(0xFF16A34A);
+        return AppColors.badgeGreenFg(context);
       case 'recorded':
-        return const Color(0xFF0891B2);
+        return AppColors.badgeBlueFg(context);
       default:
-        return isDark ? Colors.grey.shade300 : const Color(0xFF475569);
+        return AppColors.textSecondary(context);
     }
   }
 
@@ -144,9 +146,10 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
         key: _scaffoldKey,
         appBar: const CustomAppBar(),
         drawer: const CustomLeftDrawer(currentRoute: '/complaints/appreciations'),
-        backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-        body: SafeArea(
-          child: BlocBuilder<ComplaintsBloc, ComplaintsState>(
+        backgroundColor: AppColors.scaffoldBg(context),
+        body: AnnouncementBannerWrapper(
+          child: SafeArea(
+            child: BlocBuilder<ComplaintsBloc, ComplaintsState>(
             builder: (context, state) {
               List<TicketItemModel> items = [];
               TicketCountsModel counts = const TicketCountsModel();
@@ -165,13 +168,13 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
               }
 
               return RefreshIndicator(
-                color: const Color(0xFF8B1D24),
+                color: AppColors.primaryRed,
                 onRefresh: _fetchAppreciations,
                 child: isLoading && items.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Padding(
-                          padding: EdgeInsets.all(40),
-                          child: CircularProgressIndicator(color: Color(0xFF8B1D24)),
+                          padding: const EdgeInsets.all(40),
+                          child: CircularProgressIndicator(),
                         ),
                       )
                     : SingleChildScrollView(
@@ -214,8 +217,9 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildHeaderRow(AppStrings s, bool isDark, bool isMobile) {
     return Column(
@@ -233,7 +237,7 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
                     style: TextStyle(
                       fontSize: isMobile ? 18 : 22,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      color: AppColors.textPrimary(context),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -241,7 +245,7 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
                     s.appreciationsSubtitle,
                     style: TextStyle(
                       fontSize: 12.5,
-                      color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                      color: AppColors.textSecondary(context),
                     ),
                   ),
                 ],
@@ -278,9 +282,9 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
           ),
           style: OutlinedButton.styleFrom(
-            foregroundColor: isDark ? Colors.white : const Color(0xFF1E293B),
-            backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-            side: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+            foregroundColor: AppColors.textPrimary(context),
+            backgroundColor: AppColors.card(context),
+            side: BorderSide(color: AppColors.border(context)),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
@@ -296,14 +300,14 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
               }
             });
           },
-          icon: const Icon(Icons.add, size: 16, color: Colors.white),
+          icon: const Icon(Icons.add, size: 16, color: AppColors.white),
           label: Text(
             s.raiseRequestButton,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white),
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.white),
           ),
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF8B1D24),
-            foregroundColor: Colors.white,
+            backgroundColor: AppColors.button(context),
+            foregroundColor: AppColors.white,
             elevation: 0,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -318,20 +322,20 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF450A0A) : const Color(0xFFFEF2F2),
+        color: AppColors.badgeRedBg(context),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFF87171)),
+        border: Border.all(color: AppColors.red600),
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline, color: Color(0xFFDC2626), size: 18),
+          Icon(Icons.error_outline, color: AppColors.red600, size: 18),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               message,
               style: TextStyle(
                 fontSize: 12,
-                color: isDark ? Colors.red.shade200 : const Color(0xFFB91C1C),
+                color: AppColors.badgeRedFg(context),
               ),
             ),
           ),
@@ -346,25 +350,25 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
       _buildStatCard(
         count: counts.allTickets.toString(),
         label: s.appreciationsReceived,
-        accentColor: const Color(0xFF10B981),
+        accentColor: AppColors.green600,
         isDark: isDark,
       ),
       _buildStatCard(
         count: counts.recorded.toString(),
         label: s.recordedBadge,
-        accentColor: const Color(0xFF06B6D4),
+        accentColor: AppColors.accentBlue(context),
         isDark: isDark,
       ),
       _buildStatCard(
         count: counts.pendingReward.toString(),
         label: s.awaitingDirectorApproval,
-        accentColor: const Color(0xFFF43F5E),
+        accentColor: AppColors.badgeRedFg(context),
         isDark: isDark,
       ),
       _buildStatCard(
         count: counts.awarded.toString(),
         label: s.rewardPointsGiven,
-        accentColor: const Color(0xFF3B82F6),
+        accentColor: AppColors.button(context),
         isDark: isDark,
       ),
     ];
@@ -392,14 +396,14 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
       width: 175,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: AppColors.card(context),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          color: AppColors.border(context),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: AppColors.black.withOpacity(0.02),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -431,7 +435,7 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w500,
-              color: isDark ? Colors.grey.shade400 : const Color(0xFF64748B),
+              color: AppColors.textSecondary(context),
             ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -452,13 +456,13 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
         controller: _searchController,
         style: TextStyle(
           fontSize: 12,
-          color: isDark ? Colors.white : const Color(0xFF0F172A),
+          color: AppColors.textPrimary(context),
         ),
         decoration: InputDecoration(
           hintText: s.searchTicketsPlaceholder,
           hintStyle: TextStyle(
             fontSize: 12,
-            color: isDark ? Colors.grey.shade500 : Colors.grey.shade400,
+            color: AppColors.textSecondary(context),
           ),
           prefixIcon: const Icon(Icons.search, size: 16),
           suffixIcon: _searchController.text.isNotEmpty
@@ -472,18 +476,18 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
               : null,
           contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
           filled: true,
-          fillColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+          fillColor: AppColors.card(context),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+            borderSide: BorderSide(color: AppColors.border(context)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+            borderSide: BorderSide(color: AppColors.border(context)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Color(0xFF8B1D24)),
+            borderSide: BorderSide(color: AppColors.primaryRed),
           ),
         ),
         onSubmitted: (_) => _fetchAppreciations(),
@@ -494,9 +498,9 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
       height: 38,
       padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: AppColors.card(context),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+        border: Border.all(color: AppColors.border(context)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
@@ -504,9 +508,9 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
           icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 18),
           style: TextStyle(
             fontSize: 12,
-            color: isDark ? Colors.white : const Color(0xFF0F172A),
+            color: AppColors.textPrimary(context),
           ),
-          dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+          dropdownColor: AppColors.card(context),
           items: [
             DropdownMenuItem(value: 'Everyone', child: Text(s.scopeEveryone)),
             DropdownMenuItem(value: 'Parents', child: Text(s.scopeParents)),
@@ -545,9 +549,9 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
       height: 38,
       padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: AppColors.card(context),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+        border: Border.all(color: AppColors.border(context)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
@@ -555,9 +559,9 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
           icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 18),
           style: TextStyle(
             fontSize: 12,
-            color: isDark ? Colors.white : const Color(0xFF0F172A),
+            color: AppColors.textPrimary(context),
           ),
-          dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+          dropdownColor: AppColors.card(context),
           items: [
             DropdownMenuItem(value: "Everyone's", child: Text(s.everyonesFilter)),
             DropdownMenuItem(value: "owned", child: Text(s.assignedToMe)),
@@ -588,16 +592,16 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
 
   /// Desktop Data Table matching Image 1
   Widget _buildDesktopTable(List<TicketItemModel> items, AppStrings s, bool isDark) {
-    final borderColor = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
-    final headerBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC);
-    final headerTextColor = isDark ? Colors.grey.shade300 : const Color(0xFF64748B);
+    final borderColor = AppColors.border(context);
+    final headerBg = AppColors.subtleBg(context);
+    final headerTextColor = AppColors.textSecondary(context);
 
     if (items.isEmpty) {
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 40),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          color: AppColors.card(context),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: borderColor),
         ),
@@ -606,7 +610,7 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
             s.noTicketsFound,
             style: TextStyle(
               fontSize: 13,
-              color: isDark ? Colors.grey.shade400 : const Color(0xFF64748B),
+              color: AppColors.textSecondary(context),
             ),
           ),
         ),
@@ -616,7 +620,7 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: AppColors.card(context),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: borderColor),
       ),
@@ -660,10 +664,10 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
                     DataCell(
                       Text(
                         ticket.ticketNo,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF8B1D24),
+                          color: AppColors.primaryRed,
                         ),
                       ),
                     ),
@@ -672,15 +676,15 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF064E3B) : const Color(0xFFDCFCE7),
+                          color: AppColors.badgeGreenBg(context),
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: const Text(
+                        child: Text(
                           'Appreciation',
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF16A34A),
+                            color: AppColors.badgeGreenFg(context),
                           ),
                         ),
                       ),
@@ -693,7 +697,7 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
                             : '—',
                         style: TextStyle(
                           fontSize: 12,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          color: AppColors.textPrimary(context),
                         ),
                       ),
                     ),
@@ -705,7 +709,7 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
                             : '—',
                         style: TextStyle(
                           fontSize: 12,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          color: AppColors.textPrimary(context),
                         ),
                       ),
                     ),
@@ -720,7 +724,7 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          color: AppColors.textPrimary(context),
                         ),
                       ),
                     ),
@@ -730,7 +734,7 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
                         ticket.category.isNotEmpty ? ticket.category : '—',
                         style: TextStyle(
                           fontSize: 12,
-                          color: isDark ? Colors.grey.shade300 : const Color(0xFF334155),
+                          color: AppColors.textSecondary(context),
                         ),
                       ),
                     ),
@@ -739,7 +743,7 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: _getStatusBgColor(ticket.status, isDark),
+                          color: _getStatusBgColor(ticket.status, context),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
@@ -747,7 +751,7 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: _getStatusTextColor(ticket.status, isDark),
+                            color: _getStatusTextColor(ticket.status, context),
                           ),
                         ),
                       ),
@@ -760,7 +764,7 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
                             : '—',
                         style: TextStyle(
                           fontSize: 12,
-                          color: isDark ? Colors.grey.shade400 : const Color(0xFF64748B),
+                          color: AppColors.textSecondary(context),
                         ),
                       ),
                     ),
@@ -770,7 +774,7 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
                         _formatSimpleDate(ticket.receivedAt),
                         style: TextStyle(
                           fontSize: 12,
-                          color: isDark ? Colors.grey.shade400 : const Color(0xFF64748B),
+                          color: AppColors.textSecondary(context),
                         ),
                       ),
                     ),
@@ -779,17 +783,17 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
                       ticket.taskNo != null && ticket.taskNo!.isNotEmpty
                           ? Text(
                               ticket.taskNo!,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.w600,
-                                color: Color(0xFF3B82F6),
+                                color: AppColors.accentBlue(context),
                               ),
                             )
                           : Text(
                               '—',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: isDark ? Colors.grey.shade500 : const Color(0xFF94A3B8),
+                                color: AppColors.textSecondary(context),
                               ),
                             ),
                     ),
@@ -805,14 +809,14 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
 
   /// Mobile Cards List
   Widget _buildMobileCardsList(List<TicketItemModel> items, AppStrings s, bool isDark) {
-    final borderColor = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final borderColor = AppColors.border(context);
 
     if (items.isEmpty) {
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 40),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          color: AppColors.card(context),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: borderColor),
         ),
@@ -821,7 +825,7 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
             s.noTicketsFound,
             style: TextStyle(
               fontSize: 13,
-              color: isDark ? Colors.grey.shade400 : const Color(0xFF64748B),
+              color: AppColors.textSecondary(context),
             ),
           ),
         ),
@@ -833,7 +837,7 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            color: AppColors.card(context),
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: borderColor),
           ),
@@ -850,16 +854,16 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
                     children: [
                       Text(
                         ticket.ticketNo,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF8B1D24),
+                          color: AppColors.primaryRed,
                         ),
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: _getStatusBgColor(ticket.status, isDark),
+                          color: _getStatusBgColor(ticket.status, context),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
@@ -867,7 +871,7 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: _getStatusTextColor(ticket.status, isDark),
+                            color: _getStatusTextColor(ticket.status, context),
                           ),
                         ),
                       ),
@@ -881,7 +885,7 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
                           'About: ',
                           style: TextStyle(
                             fontSize: 11.5,
-                            color: isDark ? Colors.grey.shade400 : const Color(0xFF64748B),
+                            color: AppColors.textSecondary(context),
                           ),
                         ),
                         Text(
@@ -889,7 +893,7 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                            color: AppColors.textPrimary(context),
                           ),
                         ),
                       ],
@@ -901,7 +905,7 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
                       ticket.description,
                       style: TextStyle(
                         fontSize: 12,
-                        color: isDark ? Colors.grey.shade300 : const Color(0xFF334155),
+                        color: AppColors.textSecondary(context),
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -915,14 +919,14 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
                         ticket.category.isNotEmpty ? ticket.category : '—',
                         style: TextStyle(
                           fontSize: 11,
-                          color: isDark ? Colors.grey.shade400 : const Color(0xFF64748B),
+                          color: AppColors.textSecondary(context),
                         ),
                       ),
                       Text(
                         _formatSimpleDate(ticket.receivedAt),
                         style: TextStyle(
                           fontSize: 11,
-                          color: isDark ? Colors.grey.shade500 : const Color(0xFF94A3B8),
+                          color: AppColors.textSecondary(context),
                         ),
                       ),
                     ],

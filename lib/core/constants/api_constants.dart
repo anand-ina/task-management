@@ -28,6 +28,11 @@ class ApiConstants {
   static const String meetingsAvailability = '$baseUrl/meetings/availability';
   static const String sutraCommand = '$baseUrl/sutra/command';
 
+  // Announcements Endpoints
+  static const String announcementsActive = '$baseUrl/announcements/active';
+  static const String announcements = '$baseUrl/announcements';
+  static String announcementDetail(int id) => '$baseUrl/announcements/$id';
+
   // Approvals & Escalations Endpoints
   static const String approvals = '$baseUrl/approvals';
   static const String approvalsInitiated = '$baseUrl/approvals/initiated';
@@ -93,5 +98,11 @@ class ApiConstants {
   static const String auditsAsAuditor = '$baseUrl/audits/as-auditor';
   static String auditDetail(int id) => '$baseUrl/audits/$id';
   static String closeAudit(int id) => '$baseUrl/audits/$id/close';
+
+  // Hourly Log Endpoints
+  static const String hourlyLog = '$baseUrl/hourly-log';
+  static const String hourlyLogItems = '$baseUrl/hourly-log/items';
+  static String hourlyLogItemDetail(int id) => '$baseUrl/hourly-log/items/$id';
+  static const String hourlyLogSubmit = '$baseUrl/hourly-log/submit';
 }
 

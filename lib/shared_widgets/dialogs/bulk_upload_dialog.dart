@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:path_provider/path_provider.dart';
+import '../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../modules/tasks/bloc/bulk_tasks_bloc.dart';
 import '../../../modules/tasks/bloc/bulk_tasks_event.dart';
@@ -189,7 +190,7 @@ class BulkUploadDialog extends StatelessWidget {
               const SizedBox(height: 12),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0F172A),
+                  backgroundColor: AppColors.button(context),
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -455,7 +456,7 @@ class BulkUploadDialog extends StatelessWidget {
             const SizedBox(width: 2),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0F172A),
+                backgroundColor: AppColors.button(context),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 10),

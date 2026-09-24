@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../models/fine_item_model.dart';
+import '../repository/fines_repository.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
@@ -13,7 +16,6 @@ import '../../auth/bloc/auth_state.dart';
 import '../bloc/fines_bloc.dart';
 import '../bloc/fines_event.dart';
 import '../bloc/fines_state.dart';
-import '../repository/fines_repository.dart';
 
 class FinesRewardsScreen extends StatefulWidget {
   const FinesRewardsScreen({super.key});
@@ -57,18 +59,15 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
       create: (context) => FinesBloc()..add(FetchFinesEvent()),
       child: PopScope(
         canPop: false,
-        onPopInvokedWithResult: (didPop, result) async {
-          if (didPop) return;
-          final shouldExit = await ExitConfirmationDialog.show(context);
-          if (shouldExit) {
-            // Handled inside exit dialog
-          }
+        onPopInvokedWithResult: (didPop, _) async {
+          if (!didPop) await ExitConfirmationDialog.show(context);
         },
         child: Scaffold(
           floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/fines-rewards'),
           appBar: const CustomAppBar(),
-          body: BlocBuilder<FinesBloc, FinesState>(
+          body: AnnouncementBannerWrapper(
+            child: BlocBuilder<FinesBloc, FinesState>(
             builder: (context, state) {
               return RefreshIndicator(
                 onRefresh: () async {
@@ -92,7 +91,7 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
                                 style: TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                  color: AppColors.textPrimary(context),
                                 ),
                               ),
                               const SizedBox(height: 2),
@@ -100,7 +99,7 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
                                 s.finesRewardsSubtitle,
                                 style: TextStyle(
                                   fontSize: 10,
-                                  color: isDark ? Colors.white54 : Colors.black54,
+                                  color: AppColors.textSecondary(context),
                                 ),
                               ),
                             ],
@@ -109,8 +108,8 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
                             ElevatedButton(
                               onPressed: () => IssueFineRewardDialog.show(context),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF0F172A),
-                                foregroundColor: Colors.white,
+                                backgroundColor: AppColors.button(context),
+                                foregroundColor: AppColors.white,
                                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                               ),
@@ -135,13 +134,13 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
                       if (state is FinesLoadingState)
                         const Padding(
                           padding: EdgeInsets.all(60),
-                          child: Center(child: CircularProgressIndicator(color: Color(0xFF0F172A))),
+                          child: Center(child: CircularProgressIndicator()),
                         )
                       else if (state is FinesErrorState)
                         Center(
                           child: Column(
                             children: [
-                              Text(state.message, style: const TextStyle(color: Colors.red)),
+                              Text(state.message, style: const TextStyle(color: AppColors.red)),
                               const SizedBox(height: 12),
                               ElevatedButton(
                                 onPressed: () => context.read<FinesBloc>().add(FetchFinesEvent()),
@@ -176,6 +175,7 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
               );
             },
           ),
+          ),
         ),
       ),
     );
@@ -183,7 +183,6 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
 
   Widget _buildTabButton(int index, String label) {
     final isSelected = _selectedTabIndex == index;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return InkWell(
       onTap: () => setState(() => _selectedTabIndex = index),
@@ -195,15 +194,15 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
               fontSize: 13,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               color: isSelected
-                  ? (isDark ? Colors.white : const Color(0xFF0F172A))
-                  : (isDark ? Colors.white54 : Colors.black45),
+                  ? AppColors.textPrimary(context)
+                  : AppColors.textSecondary(context),
             ),
           ),
           const SizedBox(height: 6),
           Container(
             height: 2,
             width: 50,
-            color: isSelected ? const Color(0xFFB91C1C) : Colors.transparent,
+            color: isSelected ? AppColors.red700 : AppColors.transparent,
           ),
         ],
       ),
@@ -211,8 +210,6 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
   }
 
   Widget _buildPolicyGrid(BuildContext context, AppStrings s, FinesOverviewData data) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     final policies = data.fineTypes.isNotEmpty
         ? data.fineTypes
             .map((ft) => {
@@ -247,14 +244,14 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
           itemBuilder: (context, index) {
             final p = policies[index];
             final isFine = p['isFine'] as bool;
-            final accentColor = isFine ? const Color(0xFFDC2626) : const Color(0xFF16A34A);
+            final accentColor = isFine ? AppColors.red600 : AppColors.green600;
 
             return Container(
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                color: AppColors.card(context),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                  color: AppColors.border(context),
                 ),
               ),
               child: ClipRRect(
@@ -280,7 +277,7 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
                                   style: TextStyle(
                                     fontSize: 12.5,
                                     fontWeight: FontWeight.bold,
-                                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                    color: AppColors.textPrimary(context),
                                   ),
                                 ),
                                 const SizedBox(height: 2),
@@ -297,7 +294,7 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
-                                color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+                                color: AppColors.subtleBg(context),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
@@ -305,7 +302,7 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.white70 : Colors.grey.shade700,
+                                  color: AppColors.textSecondary(context),
                                 ),
                               ),
                             ),
@@ -338,9 +335,9 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: AppColors.card(context),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppColors.border(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -351,12 +348,12 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
             children: [
               Text(
                 s.samskarMerchandiseStoreHeader,
-                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1.1),
+                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.grey, letterSpacing: 1.1),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF064E3B) : const Color(0xFFDCFCE7),
+                  color: isDark ? AppColors.green900 : AppColors.greenLight,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -364,7 +361,7 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
                   style: TextStyle(
                     fontSize: 10.5,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? const Color(0xFF86EFAC) : const Color(0xFF15803D),
+                    color: isDark ? AppColors.green300 : AppColors.green700,
                   ),
                 ),
               ),
@@ -393,13 +390,13 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
                   return Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                      color: AppColors.subtleBg(context),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                      border: Border.all(color: AppColors.border(context)),
                     ),
                     child: Row(
                       children: [
-                        Icon(item['icon'] as IconData, size: 22, color: isDark ? Colors.white70 : const Color(0xFF334155)),
+                        Icon(item['icon'] as IconData, size: 22, color: AppColors.textSecondary(context)),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Column(
@@ -411,12 +408,12 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                  color: AppColors.textPrimary(context),
                                 ),
                               ),
                               Text(
                                 item['pts'] as String,
-                                style: TextStyle(fontSize: 10, color: isDark ? Colors.white54 : Colors.grey.shade600),
+                                style: TextStyle(fontSize: 10, color: AppColors.textMuted(context)),
                               ),
                             ],
                           ),
@@ -448,7 +445,7 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(40),
-          child: Text(s.noFinesOrRewardsYet, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+          child: Text(s.noFinesOrRewardsYet, style: const TextStyle(color: AppColors.grey, fontSize: 13)),
         ),
       );
     }
@@ -461,7 +458,7 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : const Color(0xFF0F172A),
+            color: AppColors.textPrimary(context),
           ),
         ),
         const SizedBox(height: 12),
@@ -473,10 +470,10 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
           itemBuilder: (context, index) {
             final item = fines[index];
             final isReward = item.type.toLowerCase() == 'reward';
-            final accentColor = isReward ? const Color(0xFF16A34A) : const Color(0xFFDC2626);
+            final accentColor = isReward ? AppColors.green600 : AppColors.red600;
             final bgBadgeColor = isReward
-                ? (isDark ? const Color(0xFF064E3B) : const Color(0xFFDCFCE7))
-                : (isDark ? const Color(0xFF450A0A) : const Color(0xFFFEE2E2));
+                ? (isDark ? AppColors.green900 : AppColors.greenLight)
+                : (isDark ? AppColors.red900 : AppColors.redLight);
 
             String formattedDate = item.createdAt;
             try {
@@ -487,10 +484,10 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
             return Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                color: AppColors.card(context),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                  color: AppColors.border(context),
                 ),
               ),
               child: Row(
@@ -524,7 +521,7 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                  color: AppColors.textPrimary(context),
                                 ),
                               ),
                             ),
@@ -549,14 +546,14 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.person_outline_rounded, size: 13, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600),
+                                    Icon(Icons.person_outline_rounded, size: 13, color: AppColors.textSecondary(context)),
                                   const SizedBox(width: 4),
                                   Text(
                                     item.member,
                                     style: TextStyle(
                                       fontSize: 11.5,
                                       fontWeight: FontWeight.w500,
-                                      color: isDark ? Colors.grey.shade300 : const Color(0xFF475569),
+                                      color: AppColors.textSecondary(context),
                                     ),
                                   ),
                                 ],
@@ -565,13 +562,13 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.verified_outlined, size: 13, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600),
+                                  Icon(Icons.verified_outlined, size: 13, color: AppColors.textSecondary(context)),
                                   const SizedBox(width: 4),
                                   Text(
                                     '${s.issuedByLabel}: ${item.issuedBy}',
                                     style: TextStyle(
                                       fontSize: 11.5,
-                                      color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                                      color: AppColors.textSecondary(context),
                                     ),
                                   ),
                                 ],
@@ -580,27 +577,27 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                                  color: AppColors.subtleBg(context),
                                   borderRadius: BorderRadius.circular(4),
-                                  border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+                                  border: Border.all(color: AppColors.border(context)),
                                 ),
                                 child: Text(
                                   item.taskNo ?? '#${item.taskId}',
                                   style: TextStyle(
                                     fontSize: 10.5,
                                     fontWeight: FontWeight.w600,
-                                    color: isDark ? Colors.grey.shade300 : const Color(0xFF334155),
+                                    color: AppColors.textSecondary(context),
                                   ),
                                 ),
                               ),
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.access_time_rounded, size: 12, color: isDark ? Colors.grey.shade500 : Colors.grey.shade400),
+                                Icon(Icons.access_time_rounded, size: 12, color: AppColors.textMuted(context)),
                                 const SizedBox(width: 4),
                                 Text(
                                   formattedDate,
-                                  style: TextStyle(fontSize: 11, color: isDark ? Colors.grey.shade500 : Colors.grey.shade500),
+                                  style: TextStyle(fontSize: 11, color: AppColors.textMuted(context)),
                                 ),
                               ],
                             ),
@@ -641,19 +638,19 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
             _buildStatMetricCard(
               title: s.rewardLabel,
               amount: '+₹${totalRewards.toStringAsFixed(2)}',
-              accentColor: const Color(0xFF16A34A),
+              accentColor: AppColors.green600,
               isDark: isDark,
             ),
             _buildStatMetricCard(
               title: s.fineLabel,
               amount: '-₹${totalFines.toStringAsFixed(2)}',
-              accentColor: const Color(0xFFDC2626),
+              accentColor: AppColors.red600,
               isDark: isDark,
             ),
             _buildStatMetricCard(
               title: 'Net Balance',
               amount: '₹${net.toStringAsFixed(2)}',
-              accentColor: net >= 0 ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+              accentColor: net >= 0 ? AppColors.green600 : AppColors.red600,
               isDark: isDark,
             ),
           ],
@@ -674,14 +671,14 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
       width: 170,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: AppColors.card(context),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppColors.border(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: TextStyle(fontSize: 11, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600)),
+          Text(title, style: TextStyle(fontSize: 11, color: AppColors.textSecondary(context))),
           const SizedBox(height: 6),
           Text(
             amount,
@@ -701,7 +698,7 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : const Color(0xFF0F172A),
+            color: AppColors.textPrimary(context),
           ),
         ),
         const SizedBox(height: 12),

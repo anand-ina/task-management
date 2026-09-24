@@ -1,11 +1,13 @@
 import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/dialogs/new_recurring_task_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../bloc/recurring_tasks_bloc.dart';
 import '../bloc/recurring_tasks_event.dart';
 import '../bloc/recurring_tasks_state.dart';
@@ -53,7 +55,8 @@ class _RecurringTasksScreenState extends State<RecurringTasksScreen> {
           floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/recurring'),
           appBar: const CustomAppBar(),
-          body: BlocBuilder<RecurringTasksBloc, RecurringTasksState>(
+          body: AnnouncementBannerWrapper(
+            child: BlocBuilder<RecurringTasksBloc, RecurringTasksState>(
             builder: (context, state) {
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
@@ -91,7 +94,7 @@ class _RecurringTasksScreenState extends State<RecurringTasksScreen> {
                           icon: const Icon(Icons.add_rounded, size: 14),
                           label: Text(s.newRecurring, style: const TextStyle(fontSize: 11)),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF0F172A),
+                            backgroundColor: AppColors.button(context),
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -145,7 +148,7 @@ class _RecurringTasksScreenState extends State<RecurringTasksScreen> {
                     if (state is RecurringTasksLoadingState)
                       const Padding(
                         padding: EdgeInsets.all(48),
-                        child: Center(child: CircularProgressIndicator(color: Color(0xFF2563EB))),
+                        child: Center(child: CircularProgressIndicator()),
                       )
                     else if (state is RecurringTasksErrorState)
                       Center(
@@ -176,8 +179,9 @@ class _RecurringTasksScreenState extends State<RecurringTasksScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   // 2-Column Responsive Grid Layout of Recurring Task Container Cards
   Widget _buildRecurringGrid(BuildContext context, List<RecurringTaskModel> tasks) {

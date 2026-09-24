@@ -41,6 +41,12 @@ class MeetingItemModel {
   final String? myResponse;
   final bool? myRequired;
   final bool? myAttended;
+  final bool? syncToGoogle;
+  final bool? createGoogleMeet;
+  final String? googleEventId;
+  final String? googleMeetUrl;
+  final String? googleSyncStatus;
+  final String? googleSyncError;
   final List<InviteeItemModel> invitees;
 
   MeetingItemModel({
@@ -63,8 +69,19 @@ class MeetingItemModel {
     this.myResponse,
     this.myRequired,
     this.myAttended,
+    this.syncToGoogle,
+    this.createGoogleMeet,
+    this.googleEventId,
+    this.googleMeetUrl,
+    this.googleSyncStatus,
+    this.googleSyncError,
     required this.invitees,
   });
+
+  bool get isGoogleMeet =>
+      createGoogleMeet == true ||
+      (googleMeetUrl != null && googleMeetUrl!.trim().isNotEmpty) ||
+      (location != null && location!.toLowerCase().contains('google meet'));
 
   factory MeetingItemModel.fromJson(Map<String, dynamic> json) {
     int parseId(dynamic val) {
@@ -94,6 +111,12 @@ class MeetingItemModel {
       myResponse: json['my_response']?.toString(),
       myRequired: json['my_required'] is bool ? json['my_required'] as bool : null,
       myAttended: json['my_attended'] is bool ? json['my_attended'] as bool : null,
+      syncToGoogle: json['sync_to_google'] is bool ? json['sync_to_google'] as bool : null,
+      createGoogleMeet: json['create_google_meet'] is bool ? json['create_google_meet'] as bool : null,
+      googleEventId: json['google_event_id']?.toString(),
+      googleMeetUrl: json['google_meet_url']?.toString(),
+      googleSyncStatus: json['google_sync_status']?.toString(),
+      googleSyncError: json['google_sync_error']?.toString(),
       invitees: json['invitees'] != null && json['invitees'] is List
           ? (json['invitees'] as List)
               .map((e) => InviteeItemModel.fromJson(e is Map<String, dynamic> ? e : {}))

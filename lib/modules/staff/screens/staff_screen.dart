@@ -1,7 +1,9 @@
 import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/add_staff_dialog.dart';
 import '../../../shared_widgets/dialogs/edit_user_dialog.dart';
@@ -57,7 +59,8 @@ class _StaffScreenState extends State<StaffScreen> {
           floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/staff'),
           appBar: const CustomAppBar(),
-          body: BlocBuilder<StaffBloc, StaffState>(
+          body: AnnouncementBannerWrapper(
+            child: BlocBuilder<StaffBloc, StaffState>(
             builder: (context, state) {
               return RefreshIndicator(
                 onRefresh: () async {
@@ -170,7 +173,7 @@ class _StaffScreenState extends State<StaffScreen> {
                                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                                   ),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF0F172A),
+                                    backgroundColor: AppColors.button(context),
                                     foregroundColor: Colors.white,
                                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -186,7 +189,7 @@ class _StaffScreenState extends State<StaffScreen> {
                       if (state is StaffLoadingState)
                         const Padding(
                           padding: EdgeInsets.all(60),
-                          child: Center(child: CircularProgressIndicator(color: Color(0xFF0F172A))),
+                          child: Center(child: CircularProgressIndicator()),
                         )
                       else if (state is StaffErrorState)
                         Center(
@@ -216,6 +219,7 @@ class _StaffScreenState extends State<StaffScreen> {
                 ),
               );
             },
+          ),
           ),
         ),
       ),
@@ -681,7 +685,7 @@ class _StaffScreenState extends State<StaffScreen> {
             ElevatedButton(
               onPressed: () => Navigator.of(ctx).pop(true),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF132A50),
+                backgroundColor: AppColors.button(context),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),

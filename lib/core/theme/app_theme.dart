@@ -40,6 +40,29 @@ class AppTheme {
         color: AppColors.lightBorder,
         thickness: 1,
       ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.buttonPrimary,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: AppColors.buttonPrimary,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      ),
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: AppColors.buttonPrimary,
+        foregroundColor: Colors.white,
+      ),
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: AppColors.buttonPrimary,
+      ),
     );
   }
 
@@ -59,7 +82,7 @@ class AppTheme {
         bodyMedium: const TextStyle(color: AppColors.darkTextSecondary),
       ),
       appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.darkCardBg,
+        backgroundColor: AppColors.appBarDark,
         elevation: 0,
         iconTheme: IconThemeData(color: AppColors.darkTextPrimary),
         titleTextStyle: TextStyle(
@@ -79,6 +102,29 @@ class AppTheme {
       dividerTheme: const DividerThemeData(
         color: AppColors.darkBorder,
         thickness: 1,
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.buttonPrimaryDark,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: AppColors.buttonPrimaryDark,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      ),
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: AppColors.buttonPrimaryDark,
+        foregroundColor: Colors.white,
+      ),
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: AppColors.buttonPrimaryDark,
       ),
     );
   }

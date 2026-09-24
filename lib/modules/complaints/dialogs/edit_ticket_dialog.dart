@@ -1,6 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../core/utils/network_connectivity_service.dart';
 import '../../../shared_widgets/dialogs/no_internet_dialog.dart';
@@ -642,7 +643,7 @@ class _EditTicketDialogState extends State<EditTicketDialog> {
                   ElevatedButton(
                     onPressed: _isSaving ? null : _handleSave,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF132A50),
+                      backgroundColor: AppColors.button(context),
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),

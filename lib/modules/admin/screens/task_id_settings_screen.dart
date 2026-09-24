@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../../shared_widgets/dropdowns/searchable_filter_dropdown.dart';
 import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import '../bloc/task_id_settings_bloc.dart';
@@ -36,10 +38,12 @@ class _TaskIdSettingsView extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: Text(
-          s.resetConfirmTitle,
+          'Reset ${branch.name}?',
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
-        content: Text(s.resetConfirmMessage('${branch.code} · ${branch.name}')),
+        content: Text(
+          'Are you sure you want to reset the counter for ${branch.name} (${branch.code}) to 0001?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -47,8 +51,8 @@ class _TaskIdSettingsView extends StatelessWidget {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF991B1B),
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.red800,
+              foregroundColor: AppColors.white,
             ),
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(s.resetTo0001),
@@ -84,8 +88,8 @@ class _TaskIdSettingsView extends StatelessWidget {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF991B1B),
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.red800,
+              foregroundColor: AppColors.white,
             ),
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(s.resetEveryBranch),
@@ -106,7 +110,7 @@ class _TaskIdSettingsView extends StatelessWidget {
       buffer.write(hex.replaceFirst('#', ''));
       return Color(int.parse(buffer.toString(), radix: 16));
     } catch (_) {
-      return const Color(0xFF132A50);
+      return AppColors.navyHeader;
     }
   }
 
@@ -124,13 +128,14 @@ class _TaskIdSettingsView extends StatelessWidget {
         floatingActionButton: const TodoFloatingActionButton(),
         drawer: const CustomLeftDrawer(currentRoute: '/admin/task-ids'),
         appBar: const CustomAppBar(),
-        body: BlocConsumer<TaskIdSettingsBloc, TaskIdSettingsState>(
+        body: AnnouncementBannerWrapper(
+          child: BlocConsumer<TaskIdSettingsBloc, TaskIdSettingsState>(
           listener: (context, state) {
             if (state is TaskIdSettingsLoadedState && state.successMessage != null) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.successMessage!),
-                  backgroundColor: const Color(0xFF16A34A),
+                  backgroundColor: AppColors.green600,
                 ),
               );
             }
@@ -138,7 +143,7 @@ class _TaskIdSettingsView extends StatelessWidget {
           builder: (context, state) {
             if (state is TaskIdSettingsLoadingState || state is TaskIdSettingsInitialState) {
               return const Center(
-                child: CircularProgressIndicator(color: Color(0xFF0F172A)),
+                child: CircularProgressIndicator(),
               );
             }
 
@@ -149,12 +154,12 @@ class _TaskIdSettingsView extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.error_outline, color: Colors.red, size: 40),
+                      const Icon(Icons.error_outline, color: AppColors.red, size: 40),
                       const SizedBox(height: 12),
                       Text(
                         state.message,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.red, fontSize: 13),
+                        style: const TextStyle(color: AppColors.red, fontSize: 13),
                       ),
                       const SizedBox(height: 16),
                       ElevatedButton(
@@ -188,7 +193,7 @@ class _TaskIdSettingsView extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          color: AppColors.textPrimary(context),
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -197,7 +202,7 @@ class _TaskIdSettingsView extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 13,
                           height: 1.4,
-                          color: isDark ? Colors.white70 : const Color(0xFF64748B),
+                          color: AppColors.textSecondary(context),
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -225,6 +230,7 @@ class _TaskIdSettingsView extends StatelessWidget {
           },
         ),
       ),
+    ),
     );
   }
 
@@ -240,14 +246,14 @@ class _TaskIdSettingsView extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: AppColors.card(context),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          color: AppColors.border(context),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: AppColors.black.withValues(alpha: 0.04),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -263,7 +269,7 @@ class _TaskIdSettingsView extends StatelessWidget {
               fontSize: 12,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.8,
-              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+              color: AppColors.textSecondary(context),
             ),
           ),
           const SizedBox(height: 4),
@@ -272,7 +278,7 @@ class _TaskIdSettingsView extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               height: 1.4,
-              color: isDark ? Colors.white60 : const Color(0xFF475569),
+              color: AppColors.textSecondary(context),
             ),
           ),
           const SizedBox(height: 16),
@@ -296,8 +302,8 @@ class _TaskIdSettingsView extends StatelessWidget {
             icon: const Icon(Icons.restart_alt_rounded, size: 16),
             label: Text(s.resetEveryBranch),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFDC2626),
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.red600,
+              foregroundColor: AppColors.white,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
@@ -321,10 +327,10 @@ class _TaskIdSettingsView extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+        color: AppColors.subtleBg(context),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          color: AppColors.border(context),
         ),
       ),
       child: Column(
@@ -337,7 +343,7 @@ class _TaskIdSettingsView extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                  color: AppColors.border(context),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -345,7 +351,7 @@ class _TaskIdSettingsView extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    color: AppColors.textPrimary(context),
                   ),
                 ),
               ),
@@ -356,7 +362,7 @@ class _TaskIdSettingsView extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    color: AppColors.textPrimary(context),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -367,9 +373,9 @@ class _TaskIdSettingsView extends StatelessWidget {
                 icon: const Icon(Icons.restart_alt_rounded, size: 14),
                 label: Text(s.resetTo0001),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: isDark ? Colors.white70 : const Color(0xFF334155),
+                  foregroundColor: AppColors.textPrimary(context),
                   side: BorderSide(
-                    color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
+                    color: AppColors.border(context),
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
@@ -385,6 +391,7 @@ class _TaskIdSettingsView extends StatelessWidget {
             children: [
               Expanded(
                 child: _buildMetricItem(
+                  context: context,
                   label: s.lastUsed,
                   value: lastUsedFormatted,
                   isDark: isDark,
@@ -393,6 +400,7 @@ class _TaskIdSettingsView extends StatelessWidget {
               Expanded(
                 flex: 2,
                 child: _buildMetricItem(
+                  context: context,
                   label: s.nextTaskId,
                   value: branch.next,
                   isDark: isDark,
@@ -401,6 +409,7 @@ class _TaskIdSettingsView extends StatelessWidget {
               ),
               Expanded(
                 child: _buildMetricItem(
+                  context: context,
                   label: s.lastReset,
                   value: lastResetText,
                   isDark: isDark,
@@ -414,6 +423,7 @@ class _TaskIdSettingsView extends StatelessWidget {
   }
 
   Widget _buildMetricItem({
+    required BuildContext context,
     required String label,
     required String value,
     required bool isDark,
@@ -428,7 +438,7 @@ class _TaskIdSettingsView extends StatelessWidget {
             fontSize: 10,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.5,
-            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+            color: AppColors.textSecondary(context),
           ),
         ),
         const SizedBox(height: 2),
@@ -438,8 +448,8 @@ class _TaskIdSettingsView extends StatelessWidget {
             fontSize: 12,
             fontWeight: isHighlighted ? FontWeight.bold : FontWeight.w500,
             color: isHighlighted
-                ? (isDark ? const Color(0xFFFCA5A5) : const Color(0xFF991B1B))
-                : (isDark ? Colors.white : const Color(0xFF0F172A)),
+                ? (isDark ? AppColors.redLight : AppColors.red800)
+                : AppColors.textPrimary(context),
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -462,14 +472,14 @@ class _TaskIdSettingsView extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: AppColors.card(context),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          color: AppColors.border(context),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: AppColors.black.withValues(alpha: 0.04),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -485,7 +495,7 @@ class _TaskIdSettingsView extends StatelessWidget {
               fontSize: 12,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.8,
-              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+              color: AppColors.textSecondary(context),
             ),
           ),
           const SizedBox(height: 4),
@@ -494,7 +504,7 @@ class _TaskIdSettingsView extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               height: 1.4,
-              color: isDark ? Colors.white60 : const Color(0xFF475569),
+              color: AppColors.textSecondary(context),
             ),
           ),
           const SizedBox(height: 16),
@@ -558,7 +568,7 @@ class _TaskIdSettingsView extends StatelessWidget {
             child: Text(
               a.initials,
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.white,
                 fontSize: 9,
                 fontWeight: FontWeight.bold,
               ),
@@ -571,10 +581,10 @@ class _TaskIdSettingsView extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+        color: AppColors.subtleBg(context),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          color: AppColors.border(context),
         ),
       ),
       child: LayoutBuilder(
@@ -589,7 +599,7 @@ class _TaskIdSettingsView extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  color: AppColors.textPrimary(context),
                 ),
               ),
               const SizedBox(width: 6),
@@ -598,7 +608,7 @@ class _TaskIdSettingsView extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white54 : Colors.grey,
+                  color: AppColors.textMuted(context),
                 ),
               ),
               const SizedBox(width: 6),
@@ -608,7 +618,7 @@ class _TaskIdSettingsView extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: isDark ? Colors.white70 : const Color(0xFF334155),
+                    color: AppColors.textSecondary(context),
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -684,7 +694,7 @@ class _TaskIdSettingsView extends StatelessWidget {
             child: Text(
               a.initials,
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.white,
                 fontSize: 9,
                 fontWeight: FontWeight.bold,
               ),
@@ -697,10 +707,10 @@ class _TaskIdSettingsView extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+        color: AppColors.subtleBg(context),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          color: AppColors.border(context),
         ),
       ),
       child: LayoutBuilder(
@@ -715,7 +725,7 @@ class _TaskIdSettingsView extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  color: AppColors.textPrimary(context),
                 ),
               ),
               const SizedBox(width: 6),
@@ -724,7 +734,7 @@ class _TaskIdSettingsView extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   fontStyle: FontStyle.italic,
-                  color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                  color: AppColors.textMuted(context),
                 ),
               ),
             ],

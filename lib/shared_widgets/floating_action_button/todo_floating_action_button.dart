@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../core/constants/app_colors.dart';
 import '../../modules/auth/bloc/auth_bloc.dart';
 import '../../modules/auth/bloc/auth_state.dart';
 import '../../modules/dashboard/bloc/dashboard_bloc.dart';
@@ -37,10 +38,10 @@ class TodoFloatingActionButton extends StatelessWidget {
     return Stack(
       children: [
         FloatingActionButton(
-          backgroundColor: const Color(0xFF0F172A),
+          backgroundColor: AppColors.button(context),
           foregroundColor: Colors.white,
           onPressed: () => TodoTodayDialog.show(context),
-          child: const Icon(Icons.calendar_month_rounded),
+          child: const Icon(Icons.event_note_sharp),
         ),
         if (openTodosCount > 0)
           Positioned(

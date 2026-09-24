@@ -4,8 +4,10 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/api_constants.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../core/network/dio_client.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
@@ -149,7 +151,7 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
                           Expanded(
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF0F172A),
+                                backgroundColor: AppColors.button(context),
                                 foregroundColor: Colors.white,
                                 padding: const EdgeInsets.symmetric(vertical: 8),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
@@ -287,7 +289,7 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0F172A),
+                      backgroundColor: AppColors.button(context),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -415,7 +417,8 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
             floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/my-meetings'),
             appBar: const CustomAppBar(),
-          body: BlocBuilder<MeetingsBloc, MeetingsState>(
+          body: AnnouncementBannerWrapper(
+            child: BlocBuilder<MeetingsBloc, MeetingsState>(
             builder: (context, state) {
               return RefreshIndicator(
                 onRefresh: () async {
@@ -464,7 +467,7 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
                                   style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
                                 ),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF0F172A),
+                                  backgroundColor: AppColors.button(context),
                                   foregroundColor: Colors.white,
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -590,7 +593,7 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
                       if (state is MeetingsLoadingState)
                         const Padding(
                           padding: EdgeInsets.all(48),
-                          child: Center(child: CircularProgressIndicator(color: Color(0xFF0F172A))),
+                          child: Center(child: CircularProgressIndicator()),
                         )
                       else if (state is MeetingsErrorState)
                         Center(
@@ -618,6 +621,7 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
               );
             },
           ),
+        ),
         ),
       ),)
     );
@@ -740,6 +744,34 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
     }
   }
 
+  Widget _buildGoogleMeetBadge(BuildContext context, MeetingItemModel item) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0C4A6E).withValues(alpha: 0.4) : const Color(0xFFE0F2FE),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? const Color(0xFF0284C7).withValues(alpha: 0.4) : const Color(0xFFBAE6FD),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('📹 ', style: TextStyle(fontSize: 10)),
+          Text(
+            'Google Meet',
+            style: TextStyle(
+              fontSize: 10.5,
+              fontWeight: FontWeight.bold,
+              color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMeetingCard(BuildContext context, AppStrings s, MeetingItemModel item) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -813,68 +845,71 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Top Badge: Cancelled / Completion awaiting approval / Approved
-                      if (isCancelled) ...[
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFEE2E2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Text(
-                            'Cancelled',
+                      // Meeting Title & Badges
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          Text(
+                            item.title.isNotEmpty ? item.title : 'Untitled Meeting',
                             style: TextStyle(
-                              fontSize: 10.5,
+                              fontSize: 14,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFFDC2626),
+                              color: isDark ? Colors.white : const Color(0xFF0F172A),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 6),
-                      ] else if (isPendingCompletion) ...[
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFEDD5),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            s.completionAwaitingApproval,
-                            style: const TextStyle(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF9A3412),
+                          if (item.isGoogleMeet)
+                            _buildGoogleMeetBadge(context, item),
+                          if (isCancelled)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFEE2E2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Text(
+                                'Cancelled',
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFFDC2626),
+                                ),
+                              ),
+                            )
+                          else if (isPendingCompletion)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFEDD5),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                s.completionAwaitingApproval,
+                                style: const TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF9A3412),
+                                ),
+                              ),
+                            )
+                          else if (isApprovedCompletion)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFDCFCE7),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Text(
+                                'Completed · Approved',
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF166534),
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                      ] else if (isApprovedCompletion) ...[
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFDCFCE7),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Text(
-                            'Completed · Approved',
-                            style: TextStyle(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF166534),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                      ],
-
-                      // Meeting Title
-                      Text(
-                        item.title.isNotEmpty ? item.title : 'Untitled Meeting',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
-                        ),
+                        ],
                       ),
                       const SizedBox(height: 4),
 

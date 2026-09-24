@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/utils/preferences_service.dart';
 import '../models/branch_model.dart';
 import '../models/todo_model.dart';
 import '../repository/dashboard_repository.dart';
@@ -21,10 +22,15 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   ) async {
     emit(DashboardLoadingState());
     try {
-      final effectiveBranchId = event.mine == 1 ? null : event.branchId;
+      final role = (await PreferencesService().getUserRole())?.toLowerCase() ?? '';
+      final roleLabel = (await PreferencesService().getUserRoleLabel())?.toLowerCase() ?? '';
+      final isManager = role.contains('manager') || roleLabel.contains('manager');
+
+      final effectiveBranchId = isManager ? null : event.branchId;
+      final effectiveMine = isManager ? 1 : event.mine;
       final results = await Future.wait([
-        _repository.getDashboardData(branchId: effectiveBranchId, mine: event.mine),
-        _repository.getTeamData(branchId: effectiveBranchId, mine: event.mine),
+        _repository.getDashboardData(branchId: effectiveBranchId, mine: effectiveMine),
+        _repository.getTeamData(branchId: effectiveBranchId, mine: effectiveMine),
         _repository.getNotifications(),
         _repository.getBranches(),
         _repository.getTodos(),
@@ -43,12 +49,15 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       }
 
       BranchModel? selected;
-      if (effectiveBranchId != null) {
-        final match = branchList.firstWhere((b) => b.id == effectiveBranchId, orElse: () => branchList.first);
+      if (effectiveBranchId != null && effectiveBranchId > 0) {
+        final match = branchList.firstWhere(
+          (b) => b.id == effectiveBranchId,
+          orElse: () => BranchModel(id: effectiveBranchId, code: '', name: '', isAll: false),
+        );
         selected = match;
       } else if (state is DashboardLoadedState) {
         final prevSelected = (state as DashboardLoadedState).selectedBranch;
-        if (prevSelected != null) {
+        if (prevSelected != null && !prevSelected.isAll) {
           final match = branchList.firstWhere((b) => b.id == prevSelected.id, orElse: () => branchList.first);
           selected = match;
         }
@@ -75,9 +84,13 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     final currentState = state is DashboardLoadedState ? state as DashboardLoadedState : null;
     emit(DashboardLoadingState());
     try {
+      final role = (await PreferencesService().getUserRole())?.toLowerCase() ?? '';
+      final roleLabel = (await PreferencesService().getUserRoleLabel())?.toLowerCase() ?? '';
+      final isManager = role.contains('manager') || roleLabel.contains('manager');
+
       final isAllSelected = event.branch.id == 0 || event.branch.code.toUpperCase() == 'ALL' || event.branch.isAll;
-      final effectiveMine = event.mine ?? (isAllSelected ? null : 1);
-      final targetBranchId = (effectiveMine == 1 || isAllSelected) ? null : event.branch.id;
+      final effectiveMine = isManager ? 1 : (isAllSelected ? event.mine : null);
+      final targetBranchId = isManager ? null : (isAllSelected ? null : (event.branch.id > 0 ? event.branch.id : null));
       final results = await Future.wait([
         _repository.getDashboardData(branchId: targetBranchId, mine: effectiveMine),
         _repository.getTeamData(branchId: targetBranchId, mine: effectiveMine),

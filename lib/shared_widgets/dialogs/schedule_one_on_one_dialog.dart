@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/app_colors.dart';
 import '../../core/localization/app_strings.dart';
 import '../../modules/dashboard/models/branch_model.dart';
 import '../../modules/meetings/models/availability_model.dart';
@@ -114,7 +115,7 @@ class _ScheduleOneOnOneDialogState extends State<ScheduleOneOnOneDialog> {
             if (_isLoading)
               const Padding(
                 padding: EdgeInsets.all(40),
-                child: Center(child: CircularProgressIndicator(color: Color(0xFF0F172A))),
+                child: Center(child: CircularProgressIndicator()),
               )
             else if (_errorMessage != null)
               Padding(
@@ -439,7 +440,7 @@ class _ScheduleOneOnOneDialogState extends State<ScheduleOneOnOneDialog> {
                               );
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF0B132B),
+                              backgroundColor: AppColors.button(context),
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

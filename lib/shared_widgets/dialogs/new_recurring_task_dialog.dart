@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/api_constants.dart';
+import '../../core/constants/app_colors.dart';
 import '../../core/localization/app_strings.dart';
 import '../../core/network/dio_client.dart';
 import '../../modules/dashboard/models/branch_model.dart';
@@ -172,7 +173,7 @@ class _NewRecurringTaskDialogState extends State<NewRecurringTaskDialog> {
             if (_isLoading)
               const Padding(
                 padding: EdgeInsets.all(48),
-                child: Center(child: CircularProgressIndicator(color: Color(0xFF0F172A))),
+                child: Center(child: CircularProgressIndicator()),
               )
             else if (_errorMessage != null)
               Padding(
@@ -480,7 +481,7 @@ class _NewRecurringTaskDialogState extends State<NewRecurringTaskDialog> {
                                 : const Icon(Icons.check_rounded, size: 14),
                             label: const Text('Create Recurring'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF0F172A),
+                              backgroundColor: AppColors.button(context),
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

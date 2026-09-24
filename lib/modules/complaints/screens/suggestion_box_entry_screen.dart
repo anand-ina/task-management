@@ -1,10 +1,10 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
- import '../../../core/utils/network_connectivity_service.dart';
+import '../../../core/utils/network_connectivity_service.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/dialogs/no_internet_dialog.dart';
@@ -336,13 +336,13 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
   Color _getSlipColor(String type) {
     switch (type) {
       case 'complaint':
-        return const Color(0xFFEF4444);
+        return AppColors.dangerRed;
       case 'feedback':
-        return const Color(0xFF3B82F6);
+        return AppColors.infoBlue;
       case 'appreciation':
-        return const Color(0xFF10B981);
+        return AppColors.successGreen;
       default:
-        return const Color(0xFFEF4444);
+        return AppColors.dangerRed;
     }
   }
 
@@ -364,7 +364,7 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
       },
       child: Scaffold(
         key: _scaffoldKey,
-        backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+        backgroundColor: AppColors.scaffoldBg(context),
         drawer: const CustomLeftDrawer(currentRoute: '/complaints/suggestion-box'),
         appBar: const CustomAppBar(),
         body: _isLoadingInitial
@@ -431,7 +431,7 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
                 style: TextStyle(
                   fontSize: isMobile ? 18 : 22,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  color: AppColors.textPrimary(context),
                 ),
               ),
             ),
@@ -446,8 +446,8 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
                 }
               },
               style: OutlinedButton.styleFrom(
-                foregroundColor: isDark ? Colors.white70 : const Color(0xFF334155),
-                side: BorderSide(color: isDark ? Colors.grey.shade700 : const Color(0xFFCBD5E1)),
+                foregroundColor: AppColors.textSecondary(context),
+                side: BorderSide(color: AppColors.border(context)),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
@@ -460,7 +460,7 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
           s.suggestionBoxSub,
           style: TextStyle(
             fontSize: 12.5,
-            color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+            color: AppColors.textSecondary(context),
             height: 1.4,
           ),
         ),
@@ -474,9 +474,9 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: AppColors.card(context),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppColors.border(context)),
       ),
       child: Wrap(
         spacing: 12,
@@ -490,7 +490,7 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
-                border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+                border: Border.all(color: AppColors.border(context)),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -500,7 +500,7 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
                     '${s.boxOpenedLabel}: ',
                     style: TextStyle(
                       fontSize: 12,
-                      color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                      color: AppColors.textSecondary(context),
                     ),
                   ),
                   Text(
@@ -508,7 +508,7 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      color: AppColors.textPrimary(context),
                     ),
                   ),
                   const SizedBox(width: 4),
@@ -522,7 +522,7 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10),
             decoration: BoxDecoration(
-              border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+              border: Border.all(color: AppColors.border(context)),
               borderRadius: BorderRadius.circular(8),
             ),
             child: DropdownButtonHideUnderline(
@@ -532,9 +532,9 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
                 icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 16),
                 style: TextStyle(
                   fontSize: 12,
-                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  color: AppColors.textPrimary(context),
                 ),
-                dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                dropdownColor: AppColors.card(context),
                 onChanged: _onBranchChanged,
                 items: _branches.map((b) {
                   return DropdownMenuItem<int>(
@@ -550,8 +550,8 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
           OutlinedButton(
             onPressed: _addSlipRow,
             style: OutlinedButton.styleFrom(
-              foregroundColor: isDark ? Colors.white70 : const Color(0xFF334155),
-              side: BorderSide(color: isDark ? Colors.grey.shade700 : const Color(0xFFCBD5E1)),
+              foregroundColor: AppColors.textSecondary(context),
+              side: BorderSide(color: AppColors.border(context)),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
@@ -562,8 +562,8 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
           ElevatedButton(
             onPressed: _isSaving ? null : () => _saveRequests(s),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF1E3A8A),
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.primary(context),
+              foregroundColor: AppColors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             ),
@@ -582,18 +582,18 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFFEF2F2),
-        border: Border.all(color: const Color(0xFFFCA5A5)),
+        color: AppColors.red50,
+        border: Border.all(color: AppColors.red300),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [
-          const Icon(Icons.warning_amber_rounded, color: Color(0xFFDC2626), size: 18),
+          const Icon(Icons.warning_amber_rounded, color: AppColors.red600, size: 18),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               message,
-              style: const TextStyle(color: Color(0xFF991B1B), fontSize: 12.5),
+              style: const TextStyle(color: AppColors.red800, fontSize: 12.5),
             ),
           ),
         ],
@@ -605,14 +605,14 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF064E3B).withValues(alpha: 0.3) : const Color(0xFFECFDF5),
+        color: isDark ? AppColors.green900.withValues(alpha: 0.3) : AppColors.green50,
         borderRadius: BorderRadius.circular(10),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(10),
         child: Container(
           decoration: const BoxDecoration(
-            border: Border(left: BorderSide(color: Color(0xFF10B981), width: 4)),
+            border: Border(left: BorderSide(color: AppColors.successGreen, width: 4)),
           ),
           padding: const EdgeInsets.all(14),
           child: Column(
@@ -623,7 +623,7 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
             style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF059669),
+              color: AppColors.green600,
               letterSpacing: 0.5,
             ),
           ),
@@ -635,7 +635,7 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
               return Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF064E3B) : const Color(0xFFD1FAE5),
+                  color: AppColors.badgeGreenBg(context),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -643,7 +643,7 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF065F46),
+                    color: AppColors.green800,
                   ),
                 ),
               );
@@ -665,9 +665,9 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: AppColors.card(context),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppColors.border(context)),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(10),
@@ -689,13 +689,13 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 0.5,
-                      color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
+                      color: AppColors.textSecondary(context),
                     ),
                   ),
                   TextButton(
                     onPressed: () => _removeSlip(index),
                     style: TextButton.styleFrom(
-                      foregroundColor: const Color(0xFFEF4444),
+                      foregroundColor: AppColors.dangerRed,
                       padding: EdgeInsets.zero,
                       minimumSize: const Size(50, 24),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -759,29 +759,29 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.grey.shade300 : const Color(0xFF334155),
+                  color: AppColors.textSecondary(context),
                 ),
               ),
               const SizedBox(height: 4),
               TextField(
                 controller: slip.descriptionController,
                 maxLines: 3,
-                style: const TextStyle(fontSize: 13),
+                style: TextStyle(fontSize: 13, color: AppColors.textPrimary(context)),
                 decoration: InputDecoration(
                   hintText: s.typeSlipPlaceholder,
                   hintStyle: TextStyle(
                     fontSize: 12,
-                    color: isDark ? Colors.grey.shade500 : Colors.grey.shade400,
+                    color: AppColors.textMuted(context),
                   ),
                   filled: true,
-                  fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                  fillColor: AppColors.subtleBg(context),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+                    borderSide: BorderSide(color: AppColors.border(context)),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+                    borderSide: BorderSide(color: AppColors.border(context)),
                   ),
                   contentPadding: const EdgeInsets.all(10),
                 ),
@@ -795,7 +795,7 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.grey.shade300 : const Color(0xFF334155),
+                  color: AppColors.textSecondary(context),
                 ),
               ),
               const SizedBox(height: 6),
@@ -807,10 +807,10 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
                   OutlinedButton.icon(
                     onPressed: slip.isUploading ? null : () => _pickAndUploadPhoto(index),
                     icon: slip.isUploading
-                        ? const SizedBox(
+                        ? SizedBox(
                             width: 12,
                             height: 12,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary(context)),
                           )
                         : const Text('📎', style: TextStyle(fontSize: 12)),
                     label: Text(
@@ -818,8 +818,8 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
                       style: const TextStyle(fontSize: 12),
                     ),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: isDark ? Colors.white70 : const Color(0xFF334155),
-                      side: BorderSide(color: isDark ? Colors.grey.shade700 : const Color(0xFFCBD5E1)),
+                      foregroundColor: AppColors.textSecondary(context),
+                      side: BorderSide(color: AppColors.border(context)),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                     ),
@@ -830,7 +830,7 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
                     return Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                       decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                        color: AppColors.chipBg(context),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Row(
@@ -841,7 +841,7 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
                             constraints: const BoxConstraints(maxWidth: 140),
                             child: Text(
                               att.filename,
-                              style: const TextStyle(fontSize: 11),
+                              style: TextStyle(fontSize: 11, color: AppColors.textPrimary(context)),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -852,7 +852,7 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
                                 slip.attachments.removeAt(attIdx);
                               });
                             },
-                            child: const Icon(Icons.close, size: 12, color: Color(0xFFEF4444)),
+                            child: const Icon(Icons.close, size: 12, color: AppColors.dangerRed),
                           ),
                         ],
                       ),
@@ -876,23 +876,23 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
           style: TextStyle(
             fontSize: 11.5,
             fontWeight: FontWeight.w600,
-            color: isDark ? Colors.grey.shade300 : const Color(0xFF334155),
+            color: AppColors.textSecondary(context),
           ),
         ),
         const SizedBox(height: 4),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-            border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+            color: AppColors.subtleBg(context),
+            border: Border.all(color: AppColors.border(context)),
             borderRadius: BorderRadius.circular(8),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               isExpanded: true,
               value: slip.type,
-              style: TextStyle(fontSize: 12, color: isDark ? Colors.white : const Color(0xFF0F172A)),
-              dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+              style: TextStyle(fontSize: 12, color: AppColors.textPrimary(context)),
+              dropdownColor: AppColors.card(context),
               onChanged: (val) {
                 if (val != null) {
                   setState(() {
@@ -921,28 +921,28 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
           style: TextStyle(
             fontSize: 11.5,
             fontWeight: FontWeight.w600,
-            color: isDark ? Colors.grey.shade300 : const Color(0xFF334155),
+            color: AppColors.textSecondary(context),
           ),
         ),
         const SizedBox(height: 4),
         TextField(
           controller: slip.studentNameController,
-          style: const TextStyle(fontSize: 12),
+          style: TextStyle(fontSize: 12, color: AppColors.textPrimary(context)),
           decoration: InputDecoration(
             hintText: s.anonymousHint,
             hintStyle: TextStyle(
               fontSize: 12,
-              color: isDark ? Colors.grey.shade500 : Colors.grey.shade400,
+              color: AppColors.textMuted(context),
             ),
             filled: true,
-            fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+            fillColor: AppColors.subtleBg(context),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+              borderSide: BorderSide(color: AppColors.border(context)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+              borderSide: BorderSide(color: AppColors.border(context)),
             ),
             contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           ),
@@ -960,28 +960,28 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
           style: TextStyle(
             fontSize: 11.5,
             fontWeight: FontWeight.w600,
-            color: isDark ? Colors.grey.shade300 : const Color(0xFF334155),
+            color: AppColors.textSecondary(context),
           ),
         ),
         const SizedBox(height: 4),
         TextField(
           controller: slip.classSectionController,
-          style: const TextStyle(fontSize: 12),
+          style: TextStyle(fontSize: 12, color: AppColors.textPrimary(context)),
           decoration: InputDecoration(
             hintText: s.classPlaceholder,
             hintStyle: TextStyle(
               fontSize: 12,
-              color: isDark ? Colors.grey.shade500 : Colors.grey.shade400,
+              color: AppColors.textMuted(context),
             ),
             filled: true,
-            fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+            fillColor: AppColors.subtleBg(context),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+              borderSide: BorderSide(color: AppColors.border(context)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+              borderSide: BorderSide(color: AppColors.border(context)),
             ),
             contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           ),
@@ -999,23 +999,23 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
           style: TextStyle(
             fontSize: 11.5,
             fontWeight: FontWeight.w600,
-            color: isDark ? Colors.grey.shade300 : const Color(0xFF334155),
+            color: AppColors.textSecondary(context),
           ),
         ),
         const SizedBox(height: 4),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-            border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+            color: AppColors.subtleBg(context),
+            border: Border.all(color: AppColors.border(context)),
             borderRadius: BorderRadius.circular(8),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               isExpanded: true,
               value: slip.aboutKind,
-              style: TextStyle(fontSize: 12, color: isDark ? Colors.white : const Color(0xFF0F172A)),
-              dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+              style: TextStyle(fontSize: 12, color: AppColors.textPrimary(context)),
+              dropdownColor: AppColors.card(context),
               onChanged: (val) {
                 if (val != null) {
                   setState(() {
@@ -1045,15 +1045,15 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
           style: TextStyle(
             fontSize: 11.5,
             fontWeight: FontWeight.w600,
-            color: isDark ? Colors.grey.shade300 : const Color(0xFF334155),
+            color: AppColors.textSecondary(context),
           ),
         ),
         const SizedBox(height: 4),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-            border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+            color: AppColors.subtleBg(context),
+            border: Border.all(color: AppColors.border(context)),
             borderRadius: BorderRadius.circular(8),
           ),
           child: DropdownButtonHideUnderline(
@@ -1061,8 +1061,8 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
               isExpanded: true,
               value: slip.aboutUserId,
               hint: Text(s.notNamedOption, style: const TextStyle(fontSize: 12)),
-              style: TextStyle(fontSize: 12, color: isDark ? Colors.white : const Color(0xFF0F172A)),
-              dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+              style: TextStyle(fontSize: 12, color: AppColors.textPrimary(context)),
+              dropdownColor: AppColors.card(context),
               onChanged: (val) {
                 setState(() {
                   slip.aboutUserId = val;
@@ -1099,23 +1099,23 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
           style: TextStyle(
             fontSize: 11.5,
             fontWeight: FontWeight.w600,
-            color: isDark ? Colors.grey.shade300 : const Color(0xFF334155),
+            color: AppColors.textSecondary(context),
           ),
         ),
         const SizedBox(height: 4),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-            border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+            color: AppColors.subtleBg(context),
+            border: Border.all(color: AppColors.border(context)),
             borderRadius: BorderRadius.circular(8),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               isExpanded: true,
               value: validCategory,
-              style: TextStyle(fontSize: 12, color: isDark ? Colors.white : const Color(0xFF0F172A)),
-              dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+              style: TextStyle(fontSize: 12, color: AppColors.textPrimary(context)),
+              dropdownColor: AppColors.card(context),
               onChanged: (val) {
                 if (val != null) {
                   setState(() {
@@ -1142,23 +1142,23 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
           style: TextStyle(
             fontSize: 11.5,
             fontWeight: FontWeight.w600,
-            color: isDark ? Colors.grey.shade300 : const Color(0xFF334155),
+            color: AppColors.textSecondary(context),
           ),
         ),
         const SizedBox(height: 4),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-            border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+            color: AppColors.subtleBg(context),
+            border: Border.all(color: AppColors.border(context)),
             borderRadius: BorderRadius.circular(8),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               isExpanded: true,
               value: slip.visibility,
-              style: TextStyle(fontSize: 12, color: isDark ? Colors.white : const Color(0xFF0F172A)),
-              dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+              style: TextStyle(fontSize: 12, color: AppColors.textPrimary(context)),
+              dropdownColor: AppColors.card(context),
               onChanged: (val) {
                 if (val != null) {
                   setState(() {
@@ -1185,7 +1185,7 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
       s.suggestionBoxFootnote(ownerName, points),
       style: TextStyle(
         fontSize: 11.5,
-        color: isDark ? Colors.grey.shade500 : Colors.grey.shade600,
+        color: AppColors.textSecondary(context),
         height: 1.4,
       ),
     );

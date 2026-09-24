@@ -1,5 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import '../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../modules/tasks/models/task_model.dart';
 import '../../../modules/tasks/repository/task_repository.dart';
@@ -452,7 +453,7 @@ class _ChangeStatusDialogState extends State<ChangeStatusDialog> {
                   ElevatedButton(
                     onPressed: _isSaving ? null : _handleSave,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0F172A),
+                      backgroundColor: AppColors.button(context),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

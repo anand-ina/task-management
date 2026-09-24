@@ -14,6 +14,10 @@ import 'modules/auth/screens/login_screen.dart';
 import 'modules/dashboard/bloc/dashboard_bloc.dart';
 import 'modules/approvals/bloc/approvals_bloc.dart';
 import 'modules/complaints/bloc/complaints_bloc.dart';
+import 'modules/announcements/bloc/announcements_bloc.dart';
+import 'modules/hourly_log/bloc/hourly_log_bloc.dart';
+import 'modules/hourly_log/repository/hourly_log_repository.dart';
+import 'modules/hourly_log/widgets/hourly_log_prompt_overlay.dart';
 import 'modules/settings/bloc/language_cubit.dart';
 import 'shared_widgets/dialogs/no_internet_dialog.dart';
 
@@ -80,6 +84,10 @@ class _MyAppState extends State<MyApp> {
         BlocProvider<DashboardBloc>(create: (context) => DashboardBloc()),
         BlocProvider<ApprovalsBloc>(create: (context) => ApprovalsBloc()),
         BlocProvider<ComplaintsBloc>(create: (context) => ComplaintsBloc()),
+        BlocProvider<AnnouncementsBloc>(create: (context) => AnnouncementsBloc()),
+        BlocProvider<HourlyLogBloc>(
+          create: (context) => HourlyLogBloc(HourlyLogRepository()),
+        ),
       ],
       child: BlocBuilder<ThemeCubit, ThemeMode>(
         builder: (context, themeMode) {
@@ -103,6 +111,11 @@ class _MyAppState extends State<MyApp> {
                   GlobalWidgetsLocalizations.delegate,
                   GlobalCupertinoLocalizations.delegate,
                 ],
+                builder: (context, child) {
+                  return HourlyLogPromptOverlay(
+                    child: child ?? const SizedBox.shrink(),
+                  );
+                },
                 home: BlocListener<AuthBloc, AuthState>(
                   listener: (context, state) {
                     if (state is UnauthenticatedState) {

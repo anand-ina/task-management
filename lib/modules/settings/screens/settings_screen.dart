@@ -5,6 +5,7 @@ import '../../../core/localization/app_strings.dart';
 import '../../../core/theme/theme_cubit.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../bloc/language_cubit.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -19,7 +20,8 @@ class SettingsScreen extends StatelessWidget {
       floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/preferences'),
       appBar: const CustomAppBar(),
-      body: SingleChildScrollView(
+      body: AnnouncementBannerWrapper(
+        child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -68,6 +70,7 @@ class SettingsScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

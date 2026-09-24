@@ -4,6 +4,7 @@ import '../../../core/localization/app_strings.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 
 class FaqScreen extends StatefulWidget {
   const FaqScreen({super.key});
@@ -41,7 +42,8 @@ class _FaqScreenState extends State<FaqScreen> {
         floatingActionButton: const TodoFloatingActionButton(),
           appBar: const CustomAppBar(),
         drawer: const CustomLeftDrawer(currentRoute: '/faq'),
-        body: SingleChildScrollView(
+        body: AnnouncementBannerWrapper(
+          child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -134,6 +136,7 @@ class _FaqScreenState extends State<FaqScreen> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

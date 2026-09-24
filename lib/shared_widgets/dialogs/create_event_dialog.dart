@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/api_constants.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/network/dio_client.dart';
 
 import '../../modules/auth/bloc/auth_bloc.dart';
@@ -527,7 +528,7 @@ class _CreateEventDialogState extends State<CreateEventDialog> {
                 const SizedBox(width: 12),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0F172A),
+                    backgroundColor: AppColors.button(context),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),

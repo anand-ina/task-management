@@ -14,6 +14,7 @@ import '../../modules/approvals/screens/task_approvals_screen.dart';
 import '../../modules/audits/screens/audits_screen.dart';
 import '../../modules/auth/bloc/auth_bloc.dart';
 import '../../modules/auth/bloc/auth_state.dart';
+import '../../modules/announcements/screens/announcements_screen.dart';
 import '../../modules/complaints/screens/appreciations_screen.dart';
 import '../../modules/complaints/screens/complaints_history_insights_screen.dart';
 import '../../modules/complaints/screens/complaints_screen.dart';
@@ -45,6 +46,7 @@ import '../../modules/tasks/screens/my_tasks_screen.dart';
 import '../../modules/tasks/screens/recurring_tasks_screen.dart';
 import '../../modules/todos/screens/today_screen.dart';
 import '../../modules/todos/screens/todo_history_screen.dart';
+import '../../modules/hourly_log/screens/hourly_log_screen.dart';
 
 class CustomLeftDrawer extends StatelessWidget {
   final String currentRoute;
@@ -124,8 +126,6 @@ class CustomLeftDrawer extends StatelessWidget {
         roleScope = s.operationalScopeYourOwn;
       }
     }
-
-    final isMobile = MediaQuery.of(context).size.width < 800;
 
     return Drawer(
       backgroundColor: isDark ? const Color(0xFF0D1424) : Colors.white,
@@ -249,6 +249,13 @@ class CustomLeftDrawer extends StatelessWidget {
                           title: s.dashboard,
                           isSelected: currentRoute == '/dashboard',
                           onTap: () => _navigate(context, '/dashboard'),
+                        ),
+                        _buildNavItem(
+                          context,
+                          icon: Icons.campaign_rounded,
+                          title: s.announcements,
+                          isSelected: currentRoute == '/announcements',
+                          onTap: () => _navigate(context, '/announcements'),
                         ),
                         if (isDirector)
                           _buildNavItem(
@@ -383,6 +390,14 @@ class CustomLeftDrawer extends StatelessWidget {
                           isSelected: currentRoute == '/todo-history',
                           onTap: () => _navigate(context, '/todo-history'),
                         ),
+                        if (isAcademicExecutive || isTeamLead)
+                          _buildNavItem(
+                            context,
+                            icon: Icons.access_time_rounded,
+                            title: s.hourlyLog,
+                            isSelected: currentRoute == '/hourly-log',
+                            onTap: () => _navigate(context, '/hourly-log'),
+                          ),
                       ],
                     ),
 
@@ -581,8 +596,8 @@ class CustomLeftDrawer extends StatelessWidget {
                       ],
                     ),
 
-                    // CARD 14: AI & SETTINGS
-                    if (!isManager)
+                    // CARD 14: AI & SETTINGS (Shown for all logins except administrator)
+                    if (!isAdmin)
                       _buildSectionCard(
                         context,
                         title: s.sutraAi,
@@ -862,6 +877,21 @@ class CustomLeftDrawer extends StatelessWidget {
       return;
     }
 
+    if (route == '/announcements') {
+      if (currentRoute == '/announcements') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const AnnouncementsScreen()),
+      );
+      return;
+    }
+
     if (route == '/org-overview' || route == '/campus-overview') {
       if (currentRoute == '/org-overview' || currentRoute == '/campus-overview') {
         if (isDrawerOpen) navigator.pop();
@@ -1128,6 +1158,21 @@ class CustomLeftDrawer extends StatelessWidget {
       }
       navigator.push(
         MaterialPageRoute(builder: (context) => const TodoHistoryScreen()),
+      );
+      return;
+    }
+
+    if (route == '/hourly-log') {
+      if (currentRoute == '/hourly-log') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const HourlyLogScreen()),
       );
       return;
     }

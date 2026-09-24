@@ -342,6 +342,8 @@ class AppStringsEn extends AppStrings {
   @override
   String approvalsBadge(int count) => '$count approvals';
   @override
+  String toReviewBadge(int count) => '$count to review';
+  @override
   String toStartBadge(int count) => '$count to start';
   @override
   String inProgressBadge(int count) => '$count in progress';
@@ -1984,5 +1986,124 @@ class AppStringsEn extends AppStrings {
   String get searchFacultyPlaceholder => 'Search faculty...';
   @override
   String get changingThisMovesPoints => 'Changing this moves the points.';
+
+  // ── Announcements Module Strings ──────────────────────────────────────────
+  @override
+  String get announcements => 'Announcements';
+  @override
+  String get announcementsTickerLabel => 'ANNOUNCEMENTS';
+  @override
+  String get announcementsSubtitle =>
+      'Posts here scroll across the top of every page for the whole team. Managers & above can create them.';
+  @override
+  String get newAnnouncement => 'New announcement';
+  @override
+  String get editAnnouncement => 'Edit announcement';
+  @override
+  String get postAnnouncement => 'Post announcement';
+  @override
+  String get announcementTitleLabel => 'Title *';
+  @override
+  String get announcementTitleHint => 'e.g., Half-day on Friday for Sports Day';
+  @override
+  String get announcementDetailsLabel => 'Details';
+  @override
+  String get announcementDetailsHint => 'Optional longer message shown in the ticker...';
+  @override
+  String get priorityInfo => 'Info';
+  @override
+  String get priorityCritical => 'Critical';
+  @override
+  String get priorityWarning => 'Warning';
+  @override
+  String get activeShowNow => 'Active (show now)';
+  @override
+  String get showFromOptional => 'Show from (optional)';
+  @override
+  String get showUntilOptional => 'Show until (optional)';
+  @override
+  String get deactivate => 'Deactivate';
+  @override
+  String get activate => 'Activate';
+  @override
+  String get delete => 'Delete';
+  @override
+  String get edit => 'Edit';
+  @override
+  String deleteAnnouncementConfirmation(String title) => 'Delete announcement "$title"?';
+  @override
+  String get noAnnouncementsFound => 'No announcements found';
+  @override
+  String get announcementCreatedSuccess => 'Announcement posted successfully';
+  @override
+  String get announcementUpdatedSuccess => 'Announcement updated successfully';
+  @override
+  String get announcementDeletedSuccess => 'Announcement deleted successfully';
+  @override
+  String get announcementDeactivatedSuccess => 'Announcement deactivated successfully';
+  @override
+  String get announcementActivatedSuccess => 'Announcement activated successfully';
+  @override
+  String get themeModeLight => 'Light';
+  @override
+  String get themeModeDark => 'Dark';
+  @override
+  String get themeModeSystem => 'System Comfortable';
+
+  // Hourly Log Strings
+  @override
+  String get hourlyLog => 'Hourly Log';
+  @override
+  String get dailyHourlyLog => 'Daily Hourly Log';
+  @override
+  String get dailyHourlyLogSubtitle =>
+      'Log what you did each hour — add one or more entries per slot. Every slot except your lunch hour is required. Auto-submits at 9 PM if you don\'t submit it yourself.';
+  @override
+  String slotsFilledCount(int filled, int total) => '$filled/$total slots filled';
+  @override
+  String get submitDsr => 'Submit DSR';
+  @override
+  String get setAsLunch => 'Set as lunch';
+  @override
+  String get lunchHour => 'Lunch Hour';
+  @override
+  String get whatDidYouWorkOn => 'What did you work on...';
+  @override
+  String get deleteItemConfirm => 'Are you sure you want to delete this log entry?';
+  @override
+  String get editLogEntry => 'Edit Log Entry';
+  @override
+  String get dsrSubmittedSuccessfully => 'DSR submitted successfully';
+  @override
+  String get addEntry => 'Add';
+  @override
+  String get noEntriesYet => 'No entries yet for this slot';
+  @override
+  String hourlyLogPromptTitle(String slot) => 'Hourly log — $slot';
+  @override
+  String whatDidYouWorkOnDuring(String slot) => 'What did you work on during $slot?';
+  @override
+  String get addQuickEntryHint => 'Add a quick entry...';
+  @override
+  String get logButton => 'Log';
+  @override
+  String get openFullLog => 'Open full log →';
+  @override
+  String get remindMeLater => 'Remind me later';
+  @override
+  String get submitDsrConfirmTitle => 'Submit DSR?';
+  @override
+  String get submitDsrConfirmMessage =>
+      'Submit your hourly log for today? You won’t be able to edit it afterwards.';
+  @override
+  String get submittedStatus => 'Submitted';
+  @override
+  String get notFilledStatus => 'Not filled';
+  @override
+  String entryLoggedSuccess(String slot) => 'Entry logged successfully for $slot!';
+  @override
+  String get hourlyLogSubmittedSuccess => 'Hourly log submitted successfully!';
+  @override
+  String get announcementsHeader => 'ANNOUNCEMENTS';
 }
 

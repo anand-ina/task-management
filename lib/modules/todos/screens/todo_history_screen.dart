@@ -5,6 +5,7 @@ import '../../../core/localization/app_strings.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../bloc/todos_bloc.dart';
 import '../bloc/todos_event.dart';
 import '../bloc/todos_state.dart';
@@ -33,7 +34,8 @@ class TodoHistoryScreen extends StatelessWidget {
           floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/todo-history'),
           appBar: const CustomAppBar(),
-          body: BlocBuilder<TodosBloc, TodosState>(
+          body: AnnouncementBannerWrapper(
+            child: BlocBuilder<TodosBloc, TodosState>(
             builder: (context, state) {
               return RefreshIndicator(
                 onRefresh: () async {
@@ -68,7 +70,7 @@ class TodoHistoryScreen extends StatelessWidget {
                       if (state is TodosLoadingState)
                         const Padding(
                           padding: EdgeInsets.all(60),
-                          child: Center(child: CircularProgressIndicator(color: Color(0xFF0F172A))),
+                          child: Center(child: CircularProgressIndicator()),
                         )
                       else if (state is TodosErrorState)
                         Center(
@@ -96,8 +98,9 @@ class TodoHistoryScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildGroupedHistory(BuildContext context, AppStrings s, List<TodoHistoryModel> items) {
     final isDark = Theme.of(context).brightness == Brightness.dark;

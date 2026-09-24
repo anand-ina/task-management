@@ -21,7 +21,7 @@ class BranchInfo {
     return BranchInfo(
       id: json['id'] as int? ?? (int.tryParse(json['id']?.toString() ?? '0') ?? 0),
       code: codeVal,
-      name: nameVal.isNotEmpty ? nameVal : (codeVal.isNotEmpty ? codeVal : 'Head Office'),
+      name: nameVal.isNotEmpty ? nameVal : codeVal,
       isAll: json['is_all'] as bool? ?? json['isAll'] as bool? ?? false,
     );
   }
@@ -204,6 +204,30 @@ class UserProfile {
       }
     }
 
+    final dynamic explicitBranchRaw = json['branch_id'] ?? json['branchId'] ?? (rawBranch is num ? rawBranch : null);
+    final explicitBranchId = int.tryParse(explicitBranchRaw?.toString() ?? '');
+    if (explicitBranchId != null && explicitBranchId > 0) {
+      if (resolvedBranch == null) {
+        resolvedBranch = BranchInfo(id: explicitBranchId, code: '', name: '', isAll: false);
+      } else if (resolvedBranch.id == 0) {
+        resolvedBranch = BranchInfo(
+          id: explicitBranchId,
+          code: resolvedBranch.code,
+          name: resolvedBranch.name,
+          isAll: resolvedBranch.isAll,
+        );
+      }
+    }
+
+    if (resolvedBranch != null && resolvedBranch.id > 0) {
+      final matchingParsed = parsedBranches.where((b) => b.id == resolvedBranch!.id).firstOrNull;
+      if (matchingParsed != null && matchingParsed.name.isNotEmpty) {
+        resolvedBranch = matchingParsed;
+      } else if (!parsedBranches.any((b) => b.id == resolvedBranch!.id)) {
+        parsedBranches.add(resolvedBranch);
+      }
+    }
+
     return UserProfile(
       id: json['id'] as int? ?? (int.tryParse(json['id']?.toString() ?? '0') ?? 0),
       name: resolvedName,
@@ -262,8 +286,22 @@ class UserProfile {
     return r.contains('admin') || rl.contains('admin');
   }
 
+  bool get isManager {
+    final r = role.toLowerCase();
+    final rl = roleLabel.toLowerCase();
+    return r.contains('manager') || rl.contains('manager');
+  }
+
   bool get hasMultiBranchAccess {
     return isDirector || isPrincipal || isAdmin;
+  }
+
+  int? get assignedBranchId {
+    if (branch != null && branch!.id > 0) return branch!.id;
+    for (final b in branches) {
+      if (b.id > 0) return b.id;
+    }
+    return null;
   }
 }
 

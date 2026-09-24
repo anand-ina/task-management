@@ -8,6 +8,7 @@ import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/dialogs/no_internet_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../../shared_widgets/dropdowns/searchable_filter_dropdown.dart';
 import '../bloc/complaints_bloc.dart';
 import '../bloc/complaints_event.dart';
@@ -101,8 +102,9 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
         appBar: const CustomAppBar(),
         drawer: const CustomLeftDrawer(currentRoute: '/complaints/dashboard'),
         backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-        body: SafeArea(
-          child: BlocBuilder<ComplaintsBloc, ComplaintsState>(
+        body: AnnouncementBannerWrapper(
+          child: SafeArea(
+            child: BlocBuilder<ComplaintsBloc, ComplaintsState>(
             builder: (context, state) {
               TicketInsightsResponse insights = const TicketInsightsResponse();
               List<LookupBranchModel> branches = [];
@@ -127,7 +129,7 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
                     ? const Center(
                         child: Padding(
                           padding: EdgeInsets.all(40),
-                          child: CircularProgressIndicator(color: Color(0xFF8B1D24)),
+                          child: CircularProgressIndicator(),
                         ),
                       )
                     : SingleChildScrollView(
@@ -198,8 +200,9 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildHeader(
     AppStrings s,

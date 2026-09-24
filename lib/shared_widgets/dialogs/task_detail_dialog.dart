@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../modules/auth/bloc/auth_bloc.dart';
 import '../../../modules/auth/bloc/auth_state.dart';
@@ -20,6 +21,7 @@ class TaskDetailDialog extends StatefulWidget {
   final TaskItemModel? initialTask;
   final bool isReadOnly;
   final bool canCloneTask;
+  final bool showOnlyCloneAndCancel;
 
   const TaskDetailDialog({
     super.key,
@@ -27,6 +29,7 @@ class TaskDetailDialog extends StatefulWidget {
     this.initialTask,
     this.isReadOnly = false,
     this.canCloneTask = false,
+    this.showOnlyCloneAndCancel = false,
   });
 
   static Future<void> show(
@@ -35,6 +38,7 @@ class TaskDetailDialog extends StatefulWidget {
     TaskItemModel? initialTask,
     bool isReadOnly = false,
     bool canCloneTask = false,
+    bool showOnlyCloneAndCancel = false,
   }) {
     return showDialog(
       context: context,
@@ -44,6 +48,7 @@ class TaskDetailDialog extends StatefulWidget {
         initialTask: initialTask,
         isReadOnly: isReadOnly,
         canCloneTask: canCloneTask,
+        showOnlyCloneAndCancel: showOnlyCloneAndCancel,
       ),
     );
   }
@@ -335,7 +340,7 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text('Assignees', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
-                  if (!widget.isReadOnly && !isAcademicExecutive && !(isDirector && isDoneOrCompleted)) ...[
+                  if (!widget.isReadOnly && !isAcademicExecutive && !(isDirector && isDoneOrCompleted) && !widget.showOnlyCloneAndCancel) ...[
                     InkWell(
                       onTap: () async {
                         final result = await ReassignTaskDialog.show(
@@ -628,11 +633,11 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                         ),
                       ),
                     ),
-                    if (!widget.isReadOnly) ...[
+                    if (!widget.isReadOnly && !widget.showOnlyCloneAndCancel) ...[
                       const SizedBox(width: 8),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0F172A),
+                          backgroundColor: AppColors.button(context),
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
@@ -660,7 +665,42 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
               ],
 
               // 10. Footer Action Buttons Bar
-              if (isDirector && isCompleted) ...[
+              if (widget.showOnlyCloneAndCancel) ...[
+                const SizedBox(height: 20),
+                const Divider(),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        CloneTaskDialog.show(
+                          context,
+                          sourceTask: _detail,
+                          sourceItem: widget.initialTask,
+                        );
+                      },
+                      icon: const Icon(Icons.content_copy_outlined, size: 14),
+                      label: Text(s.cloneTaskTitle, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        side: BorderSide(color: isDark ? Colors.white24 : Colors.black26),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(_hasReviewed),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        side: BorderSide(color: isDark ? Colors.white24 : Colors.black26),
+                      ),
+                      child: Text(s.cancelButton, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+              ] else if (isDirector && isCompleted) ...[
                 // Director viewing a completed task — show Clone Task + Close
                 const SizedBox(height: 20),
                 const Divider(),
@@ -723,7 +763,7 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0F172A),
+                        backgroundColor: AppColors.button(context),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

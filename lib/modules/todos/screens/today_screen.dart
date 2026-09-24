@@ -2,10 +2,12 @@ import '../../../shared_widgets/floating_action_button/todo_floating_action_butt
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../bloc/todos_bloc.dart';
 import '../bloc/todos_event.dart';
 import '../bloc/todos_state.dart';
@@ -55,7 +57,8 @@ class _TodayScreenState extends State<TodayScreen> {
           floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/todo'),
           appBar: const CustomAppBar(),
-          body: BlocBuilder<TodosBloc, TodosState>(
+          body: AnnouncementBannerWrapper(
+            child: BlocBuilder<TodosBloc, TodosState>(
             builder: (context, state) {
               return RefreshIndicator(
                 onRefresh: () async {
@@ -89,7 +92,7 @@ class _TodayScreenState extends State<TodayScreen> {
                       if (state is TodosLoadingState)
                         const Padding(
                           padding: EdgeInsets.all(60),
-                          child: Center(child: CircularProgressIndicator(color: Color(0xFF0F172A))),
+                          child: Center(child: CircularProgressIndicator()),
                         )
                       else if (state is TodosErrorState)
                         Center(
@@ -165,7 +168,7 @@ class _TodayScreenState extends State<TodayScreen> {
                                   const SizedBox(width: 8),
                                   ElevatedButton(
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF0F172A),
+                                      backgroundColor: AppColors.button(context),
                                       foregroundColor: Colors.white,
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
@@ -247,8 +250,9 @@ class _TodayScreenState extends State<TodayScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildPillBadge(String label, Color bg, Color text) {
     return Container(

@@ -1,7 +1,9 @@
 import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
@@ -24,11 +26,13 @@ class AdminOrgChartScreen extends StatelessWidget {
         onPopInvokedWithResult: (didPop, _) async {
           if (!didPop) await ExitConfirmationDialog.show(context);
         },
-        child: Scaffold(
-          floatingActionButton: const TodoFloatingActionButton(),
-          drawer: const CustomLeftDrawer(currentRoute: '/org-chart'),
-          appBar: const CustomAppBar(),
-          body: const _OrgChartBody(),
+        child: const Scaffold(
+          floatingActionButton: TodoFloatingActionButton(),
+          drawer: CustomLeftDrawer(currentRoute: '/org-chart'),
+          appBar: CustomAppBar(),
+          body: AnnouncementBannerWrapper(
+            child: _OrgChartBody(),
+          ),
         ),
       ),
     );
@@ -70,7 +74,7 @@ class _OrgChartBody extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        color: AppColors.textPrimary(context),
                       ),
                     ),
                     if (state is OrgChartLoadedState) ...[
@@ -78,7 +82,7 @@ class _OrgChartBody extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+                          color: AppColors.subtleBg(context),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
@@ -86,7 +90,7 @@ class _OrgChartBody extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.white70 : const Color(0xFF475569),
+                            color: AppColors.textSecondary(context),
                           ),
                         ),
                       ),
@@ -98,7 +102,7 @@ class _OrgChartBody extends StatelessWidget {
                   s.adminOrgChartSubtitle,
                   style: TextStyle(
                     fontSize: 12,
-                    color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                    color: AppColors.textSecondary(context),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -106,13 +110,13 @@ class _OrgChartBody extends StatelessWidget {
                 // Legend row
                 Row(
                   children: [
-                    Container(width: 16, height: 2, color: isDark ? Colors.white60 : Colors.grey.shade600),
+                    Container(width: 16, height: 2, color: isDark ? AppColors.white : AppColors.textSecondary(context)),
                     const SizedBox(width: 6),
                     Text(
                       s.primaryReportingLegend,
                       style: TextStyle(
                         fontSize: 11,
-                        color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                        color: AppColors.textSecondary(context),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -121,7 +125,7 @@ class _OrgChartBody extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 11,
                         letterSpacing: 1.5,
-                        color: isDark ? Colors.white60 : Colors.grey.shade600,
+                        color: AppColors.textSecondary(context),
                       ),
                     ),
                     const SizedBox(width: 6),
@@ -129,7 +133,7 @@ class _OrgChartBody extends StatelessWidget {
                       s.secondaryReportingLegend,
                       style: TextStyle(
                         fontSize: 11,
-                        color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                        color: AppColors.textSecondary(context),
                       ),
                     ),
                   ],
@@ -137,17 +141,17 @@ class _OrgChartBody extends StatelessWidget {
                 const SizedBox(height: 20),
 
                 if (state is OrgChartLoadingState)
-                  const Padding(
-                    padding: EdgeInsets.all(60),
-                    child: Center(
-                      child: CircularProgressIndicator(color: Color(0xFF0F172A)),
+                  Padding(
+                    padding: const EdgeInsets.all(60),
+                    child: const Center(
+                      child: CircularProgressIndicator(),
                     ),
                   )
                 else if (state is OrgChartErrorState)
                   Center(
                     child: Column(
                       children: [
-                        Text(state.message, style: const TextStyle(color: Colors.red)),
+                        Text(state.message, style: TextStyle(color: AppColors.red)),
                         const SizedBox(height: 12),
                         ElevatedButton(
                           onPressed: () => context.read<OrgChartBloc>().add(FetchOrgChartEvent()),
@@ -191,7 +195,7 @@ class _OrgChartBody extends StatelessWidget {
           padding: const EdgeInsets.all(40),
           child: Text(
             s.noOrgChartDataFound,
-            style: TextStyle(color: isDark ? Colors.white54 : Colors.grey.shade500),
+            style: TextStyle(color: AppColors.textMuted),
           ),
         ),
       );
@@ -200,10 +204,10 @@ class _OrgChartBody extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: AppColors.card(context),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          color: AppColors.border(context),
         ),
       ),
       child: Column(
@@ -222,7 +226,7 @@ class _OrgChartBody extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 child: Divider(
                   height: 1,
-                  color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                  color: AppColors.border(context),
                 ),
               ),
           ],
@@ -264,7 +268,7 @@ class _OrgChartBody extends StatelessWidget {
                 s.peopleCount(levelModel.people.length),
                 style: TextStyle(
                   fontSize: 11,
-                  color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                  color: AppColors.textSecondary(context),
                 ),
               ),
               if (!isWide) const SizedBox(height: 12),
@@ -314,18 +318,18 @@ class _OrgChartBody extends StatelessWidget {
       width: 250,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0F172A) : Colors.white,
+        color: AppColors.card(context),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: isCurrent
-              ? const Color(0xFF2563EB)
-              : (isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+              ? AppColors.blue
+              : AppColors.border(context),
           width: isCurrent ? 2.0 : 1.0,
         ),
         boxShadow: isCurrent
             ? [
                 BoxShadow(
-                  color: const Color(0xFF2563EB).withValues(alpha: 0.15),
+                  color: AppColors.blue.withValues(alpha: 0.15),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 )
@@ -343,8 +347,8 @@ class _OrgChartBody extends StatelessWidget {
                 backgroundColor: _hexToColor(person.avatarColor),
                 child: Text(
                   person.initials,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: AppColors.white,
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),
@@ -363,7 +367,7 @@ class _OrgChartBody extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : const Color(0xFF0F172A),
+                              color: AppColors.textPrimary(context),
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -374,7 +378,7 @@ class _OrgChartBody extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                             decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                              color: AppColors.subtleBg(context),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
@@ -382,7 +386,7 @@ class _OrgChartBody extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 9,
                                 fontWeight: FontWeight.bold,
-                                color: isDark ? Colors.white70 : const Color(0xFF475569),
+                                color: AppColors.textSecondary(context),
                               ),
                             ),
                           ),
@@ -393,7 +397,7 @@ class _OrgChartBody extends StatelessWidget {
                       person.designation.isNotEmpty ? person.designation : person.roleLabel,
                       style: TextStyle(
                         fontSize: 10,
-                        color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                        color: AppColors.textSecondary(context),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -410,9 +414,7 @@ class _OrgChartBody extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: isDark
-                    ? const Color(0xFF1E293B)
-                    : const Color(0xFFF1F5F9),
+                color: AppColors.subtleBg(context),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
@@ -420,7 +422,7 @@ class _OrgChartBody extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w500,
-                  color: isDark ? Colors.white70 : const Color(0xFF334155),
+                  color: AppColors.textSecondary(context),
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -438,14 +440,14 @@ class _OrgChartBody extends StatelessWidget {
                   '↳ ',
                   style: TextStyle(
                     fontSize: 11,
-                    color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                    color: AppColors.textSecondary(context),
                   ),
                 ),
                 Text(
                   '${s.reportsToPrefix} ',
                   style: TextStyle(
                     fontSize: 10,
-                    color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                    color: AppColors.textSecondary(context),
                   ),
                 ),
                 Expanded(
@@ -454,7 +456,7 @@ class _OrgChartBody extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      color: AppColors.textPrimary(context),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -474,14 +476,14 @@ class _OrgChartBody extends StatelessWidget {
                   '⇢ ',
                   style: TextStyle(
                     fontSize: 11,
-                    color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                    color: AppColors.textSecondary(context),
                   ),
                 ),
                 Text(
                   '${s.dottedPrefix} ',
                   style: TextStyle(
                     fontSize: 10,
-                    color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                    color: AppColors.textSecondary(context),
                   ),
                 ),
                 Expanded(
@@ -490,7 +492,7 @@ class _OrgChartBody extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      color: AppColors.textPrimary(context),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -507,28 +509,28 @@ class _OrgChartBody extends StatelessWidget {
   Color _getLevelColor(int level) {
     switch (level) {
       case 5:
-        return const Color(0xFF2563EB); // Blue for Director
+        return AppColors.blue;
       case 4:
-        return const Color(0xFF0284C7); // Light Blue for Center Head
+        return AppColors.cyan;
       case 3:
-        return const Color(0xFF16A34A); // Green for Manager
+        return AppColors.green;
       case 2:
-        return const Color(0xFFD97706); // Amber for Team Lead
+        return AppColors.amber;
       case 1:
-        return const Color(0xFF64748B); // Slate for Executive
+        return AppColors.slate500;
       default:
-        return const Color(0xFF475569);
+        return AppColors.slate600;
     }
   }
 
   Color _hexToColor(String? hex) {
-    if (hex == null || hex.trim().isEmpty) return const Color(0xFF132A50);
+    if (hex == null || hex.trim().isEmpty) return AppColors.primaryNavy;
     try {
       String h = hex.replaceAll('#', '').replaceAll('0x', '').trim();
       if (h.length == 6) h = 'FF$h';
       return Color(int.parse(h, radix: 16));
     } catch (_) {
-      return const Color(0xFF132A50);
+      return AppColors.primaryNavy;
     }
   }
 }

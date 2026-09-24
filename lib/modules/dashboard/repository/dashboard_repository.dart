@@ -9,8 +9,11 @@ import '../models/notification_model.dart';
 import '../models/branch_model.dart';
 import '../models/todo_model.dart';
 
+import '../../../core/utils/preferences_service.dart';
+
 class DashboardRepository {
   final DioClient _dioClient = DioClient();
+  final PreferencesService _prefs = PreferencesService();
 
   dynamic _safeParse(dynamic data) {
     if (data is String) {
@@ -58,14 +61,21 @@ class DashboardRepository {
 
   Future<DashboardData> getDashboardData({int? branchId, int? mine}) async {
     try {
+      final role = (await _prefs.getUserRole())?.toLowerCase() ?? '';
+      final roleLabel = (await _prefs.getUserRoleLabel())?.toLowerCase() ?? '';
+      final isManager = role.contains('manager') || roleLabel.contains('manager');
+
       Map<String, dynamic> queryParams = {};
-      if (mine != null) {
-        queryParams['mine'] = mine;
-      }
-      // When mine == 1 (e.g. Manager login), suppress branch_id and branchId
-      if (mine != 1 && branchId != null && branchId > 0) {
-        queryParams['branch_id'] = branchId;
-        queryParams['branchId'] = branchId;
+      if (isManager || mine == 1) {
+        queryParams['mine'] = 1;
+      } else {
+        if (mine != null) {
+          queryParams['mine'] = mine;
+        }
+        if (branchId != null && branchId > 0) {
+          queryParams['branch_id'] = branchId;
+          queryParams['branchId'] = branchId;
+        }
       }
       final response = await _dioClient.dio.get(
         ApiConstants.dashboard,
@@ -87,10 +97,15 @@ class DashboardRepository {
 
   Future<TeamData> getTeamData({int? branchId, int? mine}) async {
     try {
+      final role = (await _prefs.getUserRole())?.toLowerCase() ?? '';
+      final roleLabel = (await _prefs.getUserRoleLabel())?.toLowerCase() ?? '';
+      final isManager = role.contains('manager') || roleLabel.contains('manager');
+
       String url = ApiConstants.dashboardTeam;
       Map<String, dynamic>? queryParams;
-      // When mine == 1 (e.g. Manager login), suppress branch_id and branchId
-      if (mine != 1 && branchId != null && branchId > 0) {
+      if (isManager || mine == 1) {
+        queryParams = {'mine': 1};
+      } else if (branchId != null && branchId > 0) {
         queryParams = {'branch_id': branchId, 'branchId': branchId};
       }
       final response = await _dioClient.dio.get(url, queryParameters: queryParams);
@@ -122,21 +137,33 @@ class DashboardRepository {
   Future<List<BranchModel>> getBranches() async {
     try {
       final response = await _dioClient.dio.get(ApiConstants.branches);
+      _logServiceCall(
+        serviceMethod: 'getBranches',
+        url: ApiConstants.branches,
+        response: response.data,
+      );
       final data = _safeParse(response.data);
+      List<dynamic>? rawList;
       if (data is List) {
-        final list = data.map((e) => BranchModel.fromJson(e is Map<String, dynamic> ? e : {})).toList();
-        if (!list.any((b) => b.id == 0 || b.code == 'ALL')) {
+        rawList = data;
+      } else if (data is Map<String, dynamic>) {
+        if (data['data'] is List) {
+          rawList = data['data'] as List;
+        } else if (data['branches'] is List) {
+          rawList = data['branches'] as List;
+        } else if (data['results'] is List) {
+          rawList = data['results'] as List;
+        }
+      }
+      if (rawList != null) {
+        final list = rawList.map((e) => BranchModel.fromJson(e is Map<String, dynamic> ? e : {})).toList();
+        if (list.isNotEmpty && !list.any((b) => b.id == 0 || b.code.toUpperCase() == 'ALL' || b.name.toLowerCase().contains('all branches'))) {
           list.insert(0, BranchModel(id: 0, code: 'ALL', name: 'All Branches', isAll: true));
         }
         return list;
       }
     } catch (_) {}
-    return [
-      BranchModel(id: 0, code: 'ALL', name: 'All Branches', isAll: true),
-      BranchModel(id: 1, code: 'SS00', name: 'Head Office', isAll: false),
-      BranchModel(id: 2, code: 'SS01', name: 'Moti Nagar & Sanath Nagar', isAll: false),
-      BranchModel(id: 3, code: 'SS02', name: 'Peerzadiguda', isAll: false),
-    ];
+    return [];
   }
 
   Future<List<dynamic>> getScheduleMy() async {

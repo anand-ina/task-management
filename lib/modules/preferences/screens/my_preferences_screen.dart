@@ -1,10 +1,12 @@
 import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../bloc/preferences_bloc.dart';
 import '../bloc/preferences_event.dart';
 import '../bloc/preferences_state.dart';
@@ -43,7 +45,8 @@ class _MyPreferencesScreenState extends State<MyPreferencesScreen> {
           floatingActionButton: const TodoFloatingActionButton(),
           appBar: const CustomAppBar(),
           drawer: const CustomLeftDrawer(currentRoute: '/my-preferences'),
-          body: BlocBuilder<PreferencesBloc, PreferencesState>(
+          body: AnnouncementBannerWrapper(
+            child: BlocBuilder<PreferencesBloc, PreferencesState>(
             builder: (context, state) {
               if (state is PreferencesLoadingState) {
                 return const Center(child: CircularProgressIndicator());
@@ -144,7 +147,7 @@ class _MyPreferencesScreenState extends State<MyPreferencesScreen> {
                                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                               ),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF16A34A),
+                                backgroundColor: AppColors.button(context),
                                 foregroundColor: Colors.white,
                                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -292,8 +295,9 @@ class _MyPreferencesScreenState extends State<MyPreferencesScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildProfileCard(BuildContext context, AppStrings s, dynamic profile, bool isDark) {
     final rows = [

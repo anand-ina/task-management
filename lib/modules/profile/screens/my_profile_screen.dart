@@ -5,6 +5,7 @@ import '../../../core/localization/app_strings.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
 import '../bloc/profile_state.dart';
@@ -43,7 +44,8 @@ class MyProfileScreen extends StatelessWidget {
           floatingActionButton: const TodoFloatingActionButton(),
           appBar: const CustomAppBar(),
           drawer: const CustomLeftDrawer(currentRoute: '/profile'),
-          body: BlocBuilder<ProfileBloc, ProfileState>(
+          body: AnnouncementBannerWrapper(
+            child: BlocBuilder<ProfileBloc, ProfileState>(
             builder: (context, state) {
               if (state is ProfileLoadingState) {
                 return const Center(child: CircularProgressIndicator());
@@ -196,7 +198,8 @@ class MyProfileScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildPersonalInfoCard(BuildContext context, AppStrings s, dynamic p, bool isDark) {

@@ -2,6 +2,7 @@ import '../../../shared_widgets/floating_action_button/todo_floating_action_butt
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/localization/app_strings.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
@@ -34,7 +35,8 @@ class LeaderboardScreen extends StatelessWidget {
           floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/leaderboard'),
           appBar: const CustomAppBar(),
-          body: BlocBuilder<PerformanceBloc, PerformanceState>(
+          body: AnnouncementBannerWrapper(
+            child: BlocBuilder<PerformanceBloc, PerformanceState>(
             builder: (context, state) {
               return RefreshIndicator(
                 onRefresh: () async {
@@ -49,7 +51,7 @@ class LeaderboardScreen extends StatelessWidget {
                       if (state is PerformanceLoadingState)
                         const Padding(
                           padding: EdgeInsets.all(60),
-                          child: Center(child: CircularProgressIndicator(color: Color(0xFF0F172A))),
+                          child: Center(child: CircularProgressIndicator()),
                         )
                       else if (state is PerformanceErrorState)
                         Center(
@@ -87,6 +89,7 @@ class LeaderboardScreen extends StatelessWidget {
                 ),
               );
             },
+          ),
           ),
         ),
       ),

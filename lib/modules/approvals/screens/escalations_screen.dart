@@ -1,11 +1,13 @@
 import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/raise_escalation_dialog.dart';
 import '../../../shared_widgets/dialogs/task_detail_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/bloc/auth_state.dart';
 import '../bloc/approvals_bloc.dart';
@@ -51,9 +53,10 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
 
     return Scaffold(
       floatingActionButton: const TodoFloatingActionButton(),
-          drawer: const CustomLeftDrawer(currentRoute: '/approvals/escalations'),
+      drawer: const CustomLeftDrawer(currentRoute: '/approvals/escalations'),
       appBar: const CustomAppBar(),
-      body: RefreshIndicator(
+      body: AnnouncementBannerWrapper(
+        child: RefreshIndicator(
         onRefresh: () async {
           context.read<ApprovalsBloc>().add(FetchEscalationsDataEvent());
         },
@@ -86,7 +89,7 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                           return Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                              color: AppColors.subtleBorder(context),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
@@ -94,7 +97,7 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
-                                color: isDark ? Colors.white70 : Colors.black87,
+                                color: AppColors.textSecondary(context),
                               ),
                             ),
                           );
@@ -110,8 +113,8 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                         },
                         label: const Text('+ Raise escalation', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0F172A),
-                          foregroundColor: Colors.white,
+                          backgroundColor: AppColors.button(context),
+                          foregroundColor: AppColors.white,
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
@@ -125,7 +128,7 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                 ApprovalsConstStrings.approvalsSubtitle,
                 style: TextStyle(
                   fontSize: 13,
-                  color: isDark ? Colors.white60 : Colors.black54,
+                  color: AppColors.textSecondary(context),
                 ),
               ),
               const SizedBox(height: 16),
@@ -142,7 +145,7 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                     }
                     return Container(
                       decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                        color: AppColors.chipBg(context),
                         borderRadius: BorderRadius.circular(24),
                       ),
                       padding: const EdgeInsets.all(4),
@@ -175,7 +178,7 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                     return const Center(
                       child: Padding(
                         padding: EdgeInsets.symmetric(vertical: 40),
-                        child: CircularProgressIndicator(color: Color(0xFFB91C1C)),
+                        child: CircularProgressIndicator(),
                       ),
                     );
                   }
@@ -229,8 +232,9 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildTabButton({
     required String title,
@@ -245,8 +249,8 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? (isDark ? const Color(0xFF0F172A) : const Color(0xFF0F172A))
-              : Colors.transparent,
+              ? AppColors.navyDark
+              : AppColors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
@@ -257,7 +261,7 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                color: isSelected ? AppColors.white : AppColors.textSecondary(context),
               ),
             ),
             if (badgeCount > 0) ...[
@@ -265,7 +269,7 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                  color: isSelected ? AppColors.slate700 : AppColors.slate200,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
@@ -273,7 +277,7 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: isSelected ? Colors.white : Colors.black87,
+                    color: isSelected ? AppColors.white : AppColors.black,
                   ),
                 ),
               ),
@@ -290,11 +294,11 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
         padding: const EdgeInsets.symmetric(vertical: 60),
         child: Column(
           children: [
-            Icon(Icons.flag_outlined, size: 48, color: Colors.grey.shade400),
+            Icon(Icons.flag_outlined, size: 48, color: AppColors.textSecondary(context).withValues(alpha: 0.5)),
             const SizedBox(height: 12),
             Text(
               ApprovalsConstStrings.noEscalations,
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+              style: TextStyle(color: AppColors.textSecondary(context), fontSize: 14),
             ),
           ],
         ),
@@ -325,14 +329,14 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: AppColors.card(context),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          color: AppColors.border(context),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: AppColors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -347,7 +351,7 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
               // Left Accent Strip (Red accent line as in screenshot)
               Container(
                 width: 4,
-                color: const Color(0xFFB91C1C),
+                color: AppColors.primaryRed,
               ),
               Expanded(
                 child: Padding(
@@ -373,15 +377,15 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFFEF08A),
+                                color: AppColors.badgeYellowBg(context),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
                                 _capitalize(item.priority!),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFF854D0E),
+                                  color: AppColors.badgeYellowFg(context),
                                 ),
                               ),
                             ),
@@ -390,15 +394,15 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFFEDD5),
+                              color: AppColors.badgeOrangeBg(context),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
                               typeLabel,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
-                                color: Color(0xFF9A3412),
+                                color: AppColors.badgeOrangeFg(context),
                               ),
                             ),
                           ),
@@ -413,7 +417,7 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                           subtitleText.startsWith('·') ? subtitleText.substring(1).trim() : subtitleText,
                           style: TextStyle(
                             fontSize: 12.5,
-                            color: isDark ? Colors.white60 : Colors.grey.shade700,
+                            color: AppColors.textSecondary(context),
                           ),
                         ),
 
@@ -424,14 +428,14 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                           width: double.infinity,
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                            color: AppColors.subtleBg(context),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             '${item.reason}',
                             style: TextStyle(
                               fontSize: 12.5,
-                              color: isDark ? Colors.white : Colors.black87,
+                              color: AppColors.textPrimary(context),
                             ),
                           ),
                         ),
@@ -447,7 +451,7 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content: Text('Escalation resolved and approved.'),
-                                    backgroundColor: Colors.green,
+                                    backgroundColor: AppColors.green,
                                   ),
                                 );
                               },
@@ -456,7 +460,7 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                                 style: TextStyle(
                                   fontSize: 12.5,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFF16A34A),
+                                  color: AppColors.green600,
                                 ),
                               ),
                             ),
@@ -466,7 +470,7 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content: Text('Escalation request rejected.'),
-                                    backgroundColor: Colors.red,
+                                    backgroundColor: AppColors.red,
                                   ),
                                 );
                               },
@@ -475,7 +479,7 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                                 style: TextStyle(
                                   fontSize: 12.5,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFFDC2626),
+                                  color: AppColors.red600,
                                 ),
                               ),
                             ),
@@ -488,6 +492,7 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                                   taskId: item.taskId ?? 0,
                                   isReadOnly: isReadOnlyUser,
                                   canCloneTask: true,
+                                  showOnlyCloneAndCancel: true,
                                 );
                                 if (context.mounted) {
                                   context.read<ApprovalsBloc>().add(FetchEscalationsDataEvent());
@@ -500,7 +505,7 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,
-                                      color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF1E3A8A),
+                                      color: AppColors.linkBlue(context),
                                     ),
                                   ),
                                 ],

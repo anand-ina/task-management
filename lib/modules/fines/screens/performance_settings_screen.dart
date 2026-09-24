@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
@@ -277,7 +279,7 @@ class _PerformanceSettingsScreenState extends State<PerformanceSettingsScreen> {
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0F172A),
+                backgroundColor: AppColors.button(dialogCtx),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
@@ -328,7 +330,8 @@ class _PerformanceSettingsScreenState extends State<PerformanceSettingsScreen> {
           floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/performance-settings'),
           appBar: const CustomAppBar(),
-          body: BlocConsumer<FinesBloc, FinesState>(
+          body: AnnouncementBannerWrapper(
+            child: BlocConsumer<FinesBloc, FinesState>(
             listener: (context, state) {
               if (state is FineTypesLoadedState) {
                 setState(() {
@@ -374,10 +377,8 @@ class _PerformanceSettingsScreenState extends State<PerformanceSettingsScreen> {
             },
             builder: (blocContext, state) {
               if (state is FinesLoadingState) {
-                return Center(
-                  child: CircularProgressIndicator(
-                    color: isDark ? Colors.white : const Color(0xFF0F172A),
-                  ),
+                return const Center(
+                  child: CircularProgressIndicator(),
                 );
               }
 
@@ -510,7 +511,7 @@ class _PerformanceSettingsScreenState extends State<PerformanceSettingsScreen> {
                           ElevatedButton(
                             onPressed: _isSaving ? null : () => _saveSettings(blocContext),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF0F172A),
+                              backgroundColor: AppColors.button(context),
                               foregroundColor: Colors.white,
                               disabledBackgroundColor: const Color(0xFF64748B),
                               padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
@@ -561,6 +562,7 @@ class _PerformanceSettingsScreenState extends State<PerformanceSettingsScreen> {
                 ),
               );
             },
+          ),
           ),
         ),
       ),

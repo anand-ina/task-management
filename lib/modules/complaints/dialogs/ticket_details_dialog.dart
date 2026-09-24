@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../core/utils/network_connectivity_service.dart';
 import '../../../shared_widgets/dialogs/no_internet_dialog.dart';
@@ -506,10 +507,20 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
     }
   }
 
-  void _navigateToAllTasks() {
-    Navigator.of(context).push(
+  void _navigateToAllTasks([TicketItemModel? ticket]) {
+    final t = ticket ?? _ticket;
+    int? targetTaskId = t?.taskId;
+    if (targetTaskId == null && t?.taskNo != null && t!.taskNo!.isNotEmpty) {
+      targetTaskId = int.tryParse(t.taskNo!.replaceAll(RegExp(r'[^0-9]'), ''));
+    }
+
+    final navigator = Navigator.of(context);
+    navigator.pop();
+    navigator.push(
       MaterialPageRoute(
-        builder: (_) => const AllTasksScreen(),
+        builder: (_) => AllTasksScreen(
+          initialTaskId: targetTaskId,
+        ),
       ),
     );
   }
@@ -1514,7 +1525,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
             child: ElevatedButton(
               onPressed: _isSubmittingAward ? null : () => _handleAwardPoints(s),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF132A50),
+                backgroundColor: AppColors.button(context),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 elevation: 0,
@@ -1761,7 +1772,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
                       style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF132A50),
+                      backgroundColor: AppColors.button(context),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
                       shape: RoundedRectangleBorder(
@@ -1773,7 +1784,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: hasLinkedTask ? _navigateToAllTasks : null,
+                    onPressed: hasLinkedTask ? () => _navigateToAllTasks(ticket) : null,
                     style: OutlinedButton.styleFrom(
                       foregroundColor: isDark ? Colors.white : const Color(0xFF334155),
                       side: BorderSide(color: borderColor),
@@ -1794,7 +1805,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
             Align(
               alignment: Alignment.centerLeft,
               child: OutlinedButton(
-                onPressed: hasLinkedTask ? _navigateToAllTasks : null,
+                onPressed: hasLinkedTask ? () => _navigateToAllTasks(ticket) : null,
                 style: OutlinedButton.styleFrom(
                   foregroundColor: isDark ? Colors.white : const Color(0xFF334155),
                   side: BorderSide(color: borderColor),
@@ -1993,7 +2004,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
             child: ElevatedButton(
               onPressed: _isSubmittingAssign ? null : _handleAssign,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF132A50),
+                backgroundColor: AppColors.button(context),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 shape: RoundedRectangleBorder(
@@ -2056,7 +2067,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
                     setState(() => _closeLoopTab = 'resolve');
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: isResolve ? const Color(0xFF132A50) : (isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9)),
+                    backgroundColor: isResolve ? AppColors.button(context) : (isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9)),
                     foregroundColor: isResolve ? Colors.white : (isDark ? Colors.grey.shade400 : const Color(0xFF475569)),
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(vertical: 8),
@@ -2074,7 +2085,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
                     setState(() => _closeLoopTab = 'reject');
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: !isResolve ? const Color(0xFF132A50) : (isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9)),
+                    backgroundColor: !isResolve ? AppColors.button(context) : (isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9)),
                     foregroundColor: !isResolve ? Colors.white : (isDark ? Colors.grey.shade400 : const Color(0xFF475569)),
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(vertical: 8),

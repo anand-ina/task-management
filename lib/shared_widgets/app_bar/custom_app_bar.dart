@@ -15,18 +15,21 @@ import '../../modules/settings/screens/settings_screen.dart';
 import '../../modules/profile/screens/my_profile_screen.dart';
 import '../../modules/faq/screens/faq_screen.dart';
 import '../../modules/auth/screens/login_screen.dart';
+import '../../core/constants/app_colors.dart';
 import '../../core/utils/preferences_service.dart';
 import '../dialogs/create_task_dialog.dart';
 import '../dialogs/create_todo_dialog.dart';
 import '../dialogs/schedule_meeting_dialog.dart';
 import '../dialogs/create_event_dialog.dart';
 import '../../modules/complaints/dialogs/raise_complaint_dialog.dart';
+import '../../modules/announcements/bloc/announcements_bloc.dart';
+import '../../modules/announcements/bloc/announcements_event.dart';
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   const CustomAppBar({super.key});
 
   @override
-  Size get preferredSize => const Size.fromHeight(65);
+  Size get preferredSize => const Size.fromHeight(56);
 
   @override
   State<CustomAppBar> createState() => _CustomAppBarState();
@@ -39,14 +42,29 @@ class _CustomAppBarState extends State<CustomAppBar> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final dashBloc = context.read<DashboardBloc>();
+      final authState = context.read<AuthBloc>().state;
+      int? initialBranchId;
+      int? initialMine;
+      if (authState is AuthenticatedState) {
+        final u = authState.userProfile;
+        if (u.isManager) {
+          initialMine = 1;
+          initialBranchId = null;
+        } else if (u.isPrincipal) {
+          initialBranchId = u.assignedBranchId;
+        } else if (!u.isDirector) {
+          initialMine = 1;
+        }
+      }
       if (dashBloc.state is DashboardInitialState) {
-        dashBloc.add(const FetchDashboardDataEvent());
+        dashBloc.add(FetchDashboardDataEvent(mine: initialMine, branchId: initialBranchId));
       } else if (dashBloc.state is DashboardLoadedState) {
         final loaded = dashBloc.state as DashboardLoadedState;
         if (loaded.branches.length <= 1) {
-          dashBloc.add(const FetchDashboardDataEvent());
+          dashBloc.add(FetchDashboardDataEvent(mine: initialMine, branchId: initialBranchId));
         }
       }
+      context.read<AnnouncementsBloc>().add(const FetchActiveAnnouncementsEvent());
     });
   }
 
@@ -79,41 +97,59 @@ class _CustomAppBarState extends State<CustomAppBar> {
       hasMultiBranchAccess = user.hasMultiBranchAccess;
     }
 
+    final List<BranchModel> meBranches = [];
+    if (authState is AuthenticatedState) {
+      final user = authState.userProfile;
+      if (user.branches.isNotEmpty) {
+        for (final b in user.branches) {
+          if (!meBranches.any((existing) => existing.id == b.id && existing.code == b.code)) {
+            meBranches.add(BranchModel(id: b.id, code: b.code, name: b.name, isAll: b.isAll));
+          }
+        }
+      }
+      if (user.branch != null) {
+        final b = user.branch!;
+        if (!meBranches.any((existing) => existing.id == b.id && existing.code == b.code)) {
+          meBranches.add(BranchModel(id: b.id, code: b.code, name: b.name, isAll: b.isAll));
+        }
+      }
+    }
+
     final initialChar = userName.isNotEmpty ? userName[0].toUpperCase() : 'V';
 
     return BlocBuilder<DashboardBloc, DashboardState>(
       builder: (context, dashState) {
-        final defaultBranches = [
-          BranchModel(id: 0, code: 'ALL', name: 'All Branches', isAll: true),
-          BranchModel(id: 1, code: 'SS00', name: 'Head Office', isAll: false),
-          BranchModel(id: 2, code: 'SS01', name: 'Moti Nagar & Sanath Nagar', isAll: false),
-          BranchModel(id: 3, code: 'SS02', name: 'Peerzadiguda', isAll: false),
-        ];
-
         List<BranchModel> branches = [];
         BranchModel? selectedBranch;
         int unreadCount = 0;
 
         if (dashState is DashboardLoadedState) {
           branches = List<BranchModel>.from(dashState.branches);
+          if (branches.isEmpty) {
+            branches = List<BranchModel>.from(meBranches);
+          }
+
           if (!hasMultiBranchAccess && userBranchName.isNotEmpty) {
             branches = branches.where((b) => !b.isAll && (b.name == userBranchName || b.id == (authState is AuthenticatedState ? authState.userProfile.branch?.id : null))).toList();
-            if (branches.isEmpty && authState is AuthenticatedState && authState.userProfile.branch != null) {
-              final ub = authState.userProfile.branch!;
-              branches = [BranchModel(id: ub.id, code: ub.code, name: ub.name, isAll: ub.isAll)];
+            if (branches.isEmpty && meBranches.isNotEmpty) {
+              branches = [meBranches.first];
+            } else if (branches.isEmpty && userBranchName.isNotEmpty) {
+              branches = [BranchModel(id: 1, code: '', name: userBranchName, isAll: false)];
             }
           } else {
-            if (!branches.any((b) => b.id == 0 || b.code.toUpperCase() == 'ALL' || b.name.toLowerCase().contains('all branches'))) {
+            if (branches.isNotEmpty && !branches.any((b) => b.id == 0 || b.code.toUpperCase() == 'ALL' || b.name.toLowerCase().contains('all branches'))) {
               branches.insert(0, BranchModel(id: 0, code: 'ALL', name: 'All Branches', isAll: true));
-            }
-            if (branches.length <= 1) {
-              branches = List<BranchModel>.from(defaultBranches);
             }
           }
           selectedBranch = dashState.selectedBranch;
-          if ((isDirector || isPrincipal) && (selectedBranch == null || dashState.selectedBranch == null)) {
-            selectedBranch = branches.isNotEmpty ? branches.first : null;
-          } else if (selectedBranch != null) {
+          final assignedId = authState is AuthenticatedState ? authState.userProfile.assignedBranchId : null;
+          if (isPrincipal && assignedId != null && assignedId > 0 && (selectedBranch == null || selectedBranch.isAll)) {
+            final match = branches.where((b) => b.id == assignedId).firstOrNull;
+            if (match != null) {
+              selectedBranch = match;
+            }
+          }
+          if (selectedBranch != null) {
             final matchIndex = branches.indexWhere((b) => b.id == selectedBranch?.id || b.code == selectedBranch?.code);
             if (matchIndex != -1) {
               selectedBranch = branches[matchIndex];
@@ -126,11 +162,16 @@ class _CustomAppBarState extends State<CustomAppBar> {
           unreadCount = dashState.notifications.unread;
         } else {
           if (!hasMultiBranchAccess && userBranchName.isNotEmpty) {
-            branches = [BranchModel(id: 1, code: '', name: userBranchName, isAll: false)];
+            branches = meBranches.isNotEmpty
+                ? meBranches.where((b) => !b.isAll).toList()
+                : [BranchModel(id: 1, code: '', name: userBranchName, isAll: false)];
           } else {
-            branches = List<BranchModel>.from(defaultBranches);
+            branches = List<BranchModel>.from(meBranches);
+            if (branches.isNotEmpty && !branches.any((b) => b.id == 0 || b.code.toUpperCase() == 'ALL' || b.name.toLowerCase().contains('all branches'))) {
+              branches.insert(0, BranchModel(id: 0, code: 'ALL', name: 'All Branches', isAll: true));
+            }
           }
-          selectedBranch = branches.first;
+          selectedBranch = branches.isNotEmpty ? branches.first : null;
         }
 
         String directBranchDisplayName = '';
@@ -140,8 +181,10 @@ class _CustomAppBarState extends State<CustomAppBar> {
           directBranchDisplayName = userBranchName;
         } else if (branches.isNotEmpty && !branches.first.isAll) {
           directBranchDisplayName = branches.first.name;
+        } else if (deptName.isNotEmpty) {
+          directBranchDisplayName = deptName;
         } else {
-          directBranchDisplayName = 'Administration · Head Office';
+          directBranchDisplayName = '';
         }
 
         String adminBranchName = userBranchName;
@@ -152,12 +195,12 @@ class _CustomAppBarState extends State<CustomAppBar> {
           } else if (branches.isNotEmpty) {
             adminBranchName = branches.first.name;
           } else {
-            adminBranchName = 'Head Office';
+            adminBranchName = '';
           }
         }
 
         return AppBar(
-          backgroundColor: isDark ? const Color(0xFF131C2E) : Colors.white,
+          backgroundColor: AppColors.appBarBg(context),
           elevation: 1,
           titleSpacing: 0,
           title: Row(
@@ -166,7 +209,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
               //   child: Container(
               //     height: 38,
               //     decoration: BoxDecoration(
-              //       color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+              //       color: isDark ? AppColors.navyCard : AppColors.slate100,
               //       borderRadius: BorderRadius.circular(8),
               //     ),
               //     padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -175,7 +218,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
               //         Icon(
               //           Icons.search_rounded,
               //           size: 18,
-              //           color: isDark ? Colors.white60 : Colors.black45,
+              //           color: isDark ? AppColors.white60 : AppColors.black45,
               //         ),
               //         const SizedBox(width: 8),
               //         Expanded(
@@ -184,7 +227,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
               //               hintText: s.searchPlaceholder,
               //               hintStyle: TextStyle(
               //                 fontSize: 13,
-              //                 color: isDark ? Colors.white54 : Colors.black45,
+              //                 color: isDark ? AppColors.white54 : AppColors.black45,
               //               ),
               //               border: InputBorder.none,
               //               isDense: true,
@@ -201,9 +244,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
                   height: 36,
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                    color: AppColors.chipBg(context),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: isDark ? Colors.white24 : Colors.black12),
+                    border: Border.all(color: AppColors.subtleBorder(context)),
                   ),
                   alignment: Alignment.center,
                   child: Text(
@@ -213,19 +256,19 @@ class _CustomAppBarState extends State<CustomAppBar> {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white70 : const Color(0xFF334155),
+                      color: AppColors.textSecondary(context),
                     ),
                   ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 1),
                 Flexible(
                   child: Container(
                     height: 36,
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                      color: AppColors.chipBg(context),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: isDark ? Colors.white24 : Colors.black12),
+                      border: Border.all(color: AppColors.subtleBorder(context)),
                     ),
                     alignment: Alignment.centerLeft,
                     child: Row(
@@ -238,7 +281,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white70 : const Color(0xFF334155),
+                              color: AppColors.textSecondary(context),
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -269,7 +312,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                     PopupMenuItem(
                       value: 'task',
                       child: Row(children: [
-                        const Icon(Icons.check_rounded, size: 18, color: Colors.blue),
+                        const Icon(Icons.check_rounded, size: 18, color: AppColors.blue),
                         const SizedBox(width: 8),
                         Text(s.newTask),
                       ]),
@@ -277,7 +320,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                     PopupMenuItem(
                       value: 'todo',
                       child: Row(children: [
-                        const Icon(Icons.assignment_outlined, size: 18, color: Colors.orange),
+                        const Icon(Icons.assignment_outlined, size: 18, color: AppColors.orange),
                         const SizedBox(width: 8),
                         Text(s.newTodo),
                       ]),
@@ -285,7 +328,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                     PopupMenuItem(
                       value: 'meeting',
                       child: Row(children: [
-                        const Icon(Icons.access_time_rounded, size: 18, color: Colors.purple),
+                        const Icon(Icons.access_time_rounded, size: 18, color: AppColors.purple),
                         const SizedBox(width: 8),
                         Text(s.newMeeting),
                       ]),
@@ -293,7 +336,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                     PopupMenuItem(
                       value: 'event',
                       child: Row(children: [
-                        const Icon(Icons.star_rounded, size: 18, color: Colors.amber),
+                        const Icon(Icons.star_rounded, size: 18, color: AppColors.amber),
                         const SizedBox(width: 8),
                         Text(s.newEvent),
                       ]),
@@ -301,7 +344,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                     PopupMenuItem(
                       value: 'raise_request',
                       child: Row(children: [
-                        const Icon(Icons.feedback_outlined, size: 18, color: Color(0xFF8B1D24)),
+                        const Icon(Icons.feedback_outlined, size: 18, color: AppColors.maroon),
                         const SizedBox(width: 8),
                         Text(s.raiseRequestButton),
                       ]),
@@ -311,7 +354,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                     height: 36,
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0B132B),
+                      color: AppColors.button(context),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
@@ -321,26 +364,26 @@ class _CustomAppBarState extends State<CustomAppBar> {
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: AppColors.white,
                           ),
                         ),
-                        const Icon(Icons.arrow_drop_down_rounded, size: 16, color: Colors.white),
+                        const Icon(Icons.arrow_drop_down_rounded, size: 16, color: AppColors.white),
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 1),
 
                 // Branch Selector: if hasMultiBranchAccess and (branches > 1 or isPrincipal or isDirector), show dropdown; otherwise direct branch name
                 if (hasMultiBranchAccess && (branches.length > 1 || isPrincipal || isDirector))
                   Flexible(
                     child: Container(
                       height: 36,
-                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
                       decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                        color: AppColors.chipBg(context),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: isDark ? Colors.white24 : Colors.black12),
+                        border: Border.all(color: AppColors.subtleBorder(context)),
                       ),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<BranchModel>(
@@ -356,7 +399,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                             return DropdownMenuItem<BranchModel>(
                               value: b,
                               child: Row(
-                                mainAxisSize: MainAxisSize.min,
+                                // mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(isAllItem ? '🏛️ ' : '🏫 ', style: const TextStyle(fontSize: 9)),
                                   Expanded(
@@ -364,7 +407,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                       displayName,
                                       style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold),
                                       overflow: TextOverflow.ellipsis,
-                                      maxLines: 2,
+                                      maxLines: 3,
                                     ),
                                   ),
                                 ],
@@ -376,7 +419,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                               context.read<DashboardBloc>().add(
                                 SelectBranchEvent(
                                   val,
-                                  mine: isDirector ? null : 1,
+                                  mine: (isDirector || isPrincipal) ? null : 1,
                                 ),
                               );
                             }
@@ -391,9 +434,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
                       height: 36,
                       padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 2),
                       decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                        color: AppColors.chipBg(context),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: isDark ? Colors.white24 : Colors.black12),
+                        border: Border.all(color: AppColors.subtleBorder(context)),
                       ),
                       alignment: Alignment.centerLeft,
                       child: Row(
@@ -403,18 +446,18 @@ class _CustomAppBarState extends State<CustomAppBar> {
                             width: 6,
                             height: 6,
                             decoration: BoxDecoration(
-                              color: isDark ? Colors.white70 : const Color(0xFF0F172A),
+                              color: AppColors.textPrimary(context),
                               shape: BoxShape.circle,
                             ),
                           ),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: 3),
                           Flexible(
                             child: Text(
                               directBranchDisplayName,
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
-                                color: isDark ? Colors.white70 : const Color(0xFF334155),
+                                color: AppColors.textSecondary(context),
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
@@ -433,49 +476,46 @@ class _CustomAppBarState extends State<CustomAppBar> {
                     height: 36,
                     padding: const EdgeInsets.symmetric(horizontal: 4),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                      color: AppColors.chipBg(context),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     alignment: Alignment.center,
                     child: Text(
                       userRoleLabel,
-                      maxLines: 2,
+                      maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-
                         fontSize: 9,
                         fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white70 : const Color(0xFF334155),
+                        color: AppColors.textSecondary(context),
                       ),
                     ),
                   ),
                 ],
               ],
 
-              // Theme Toggle Button
-              const SizedBox(width: 4),
+              // Direct 2-Way Theme Mode Switching (Light White, Dark Black - No Dropdown)
               IconButton(
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                visualDensity: VisualDensity.compact,
-                style: IconButton.styleFrom(
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                tooltip: isDark ? s.themeModeLight : s.themeModeDark,
                 icon: Icon(
                   isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-                  size: 18,
+                  size: 20,
+                  color: isDark ? AppColors.amber : AppColors.textPrimary(context),
                 ),
                 onPressed: () {
-                  context.read<ThemeCubit>().toggleLightDark();
+                  context.read<ThemeCubit>().setThemeMode(isDark ? ThemeMode.light : ThemeMode.dark);
                 },
               ),
-              const SizedBox(width: 4),
 
               // Notifications Bell with Dynamic Badge & Scrollable Dropdown List
               PopupMenuButton<void>(
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
                 offset: const Offset(0, 42),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                color: AppColors.card(context),
                 itemBuilder: (context) {
                   final notifications = dashState is DashboardLoadedState ? dashState.notifications.items : <NotificationItem>[];
                   return [
@@ -496,19 +536,19 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
-                                    color: isDark ? Colors.white : Colors.black87,
+                                    color: AppColors.textPrimary(context),
                                   ),
                                 ),
                                 if (unreadCount > 0)
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFB91C1C),
+                                      color: AppColors.primaryRed,
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Text(
                                       '$unreadCount new',
-                                      style: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold),
+                                      style: const TextStyle(fontSize: 10, color: AppColors.white, fontWeight: FontWeight.bold),
                                     ),
                                   ),
                               ],
@@ -521,7 +561,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                   ? Center(
                                       child: Text(
                                         s.noNotifications,
-                                        style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                                        style: TextStyle(fontSize: 12, color: AppColors.textSecondary(context)),
                                       ),
                                     )
                                   : ListView.separated(
@@ -540,7 +580,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                                 height: 8,
                                                 margin: const EdgeInsets.only(top: 4, right: 8),
                                                 decoration: BoxDecoration(
-                                                  color: item.isRead ? Colors.transparent : const Color(0xFFB91C1C),
+                                                  color: item.isRead ? AppColors.transparent : AppColors.primaryRed,
                                                   shape: BoxShape.circle,
                                                 ),
                                               ),
@@ -553,7 +593,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                                       style: TextStyle(
                                                         fontSize: 12,
                                                         fontWeight: item.isRead ? FontWeight.normal : FontWeight.bold,
-                                                        color: isDark ? Colors.white : Colors.black87,
+                                                        color: AppColors.textPrimary(context),
                                                       ),
                                                     ),
                                                     if (item.body.isNotEmpty) ...[
@@ -562,7 +602,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                                         item.body,
                                                         style: TextStyle(
                                                           fontSize: 11,
-                                                          color: isDark ? Colors.white60 : Colors.black54,
+                                                          color: AppColors.textSecondary(context),
                                                         ),
                                                         maxLines: 2,
                                                         overflow: TextOverflow.ellipsis,
@@ -583,36 +623,43 @@ class _CustomAppBarState extends State<CustomAppBar> {
                     ),
                   ];
                 },
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.notifications_none_rounded, size: 20),
-                      onPressed: null, // PopupMenuButton handles tap
-                    ),
-                    if (unreadCount > 0)
-                      Positioned(
-                        right: 6,
-                        top: 6,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFB91C1C),
-                            shape: BoxShape.circle,
-                          ),
-                          constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                          child: Text(
-                            '$unreadCount',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(6),
+                        child: Icon(
+                          Icons.notifications_none_rounded,
+                          size: 20,
+                          color: isDark ? AppColors.white70 : AppColors.textPrimary(context),
                         ),
                       ),
-                  ],
+                      if (unreadCount > 0)
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: AppColors.primaryRed,
+                              shape: BoxShape.circle,
+                            ),
+                            constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                            child: Text(
+                              '$unreadCount',
+                              style: const TextStyle(
+                                color: AppColors.white,
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
 
@@ -654,11 +701,11 @@ class _CustomAppBarState extends State<CustomAppBar> {
                           children: [
                             CircleAvatar(
                               radius: 16,
-                              backgroundColor: const Color(0xFF0B132B),
+                              backgroundColor: AppColors.navyHeader,
                               child: Text(
                                 initialChar,
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  color: AppColors.white,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -677,13 +724,13 @@ class _CustomAppBarState extends State<CustomAppBar> {
                                     style: TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600,
-                                      color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
+                                      color: AppColors.accentBlue(context),
                                     ),
                                   ),
                                 ],
                                 Text(
                                   userEmail,
-                                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                                  style: TextStyle(fontSize: 11, color: AppColors.textSecondary(context)),
                                 ),
                               ],
                             ),
@@ -728,20 +775,20 @@ class _CustomAppBarState extends State<CustomAppBar> {
                     value: 'logout',
                     child: Row(
                       children: [
-                        const Icon(Icons.logout_rounded, size: 18, color: Colors.red),
+                        const Icon(Icons.logout_rounded, size: 18, color: AppColors.red),
                         const SizedBox(width: 10),
-                        Text(s.logout, style: const TextStyle(color: Colors.red)),
+                        Text(s.logout, style: const TextStyle(color: AppColors.red)),
                       ],
                     ),
                   ),
                 ],
                 child: CircleAvatar(
                   radius: 16,
-                  backgroundColor: const Color(0xFF0B132B),
+                  backgroundColor: AppColors.navyHeader,
                   child: Text(
                     initialChar,
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: AppColors.white,
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                     ),

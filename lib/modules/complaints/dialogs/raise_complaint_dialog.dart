@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
 import '../bloc/complaints_bloc.dart';
 import '../bloc/complaints_event.dart';
@@ -325,7 +326,7 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
           child: _isLoadingInitial
               ? const SizedBox(
                   height: 300,
-                  child: Center(child: CircularProgressIndicator(color: Color(0xFFB91C1C))),
+                  child: Center(child: CircularProgressIndicator()),
                 )
               : Column(
                   children: [
@@ -405,6 +406,12 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
                                 title: s.receivedFromStudent,
                                 isSelected: _selectedSource == 'student',
                                 onTap: () => setState(() => _selectedSource = 'student'),
+                              ),
+                              const SizedBox(width: 8),
+                              _buildPillButton(
+                                title: 'Staff Member',
+                                isSelected: _selectedSource == 'staff_member',
+                                onTap: () => setState(() => _selectedSource = 'staff_member'),
                               ),
                             ],
                           ),
@@ -946,7 +953,7 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
                               return ElevatedButton(
                                 onPressed: isSubmitting ? null : _submitComplaint,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF8B1D24),
+                                  backgroundColor: AppColors.button(context),
                                   foregroundColor: Colors.white,
                                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

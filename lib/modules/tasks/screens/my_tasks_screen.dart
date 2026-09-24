@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/bulk_actions_dialog.dart';
@@ -11,6 +12,7 @@ import '../../../shared_widgets/dialogs/task_detail_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
 import '../../../shared_widgets/export_service.dart';
 import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/bloc/auth_state.dart';
 import '../bloc/all_tasks_bloc.dart';
@@ -272,11 +274,12 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
             floatingActionButton: const TodoFloatingActionButton(),
             drawer: const CustomLeftDrawer(currentRoute: '/my-tasks'),
             appBar: const CustomAppBar(),
-            body: BlocBuilder<AllTasksBloc, AllTasksState>(
+            body: AnnouncementBannerWrapper(
+              child: BlocBuilder<AllTasksBloc, AllTasksState>(
             builder: (context, state) {
               if (state is AllTasksLoadingState) {
                 return const Center(
-                  child: CircularProgressIndicator(color: Color(0xFFB91C1C)),
+                  child: CircularProgressIndicator(),
                 );
               }
 
@@ -349,11 +352,10 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
 
                         // Status Checkbox Legend Row
                         _buildStatusCheckboxRow(context, s),
-                        const SizedBox(height: 10),
 
-                        // Quick Filter Chips (Created by me / Assigned to me)
-                        _buildQuickFilterRow(context, s),
-                        const SizedBox(height: 10),
+                        // // Quick Filter Chips (Created by me / Assigned to me)
+                        // _buildQuickFilterRow(context, s),
+                        // const SizedBox(height: 10),
 
                         // Bulk Actions or Select All Row
                         if (_selectedTaskIds.isNotEmpty)
@@ -425,7 +427,6 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
                                   height: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    color: Color(0xFF2563EB),
                                   ),
                                 ),
                               ),
@@ -444,7 +445,8 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
         ),
       ),
     ),
-  );
+  ),
+);
 }
 
   // 7 Stat Cards Row
@@ -732,7 +734,7 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
             icon: const Icon(Icons.add_rounded, size: 14),
             label: Text(s.newTaskButton, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF0F172A),
+              backgroundColor: AppColors.button(context),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -1570,7 +1572,7 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
           const SizedBox(width: 8),
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF0F172A),
+              backgroundColor: AppColors.button(context),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               visualDensity: VisualDensity.compact,
@@ -2085,16 +2087,16 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
           return Padding(
             padding: const EdgeInsets.only(right: 14),
             child: InkWell(
-              onTap: () {
-                setState(() {
-                  if (isChecked) {
-                    _selectedStatusFilter = 'all';
-                  } else {
-                    _selectedStatusFilter = key;
-                  }
-                });
-                _dispatchFetch(offset: 0);
-              },
+              // onTap: () {
+              //   setState(() {
+              //     if (isChecked) {
+              //       _selectedStatusFilter = 'all';
+              //     } else {
+              //       _selectedStatusFilter = key;
+              //     }
+              //   });
+              //   _dispatchFetch(offset: 0);
+              // },
               borderRadius: BorderRadius.circular(4),
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
@@ -2102,10 +2104,10 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      width: 15,
-                      height: 15,
+                      width: 10,
+                      height: 10,
                       decoration: BoxDecoration(
-                        color: isChecked ? color : Colors.transparent,
+                        color: color.withOpacity(0.3),
                         borderRadius: BorderRadius.circular(3.5),
                         border: Border.all(
                           color: color,
@@ -2126,7 +2128,7 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
                     Text(
                       label,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 11,
                         fontWeight: isChecked ? FontWeight.w600 : FontWeight.w500,
                         color: isChecked
                             ? (isDark ? Colors.white : const Color(0xFF0F172A))

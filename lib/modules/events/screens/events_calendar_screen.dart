@@ -1,7 +1,9 @@
 import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
@@ -29,7 +31,6 @@ class _EventsCalendarScreenState extends State<EventsCalendarScreen> {
   @override
   Widget build(BuildContext context) {
     final s = AppStrings.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return BlocProvider(
       create: (context) => EventsBloc()..add(FetchEventsEvent()),
@@ -46,7 +47,8 @@ class _EventsCalendarScreenState extends State<EventsCalendarScreen> {
           floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/events-calendar'),
           appBar: const CustomAppBar(),
-          body: BlocBuilder<EventsBloc, EventsState>(
+          body: AnnouncementBannerWrapper(
+            child: BlocBuilder<EventsBloc, EventsState>(
             builder: (context, state) {
               return RefreshIndicator(
                 onRefresh: () async {
@@ -71,7 +73,7 @@ class _EventsCalendarScreenState extends State<EventsCalendarScreen> {
                                   style: TextStyle(
                                     fontSize: 22,
                                     fontWeight: FontWeight.bold,
-                                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                    color: AppColors.textPrimary(context),
                                   ),
                                 ),
                                 const SizedBox(height: 2),
@@ -79,7 +81,7 @@ class _EventsCalendarScreenState extends State<EventsCalendarScreen> {
                                   s.eventsCalendarSubtitle,
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: isDark ? Colors.white60 : Colors.black54,
+                                    color: AppColors.textSecondary(context),
                                   ),
                                 ),
                               ],
@@ -89,8 +91,8 @@ class _EventsCalendarScreenState extends State<EventsCalendarScreen> {
                             onPressed: () => CreateEventDialog.show(context),
                              label: const Text('+ New Event', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF0F172A),
-                              foregroundColor: Colors.white,
+                              backgroundColor: AppColors.button(context),
+                              foregroundColor: AppColors.white,
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                             ),
@@ -103,9 +105,9 @@ class _EventsCalendarScreenState extends State<EventsCalendarScreen> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                          color: AppColors.card(context),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                          border: Border.all(color: AppColors.border(context)),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -118,7 +120,7 @@ class _EventsCalendarScreenState extends State<EventsCalendarScreen> {
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
-                                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                    color: AppColors.textPrimary(context),
                                   ),
                                 ),
                                 const Spacer(),
@@ -170,13 +172,13 @@ class _EventsCalendarScreenState extends State<EventsCalendarScreen> {
                             if (state is EventsLoadingState)
                               const Padding(
                                 padding: EdgeInsets.all(60),
-                                child: Center(child: CircularProgressIndicator(color: Color(0xFF0F172A))),
+                                child: Center(child: CircularProgressIndicator()),
                               )
                             else if (state is EventsErrorState)
                               Center(
                                 child: Column(
                                   children: [
-                                    Text(state.message, style: const TextStyle(color: Colors.red)),
+                                    Text(state.message, style: const TextStyle(color: AppColors.red)),
                                     const SizedBox(height: 12),
                                     ElevatedButton(
                                       onPressed: () => context.read<EventsBloc>().add(FetchEventsEvent()),
@@ -199,13 +201,13 @@ class _EventsCalendarScreenState extends State<EventsCalendarScreen> {
               );
             },
           ),
+          ),
         ),
       ),
     );
   }
 
   Widget _buildFullMonthCalendarGrid(BuildContext context, AppStrings s, List<EventModel> events) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
     final firstDayOfMonth = DateTime(_selectedDate.year, _selectedDate.month, 1);
@@ -219,18 +221,18 @@ class _EventsCalendarScreenState extends State<EventsCalendarScreen> {
       child: ConstrainedBox(
         constraints: const BoxConstraints(minWidth: 700),
         child: Table(
-          border: TableBorder.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+          border: TableBorder.all(color: AppColors.border(context)),
           children: [
             // Days Header Row
             TableRow(
-              decoration: BoxDecoration(color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC)),
+              decoration: BoxDecoration(color: AppColors.subtleBg(context)),
               children: dayNames.map((d) {
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   child: Text(
                     d,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey),
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textMuted(context)),
                   ),
                 );
               }).toList(),
@@ -260,7 +262,7 @@ class _EventsCalendarScreenState extends State<EventsCalendarScreen> {
                     height: 70,
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: isToday ? (isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)) : Colors.transparent,
+                      color: isToday ? AppColors.subtleBg(context) : AppColors.transparent,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -270,7 +272,7 @@ class _EventsCalendarScreenState extends State<EventsCalendarScreen> {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: isToday ? FontWeight.bold : FontWeight.w600,
-                            color: isDark ? Colors.white : Colors.black87,
+                            color: AppColors.textPrimary(context),
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -279,12 +281,12 @@ class _EventsCalendarScreenState extends State<EventsCalendarScreen> {
                             margin: const EdgeInsets.only(top: 2),
                             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFDCFCE7),
+                              color: AppColors.greenLight,
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
                               '★ ${ev.title}',
-                              style: const TextStyle(fontSize: 9, color: Color(0xFF15803D), fontWeight: FontWeight.bold),
+                              style: const TextStyle(fontSize: 9, color: AppColors.green700, fontWeight: FontWeight.bold),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),

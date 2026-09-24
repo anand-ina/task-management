@@ -2,9 +2,11 @@ import '../../../shared_widgets/floating_action_button/todo_floating_action_butt
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/new_budget_request_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/bloc/auth_state.dart';
 import '../bloc/approvals_bloc.dart';
@@ -49,9 +51,10 @@ class _BudgetApprovalsScreenState extends State<BudgetApprovalsScreen> {
 
     return Scaffold(
       floatingActionButton: const TodoFloatingActionButton(),
-          drawer: const CustomLeftDrawer(currentRoute: '/approvals/budget'),
+      drawer: const CustomLeftDrawer(currentRoute: '/approvals/budget'),
       appBar: const CustomAppBar(),
-      body: RefreshIndicator(
+      body: AnnouncementBannerWrapper(
+        child: RefreshIndicator(
         onRefresh: () async {
           context.read<ApprovalsBloc>().add(FetchBudgetApprovalsDataEvent());
         },
@@ -85,7 +88,7 @@ class _BudgetApprovalsScreenState extends State<BudgetApprovalsScreen> {
                   onPressed: () => NewBudgetRequestDialog.show(context),
                   label: const Text('+ New budget request', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0F172A),
+                    backgroundColor: AppColors.button(context),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -138,7 +141,7 @@ class _BudgetApprovalsScreenState extends State<BudgetApprovalsScreen> {
                     return const Center(
                       child: Padding(
                         padding: EdgeInsets.symmetric(vertical: 40),
-                        child: CircularProgressIndicator(color: Color(0xFFB91C1C)),
+                        child: CircularProgressIndicator(),
                       ),
                     );
                   }
@@ -194,8 +197,9 @@ class _BudgetApprovalsScreenState extends State<BudgetApprovalsScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildTabButton({
     required String title,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/api_constants.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/network/dio_client.dart';
 import '../../modules/dashboard/bloc/dashboard_bloc.dart';
 import '../../modules/dashboard/bloc/dashboard_event.dart';
@@ -186,7 +187,7 @@ class _CreateTodoDialogState extends State<CreateTodoDialog> {
                   const SizedBox(width: 12),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0B132B),
+                      backgroundColor: AppColors.button(context),
                       foregroundColor: Colors.white,
                     ),
                     onPressed: _isLoading ? null : _submitTodo,

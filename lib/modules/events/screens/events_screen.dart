@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/api_constants.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../core/network/dio_client.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
@@ -109,7 +111,7 @@ class _EventsScreenState extends State<EventsScreen> {
       await _dioClient.dio.get('${ApiConstants.baseUrl}/events/checklist/$itemId/comments');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Update posted successfully!'), backgroundColor: Colors.green),
+          const SnackBar(content: Text('Update posted successfully!'), backgroundColor: AppColors.green600),
         );
         setState(() {
           _activeCommentInputs[itemId] = false;
@@ -119,7 +121,7 @@ class _EventsScreenState extends State<EventsScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Update posted successfully!'), backgroundColor: Colors.green),
+          const SnackBar(content: Text('Update posted successfully!'), backgroundColor: AppColors.green600),
         );
         setState(() {
           _activeCommentInputs[itemId] = false;
@@ -132,7 +134,6 @@ class _EventsScreenState extends State<EventsScreen> {
   @override
   Widget build(BuildContext context) {
     final s = AppStrings.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return BlocProvider(
       create: (context) => EventsBloc()..add(FetchEventsEvent()),
@@ -149,7 +150,8 @@ class _EventsScreenState extends State<EventsScreen> {
           floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/events'),
           appBar: const CustomAppBar(),
-          body: BlocBuilder<EventsBloc, EventsState>(
+          body: AnnouncementBannerWrapper(
+            child: BlocBuilder<EventsBloc, EventsState>(
             builder: (context, state) {
               return RefreshIndicator(
                 onRefresh: () async {
@@ -174,7 +176,7 @@ class _EventsScreenState extends State<EventsScreen> {
                                   style: TextStyle(
                                     fontSize: 22,
                                     fontWeight: FontWeight.bold,
-                                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                    color: AppColors.textPrimary(context),
                                   ),
                                 ),
                                 const SizedBox(height: 2),
@@ -182,7 +184,7 @@ class _EventsScreenState extends State<EventsScreen> {
                                   s.eventsSubtitle,
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: isDark ? Colors.white60 : Colors.black54,
+                                    color: AppColors.textSecondary(context),
                                   ),
                                 ),
                               ],
@@ -192,8 +194,8 @@ class _EventsScreenState extends State<EventsScreen> {
                             onPressed: () => CreateEventDialog.show(context),
                              label: const Text('+ New Event', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF0F172A),
-                              foregroundColor: Colors.white,
+                              backgroundColor: AppColors.button(context),
+                              foregroundColor: AppColors.white,
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                             ),
@@ -221,17 +223,29 @@ class _EventsScreenState extends State<EventsScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // State Content
+                      if (_selectedViewMode == 'list') ...[
+                        // Sub-tabs (Assigned to me, Events)
+                        Row(
+                          children: [
+                            _buildSubTab(s.assignedToMeTab, 0),
+                            const SizedBox(width: 24),
+                            _buildSubTab(s.eventsTab, 1),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+
+                      // View Modes Body
                       if (state is EventsLoadingState)
                         const Padding(
                           padding: EdgeInsets.all(60),
-                          child: Center(child: CircularProgressIndicator(color: Color(0xFF0F172A))),
+                          child: Center(child: CircularProgressIndicator()),
                         )
                       else if (state is EventsErrorState)
                         Center(
                           child: Column(
                             children: [
-                              Text(state.message, style: const TextStyle(color: Colors.red)),
+                              Text(state.message, style: const TextStyle(color: AppColors.red)),
                               const SizedBox(height: 12),
                               ElevatedButton(
                                 onPressed: () => context.read<EventsBloc>().add(FetchEventsEvent()),
@@ -240,34 +254,18 @@ class _EventsScreenState extends State<EventsScreen> {
                             ],
                           ),
                         )
-                      else if (state is EventsLoadedState)
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Sub Tabs Row (Assigned to me / Events)
-                            Row(
-                              children: [
-                                _buildSubTab('★ ${s.assignedToMeTab} ', 0),
-                                const SizedBox(width: 16),
-                                _buildSubTab('${s.eventsTab} (${state.events.length})', 1),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-
-                            // Render View Mode Content
-                            if (_selectedViewMode == '3months')
-                              _buildThreeMonthsView(context, s, state.events)
-                            else if (_selectedViewMode == 'month' || _selectedViewMode == 'calendar')
-                              _buildMonthCalendarView(context, s, state.events)
-                            else if (_selectedViewMode == 'week')
-                              _buildWeekView(context, s, state.events)
-                            else if (_selectedViewMode == 'day')
-                              _buildDayView(context, s, state.events)
-                            else
-                              _buildEventsListView(context, s, state.events),
-                          ],
-                        )
-                      else
+                      else if (state is EventsLoadedState) ...[
+                        if (_selectedViewMode == 'list')
+                          _buildEventsListView(context, s, state.events)
+                        else if (_selectedViewMode == 'day')
+                          _buildDayView(context, s, state.events)
+                        else if (_selectedViewMode == 'week')
+                          _buildWeekView(context, s, state.events)
+                        else if (_selectedViewMode == 'month')
+                          _buildMonthCalendarView(context, s, state.events)
+                        else if (_selectedViewMode == '3months')
+                          _buildThreeMonthsView(context, s, state.events),
+                      ] else
                         const SizedBox.shrink(),
                       const SizedBox(height: 40),
                     ],
@@ -275,6 +273,7 @@ class _EventsScreenState extends State<EventsScreen> {
                 ),
               );
             },
+          ),
           ),
         ),
       ),
@@ -287,20 +286,20 @@ class _EventsScreenState extends State<EventsScreen> {
 
     return OutlinedButton.icon(
       onPressed: () => setState(() => _selectedViewMode = mode),
-      icon: Icon(icon, size: 14, color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87)),
+      icon: Icon(icon, size: 14, color: isSelected ? AppColors.white : AppColors.textPrimary(context)),
       label: Text(
         label,
         style: TextStyle(
           fontSize: 12,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+          color: isSelected ? AppColors.white : AppColors.textPrimary(context),
         ),
       ),
       style: OutlinedButton.styleFrom(
-        backgroundColor: isSelected ? (isDark ? const Color(0xFF1E293B) : const Color(0xFF0F172A)) : Colors.transparent,
+        backgroundColor: isSelected ? (isDark ? AppColors.navyHeader : AppColors.navyHeader) : AppColors.transparent,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         side: BorderSide(
-          color: isSelected ? const Color(0xFF0F172A) : (isDark ? Colors.white24 : Colors.black12),
+          color: isSelected ? AppColors.navyHeader : AppColors.border(context),
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
@@ -321,14 +320,14 @@ class _EventsScreenState extends State<EventsScreen> {
             style: TextStyle(
               fontSize: 13,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-              color: isSelected ? (isDark ? const Color(0xFFF87171) : const Color(0xFFB91C1C)) : Colors.grey,
+              color: isSelected ? (isDark ? AppColors.redLight : AppColors.red700) : AppColors.textMuted(context),
             ),
           ),
           const SizedBox(height: 4),
           Container(
             height: 2,
             width: 80,
-            color: isSelected ? (isDark ? const Color(0xFFF87171) : const Color(0xFFB91C1C)) : Colors.transparent,
+            color: isSelected ? (isDark ? AppColors.redLight : AppColors.red700) : AppColors.transparent,
           ),
         ],
       ),
@@ -390,7 +389,7 @@ class _EventsScreenState extends State<EventsScreen> {
 
         Text(
           '${DateFormat('EEE, d MMM yyyy').format(_selectedDayDate)} · ${displayList.length} event',
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textMuted(context)),
         ),
         const SizedBox(height: 12),
 
@@ -403,9 +402,9 @@ class _EventsScreenState extends State<EventsScreen> {
     final filtered = _selectedSubTab == 0 ? events.where((e) => e.isMine == true).toList() : events;
 
     if (filtered.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(40),
-        child: Center(child: Text('No events found.', style: TextStyle(color: Colors.grey))),
+      return Padding(
+        padding: const EdgeInsets.all(40),
+        child: Center(child: Text('No events found.', style: TextStyle(color: AppColors.textMuted(context)))),
       );
     }
 
@@ -425,11 +424,11 @@ class _EventsScreenState extends State<EventsScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: AppColors.card(context),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppColors.border(context)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2)),
+          BoxShadow(color: AppColors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2)),
         ],
       ),
       child: ClipRRect(
@@ -437,7 +436,7 @@ class _EventsScreenState extends State<EventsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(height: 3, color: const Color(0xFFB91C1C)),
+            Container(height: 3, color: AppColors.red700),
 
             Padding(
               padding: const EdgeInsets.all(14),
@@ -453,19 +452,19 @@ class _EventsScreenState extends State<EventsScreen> {
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                            color: AppColors.textPrimary(context),
                           ),
                         ),
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                          color: AppColors.subtleBg(context),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           _formatEventDate(item.eventDate),
-                          style: TextStyle(fontSize: 10, color: isDark ? Colors.white70 : Colors.black54),
+                          style: TextStyle(fontSize: 10, color: AppColors.textSecondary(context)),
                         ),
                       ),
                     ],
@@ -479,12 +478,12 @@ class _EventsScreenState extends State<EventsScreen> {
                         return Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+                            color: AppColors.subtleBg(context),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
                             dep.trim(),
-                            style: TextStyle(fontSize: 10, color: isDark ? Colors.white70 : const Color(0xFF475569)),
+                            style: TextStyle(fontSize: 10, color: AppColors.textSecondary(context)),
                           ),
                         );
                       }).toList(),
@@ -495,15 +494,15 @@ class _EventsScreenState extends State<EventsScreen> {
                     children: [
                       Text(
                         '${item.done} of ${item.total} done · owner: ${item.owner ?? "N/A"}',
-                        style: TextStyle(fontSize: 11, color: isDark ? Colors.white60 : Colors.grey.shade600),
+                        style: TextStyle(fontSize: 11, color: AppColors.textSecondary(context)),
                       ),
                       const Spacer(),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: isDraft
-                              ? (isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9))
-                              : const Color(0xFFDCFCE7),
+                              ? AppColors.subtleBg(context)
+                              : AppColors.greenLight,
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -512,8 +511,8 @@ class _EventsScreenState extends State<EventsScreen> {
                             fontSize: 9,
                             fontWeight: FontWeight.bold,
                             color: isDraft
-                                ? (isDark ? Colors.white70 : const Color(0xFF475569))
-                                : const Color(0xFF15803D),
+                                ? AppColors.textSecondary(context)
+                                : AppColors.green700,
                           ),
                         ),
                       ),
@@ -526,8 +525,8 @@ class _EventsScreenState extends State<EventsScreen> {
                     child: LinearProgressIndicator(
                       value: progress,
                       minHeight: 6,
-                      backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF16A34A)),
+                      backgroundColor: AppColors.border(context),
+                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.green600),
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -544,11 +543,11 @@ class _EventsScreenState extends State<EventsScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      side: BorderSide(color: isDark ? Colors.white24 : Colors.black12),
+                      side: BorderSide(color: AppColors.border(context)),
                     ),
                     child: Text(
                       isExpanded ? 'Hide checklist' : '${s.checklistLabel} (${item.done}/${item.total})',
-                      style: TextStyle(fontSize: 11, color: isDark ? Colors.white70 : Colors.black87),
+                      style: TextStyle(fontSize: 11, color: AppColors.textPrimary(context)),
                     ),
                   ),
 
@@ -560,7 +559,7 @@ class _EventsScreenState extends State<EventsScreen> {
                     if (isLoadingList)
                       const Center(child: Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator()))
                     else if (checklist.isEmpty)
-                      const Text('No checklist items.', style: TextStyle(fontSize: 11, color: Colors.grey))
+                      Text('No checklist items.', style: TextStyle(fontSize: 11, color: AppColors.textMuted(context)))
                     else
                       Column(
                         children: checklist.map((chk) {
@@ -575,9 +574,9 @@ class _EventsScreenState extends State<EventsScreen> {
                             margin: const EdgeInsets.only(bottom: 10),
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                              color: AppColors.subtleBg(context),
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: isDark ? Colors.white12 : Colors.grey.shade300),
+                              border: Border.all(color: AppColors.border(context)),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -593,7 +592,7 @@ class _EventsScreenState extends State<EventsScreen> {
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
-                                        color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                                        color: AppColors.border(context),
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
@@ -612,22 +611,22 @@ class _EventsScreenState extends State<EventsScreen> {
                                           _activeCommentInputs[itemId] = !isBoxOpen;
                                         });
                                       },
-                                      child: Text(
-                                        '💬 $commentCount · 📎 $attachCount',
-                                        style: const TextStyle(fontSize: 10.5, color: Colors.blue, fontWeight: FontWeight.w600),
+                                      child: const Text(
+                                        '💬 0 · 📎 0',
+                                        style: TextStyle(fontSize: 10.5, color: AppColors.blue, fontWeight: FontWeight.w600),
                                       ),
                                     ),
                                     const SizedBox(width: 12),
-                                    const Text('Unassigned', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                                    Text('Unassigned', style: TextStyle(fontSize: 10, color: AppColors.textMuted(context))),
                                   ],
                                 ),
 
                                 // Inline Comment / Proof Note Box
                                 if (isBoxOpen) ...[
                                   const SizedBox(height: 8),
-                                  const Text(
+                                  Text(
                                     'No updates yet — add a comment or upload proof.',
-                                    style: TextStyle(fontSize: 10, color: Colors.grey),
+                                    style: TextStyle(fontSize: 10, color: AppColors.textMuted(context)),
                                   ),
                                   const SizedBox(height: 4),
                                   Row(
@@ -638,22 +637,22 @@ class _EventsScreenState extends State<EventsScreen> {
                                           style: const TextStyle(fontSize: 11),
                                           decoration: InputDecoration(
                                             hintText: 'Add an update / proof note…',
-                                            hintStyle: const TextStyle(fontSize: 11, color: Colors.grey),
+                                            hintStyle: TextStyle(fontSize: 11, color: AppColors.textMuted(context)),
                                             isDense: true,
                                             contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                                             filled: true,
-                                            fillColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                                            fillColor: AppColors.card(context),
                                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide.none),
                                           ),
                                         ),
                                       ),
                                       const SizedBox(width: 6),
-                                      const Icon(Icons.attach_file_rounded, size: 18, color: Colors.grey),
+                                      Icon(Icons.attach_file_rounded, size: 18, color: AppColors.textMuted(context)),
                                       const SizedBox(width: 6),
                                       ElevatedButton(
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color(0xFF0F172A),
-                                          foregroundColor: Colors.white,
+                                          backgroundColor: AppColors.button(context),
+                                          foregroundColor: AppColors.white,
                                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
                                         ),
@@ -691,9 +690,9 @@ class _EventsScreenState extends State<EventsScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: AppColors.card(context),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppColors.border(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -705,7 +704,7 @@ class _EventsScreenState extends State<EventsScreen> {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  color: AppColors.textPrimary(context),
                 ),
               ),
               const Spacer(),
@@ -717,12 +716,7 @@ class _EventsScreenState extends State<EventsScreen> {
                 constraints: const BoxConstraints(),
                 onPressed: () {
                   setState(() {
-                    final prevMonth = _selectedMonthDate.month - 1;
-                    final year = prevMonth < 1 ? _selectedMonthDate.year - 1 : _selectedMonthDate.year;
-                    final month = prevMonth < 1 ? 12 : prevMonth;
-                    final dim = DateUtils.getDaysInMonth(year, month);
-                    final day = _selectedMonthDate.day > dim ? dim : _selectedMonthDate.day;
-                    _selectedMonthDate = DateTime(year, month, day);
+                    _selectedMonthDate = DateTime(_selectedMonthDate.year, _selectedMonthDate.month - 1, 1);
                   });
                 },
               ),
@@ -747,12 +741,7 @@ class _EventsScreenState extends State<EventsScreen> {
                 constraints: const BoxConstraints(),
                 onPressed: () {
                   setState(() {
-                    final nextMonth = _selectedMonthDate.month + 1;
-                    final year = nextMonth > 12 ? _selectedMonthDate.year + 1 : _selectedMonthDate.year;
-                    final month = nextMonth > 12 ? 1 : nextMonth;
-                    final dim = DateUtils.getDaysInMonth(year, month);
-                    final day = _selectedMonthDate.day > dim ? dim : _selectedMonthDate.day;
-                    _selectedMonthDate = DateTime(year, month, day);
+                    _selectedMonthDate = DateTime(_selectedMonthDate.year, _selectedMonthDate.month + 1, 1);
                   });
                 },
               ),
@@ -765,18 +754,18 @@ class _EventsScreenState extends State<EventsScreen> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(minWidth: 700),
               child: Table(
-                border: TableBorder.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                border: TableBorder.all(color: AppColors.border(context)),
                 children: [
                   // Days Header Row
                   TableRow(
-                    decoration: BoxDecoration(color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC)),
+                    decoration: BoxDecoration(color: AppColors.subtleBg(context)),
                     children: dayNames.map((d) {
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         child: Text(
                           d,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey),
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textMuted(context)),
                         ),
                       );
                     }).toList(),
@@ -810,8 +799,8 @@ class _EventsScreenState extends State<EventsScreen> {
                           height: 64,
                           padding: const EdgeInsets.all(4),
                           color: isToday
-                              ? (isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9))
-                              : Colors.transparent,
+                              ? AppColors.subtleBg(context)
+                              : AppColors.transparent,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -820,7 +809,7 @@ class _EventsScreenState extends State<EventsScreen> {
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: isToday ? FontWeight.bold : FontWeight.w600,
-                                  color: isDark ? Colors.white : Colors.black87,
+                                  color: AppColors.textPrimary(context),
                                 ),
                               ),
                               const SizedBox(height: 2),
@@ -829,12 +818,12 @@ class _EventsScreenState extends State<EventsScreen> {
                                   margin: const EdgeInsets.only(top: 2),
                                   padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFDCFCE7),
+                                    color: AppColors.greenLight,
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
                                     '★ ${ev.title}',
-                                    style: const TextStyle(fontSize: 9, color: Color(0xFF15803D), fontWeight: FontWeight.bold),
+                                    style: const TextStyle(fontSize: 9, color: AppColors.green700, fontWeight: FontWeight.bold),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -867,9 +856,9 @@ class _EventsScreenState extends State<EventsScreen> {
     return Container(
       padding: const EdgeInsets.all(9),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: AppColors.card(context),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppColors.border(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -891,7 +880,7 @@ class _EventsScreenState extends State<EventsScreen> {
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  color: AppColors.textPrimary(context),
                 ),
               ),
                IconButton(
@@ -937,13 +926,13 @@ class _EventsScreenState extends State<EventsScreen> {
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: isToday
-                        ? (isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9))
-                        : (isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC)),
+                        ? AppColors.subtleBg(context)
+                        : AppColors.card(context),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                       color: isToday
-                          ? const Color(0xFF8B1D24)
-                          : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                          ? AppColors.red800
+                          : AppColors.border(context),
                       width: isToday ? 1.5 : 1,
                     ),
                   ),
@@ -959,20 +948,20 @@ class _EventsScreenState extends State<EventsScreen> {
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                               color: isToday
-                                  ? const Color(0xFF8B1D24)
-                                  : (isDark ? Colors.white : const Color(0xFF0F172A)),
+                                  ? AppColors.red800
+                                  : AppColors.textPrimary(context),
                             ),
                           ),
                           if (dayEvents.isNotEmpty)
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFDCFCE7),
+                                color: AppColors.greenLight,
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Text(
                                 '${dayEvents.length}',
-                                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF15803D)),
+                                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.green700),
                               ),
                             ),
                         ],
@@ -981,23 +970,23 @@ class _EventsScreenState extends State<EventsScreen> {
                       if (dayEvents.isEmpty)
                         Text(
                           s.noDataAvailable,
-                          style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                          style: TextStyle(fontSize: 11, color: AppColors.textMuted(context)),
                         )
                       else
                         ...dayEvents.map((ev) => Container(
                               margin: const EdgeInsets.only(top: 4),
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFDCFCE7),
+                                color: AppColors.greenLight,
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Row(
                                 children: [
-                                  const Text('★ ', style: TextStyle(color: Color(0xFF15803D), fontSize: 10)),
+                                  const Text('★ ', style: TextStyle(color: AppColors.green700, fontSize: 10)),
                                   Expanded(
                                     child: Text(
                                       ev.title,
-                                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF15803D)),
+                                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.green700),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -1053,9 +1042,9 @@ class _EventsScreenState extends State<EventsScreen> {
     return Container(
       padding: const EdgeInsets.all(7),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: AppColors.card(context),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppColors.border(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1077,7 +1066,7 @@ class _EventsScreenState extends State<EventsScreen> {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  color: AppColors.textPrimary(context),
                 ),
               ),
                IconButton(
@@ -1145,14 +1134,14 @@ class _EventsScreenState extends State<EventsScreen> {
               fontSize: 11.5,
               fontWeight: FontWeight.bold,
               letterSpacing: 0.6,
-              color: isDark ? Colors.grey.shade400 : const Color(0xFF64748B),
+              color: AppColors.textSecondary(context),
             ),
           ),
           const SizedBox(height: 12),
           if (threeMonthsEvents.isEmpty)
             Text(
               s.noDataAvailable,
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+              style: TextStyle(fontSize: 12, color: AppColors.textMuted(context)),
             )
           else
             Wrap(
@@ -1169,10 +1158,10 @@ class _EventsScreenState extends State<EventsScreen> {
                 return Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF064E3B).withOpacity(0.4) : const Color(0xFFDCFCE7),
+                    color: isDark ? AppColors.green900.withValues(alpha: 0.4) : AppColors.greenLight,
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
-                      color: isDark ? const Color(0xFF059669) : const Color(0xFF86EFAC),
+                      color: isDark ? AppColors.green700 : AppColors.green300,
                     ),
                   ),
                   child: Text(
@@ -1180,7 +1169,7 @@ class _EventsScreenState extends State<EventsScreen> {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: isDark ? const Color(0xFF6EE7B7) : const Color(0xFF15803D),
+                      color: isDark ? AppColors.green300 : AppColors.green700,
                     ),
                   ),
                 );
@@ -1202,9 +1191,9 @@ class _EventsScreenState extends State<EventsScreen> {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+        color: AppColors.subtleBg(context),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppColors.border(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1215,7 +1204,7 @@ class _EventsScreenState extends State<EventsScreen> {
               style: TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                color: AppColors.textPrimary(context),
               ),
             ),
           ),
@@ -1232,7 +1221,7 @@ class _EventsScreenState extends State<EventsScreen> {
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                        color: AppColors.textSecondary(context),
                       ),
                     ),
                   );
@@ -1264,8 +1253,8 @@ class _EventsScreenState extends State<EventsScreen> {
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: hasEvent
-                            ? (isDark ? const Color(0xFF065F46) : const Color(0xFFBBF7D0))
-                            : (isToday ? (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)) : Colors.transparent),
+                            ? (isDark ? AppColors.green900 : AppColors.greenLight)
+                            : (isToday ? AppColors.border(context) : AppColors.transparent),
                         shape: BoxShape.circle,
                       ),
                       child: Text(
@@ -1274,8 +1263,8 @@ class _EventsScreenState extends State<EventsScreen> {
                           fontSize: 10,
                           fontWeight: hasEvent || isToday ? FontWeight.bold : FontWeight.normal,
                           color: hasEvent
-                              ? (isDark ? Colors.white : const Color(0xFF15803D))
-                              : (isDark ? Colors.white70 : Colors.black87),
+                              ? (isDark ? AppColors.white : AppColors.green700)
+                              : AppColors.textPrimary(context),
                         ),
                       ),
                     );

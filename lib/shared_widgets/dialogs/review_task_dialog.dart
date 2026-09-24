@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/app_colors.dart';
 import '../../../modules/tasks/models/task_model.dart';
 import '../../../modules/tasks/repository/task_repository.dart';
 
@@ -399,7 +400,7 @@ class _ReviewTaskDialogState extends State<ReviewTaskDialog> {
                 ElevatedButton(
                   onPressed: _isSubmitting ? null : _submitReview,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF132A50),
+                    backgroundColor: AppColors.button(context),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

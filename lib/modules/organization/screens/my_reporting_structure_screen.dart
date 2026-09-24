@@ -1,7 +1,9 @@
 import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
@@ -22,11 +24,13 @@ class MyReportingStructureScreen extends StatelessWidget {
         onPopInvokedWithResult: (didPop, _) async {
           if (!didPop) await ExitConfirmationDialog.show(context);
         },
-        child: Scaffold(
-          floatingActionButton: const TodoFloatingActionButton(),
-          drawer: const CustomLeftDrawer(currentRoute: '/my-reporting'),
-          appBar: const CustomAppBar(),
-          body: const _MyReportingBody(),
+        child: const Scaffold(
+          floatingActionButton: TodoFloatingActionButton(),
+          drawer: CustomLeftDrawer(currentRoute: '/my-reporting'),
+          appBar: CustomAppBar(),
+          body: AnnouncementBannerWrapper(
+            child: _MyReportingBody(),
+          ),
         ),
       ),
     );
@@ -57,7 +61,7 @@ class _MyReportingBody extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    color: AppColors.textPrimary(context),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -65,23 +69,23 @@ class _MyReportingBody extends StatelessWidget {
                   s.myReportingSubtitle,
                   style: TextStyle(
                     fontSize: 12,
-                    color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                    color: AppColors.textSecondary(context),
                   ),
                 ),
                 const SizedBox(height: 24),
 
                 if (state is MyReportingLoadingState)
-                  const Padding(
-                    padding: EdgeInsets.all(60),
-                    child: Center(
-                      child: CircularProgressIndicator(color: Color(0xFF0F172A)),
+                  Padding(
+                    padding: const EdgeInsets.all(60),
+                    child: const Center(
+                      child: CircularProgressIndicator(),
                     ),
                   )
                 else if (state is MyReportingErrorState)
                   Center(
                     child: Column(
                       children: [
-                        Text(state.message, style: const TextStyle(color: Colors.red)),
+                        Text(state.message, style: TextStyle(color: AppColors.red)),
                         const SizedBox(height: 12),
                         ElevatedButton(
                           onPressed: () => context.read<MyReportingBloc>().add(FetchMyReportingEvent()),
@@ -93,9 +97,10 @@ class _MyReportingBody extends StatelessWidget {
                 else if (state is MyReportingLoadedState) ...[
                   // Section: Me
                   if (state.data.me != null) ...[
-                    _buildSectionHeader(s.meSectionTitle, isDark),
+                    _buildSectionHeader(context, s.meSectionTitle, isDark),
                     const SizedBox(height: 10),
                     _buildPersonCard(
+                      context: context,
                       person: state.data.me!,
                       isMe: true,
                       isDark: isDark,
@@ -106,6 +111,7 @@ class _MyReportingBody extends StatelessWidget {
 
                   // Section: I report to
                   _buildSectionHeader(
+                    context,
                     s.iReportToSectionTitle,
                     isDark,
                     tag: s.primarySolidLegend,
@@ -120,6 +126,7 @@ class _MyReportingBody extends StatelessWidget {
                             .map((m) => Padding(
                                   padding: const EdgeInsets.only(bottom: 10),
                                   child: _buildPersonCard(
+                                    context: context,
                                     person: m,
                                     isMe: false,
                                     isDark: isDark,
@@ -134,7 +141,7 @@ class _MyReportingBody extends StatelessWidget {
                         padding: const EdgeInsets.only(bottom: 6),
                         child: Text(
                           s.secondaryDottedLegend,
-                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.white60 : Colors.grey.shade600),
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textSecondary(context)),
                         ),
                       ),
                       Column(
@@ -142,6 +149,7 @@ class _MyReportingBody extends StatelessWidget {
                             .map((m) => Padding(
                                   padding: const EdgeInsets.only(bottom: 10),
                                   child: _buildPersonCard(
+                                    context: context,
                                     person: m,
                                     isMe: false,
                                     isDark: isDark,
@@ -156,6 +164,7 @@ class _MyReportingBody extends StatelessWidget {
 
                   // Section: Reports to me
                   _buildSectionHeader(
+                    context,
                     s.reportsToMeSectionTitle,
                     isDark,
                     countBadge: state.data.reports.length + state.data.dottedReports.length,
@@ -170,6 +179,7 @@ class _MyReportingBody extends StatelessWidget {
                             .map((r) => Padding(
                                   padding: const EdgeInsets.only(bottom: 10),
                                   child: _buildPersonCard(
+                                    context: context,
                                     person: r,
                                     isMe: false,
                                     isDark: isDark,
@@ -184,7 +194,7 @@ class _MyReportingBody extends StatelessWidget {
                         padding: const EdgeInsets.only(bottom: 6),
                         child: Text(
                           s.secondaryDottedLegend,
-                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.white60 : Colors.grey.shade600),
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textSecondary(context)),
                         ),
                       ),
                       Column(
@@ -192,6 +202,7 @@ class _MyReportingBody extends StatelessWidget {
                             .map((r) => Padding(
                                   padding: const EdgeInsets.only(bottom: 10),
                                   child: _buildPersonCard(
+                                    context: context,
                                     person: r,
                                     isMe: false,
                                     isDark: isDark,
@@ -206,6 +217,7 @@ class _MyReportingBody extends StatelessWidget {
 
                   // Section: Peers
                   _buildSectionHeader(
+                    context,
                     s.peersSectionTitle,
                     isDark,
                     tag: s.shareManagerSubtitle,
@@ -219,6 +231,7 @@ class _MyReportingBody extends StatelessWidget {
                           .map((p) => Padding(
                                 padding: const EdgeInsets.only(bottom: 10),
                                 child: _buildPersonCard(
+                                  context: context,
                                   person: p,
                                   isMe: false,
                                   isDark: isDark,
@@ -239,6 +252,7 @@ class _MyReportingBody extends StatelessWidget {
   }
 
   Widget _buildSectionHeader(
+    BuildContext context,
     String title,
     bool isDark, {
     String? tag,
@@ -251,7 +265,7 @@ class _MyReportingBody extends StatelessWidget {
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : const Color(0xFF0F172A),
+            color: AppColors.textPrimary(context),
           ),
         ),
         if (countBadge != null) ...[
@@ -259,14 +273,14 @@ class _MyReportingBody extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+              color: AppColors.subtleBg(context),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
               '$countBadge',
               style: TextStyle(
                 fontSize: 11,
-                color: isDark ? Colors.white70 : const Color(0xFF64748B),
+                color: AppColors.textSecondary(context),
               ),
             ),
           ),
@@ -277,7 +291,7 @@ class _MyReportingBody extends StatelessWidget {
             tag,
             style: TextStyle(
               fontSize: 11,
-              color: isDark ? Colors.white54 : const Color(0xFF64748B),
+              color: AppColors.textSecondary(context),
             ),
           ),
         ],
@@ -286,6 +300,7 @@ class _MyReportingBody extends StatelessWidget {
   }
 
   Widget _buildPersonCard({
+    required BuildContext context,
     required MyReportingPersonModel person,
     required bool isMe,
     required bool isDark,
@@ -300,10 +315,10 @@ class _MyReportingBody extends StatelessWidget {
       constraints: const BoxConstraints(maxWidth: 400),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: AppColors.card(context),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          color: AppColors.border(context),
         ),
       ),
       child: Row(
@@ -314,7 +329,7 @@ class _MyReportingBody extends StatelessWidget {
             child: Text(
               person.initials,
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.white,
                 fontWeight: FontWeight.bold,
                 fontSize: 11,
               ),
@@ -333,7 +348,7 @@ class _MyReportingBody extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          color: AppColors.textPrimary(context),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -344,7 +359,7 @@ class _MyReportingBody extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                          color: AppColors.subtleBorder(context),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -352,7 +367,7 @@ class _MyReportingBody extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 9,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white70 : const Color(0xFF475569),
+                            color: AppColors.textSecondary(context),
                           ),
                         ),
                       ),
@@ -364,7 +379,7 @@ class _MyReportingBody extends StatelessWidget {
                   subtitle,
                   style: TextStyle(
                     fontSize: 11,
-                    color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                    color: AppColors.textSecondary(context),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -384,20 +399,20 @@ class _MyReportingBody extends StatelessWidget {
         text,
         style: TextStyle(
           fontSize: 12,
-          color: isDark ? Colors.white38 : Colors.grey.shade400,
+          color: AppColors.grey,
         ),
       ),
     );
   }
 
   Color _hexToColor(String? hex) {
-    if (hex == null || hex.trim().isEmpty) return const Color(0xFF132A50);
+    if (hex == null || hex.trim().isEmpty) return AppColors.navyDark;
     try {
       String h = hex.replaceAll('#', '').replaceAll('0x', '').trim();
       if (h.length == 6) h = 'FF$h';
       return Color(int.parse(h, radix: 16));
     } catch (_) {
-      return const Color(0xFF132A50);
+      return AppColors.navyDark;
     }
   }
 }

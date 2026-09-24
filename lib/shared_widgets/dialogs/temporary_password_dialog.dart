@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/app_colors.dart';
 import 'package:flutter/services.dart';
 
 class TemporaryPasswordDialog extends StatelessWidget {
@@ -144,7 +145,7 @@ class TemporaryPasswordDialog extends StatelessWidget {
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF132A50),
+                        backgroundColor: AppColors.button(context),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(horizontal: 22),
                         shape: RoundedRectangleBorder(
@@ -184,7 +185,7 @@ class TemporaryPasswordDialog extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: () => Navigator.of(context).pop(),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF132A50),
+                      backgroundColor: AppColors.button(context),
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),

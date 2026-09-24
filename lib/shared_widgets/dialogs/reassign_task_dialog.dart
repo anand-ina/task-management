@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import '../../core/constants/app_colors.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/dio_client.dart';
 
@@ -258,7 +259,7 @@ class _ReassignTaskDialogState extends State<ReassignTaskDialog> {
             // Assignees List
             Expanded(
               child: _isLoading
-                  ? const Center(child: CircularProgressIndicator(color: Color(0xFF2563EB)))
+                  ? const Center(child: CircularProgressIndicator())
                   : _filteredAssignees.isEmpty
                       ? const Center(
                           child: Text(
@@ -356,7 +357,7 @@ class _ReassignTaskDialogState extends State<ReassignTaskDialog> {
                     style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2563EB),
+                    backgroundColor: AppColors.button(context),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

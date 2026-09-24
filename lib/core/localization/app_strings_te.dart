@@ -342,6 +342,8 @@ class AppStringsTe extends AppStrings {
   @override
   String approvalsBadge(int count) => '$count ఆమోదాలు';
   @override
+  String toReviewBadge(int count) => '$count సమీక్షకు';
+  @override
   String toStartBadge(int count) => '$count ప్రారంభించవలసినవి';
   @override
   String inProgressBadge(int count) => '$count పురోగతిలో';
@@ -1983,5 +1985,124 @@ class AppStringsTe extends AppStrings {
   String get searchFacultyPlaceholder => 'ఫ్యాకల్టీని శోధించండి...';
   @override
   String get changingThisMovesPoints => 'దీన్ని మార్చడం వలన పాయింట్లు బదిలీ అవుతాయి.';
+
+  // ── Announcements Module Strings ──────────────────────────────────────────
+  @override
+  String get announcements => 'ప్రకటనలు';
+  @override
+  String get announcementsTickerLabel => 'ప్రకటనలు';
+  @override
+  String get announcementsSubtitle =>
+      'ఇక్కడ పోస్ట్‌లు మొత్తం బృందం కోసం ప్రతి పేజీ పైభాగంలో స్క్రోల్ అవుతాయి. మేనేజర్‌లు & అంతకంటే ఎక్కువ ఉన్నవారు వాటిని సృష్టించవచ్చు.';
+  @override
+  String get newAnnouncement => 'కొత్త ప్రకటన';
+  @override
+  String get editAnnouncement => 'ప్రకటన సవరణ';
+  @override
+  String get postAnnouncement => 'ప్రకటనను పోస్ట్ చేయండి';
+  @override
+  String get announcementTitleLabel => 'శీర్షిక *';
+  @override
+  String get announcementTitleHint => 'ఉదా: స్పోర్ట్స్ డే కోసం శుక్రవారం హాఫ్ డే';
+  @override
+  String get announcementDetailsLabel => 'వివరాలు';
+  @override
+  String get announcementDetailsHint => 'టిక్కర్‌లో చూపించే ఐచ్ఛిక దీర్ఘ సందేశం...';
+  @override
+  String get priorityInfo => 'సమాచారం';
+  @override
+  String get priorityCritical => 'కీలకమైన';
+  @override
+  String get priorityWarning => 'హెచ్చరిక';
+  @override
+  String get activeShowNow => 'క్రియాశీలంగా (ఇప్పుడు చూపించు)';
+  @override
+  String get showFromOptional => 'ప్రారంభ సమయం (ఐచ్ఛికం)';
+  @override
+  String get showUntilOptional => 'ముగింపు సమయం (ఐచ్ఛికం)';
+  @override
+  String get deactivate => 'నిష్క్రియం చేయండి';
+  @override
+  String get activate => 'సక్రియం చేయండి';
+  @override
+  String get delete => 'తొలగించు';
+  @override
+  String get edit => 'సవరించు';
+  @override
+  String deleteAnnouncementConfirmation(String title) => 'ప్రకటన "$title" ను తొలగించాలా?';
+  @override
+  String get noAnnouncementsFound => 'ప్రకటనలు ఏవీ కనుగొనబడలేదు';
+  @override
+  String get announcementCreatedSuccess => 'ప్రకటన విజయవంతంగా పోస్ట్ చేయబడింది';
+  @override
+  String get announcementUpdatedSuccess => 'ప్రకటన విజయవంతంగా నవీకరించబడింది';
+  @override
+  String get announcementDeletedSuccess => 'ప్రకటన విజయవంతంగా తొలగించబడింది';
+  @override
+  String get announcementDeactivatedSuccess => 'ప్రకటన విజయవంతంగా నిష్క్రియం చేయబడింది';
+  @override
+  String get announcementActivatedSuccess => 'ప్రకటన విజయవంతంగా సక్రియం చేయబడింది';
+  @override
+  String get themeModeLight => 'లైట్';
+  @override
+  String get themeModeDark => 'డార్క్';
+  @override
+  String get themeModeSystem => 'సిస్టమ్ సౌకర్యవంతమైనది';
+
+  // Hourly Log Strings
+  @override
+  String get hourlyLog => 'గంటల వారీ లాగ్';
+  @override
+  String get dailyHourlyLog => 'రోజువారీ గంటల వారీ లాగ్';
+  @override
+  String get dailyHourlyLogSubtitle =>
+      'ప్రతి గంటలో మీరు ఏమి చేశారో లాగ్ చేయండి — ప్రతి స్లాట్‌కు ఒకటి లేదా అంతకంటే ఎక్కువ నమోదులను జోడించండి. మీ లంచ్ సమయం తప్ప ప్రతి స్లాట్ తప్పనిసరి. మీరు సమర్పించకపోతే రాత్రి 9 గంటలకు స్వయంచాలకంగా సమర్పించబడుతుంది.';
+  @override
+  String slotsFilledCount(int filled, int total) => '$filled/$total స్లాట్లు నిండాయి';
+  @override
+  String get submitDsr => 'DSR సమర్పించండి';
+  @override
+  String get setAsLunch => 'లంచ్ సమయంగా సెట్ చేయండి';
+  @override
+  String get lunchHour => 'లంచ్ సమయం';
+  @override
+  String get whatDidYouWorkOn => 'మీరు దేనిపై పనిచేశారు...';
+  @override
+  String get deleteItemConfirm => 'మీరు ఖచ్చితంగా ఈ లాగ్ నమోదును తొలగించాలనుకుంటున్నారా?';
+  @override
+  String get editLogEntry => 'లాగ్ నమోదును సవరించండి';
+  @override
+  String get dsrSubmittedSuccessfully => 'DSR విజయవంతంగా సమర్పించబడింది';
+  @override
+  String get addEntry => 'జోడించు';
+  @override
+  String get noEntriesYet => 'ఈ స్లాట్ కోసం ఇంకా ఏ నమోదులు లేవు';
+  @override
+  String hourlyLogPromptTitle(String slot) => 'గంటవారీ లాగ్ — $slot';
+  @override
+  String whatDidYouWorkOnDuring(String slot) => '$slot సమయంలో మీరు ఏమి పని చేశారు?';
+  @override
+  String get addQuickEntryHint => 'త్వరిత నమోదును జోడించండి...';
+  @override
+  String get logButton => 'లాగ్ చేయండి';
+  @override
+  String get openFullLog => 'పూర్తి లాగ్ తెరవండి →';
+  @override
+  String get remindMeLater => 'నాకు తర్వాత గుర్తుచేయండి';
+  @override
+  String get submitDsrConfirmTitle => 'DSR సమర్పించాలా?';
+  @override
+  String get submitDsrConfirmMessage =>
+      'ఈ రోజు కోసం మీ గంటవారీ లాగ్‌ను సమర్పించాలా? తర్వాత మీరు దీన్ని సవరించలేరు.';
+  @override
+  String get submittedStatus => 'సమర్పించబడింది';
+  @override
+  String get notFilledStatus => 'భర్తీ చేయలేదు';
+  @override
+  String entryLoggedSuccess(String slot) => '$slot కోసం నమోదు విజయవంతంగా లాగ్ చేయబడింది!';
+  @override
+  String get hourlyLogSubmittedSuccess => 'గంటవారీ లాగ్ విజయవంతంగా సమర్పించబడింది!';
+  @override
+  String get announcementsHeader => 'ప్రకటనలు';
 }
 

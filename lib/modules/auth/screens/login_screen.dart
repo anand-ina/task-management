@@ -388,13 +388,20 @@ class _LoginScreenState extends State<LoginScreen> {
               // Mobile Header Banner Card
               Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0B132B),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF0F172A),
+                      Color(0xFF1E40AF),
+                    ],
+                  ),
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
+                      color: Colors.black12,
                       blurRadius: 10,
-                      offset: const Offset(0, 4),
+                      offset: Offset(0, 4),
                     ),
                   ],
                 ),
@@ -755,33 +762,33 @@ class _LoginScreenState extends State<LoginScreen> {
 
         const SizedBox(height: 12),
 
-        // Right Aligned Link: Forgot password?
-        Align(
-          alignment: Alignment.centerRight,
-          child: InkWell(
-            onTap: () {
-              setState(() {
-                _forgotIdentifierController.text = _emailController.text;
-                _currentFormMode = AuthFormMode.forgotPassword;
-              });
-            },
-            borderRadius: BorderRadius.circular(4),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-              child: Text(
-                'Forgot password?',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF1E3A8A),
-                  decoration: TextDecoration.underline,
-                ),
-              ),
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 28),
+        // // Right Aligned Link: Forgot password?
+        // Align(
+        //   alignment: Alignment.centerRight,
+        //   child: InkWell(
+        //     onTap: () {
+        //       setState(() {
+        //         _forgotIdentifierController.text = _emailController.text;
+        //         _currentFormMode = AuthFormMode.forgotPassword;
+        //       });
+        //     },
+        //     borderRadius: BorderRadius.circular(4),
+        //     child: Padding(
+        //       padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+        //       child: Text(
+        //         'Forgot password?',
+        //         style: TextStyle(
+        //           fontSize: 14,
+        //           fontWeight: FontWeight.w600,
+        //           color: isDark ? const Color(0xFF60A5FA) : const Color(0xFF1E3A8A),
+        //           decoration: TextDecoration.underline,
+        //         ),
+        //       ),
+        //     ),
+        //   ),
+        // ),
+        //
+        // const SizedBox(height: 28),
 
         // Crimson Sign In Button
         BlocConsumer<AuthBloc, AuthState>(
@@ -831,7 +838,7 @@ class _LoginScreenState extends State<LoginScreen> {
               height: 52,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF991B1B), // Dark Crimson Red
+                  backgroundColor: AppColors.button(context),
                   foregroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
@@ -937,7 +944,7 @@ class _LoginScreenState extends State<LoginScreen> {
           height: 52,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF132A50), // Navy Blue
+              backgroundColor: AppColors.button(context),
               foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
@@ -1064,7 +1071,7 @@ class _LoginScreenState extends State<LoginScreen> {
           height: 52,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF132A50), // Navy Blue
+              backgroundColor: AppColors.button(context),
               foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
@@ -1318,7 +1325,7 @@ class _LoginScreenState extends State<LoginScreen> {
           height: 52,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF132A50), // Navy Blue
+              backgroundColor: AppColors.button(context),
               foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(

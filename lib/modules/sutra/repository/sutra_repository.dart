@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/dio_client.dart';
+import '../../../core/utils/preferences_service.dart';
 import '../../dashboard/models/dashboard_stats.dart';
 import '../models/sutra_task_model.dart';
 
@@ -17,6 +18,7 @@ class SutraDashboardData {
 
 class SutraRepository {
   final DioClient _dioClient = DioClient();
+  final PreferencesService _prefs = PreferencesService();
 
   dynamic _safeParse(dynamic data) {
     if (data is String) {
@@ -30,8 +32,13 @@ class SutraRepository {
   }
 
   Future<SutraDashboardData> getSutraData() async {
+    final role = (await _prefs.getUserRole())?.toLowerCase() ?? '';
+    final roleLabel = (await _prefs.getUserRoleLabel())?.toLowerCase() ?? '';
+    final isManager = role.contains('manager') || roleLabel.contains('manager');
+    final Map<String, dynamic>? dashParams = isManager ? {'mine': 1} : null;
+
     final results = await Future.wait([
-      _dioClient.dio.get(ApiConstants.dashboard),
+      _dioClient.dio.get(ApiConstants.dashboard, queryParameters: dashParams),
       _dioClient.dio.get(
         ApiConstants.tasks,
         queryParameters: {'scope': 'mine', 'status': 'in_progress', 'limit': 20},

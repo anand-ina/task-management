@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../bloc/admin_audit_bloc.dart';
 import '../bloc/admin_audit_event.dart';
 import '../bloc/admin_audit_state.dart';
@@ -25,7 +27,7 @@ class AdminAuditLogScreen extends StatelessWidget {
         child: const Scaffold(
           drawer: CustomLeftDrawer(currentRoute: '/admin/audit'),
           appBar: CustomAppBar(),
-          body: _AuditLogBody(),
+          body: AnnouncementBannerWrapper(child: _AuditLogBody()),
         ),
       ),
     );
@@ -59,7 +61,7 @@ class _AuditLogBody extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        color: AppColors.textPrimary(context),
                       ),
                     ),
                     if (state is AdminAuditLoadedState) ...[
@@ -67,7 +69,7 @@ class _AuditLogBody extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+                          color: AppColors.subtleBg(context),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
@@ -75,7 +77,7 @@ class _AuditLogBody extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.white70 : const Color(0xFF475569),
+                            color: AppColors.textSecondary(context),
                           ),
                         ),
                       ),
@@ -87,7 +89,7 @@ class _AuditLogBody extends StatelessWidget {
                   s.auditLogSubtitle,
                   style: TextStyle(
                     fontSize: 12,
-                    color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                    color: AppColors.textSecondary(context),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -98,10 +100,10 @@ class _AuditLogBody extends StatelessWidget {
                     height: 38,
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                      color: AppColors.card(context),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                        color: AppColors.border(context),
                       ),
                     ),
                     child: DropdownButtonHideUnderline(
@@ -111,9 +113,9 @@ class _AuditLogBody extends StatelessWidget {
                         icon: Icon(
                           Icons.keyboard_arrow_down_rounded,
                           size: 18,
-                          color: isDark ? Colors.white70 : const Color(0xFF475569),
+                          color: AppColors.textSecondary(context),
                         ),
-                        dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                        dropdownColor: AppColors.card(context),
                         items: [
                           DropdownMenuItem(value: 'all', child: Text(s.allActivityFilter, style: const TextStyle(fontSize: 12))),
                           DropdownMenuItem(value: 'login', child: Text(s.loginAction, style: const TextStyle(fontSize: 12))),
@@ -132,17 +134,17 @@ class _AuditLogBody extends StatelessWidget {
                 ],
 
                 if (state is AdminAuditLoadingState)
-                  const Padding(
-                    padding: EdgeInsets.all(60),
-                    child: Center(
-                      child: CircularProgressIndicator(color: Color(0xFF0F172A)),
+                  Padding(
+                    padding: const EdgeInsets.all(60),
+                    child: const Center(
+                      child: CircularProgressIndicator(),
                     ),
                   )
                 else if (state is AdminAuditErrorState)
                   Center(
                     child: Column(
                       children: [
-                        Text(state.message, style: const TextStyle(color: Colors.red)),
+                        Text(state.message, style: TextStyle(color: AppColors.red)),
                         const SizedBox(height: 12),
                         ElevatedButton(
                           onPressed: () => context.read<AdminAuditBloc>().add(FetchAuditLogsEvent()),
@@ -174,10 +176,10 @@ class _AuditLogBody extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(40),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          color: AppColors.card(context),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+            color: AppColors.border(context),
           ),
         ),
         child: Center(
@@ -185,7 +187,7 @@ class _AuditLogBody extends StatelessWidget {
             s.noAuditLogsFound,
             style: TextStyle(
               fontSize: 13,
-              color: isDark ? Colors.white54 : Colors.grey.shade500,
+              color: AppColors.textMuted,
             ),
           ),
         ),
@@ -194,10 +196,10 @@ class _AuditLogBody extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: AppColors.card(context),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          color: AppColors.border(context),
         ),
       ),
       child: ListView.separated(
@@ -206,7 +208,7 @@ class _AuditLogBody extends StatelessWidget {
         itemCount: logs.length,
         separatorBuilder: (_, index) => Divider(
           height: 1,
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          color: AppColors.border(context),
         ),
         itemBuilder: (context, i) {
           final log = logs[i];
@@ -215,7 +217,7 @@ class _AuditLogBody extends StatelessWidget {
             child: Row(
               children: [
                 // Action Badge
-                _buildActionBadge(log.action, s, isDark),
+                _buildActionBadge(context, log.action, s, isDark),
                 const SizedBox(width: 14),
 
                 // Actor & Detail
@@ -224,7 +226,7 @@ class _AuditLogBody extends StatelessWidget {
                     text: TextSpan(
                       style: TextStyle(
                         fontSize: 11,
-                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        color: AppColors.textPrimary(context),
                       ),
                       children: [
                         TextSpan(
@@ -235,7 +237,7 @@ class _AuditLogBody extends StatelessWidget {
                           TextSpan(
                             text: ' · ${log.detail}',
                             style: TextStyle(
-                              color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                              color: AppColors.textSecondary(context),
                               fontWeight: FontWeight.normal,
                             ),
                           ),
@@ -253,7 +255,7 @@ class _AuditLogBody extends StatelessWidget {
                   DateFormat('dd MMM, HH:mm').format(log.at.toLocal()),
                   style: TextStyle(
                     fontSize: 9,
-                    color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                    color: AppColors.textSecondary(context),
                   ),
                 ),
               ],
@@ -264,7 +266,7 @@ class _AuditLogBody extends StatelessWidget {
     );
   }
 
-  Widget _buildActionBadge(String action, AppStrings s, bool isDark) {
+  Widget _buildActionBadge(BuildContext context, String action, AppStrings s, bool isDark) {
     Color bg;
     Color text;
     String label;
@@ -272,23 +274,23 @@ class _AuditLogBody extends StatelessWidget {
 
     final lower = action.toLowerCase();
     if (lower.contains('login')) {
-      bg = isDark ? const Color(0xFF064E3B) : const Color(0xFFDCFCE7);
-      text = isDark ? const Color(0xFF34D399) : const Color(0xFF15803D);
+      bg = isDark ? AppColors.green900 : AppColors.greenLight;
+      text = isDark ? AppColors.green300 : AppColors.green700;
       label = s.loginAction;
       icon = Icons.arrow_forward_rounded;
     } else if (lower.contains('logout')) {
-      bg = isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9);
-      text = isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569);
+      bg = AppColors.subtleBg(context);
+      text = isDark ? AppColors.slate400 : AppColors.slate600;
       label = s.logoutAction;
       icon = Icons.arrow_back_rounded;
     } else if (lower.contains('password')) {
-      bg = isDark ? const Color(0xFF78350F) : const Color(0xFFFEF3C7);
-      text = isDark ? const Color(0xFFFBBF24) : const Color(0xFFB45309);
+      bg = isDark ? AppColors.amber900 : AppColors.amberLight;
+      text = isDark ? AppColors.amber300 : AppColors.amber800;
       label = s.passwordChangedAction;
       icon = Icons.key_rounded;
     } else {
-      bg = isDark ? const Color(0xFF1E3A8A) : const Color(0xFFDBEAFE);
-      text = isDark ? const Color(0xFF60A5FA) : const Color(0xFF1D4ED8);
+      bg = isDark ? AppColors.blueDark : AppColors.blueLight;
+      text = isDark ? AppColors.blueLight : AppColors.blue;
       label = action;
       icon = Icons.circle;
     }

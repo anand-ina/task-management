@@ -2,7 +2,9 @@ import '../../../shared_widgets/floating_action_button/todo_floating_action_butt
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
@@ -155,7 +157,7 @@ class _SutraAiScreenState extends State<SutraAiScreen> {
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0F172A),
+                backgroundColor: AppColors.button(ctx),
                 foregroundColor: Colors.white,
               ),
               onPressed: () {
@@ -205,7 +207,8 @@ class _SutraAiScreenState extends State<SutraAiScreen> {
           floatingActionButton: const TodoFloatingActionButton(),
           appBar: const CustomAppBar(),
           drawer: const CustomLeftDrawer(currentRoute: '/sutra'),
-          body: BlocBuilder<SutraBloc, SutraState>(
+          body: AnnouncementBannerWrapper(
+            child: BlocBuilder<SutraBloc, SutraState>(
             builder: (context, state) {
               if (state is SutraLoadingState) {
                 return const Center(child: CircularProgressIndicator());
@@ -405,7 +408,7 @@ class _SutraAiScreenState extends State<SutraAiScreen> {
                                           }
                                         },
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF0F172A),
+                                    backgroundColor: AppColors.button(context),
                                     foregroundColor: Colors.white,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8),
@@ -490,6 +493,7 @@ class _SutraAiScreenState extends State<SutraAiScreen> {
               }
               return const SizedBox.shrink();
             },
+          ),
           ),
         ),
       ),
@@ -650,7 +654,7 @@ class _SutraAiScreenState extends State<SutraAiScreen> {
               ElevatedButton(
                 onPressed: () {},
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0F172A),
+                  backgroundColor: AppColors.button(context),
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -781,7 +785,7 @@ class _SutraAiScreenState extends State<SutraAiScreen> {
           ElevatedButton(
             onPressed: () {},
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF0F172A),
+              backgroundColor: AppColors.button(context),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),

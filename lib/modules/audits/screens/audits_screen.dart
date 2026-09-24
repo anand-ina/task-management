@@ -2,7 +2,9 @@ import '../../../shared_widgets/floating_action_button/todo_floating_action_butt
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
@@ -163,14 +165,15 @@ class _AuditsScreenState extends State<AuditsScreen> {
           floatingActionButton: const TodoFloatingActionButton(),
           drawer: CustomLeftDrawer(currentRoute: currentRoute),
           appBar: const CustomAppBar(),
-          body: BlocConsumer<AuditBloc, AuditState>(
+          body: AnnouncementBannerWrapper(
+            child: BlocConsumer<AuditBloc, AuditState>(
             listener: (context, state) {
               if (state is AuditLoadedState) {
                 if (state.actionSuccess != null) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(state.actionSuccess!),
-                      backgroundColor: const Color(0xFF16A34A),
+                      backgroundColor: AppColors.green600,
                     ),
                   );
                   setState(() {
@@ -181,7 +184,7 @@ class _AuditsScreenState extends State<AuditsScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(state.actionError!),
-                      backgroundColor: const Color(0xFFDC2626),
+                      backgroundColor: AppColors.red600,
                     ),
                   );
                 }
@@ -214,7 +217,7 @@ class _AuditsScreenState extends State<AuditsScreen> {
                                   style: TextStyle(
                                     fontSize: 22,
                                     fontWeight: FontWeight.bold,
-                                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                    color: AppColors.textPrimary(context),
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -222,7 +225,7 @@ class _AuditsScreenState extends State<AuditsScreen> {
                                   subtitle,
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                                    color: AppColors.textSecondary(context),
                                   ),
                                 ),
                               ],
@@ -245,11 +248,11 @@ class _AuditsScreenState extends State<AuditsScreen> {
                             ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: _isScheduleFormOpen
-                                  ? (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0))
-                                  : const Color(0xFF0F172A),
+                                  ? AppColors.subtleBorder(context)
+                                  : AppColors.button(context),
                               foregroundColor: _isScheduleFormOpen
-                                  ? (isDark ? Colors.white : const Color(0xFF0F172A))
-                                  : Colors.white,
+                                  ? AppColors.textPrimary(context)
+                                  : AppColors.white,
                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                             ),
@@ -269,14 +272,14 @@ class _AuditsScreenState extends State<AuditsScreen> {
                         const Padding(
                           padding: EdgeInsets.all(60),
                           child: Center(
-                            child: CircularProgressIndicator(color: Color(0xFF0F172A)),
+                            child: CircularProgressIndicator(),
                           ),
                         )
                       else if (state is AuditErrorState)
                         Center(
                           child: Column(
                             children: [
-                              Text(state.message, style: const TextStyle(color: Colors.red)),
+                              Text(state.message, style: TextStyle(color: AppColors.red)),
                               const SizedBox(height: 12),
                               ElevatedButton(
                                 onPressed: () => context
@@ -300,6 +303,7 @@ class _AuditsScreenState extends State<AuditsScreen> {
               );
             },
           ),
+          ),
         ),
       ),
     );
@@ -317,10 +321,10 @@ class _AuditsScreenState extends State<AuditsScreen> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: AppColors.card(context),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          color: AppColors.border(context),
         ),
       ),
       child: Column(
@@ -331,7 +335,7 @@ class _AuditsScreenState extends State<AuditsScreen> {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : const Color(0xFF0F172A),
+              color: AppColors.textPrimary(context),
             ),
           ),
           const SizedBox(height: 16),
@@ -341,7 +345,7 @@ class _AuditsScreenState extends State<AuditsScreen> {
           const SizedBox(height: 6),
           TextField(
             controller: _titleController,
-            style: TextStyle(fontSize: 13, color: isDark ? Colors.white : const Color(0xFF0F172A)),
+            style: TextStyle(fontSize: 13, color: AppColors.textPrimary(context)),
             decoration: _inputDecoration(isDark, hintText: 'e.g. Cash review'),
           ),
           const SizedBox(height: 14),
@@ -351,7 +355,7 @@ class _AuditsScreenState extends State<AuditsScreen> {
           const SizedBox(height: 6),
           TextField(
             controller: _scopeNoteController,
-            style: TextStyle(fontSize: 13, color: isDark ? Colors.white : const Color(0xFF0F172A)),
+            style: TextStyle(fontSize: 13, color: AppColors.textPrimary(context)),
             decoration: _inputDecoration(isDark, hintText: 'Scope note (optional)'),
           ),
           const SizedBox(height: 14),
@@ -440,10 +444,10 @@ class _AuditsScreenState extends State<AuditsScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                          color: AppColors.subtleBg(context),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                            color: AppColors.border(context),
                           ),
                         ),
                         child: Row(
@@ -455,10 +459,10 @@ class _AuditsScreenState extends State<AuditsScreen> {
                                   : 'Pick date',
                               style: TextStyle(
                                 fontSize: 12.5,
-                                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                color: AppColors.textPrimary(context),
                               ),
                             ),
-                            Icon(Icons.calendar_today_rounded, size: 14, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600),
+                            Icon(Icons.calendar_today_rounded, size: 14, color: AppColors.textSecondary(context)),
                           ],
                         ),
                       ),
@@ -478,10 +482,10 @@ class _AuditsScreenState extends State<AuditsScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                          color: AppColors.subtleBg(context),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                            color: AppColors.border(context),
                           ),
                         ),
                         child: Row(
@@ -493,10 +497,10 @@ class _AuditsScreenState extends State<AuditsScreen> {
                                   : 'Pick date',
                               style: TextStyle(
                                 fontSize: 12.5,
-                                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                color: AppColors.textPrimary(context),
                               ),
                             ),
-                            Icon(Icons.calendar_today_rounded, size: 14, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600),
+                            Icon(Icons.calendar_today_rounded, size: 14, color: AppColors.textSecondary(context)),
                           ],
                         ),
                       ),
@@ -514,7 +518,7 @@ class _AuditsScreenState extends State<AuditsScreen> {
           TextField(
             controller: _checklistController,
             maxLines: 4,
-            style: TextStyle(fontSize: 13, color: isDark ? Colors.white : const Color(0xFF0F172A)),
+            style: TextStyle(fontSize: 13, color: AppColors.textPrimary(context)),
             decoration: _inputDecoration(
               isDark,
               hintText: 'e.g. Verify cash register\nCheck bank reconciliations\nInspect petty cash receipts',
@@ -528,16 +532,16 @@ class _AuditsScreenState extends State<AuditsScreen> {
             child: ElevatedButton(
               onPressed: state.isScheduling ? null : () => _submitScheduleForm(context, meta),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0F172A),
-                foregroundColor: Colors.white,
+                backgroundColor: AppColors.button(context),
+                foregroundColor: AppColors.white,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
               child: state.isScheduling
-                  ? const SizedBox(
+                  ? SizedBox(
                       height: 16,
                       width: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.white),
                     )
                   : Text(s.scheduleAuditButton, style: const TextStyle(fontWeight: FontWeight.bold)),
             ),
@@ -559,10 +563,10 @@ class _AuditsScreenState extends State<AuditsScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 20),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          color: AppColors.card(context),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+            color: AppColors.border(context),
           ),
         ),
         child: Column(
@@ -571,7 +575,7 @@ class _AuditsScreenState extends State<AuditsScreen> {
             Icon(
               widget.isAuditee ? Icons.assignment_outlined : Icons.search_rounded,
               size: 40,
-              color: isDark ? Colors.white38 : Colors.grey.shade400,
+              color: AppColors.grey,
             ),
             const SizedBox(height: 12),
             Text(
@@ -579,7 +583,7 @@ class _AuditsScreenState extends State<AuditsScreen> {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                color: AppColors.textSecondary(context),
               ),
               textAlign: TextAlign.center,
             ),
@@ -599,14 +603,14 @@ class _AuditsScreenState extends State<AuditsScreen> {
         final isClosed = status == 'CLOSED';
         final isScheduled = status == 'SCHEDULED';
 
-        Color statusBg = const Color(0xFFFEF3C7);
-        Color statusFg = const Color(0xFFB45309);
+        Color statusBg = AppColors.blue400;
+        Color statusFg = AppColors.amber700;
         if (isClosed) {
-          statusBg = isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9);
-          statusFg = isDark ? Colors.grey.shade300 : const Color(0xFF475569);
+          statusBg = AppColors.chipBg(context);
+          statusFg = AppColors.textSecondary(context);
         } else if (!isScheduled) {
-          statusBg = const Color(0xFFDBEAFE);
-          statusFg = const Color(0xFF1D4ED8);
+          statusBg = AppColors.blue400;
+          statusFg = AppColors.blue700;
         }
 
         return InkWell(
@@ -617,10 +621,10 @@ class _AuditsScreenState extends State<AuditsScreen> {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              color: AppColors.card(context),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                color: AppColors.border(context),
               ),
             ),
             child: Column(
@@ -636,7 +640,7 @@ class _AuditsScreenState extends State<AuditsScreen> {
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          color: AppColors.textPrimary(context),
                         ),
                       ),
                     ),
@@ -666,14 +670,14 @@ class _AuditsScreenState extends State<AuditsScreen> {
                     margin: const EdgeInsets.only(bottom: 8),
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                      color: AppColors.subtleBg(context),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       'Branch: ${audit.auditeeBranchName}',
                       style: TextStyle(
                         fontSize: 11,
-                        color: isDark ? Colors.grey.shade300 : const Color(0xFF475569),
+                        color: AppColors.textSecondary(context),
                       ),
                     ),
                   ),
@@ -687,13 +691,13 @@ class _AuditsScreenState extends State<AuditsScreen> {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.person_outline_rounded, size: 13, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600),
+                          Icon(Icons.person_outline_rounded, size: 13, color: AppColors.textSecondary(context)),
                           const SizedBox(width: 4),
                           Text(
                             audit.auditorName!,
                             style: TextStyle(
                               fontSize: 11.5,
-                              color: isDark ? Colors.grey.shade300 : const Color(0xFF475569),
+                              color: AppColors.textSecondary(context),
                             ),
                           ),
                         ],
@@ -702,13 +706,13 @@ class _AuditsScreenState extends State<AuditsScreen> {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.calendar_today_rounded, size: 12, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600),
+                          Icon(Icons.calendar_today_rounded, size: 12, color: AppColors.textSecondary(context)),
                           const SizedBox(width: 4),
                           Text(
                             '${s.scheduledFor}: ${audit.scheduledDate}',
                             style: TextStyle(
                               fontSize: 11.5,
-                              color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                              color: AppColors.textSecondary(context),
                             ),
                           ),
                         ],
@@ -717,13 +721,13 @@ class _AuditsScreenState extends State<AuditsScreen> {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.event_available_rounded, size: 13, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600),
+                          Icon(Icons.event_available_rounded, size: 13, color: AppColors.textSecondary(context)),
                           const SizedBox(width: 4),
                           Text(
                             '${s.dueOn}: ${audit.dueDate}',
                             style: TextStyle(
                               fontSize: 11.5,
-                              color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                              color: AppColors.textSecondary(context),
                             ),
                           ),
                         ],
@@ -738,7 +742,7 @@ class _AuditsScreenState extends State<AuditsScreen> {
                     style: TextStyle(
                       fontSize: 11.5,
                       fontStyle: FontStyle.italic,
-                      color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                      color: AppColors.textSecondary(context),
                     ),
                   ),
                 ],
@@ -747,10 +751,10 @@ class _AuditsScreenState extends State<AuditsScreen> {
                   const SizedBox(height: 8),
                   Text(
                     '${audit.items.length} checklist item${audit.items.length == 1 ? '' : 's'}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF3B82F6),
+                      color: AppColors.accentBlue(context),
                     ),
                   ),
                 ],
@@ -777,10 +781,10 @@ class _AuditsScreenState extends State<AuditsScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: AppColors.card(context),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          color: AppColors.border(context),
         ),
       ),
       child: Column(
@@ -807,7 +811,7 @@ class _AuditsScreenState extends State<AuditsScreen> {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    color: AppColors.textPrimary(context),
                   ),
                 ),
               ),
@@ -815,8 +819,8 @@ class _AuditsScreenState extends State<AuditsScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: isClosed
-                      ? (isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9))
-                      : const Color(0xFFFEF3C7),
+                      ? AppColors.chipBg(context)
+                      : AppColors.amber,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -825,8 +829,8 @@ class _AuditsScreenState extends State<AuditsScreen> {
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                     color: isClosed
-                        ? (isDark ? Colors.white70 : const Color(0xFF475569))
-                        : const Color(0xFFB45309),
+                        ? AppColors.textSecondary(context)
+                        : AppColors.amber700,
                   ),
                 ),
               ),
@@ -843,17 +847,17 @@ class _AuditsScreenState extends State<AuditsScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                    color: AppColors.subtleBg(context),
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
-                      color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                      color: AppColors.border(context),
                     ),
                   ),
                   child: Text(
                     'Branch: ${audit.auditeeBranchName}',
                     style: TextStyle(
                       fontSize: 11.5,
-                      color: isDark ? Colors.grey.shade300 : const Color(0xFF334155),
+                      color: AppColors.textSecondary(context),
                     ),
                   ),
                 ),
@@ -861,17 +865,17 @@ class _AuditsScreenState extends State<AuditsScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                    color: AppColors.subtleBg(context),
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
-                      color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                      color: AppColors.border(context),
                     ),
                   ),
                   child: Text(
                     '${s.conductedBy}: ${audit.auditorName}',
                     style: TextStyle(
                       fontSize: 11.5,
-                      color: isDark ? Colors.grey.shade300 : const Color(0xFF334155),
+                      color: AppColors.textSecondary(context),
                     ),
                   ),
                 ),
@@ -885,14 +889,14 @@ class _AuditsScreenState extends State<AuditsScreen> {
               if (audit.scheduledDate != null)
                 Text(
                   '${s.scheduledFor}: ${audit.scheduledDate}',
-                  style: TextStyle(fontSize: 12, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600),
+                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary(context)),
                 ),
               if (audit.scheduledDate != null && audit.dueDate != null)
-                Text(' · ', style: TextStyle(color: isDark ? Colors.grey.shade500 : Colors.grey.shade400)),
+                Text(' · ', style: TextStyle(color: AppColors.textSecondary(context))),
               if (audit.dueDate != null)
                 Text(
                   '${s.dueOn}: ${audit.dueDate}',
-                  style: TextStyle(fontSize: 12, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600),
+                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary(context)),
                 ),
             ],
           ),
@@ -903,7 +907,7 @@ class _AuditsScreenState extends State<AuditsScreen> {
               style: TextStyle(
                 fontSize: 12,
                 fontStyle: FontStyle.italic,
-                color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                color: AppColors.textSecondary(context),
               ),
             ),
           ],
@@ -915,13 +919,13 @@ class _AuditsScreenState extends State<AuditsScreen> {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : const Color(0xFF0F172A),
+              color: AppColors.textPrimary(context),
             ),
           ),
           const SizedBox(height: 10),
 
           if (audit.items.isEmpty)
-            Text('No checklist items.', style: TextStyle(fontSize: 12, color: Colors.grey.shade500))
+            Text('No checklist items.', style: TextStyle(fontSize: 12, color: AppColors.textSecondary(context)))
           else
             ListView.separated(
               shrinkWrap: true,
@@ -933,17 +937,17 @@ class _AuditsScreenState extends State<AuditsScreen> {
                 return Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                    color: AppColors.subtleBg(context),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                      color: AppColors.border(context),
                     ),
                   ),
                   child: Row(
                     children: [
                       Icon(
                         item.done ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-                        color: item.done ? const Color(0xFF16A34A) : Colors.grey,
+                        color: item.done ? AppColors.green600 : AppColors.grey,
                         size: 20,
                       ),
                       const SizedBox(width: 10),
@@ -952,7 +956,7 @@ class _AuditsScreenState extends State<AuditsScreen> {
                           item.text,
                           style: TextStyle(
                             fontSize: 13,
-                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                            color: AppColors.textPrimary(context),
                             decoration: item.done ? TextDecoration.lineThrough : null,
                           ),
                         ),
@@ -980,16 +984,16 @@ class _AuditsScreenState extends State<AuditsScreen> {
                             );
                       },
                 icon: state.isClosing
-                    ? const SizedBox(
+                    ? SizedBox(
                         height: 14,
                         width: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.white),
                       )
                     : const Icon(Icons.check_circle_outline_rounded, size: 16),
                 label: Text(s.closeAudit, style: const TextStyle(fontWeight: FontWeight.bold)),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF16A34A),
-                  foregroundColor: Colors.white,
+                  backgroundColor: AppColors.green600,
+                  foregroundColor: AppColors.white,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
@@ -1006,7 +1010,7 @@ class _AuditsScreenState extends State<AuditsScreen> {
       style: TextStyle(
         fontSize: 12,
         fontWeight: FontWeight.w600,
-        color: isDark ? Colors.grey.shade300 : const Color(0xFF475569),
+        color: AppColors.textSecondary(context),
       ),
     );
   }
@@ -1024,13 +1028,13 @@ class _AuditsScreenState extends State<AuditsScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFF0F172A)
-              : (isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9)),
+              ? AppColors.textPrimary(context)
+              : AppColors.subtleBg(context),
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
             color: isSelected
-                ? const Color(0xFF0F172A)
-                : (isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+                ? AppColors.textPrimary(context)
+                : AppColors.border(context),
           ),
         ),
         child: Text(
@@ -1039,8 +1043,8 @@ class _AuditsScreenState extends State<AuditsScreen> {
             fontSize: 11.5,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             color: isSelected
-                ? Colors.white
-                : (isDark ? Colors.grey.shade300 : const Color(0xFF475569)),
+                ? AppColors.card(context)
+                : AppColors.textSecondary(context),
           ),
         ),
       ),
@@ -1050,22 +1054,22 @@ class _AuditsScreenState extends State<AuditsScreen> {
   InputDecoration _inputDecoration(bool isDark, {String? hintText}) {
     return InputDecoration(
       hintText: hintText,
-      hintStyle: TextStyle(fontSize: 12, color: isDark ? Colors.grey.shade600 : Colors.grey.shade400),
+      hintStyle: TextStyle(fontSize: 12, color: AppColors.textSecondary(context)),
       isDense: true,
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
       filled: true,
-      fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+      fillColor: AppColors.subtleBg(context),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+        borderSide: BorderSide(color: AppColors.border(context)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+        borderSide: BorderSide(color: AppColors.border(context)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFF0F172A), width: 1.5),
+        borderSide: BorderSide(color: AppColors.textPrimary(context), width: 1.5),
       ),
     );
   }

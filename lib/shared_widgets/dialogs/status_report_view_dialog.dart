@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../core/constants/app_colors.dart';
 import '../../core/localization/app_strings.dart';
 import '../../modules/reports/models/status_report_model.dart';
 import '../../modules/reports/repository/reports_repository.dart';
@@ -241,7 +242,7 @@ class _StatusReportViewDialogState extends State<StatusReportViewDialog> {
       icon: const Icon(Icons.picture_as_pdf_outlined, size: 14),
       label: Text(s.savePdfButton, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
       style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF0F172A),
+        backgroundColor: AppColors.button(context),
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

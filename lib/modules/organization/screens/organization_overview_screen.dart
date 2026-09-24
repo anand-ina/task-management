@@ -2,6 +2,7 @@ import '../../../shared_widgets/floating_action_button/todo_floating_action_butt
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/localization/app_strings.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/dialogs/tasks_due_today_dialog.dart';
@@ -34,13 +35,17 @@ class _OrganizationOverviewScreenState extends State<OrganizationOverviewScreen>
     super.initState();
     _organizationBloc = OrganizationBloc();
     final authState = context.read<AuthBloc>().state;
-    final hasMultiBranch = authState is AuthenticatedState && authState.userProfile.hasMultiBranchAccess;
+    final user = authState is AuthenticatedState ? authState.userProfile : null;
+    final hasMultiBranch = user?.hasMultiBranchAccess ?? false;
     int? branchId;
     if (hasMultiBranch) {
       final dashState = context.read<DashboardBloc>().state;
       if (dashState is DashboardLoadedState && dashState.selectedBranch != null && !dashState.selectedBranch!.isAll) {
         branchId = dashState.selectedBranch!.id;
       }
+    }
+    if (branchId == null && user?.isPrincipal == true && user?.assignedBranchId != null && user!.assignedBranchId! > 0) {
+      branchId = user.assignedBranchId;
     }
     _organizationBloc.add(FetchOrganizationDataEvent(branchId: branchId));
   }
@@ -75,10 +80,11 @@ class _OrganizationOverviewScreenState extends State<OrganizationOverviewScreen>
         listener: (context, dashState) {
           if (dashState is DashboardLoadedState) {
             final authState = context.read<AuthBloc>().state;
-            final hasMultiBranch = authState is AuthenticatedState && authState.userProfile.hasMultiBranchAccess;
+            final user = authState is AuthenticatedState ? authState.userProfile : null;
+            final hasMultiBranch = user?.hasMultiBranchAccess ?? false;
             final branchId = (hasMultiBranch && dashState.selectedBranch != null && !dashState.selectedBranch!.isAll)
                 ? dashState.selectedBranch!.id
-                : null;
+                : (user?.isPrincipal == true ? user?.assignedBranchId : null);
             final currentOrgState = _organizationBloc.state;
             final bucket = currentOrgState is OrganizationLoadedState ? currentOrgState.activeBucket : 'week';
             _organizationBloc.add(FetchOrganizationDataEvent(bucket: bucket, branchId: branchId));
@@ -97,11 +103,12 @@ class _OrganizationOverviewScreenState extends State<OrganizationOverviewScreen>
             floatingActionButton: const TodoFloatingActionButton(),
             drawer: const CustomLeftDrawer(currentRoute: '/org-overview'),
             appBar: const CustomAppBar(),
-            body: BlocBuilder<OrganizationBloc, OrganizationState>(
+            body: AnnouncementBannerWrapper(
+              child: BlocBuilder<OrganizationBloc, OrganizationState>(
               builder: (context, state) {
                 if (state is OrganizationLoadingState) {
                   return const Center(
-                    child: CircularProgressIndicator(color: Color(0xFFB91C1C)),
+                    child: CircularProgressIndicator(),
                   );
                 }
 
@@ -115,11 +122,12 @@ class _OrganizationOverviewScreenState extends State<OrganizationOverviewScreen>
                         ElevatedButton(
                           onPressed: () {
                             final authState = context.read<AuthBloc>().state;
-                            final hasMultiBranch = authState is AuthenticatedState && authState.userProfile.hasMultiBranchAccess;
+                            final user = authState is AuthenticatedState ? authState.userProfile : null;
+                            final hasMultiBranch = user?.hasMultiBranchAccess ?? false;
                             final dashState = context.read<DashboardBloc>().state;
                             final branchId = (hasMultiBranch && dashState is DashboardLoadedState && dashState.selectedBranch != null && !dashState.selectedBranch!.isAll)
                                 ? dashState.selectedBranch!.id
-                                : null;
+                                : (user?.isPrincipal == true ? user?.assignedBranchId : null);
                             _organizationBloc.add(FetchOrganizationDataEvent(branchId: branchId));
                           },
                           child: Text(s.retryButton),
@@ -138,11 +146,12 @@ class _OrganizationOverviewScreenState extends State<OrganizationOverviewScreen>
                   return RefreshIndicator(
                     onRefresh: () async {
                       final authState = context.read<AuthBloc>().state;
-                      final hasMultiBranch = authState is AuthenticatedState && authState.userProfile.hasMultiBranchAccess;
+                      final user = authState is AuthenticatedState ? authState.userProfile : null;
+                      final hasMultiBranch = user?.hasMultiBranchAccess ?? false;
                       final dashState = context.read<DashboardBloc>().state;
                       final branchId = (hasMultiBranch && dashState is DashboardLoadedState && dashState.selectedBranch != null && !dashState.selectedBranch!.isAll)
                           ? dashState.selectedBranch!.id
-                          : null;
+                          : (user?.isPrincipal == true ? user?.assignedBranchId : null);
                       _organizationBloc.add(FetchOrganizationDataEvent(bucket: state.activeBucket, branchId: branchId));
                     },
                   child: SingleChildScrollView(
@@ -321,6 +330,7 @@ class _OrganizationOverviewScreenState extends State<OrganizationOverviewScreen>
 
               return const SizedBox.shrink();
             },
+          ),
           ),
         ),
       ),)
@@ -731,11 +741,12 @@ class _OrganizationOverviewScreenState extends State<OrganizationOverviewScreen>
     return InkWell(
       onTap: () {
         final authState = context.read<AuthBloc>().state;
-        final hasMultiBranch = authState is AuthenticatedState && authState.userProfile.hasMultiBranchAccess;
+        final user = authState is AuthenticatedState ? authState.userProfile : null;
+        final hasMultiBranch = user?.hasMultiBranchAccess ?? false;
         final dashState = context.read<DashboardBloc>().state;
         final branchId = (hasMultiBranch && dashState is DashboardLoadedState && dashState.selectedBranch != null && !dashState.selectedBranch!.isAll)
             ? dashState.selectedBranch!.id
-            : null;
+            : (user?.isPrincipal == true ? user?.assignedBranchId : null);
         _organizationBloc.add(FetchOrganizationDataEvent(bucket: key, branchId: branchId));
       },
       borderRadius: BorderRadius.circular(6),

@@ -285,6 +285,8 @@ abstract class AppStrings {
 
   String approvalsBadge(int count);
 
+  String toReviewBadge(int count);
+
   String toStartBadge(int count);
 
   String inProgressBadge(int count);
@@ -1543,4 +1545,64 @@ abstract class AppStrings {
   String get selectFacultyPrompt;
   String get searchFacultyPlaceholder;
   String get changingThisMovesPoints;
+
+  // ── Announcements Module Strings ──────────────────────────────────────────
+  String get announcements;
+  String get announcementsTickerLabel;
+  String get announcementsSubtitle;
+  String get newAnnouncement;
+  String get editAnnouncement;
+  String get postAnnouncement;
+  String get announcementTitleLabel;
+  String get announcementTitleHint;
+  String get announcementDetailsLabel;
+  String get announcementDetailsHint;
+  String get priorityInfo;
+  String get priorityCritical;
+  String get priorityWarning;
+  String get activeShowNow;
+  String get showFromOptional;
+  String get showUntilOptional;
+  String get deactivate;
+  String get activate;
+  String get delete;
+  String get edit;
+  String deleteAnnouncementConfirmation(String title);
+  String get noAnnouncementsFound;
+  String get announcementCreatedSuccess;
+  String get announcementUpdatedSuccess;
+  String get announcementDeletedSuccess;
+  String get announcementDeactivatedSuccess;
+  String get announcementActivatedSuccess;
+  String get themeModeLight;
+  String get themeModeDark;
+  String get themeModeSystem;
+
+  // Hourly Log Strings
+  String get hourlyLog;
+  String get dailyHourlyLog;
+  String get dailyHourlyLogSubtitle;
+  String slotsFilledCount(int filled, int total);
+  String get submitDsr;
+  String get setAsLunch;
+  String get lunchHour;
+  String get whatDidYouWorkOn;
+  String get deleteItemConfirm;
+  String get editLogEntry;
+  String get dsrSubmittedSuccessfully;
+  String get addEntry;
+  String get noEntriesYet;
+  String hourlyLogPromptTitle(String slot);
+  String whatDidYouWorkOnDuring(String slot);
+  String get addQuickEntryHint;
+  String get logButton;
+  String get openFullLog;
+  String get remindMeLater;
+  String get submitDsrConfirmTitle;
+  String get submitDsrConfirmMessage;
+  String get submittedStatus;
+  String get notFilledStatus;
+  String entryLoggedSuccess(String slot);
+  String get hourlyLogSubmittedSuccess;
+  String get announcementsHeader;
 }

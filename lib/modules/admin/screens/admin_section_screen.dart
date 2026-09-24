@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 
 class AdminSectionScreen extends StatelessWidget {
   final String title;
@@ -31,14 +33,15 @@ class AdminSectionScreen extends StatelessWidget {
       child: Scaffold(
         drawer: CustomLeftDrawer(currentRoute: route),
         appBar: const CustomAppBar(),
-        body: SingleChildScrollView(
+        body: AnnouncementBannerWrapper(
+          child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Icon(icon, size: 28, color: const Color(0xFFB91C1C)),
+                  Icon(icon, size: 28, color: AppColors.red700),
                   const SizedBox(width: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -48,14 +51,14 @@ class AdminSectionScreen extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          color: AppColors.textPrimary(context),
                         ),
                       ),
                       Text(
                         'Administrative Control & Overview',
                         style: TextStyle(
                           fontSize: 12,
-                          color: isDark ? Colors.white54 : Colors.black54,
+                          color: AppColors.textSecondary(context),
                         ),
                       ),
                     ],
@@ -67,10 +70,10 @@ class AdminSectionScreen extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                  color: AppColors.card(context),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                    color: AppColors.border(context),
                   ),
                 ),
                 child: Column(
@@ -78,7 +81,7 @@ class AdminSectionScreen extends StatelessWidget {
                     Icon(
                       icon,
                       size: 64,
-                      color: isDark ? Colors.white38 : Colors.grey.shade400,
+                      color: AppColors.textMuted,
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -86,7 +89,7 @@ class AdminSectionScreen extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        color: AppColors.textPrimary(context),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -95,14 +98,14 @@ class AdminSectionScreen extends StatelessWidget {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 13,
-                        color: isDark ? Colors.white60 : Colors.grey.shade600,
+                        color: AppColors.textSecondary(context),
                       ),
                     ),
                     const SizedBox(height: 20),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                        color: AppColors.subtleBg(context),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -110,7 +113,7 @@ class AdminSectionScreen extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: isDark ? Colors.amber : const Color(0xFFB91C1C),
+                          color: isDark ? AppColors.amber : AppColors.red700,
                         ),
                       ),
                     ),
@@ -120,6 +123,7 @@ class AdminSectionScreen extends StatelessWidget {
             ],
           ),
         ),
+      ),
       ),
     );
   }

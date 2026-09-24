@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../bloc/admin_reporting_bloc.dart';
 import '../bloc/admin_reporting_event.dart';
 import '../bloc/admin_reporting_state.dart';
@@ -25,7 +27,7 @@ class AdminReportingStructureScreen extends StatelessWidget {
         child: const Scaffold(
           drawer: CustomLeftDrawer(currentRoute: '/admin/reporting'),
           appBar: CustomAppBar(),
-          body: _ReportingBody(),
+          body: AnnouncementBannerWrapper(child: _ReportingBody()),
         ),
       ),
     );
@@ -71,7 +73,7 @@ class _ReportingBodyState extends State<_ReportingBody> {
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    color: AppColors.textPrimary(context),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -79,16 +81,16 @@ class _ReportingBodyState extends State<_ReportingBody> {
                   s.reportingStructureSubtitle,
                   style: TextStyle(
                     fontSize: 12,
-                    color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                    color: AppColors.textSecondary(context),
                   ),
                 ),
                 const SizedBox(height: 16),
 
                 if (state is AdminReportingLoadingState)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 80),
-                    child: Center(
-                      child: CircularProgressIndicator(color: Color(0xFF0F172A)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 80),
+                    child: const Center(
+                      child: CircularProgressIndicator(),
                     ),
                   )
                 else if (state is AdminReportingErrorState)
@@ -98,7 +100,7 @@ class _ReportingBodyState extends State<_ReportingBody> {
                       child: Column(
                         children: [
                           Text(state.message,
-                              style: const TextStyle(color: Colors.red)),
+                              style: TextStyle(color: AppColors.red)),
                           const SizedBox(height: 12),
                           ElevatedButton(
                             onPressed: () => context
@@ -114,12 +116,10 @@ class _ReportingBodyState extends State<_ReportingBody> {
                   // Search Bar
                   Container(
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                      color: AppColors.card(context),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: isDark
-                            ? const Color(0xFF334155)
-                            : const Color(0xFFE2E8F0),
+                        color: AppColors.border(context),
                       ),
                     ),
                     child: TextField(
@@ -131,18 +131,18 @@ class _ReportingBodyState extends State<_ReportingBody> {
                       },
                       style: TextStyle(
                         fontSize: 13,
-                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        color: AppColors.textPrimary(context),
                       ),
                       decoration: InputDecoration(
                         hintText: s.searchStaffPlaceholder,
                         hintStyle: TextStyle(
                           fontSize: 13,
-                          color: isDark ? Colors.white38 : Colors.grey.shade400,
+                          color: AppColors.textMuted,
                         ),
                         prefixIcon: Icon(
                           Icons.search_rounded,
                           size: 20,
-                          color: isDark ? Colors.white54 : Colors.grey.shade500,
+                          color: AppColors.textSecondary(context),
                         ),
                         suffixIcon: _searchQuery.isNotEmpty
                             ? IconButton(
@@ -189,7 +189,7 @@ class _ReportingBodyState extends State<_ReportingBody> {
           child: Text(
             s.noReportingDataFound,
             style: TextStyle(
-              color: isDark ? Colors.white54 : Colors.grey.shade500,
+              color: AppColors.textMuted,
             ),
           ),
         ),
@@ -212,12 +212,12 @@ class _ReportingBodyState extends State<_ReportingBody> {
             children: [
               Icon(Icons.search_off_rounded,
                   size: 40,
-                  color: isDark ? Colors.white38 : Colors.grey.shade400),
+                  color: AppColors.textMuted),
               const SizedBox(height: 8),
               Text(
                 s.noReportingDataFound,
                 style: TextStyle(
-                  color: isDark ? Colors.white54 : Colors.grey.shade500,
+                  color: AppColors.textMuted,
                 ),
               ),
             ],
@@ -242,7 +242,7 @@ class _ReportingBodyState extends State<_ReportingBody> {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white54 : const Color(0xFF64748B),
+              color: AppColors.textSecondary(context),
             ),
           ),
         ),
@@ -301,15 +301,15 @@ class _PersonReportingCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: AppColors.card(context),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          color: AppColors.border(context),
         ),
         boxShadow: [
           if (!isDark)
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
+              color: AppColors.black.withValues(alpha: 0.03),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -326,8 +326,8 @@ class _PersonReportingCard extends StatelessWidget {
                 backgroundColor: _hexToColor(person.avatarColor),
                 child: Text(
                   person.initials,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: AppColors.white,
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                   ),
@@ -343,7 +343,7 @@ class _PersonReportingCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        color: AppColors.textPrimary(context),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -353,9 +353,7 @@ class _PersonReportingCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: isDark
-                            ? const Color(0xFF334155)
-                            : const Color(0xFFF1F5F9),
+                        color: AppColors.subtleBg(context),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -364,8 +362,8 @@ class _PersonReportingCard extends StatelessWidget {
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                           color: isDark
-                              ? Colors.blue.shade300
-                              : const Color(0xFF1E3A8A),
+                              ? AppColors.blueLight
+                              : AppColors.blueDark,
                         ),
                       ),
                     ),
@@ -376,8 +374,8 @@ class _PersonReportingCard extends StatelessWidget {
               // Save Button
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0F172A),
-                  foregroundColor: Colors.white,
+                  backgroundColor: AppColors.button(context),
+                  foregroundColor: AppColors.white,
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   minimumSize: Size.zero,
@@ -401,7 +399,7 @@ class _PersonReportingCard extends StatelessWidget {
                     SnackBar(
                       content:
                           Text('Reporting structure saved for ${person.name}'),
-                      backgroundColor: Colors.green.shade700,
+                      backgroundColor: AppColors.green700,
                       duration: const Duration(seconds: 2),
                     ),
                   );
@@ -413,7 +411,7 @@ class _PersonReportingCard extends StatelessWidget {
           Divider(
             height: 24,
             thickness: 1,
-            color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+            color: AppColors.border(context),
           ),
 
           // Primary Managers ("Reports To")
@@ -422,7 +420,7 @@ class _PersonReportingCard extends StatelessWidget {
               Icon(
                 Icons.arrow_upward_rounded,
                 size: 14,
-                color: isDark ? Colors.blue.shade400 : const Color(0xFF2563EB),
+                color: AppColors.blue,
               ),
               const SizedBox(width: 6),
               Text(
@@ -430,7 +428,7 @@ class _PersonReportingCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white70 : const Color(0xFF475569),
+                  color: AppColors.textSecondary(context),
                 ),
               ),
               const SizedBox(width: 6),
@@ -438,7 +436,7 @@ class _PersonReportingCard extends StatelessWidget {
                 '(${primaryManagers.length})',
                 style: TextStyle(
                   fontSize: 11,
-                  color: isDark ? Colors.white38 : Colors.grey.shade500,
+                  color: AppColors.textMuted,
                 ),
               ),
             ],
@@ -452,7 +450,7 @@ class _PersonReportingCard extends StatelessWidget {
             addLabel: s.addManagerLabel,
             isPrimary: true,
             isDark: isDark,
-            accentColor: const Color(0xFF2563EB),
+            accentColor: AppColors.blue,
             dotted: false,
           ),
 
@@ -464,8 +462,7 @@ class _PersonReportingCard extends StatelessWidget {
               Icon(
                 Icons.alt_route_rounded,
                 size: 14,
-                color:
-                    isDark ? Colors.amber.shade400 : const Color(0xFFD97706),
+                color: isDark ? AppColors.amber : AppColors.amberAccent,
               ),
               const SizedBox(width: 6),
               Text(
@@ -473,7 +470,7 @@ class _PersonReportingCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white70 : const Color(0xFF475569),
+                  color: AppColors.textSecondary(context),
                 ),
               ),
               const SizedBox(width: 6),
@@ -481,7 +478,7 @@ class _PersonReportingCard extends StatelessWidget {
                 '(${secondaryManagers.length})',
                 style: TextStyle(
                   fontSize: 11,
-                  color: isDark ? Colors.white38 : Colors.grey.shade500,
+                  color: AppColors.textMuted,
                 ),
               ),
             ],
@@ -495,7 +492,7 @@ class _PersonReportingCard extends StatelessWidget {
             addLabel: s.addDottedLabel,
             isPrimary: false,
             isDark: isDark,
-            accentColor: const Color(0xFF64748B),
+            accentColor: AppColors.slate500,
             dotted: true,
           ),
         ],
@@ -530,7 +527,7 @@ class _PersonReportingCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontStyle: FontStyle.italic,
-              color: isDark ? Colors.white38 : Colors.grey.shade500,
+              color: AppColors.textMuted,
             ),
           ),
         ...managers.map((m) => _ManagerChip(
@@ -567,8 +564,8 @@ class _PersonReportingCard extends StatelessWidget {
                   backgroundColor: _hexToColor(p.avatarColor),
                   child: Text(
                     p.initials,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: AppColors.white,
                       fontSize: 9,
                       fontWeight: FontWeight.bold,
                     ),
@@ -595,15 +592,11 @@ class _PersonReportingCard extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? const Color(0xFF1E293B)
-                        : const Color(0xFFF8FAFC),
+                    color: AppColors.subtleBg(context),
                     border: Border.all(
                       color: isOpen
-                          ? const Color(0xFF991B1B)
-                          : (isDark
-                              ? const Color(0xFF475569)
-                              : const Color(0xFFCBD5E1)),
+                          ? AppColors.red800
+                          : AppColors.border(context),
                     ),
                     borderRadius: BorderRadius.circular(20),
                   ),
@@ -613,8 +606,7 @@ class _PersonReportingCard extends StatelessWidget {
                       Icon(
                         Icons.add_rounded,
                         size: 14,
-                        color:
-                            isDark ? Colors.white70 : const Color(0xFF475569),
+                        color: AppColors.textSecondary(context),
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -622,8 +614,7 @@ class _PersonReportingCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
-                          color:
-                              isDark ? Colors.white70 : const Color(0xFF475569),
+                          color: AppColors.textSecondary(context),
                         ),
                       ),
                       const SizedBox(width: 2),
@@ -632,7 +623,7 @@ class _PersonReportingCard extends StatelessWidget {
                             ? Icons.arrow_drop_up_rounded
                             : Icons.arrow_drop_down_rounded,
                         size: 16,
-                        color: isDark ? Colors.white54 : Colors.grey.shade600,
+                        color: AppColors.textSecondary(context),
                       ),
                     ],
                   ),
@@ -669,22 +660,10 @@ class _ManagerChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.only(left: 4, top: 4, bottom: 4, right: 8),
       decoration: BoxDecoration(
-        color: isDark
-            ? (dotted
-                ? const Color(0xFF334155).withValues(alpha: 0.35)
-                : accentColor.withValues(alpha: 0.2))
-            : (dotted
-                ? const Color(0xFFF1F5F9)
-                : accentColor.withValues(alpha: 0.08)),
+        color: AppColors.subtleBg(context),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isDark
-              ? (dotted
-                  ? const Color(0xFF64748B)
-                  : accentColor.withValues(alpha: 0.5))
-              : (dotted
-                  ? const Color(0xFFCBD5E1)
-                  : accentColor.withValues(alpha: 0.3)),
+          color: AppColors.border(context),
         ),
       ),
       child: Row(
@@ -695,9 +674,9 @@ class _ManagerChip extends StatelessWidget {
             backgroundColor: _hexToColor(avatarColor),
             child: Text(
               initials,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 8,
-                color: Colors.white,
+                color: AppColors.white,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -711,8 +690,8 @@ class _ManagerChip extends StatelessWidget {
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: isDark
-                    ? (dotted ? Colors.white70 : Colors.white)
-                    : (dotted ? const Color(0xFF334155) : accentColor),
+                    ? (dotted ? AppColors.textSecondary(context) : AppColors.white)
+                    : (dotted ? AppColors.textPrimary(context) : accentColor),
               ),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
@@ -728,9 +707,9 @@ class _ManagerChip extends StatelessWidget {
                 Icons.close_rounded,
                 size: 14,
                 color: isDark
-                    ? Colors.white60
+                    ? AppColors.textSecondary(context)
                     : (dotted
-                        ? Colors.grey.shade600
+                        ? AppColors.textMuted
                         : accentColor.withValues(alpha: 0.8)),
               ),
             ),
@@ -742,12 +721,12 @@ class _ManagerChip extends StatelessWidget {
 }
 
 Color _hexToColor(String? hex) {
-  if (hex == null || hex.trim().isEmpty) return const Color(0xFF132A50);
+  if (hex == null || hex.trim().isEmpty) return AppColors.primaryNavy;
   try {
     String h = hex.replaceAll('#', '').replaceAll('0x', '').trim();
     if (h.length == 6) h = 'FF$h';
     return Color(int.parse(h, radix: 16));
   } catch (_) {
-    return const Color(0xFF132A50);
+    return AppColors.primaryNavy;
   }
 }

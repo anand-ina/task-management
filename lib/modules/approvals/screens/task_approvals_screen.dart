@@ -1,11 +1,13 @@
 import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/request_task_closure_dialog.dart';
 import '../../../shared_widgets/dialogs/task_detail_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/bloc/auth_state.dart';
 import '../bloc/approvals_bloc.dart';
@@ -51,9 +53,10 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
 
     return Scaffold(
       floatingActionButton: const TodoFloatingActionButton(),
-          drawer: const CustomLeftDrawer(currentRoute: '/approvals/tasks'),
+      drawer: const CustomLeftDrawer(currentRoute: '/approvals/tasks'),
       appBar: const CustomAppBar(),
-      body: RefreshIndicator(
+      body: AnnouncementBannerWrapper(
+        child: RefreshIndicator(
         onRefresh: () async {
           context.read<ApprovalsBloc>().add(FetchTaskApprovalsDataEvent());
         },
@@ -106,7 +109,7 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
                         onPressed: () => RequestTaskClosureDialog.show(context),
                         label: const Text('+ Request task closure', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0F172A),
+                          backgroundColor: AppColors.button(context),
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -172,7 +175,7 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
                     return const Center(
                       child: Padding(
                         padding: EdgeInsets.symmetric(vertical: 40),
-                        child: CircularProgressIndicator(color: Color(0xFFB91C1C)),
+                        child: CircularProgressIndicator(),
                       ),
                     );
                   }
@@ -226,8 +229,9 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildTabButton({
     required String title,
@@ -313,7 +317,7 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
               ),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.all(14.0),
+                  padding: const EdgeInsets.all(10.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -328,11 +332,11 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 3),
                           ],
                           if (item.priority != null) ...[
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFFEF08A),
                                 borderRadius: BorderRadius.circular(12),
@@ -346,11 +350,11 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 6),
+                            const SizedBox(width: 3),
                           ],
                           // Status Badge
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                             decoration: BoxDecoration(
                               color: item.status.toLowerCase() == 'approved'
                                   ? const Color(0xFFDCFCE7)
@@ -372,9 +376,9 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: 2),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                             decoration: BoxDecoration(
                               color: const Color(0xFFE2E8F0),
                               borderRadius: BorderRadius.circular(12),
@@ -489,6 +493,7 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
                                 taskId: item.taskId ?? 0,
                                 isReadOnly: isReadOnlyUser,
                                 canCloneTask: true,
+                                showOnlyCloneAndCancel: true,
                               );
                               if (context.mounted) {
                                 context.read<ApprovalsBloc>().add(FetchTaskApprovalsDataEvent());

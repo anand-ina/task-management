@@ -19,6 +19,10 @@ import '../models/recent_activity_model.dart';
 import '../models/login_group_model.dart';
 import '../../reports/screens/status_reports_screen.dart';
 import '../../performance/screens/team_performance_screen.dart';
+import '../../announcements/bloc/announcements_bloc.dart';
+import '../../announcements/bloc/announcements_event.dart';
+import '../../announcements/bloc/announcements_state.dart';
+import '../../announcements/widgets/announcement_ticker_bar.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -39,19 +43,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final authState = context.read<AuthBloc>().state;
       int? mineVal;
       bool hasMultiBranch = false;
+      int? assignedBranchId;
+      bool isManager = false;
       if (authState is AuthenticatedState) {
         final user = authState.userProfile;
         hasMultiBranch = user.hasMultiBranchAccess;
-        if (!user.isDirector) {
+        assignedBranchId = user.assignedBranchId;
+        isManager = user.isManager;
+        if (!user.isDirector && !user.isPrincipal) {
           mineVal = 1;
         }
       }
       final dashState = context.read<DashboardBloc>().state;
       int? branchId;
-      if (hasMultiBranch && dashState is DashboardLoadedState && dashState.selectedBranch != null && !dashState.selectedBranch!.isAll) {
-        branchId = dashState.selectedBranch!.id;
+      if (!isManager) {
+        if (hasMultiBranch && dashState is DashboardLoadedState && dashState.selectedBranch != null && !dashState.selectedBranch!.isAll) {
+          branchId = dashState.selectedBranch!.id;
+        } else if (assignedBranchId != null && assignedBranchId > 0 && authState is AuthenticatedState && authState.userProfile.isPrincipal) {
+          branchId = assignedBranchId;
+        }
       }
       context.read<DashboardBloc>().add(FetchDashboardDataEvent(mine: mineVal, branchId: branchId));
+      context.read<AnnouncementsBloc>().add(const FetchAnnouncementsEvent(fetchActiveOnly: true));
     });
   }
 
@@ -67,7 +80,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     String branchName = 'HEAD OFFICE';
 
     bool isExecutive = false;
-    bool isDirector = false;
     if (authState is AuthenticatedState) {
       final user = authState.userProfile;
       userName = user.name.isNotEmpty ? user.name : (user.email.split('@').first);
@@ -76,9 +88,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       final role = user.role.toLowerCase();
       final roleLabel = user.roleLabel.toLowerCase();
-      if (role.contains('director') || roleLabel.contains('director')) {
-        isDirector = true;
-      }
       if (role.contains('principal') ||
           role.contains('center_head') ||
           role.contains('campus_head') ||
@@ -119,7 +128,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           builder: (context, state) {
             if (state is DashboardLoadingState) {
               return const Center(
-                child: CircularProgressIndicator(color: Color(0xFFB91C1C)),
+                child: CircularProgressIndicator(),
               );
             }
 
@@ -134,11 +143,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       onPressed: () {
                         final dashState = context.read<DashboardBloc>().state;
                         final auth = context.read<AuthBloc>().state;
-                        final hasMulti = auth is AuthenticatedState && auth.userProfile.hasMultiBranchAccess;
-                        final bId = (hasMulti && dashState is DashboardLoadedState && dashState.selectedBranch != null && !dashState.selectedBranch!.isAll)
-                            ? dashState.selectedBranch!.id
-                            : null;
-                        context.read<DashboardBloc>().add(FetchDashboardDataEvent(mine: isDirector ? null : 1, branchId: bId));
+                        final user = auth is AuthenticatedState ? auth.userProfile : null;
+                        final isManager = user?.isManager ?? false;
+                        final hasMulti = user?.hasMultiBranchAccess ?? false;
+                        final assignedBranchId = user?.assignedBranchId;
+                        int? bId;
+                        if (!isManager) {
+                          if (hasMulti && dashState is DashboardLoadedState && dashState.selectedBranch != null && !dashState.selectedBranch!.isAll) {
+                            bId = dashState.selectedBranch!.id;
+                          } else if (user?.isPrincipal == true && assignedBranchId != null && assignedBranchId > 0) {
+                            bId = assignedBranchId;
+                          }
+                        }
+                        final mineVal = (user?.isDirector == true || user?.isPrincipal == true) ? null : 1;
+                        context.read<DashboardBloc>().add(FetchDashboardDataEvent(mine: mineVal, branchId: bId));
                       },
                       child: Text(s.retryButton),
                     ),
@@ -156,15 +174,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
               final teamData = state.teamData;
               final timeline = state.dashboardData.timeline;
 
-              return RefreshIndicator(
+              return Column(
+                children: [
+                  BlocBuilder<AnnouncementsBloc, AnnouncementsState>(
+                    builder: (context, aState) {
+                      if (aState is AnnouncementsLoadedState && aState.activeAnnouncements.isNotEmpty) {
+                        return AnnouncementTickerBar(announcements: aState.activeAnnouncements);
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                  Expanded(
+                    child: RefreshIndicator(
                 onRefresh: () async {
                   final dashState = context.read<DashboardBloc>().state;
                   final auth = context.read<AuthBloc>().state;
-                  final hasMulti = auth is AuthenticatedState && auth.userProfile.hasMultiBranchAccess;
-                  final bId = (hasMulti && dashState is DashboardLoadedState && dashState.selectedBranch != null && !dashState.selectedBranch!.isAll)
-                      ? dashState.selectedBranch!.id
-                      : null;
-                  context.read<DashboardBloc>().add(FetchDashboardDataEvent(mine: isDirector ? null : 1, branchId: bId));
+                  final user = auth is AuthenticatedState ? auth.userProfile : null;
+                  final isManager = user?.isManager ?? false;
+                  final hasMulti = user?.hasMultiBranchAccess ?? false;
+                  final assignedBranchId = user?.assignedBranchId;
+                  int? bId;
+                  if (!isManager) {
+                    if (hasMulti && dashState is DashboardLoadedState && dashState.selectedBranch != null && !dashState.selectedBranch!.isAll) {
+                      bId = dashState.selectedBranch!.id;
+                    } else if (user?.isPrincipal == true && assignedBranchId != null && assignedBranchId > 0) {
+                      bId = assignedBranchId;
+                    }
+                  }
+                  final mineVal = (user?.isDirector == true || user?.isPrincipal == true) ? null : 1;
+                  context.read<DashboardBloc>().add(FetchDashboardDataEvent(mine: mineVal, branchId: bId));
                 },
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(12),
@@ -182,10 +220,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         stats: stats,
                         actionCenter: actionCenter,
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 10),
 
-                      // Status Report Due Today Banner (If timeline is not empty)
-                      if (timeline.isNotEmpty)
+                      // Status Report Due Today Banner (shown when submitted is false, hidden when true)
+                      if (timeline.isNotEmpty && !timeline.first.submitted)
                         _buildStatusReportAlertCard(context, timeline.first),
 
                       // My Performance Section
@@ -207,7 +245,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       const SizedBox(height: 12),
                       _buildPerformanceGrid(context, s, performance),
-                      const SizedBox(height: 24),
 
                       // Tasks by Priority Section
                       Text(
@@ -220,7 +257,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       const SizedBox(height: 12),
                       _buildPriorityGrid(context, s, stats, teamData.recentActivity),
-                      const SizedBox(height: 24),
 
                       // Total Organisation Section
                       Wrap(
@@ -257,8 +293,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ],
                       ),
                       const SizedBox(height: 12),
+
                       _buildTotalOrgGrid(context, s, stats),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 10),
 
                       // Action Center & Scheduled Meetings Row
                       LayoutBuilder(
@@ -316,8 +353,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ],
                   ),
                 ),
-              );
-            }
+              ),
+            ),
+          ],
+        );
+      }
 
             return const SizedBox.shrink();
           },
@@ -343,7 +383,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -365,23 +405,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text(
+            '$roleName · $branchName',
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.2,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(
-                child: Text(
-                  '$roleName · $branchName',
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Wrap(
+
+ Spacer(),              Wrap(
                 crossAxisAlignment: WrapCrossAlignment.center,
                 spacing: 6,
                 children: [
@@ -393,13 +431,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       shape: BoxShape.circle,
                     ),
                   ),
-                  Text(
-                    currentDateStr,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  Column(
+                    children: [
+                      Text(
+                        currentDateStr,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                   Text(
                     nowTimeStr,
@@ -433,10 +475,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              _buildHeaderBadge('✔ ${s.approvalsBadge(actionCenter.approvals)}'),
-              _buildHeaderBadge('💥 ${s.toStartBadge(stats.toBeStarted)}'),
-              _buildHeaderBadge('⌛ ${s.inProgressBadge(stats.inProgress)}'),
-              _buildHeaderBadge('🚩 ${s.overdueBadge(stats.overdue)}'),
+              _buildHeaderBadge('✅ ${s.approvalsBadge(actionCenter.approvals)}'),
+              _buildHeaderBadge('📋 ${s.toReviewBadge(actionCenter.reviews)}'),
+              _buildHeaderBadge('☀️ ${s.toStartBadge(stats.toBeStarted)}'),
+              _buildHeaderBadge('⏳ ${s.inProgressBadge(stats.inProgress)}'),
+              _buildHeaderBadge('⚑ ${s.overdueBadge(stats.overdue)}'),
               _buildHeaderBadge('🎯 ${s.completionBadge(stats.completionRate)}'),
             ],
           ),
@@ -477,8 +520,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           crossAxisCount: count,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
+          mainAxisSpacing: 5,
+          crossAxisSpacing: 5,
           mainAxisExtent: 135,
           children: [
             _buildProgressCard(
@@ -611,7 +654,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       children: [
         LayoutBuilder(
           builder: (context, constraints) {
-            final count = constraints.maxWidth > 900 ? 5 : (constraints.maxWidth > 600 ? 3 : 2);
+            final count = constraints.maxWidth > 900 ? 5 : (constraints.maxWidth > 600 ? 3 : 3);
             return GridView.count(
               crossAxisCount: count,
               shrinkWrap: true,
@@ -743,13 +786,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E293B) : Colors.white,
           borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: borderColor.withValues(alpha: isSelected ? 0.20 : 0.10),
-              blurRadius: isSelected ? 10 : 3,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          border: isDark ? Border.all(color:  Color(0xFF1E293B), width: 1.0,) : Border.all(color: Colors.grey.shade300, width: 0.7,),
+          // boxShadow: [
+          //   BoxShadow(
+          //     color: borderColor.withValues(alpha: isSelected ? 0.20 : 0.10),
+          //     blurRadius: isSelected ? 10 : 3,
+          //     offset: const Offset(0, 2),
+          //   ),
+          // ],
           // border: Border(
           //   top: BorderSide(color: borderColor, width: isSelected ? 4.5 : 3.0),
           //   left: BorderSide(color: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.06)),
@@ -790,13 +834,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildTotalOrgGrid(BuildContext context, AppStrings s, DashboardStats stats) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final count = constraints.maxWidth > 900 ? 6 : (constraints.maxWidth > 600 ? 3 : 2);
+        final count = constraints.maxWidth > 900 ? 6 : (constraints.maxWidth > 600 ? 3 : 3);
         return GridView.count(
           crossAxisCount: count,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
+          mainAxisSpacing: 5,
+          crossAxisSpacing: 5,
           mainAxisExtent: 135,
           children: [
             _buildStatCard(
@@ -851,10 +895,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Card(
-      elevation: 1,
+      // elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.06)),
+
+        side: BorderSide(color: isDark ? Color(0xFF1E293B) : Colors.grey.shade300,width: 0.6),
       ),
       child: InkWell(
         onTap: onTap,
@@ -868,7 +913,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Text(
                 val,
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: color,
                 ),
@@ -877,7 +922,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Text(
                 title,
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 11,
                   fontWeight: FontWeight.bold,
                   color: isDark ? Colors.white : Colors.black87,
                 ),

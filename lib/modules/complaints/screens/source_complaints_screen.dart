@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../core/utils/network_connectivity_service.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/dialogs/no_internet_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../../shared_widgets/dropdowns/searchable_filter_dropdown.dart';
 import '../bloc/complaints_bloc.dart';
 import '../bloc/complaints_event.dart';
@@ -110,9 +112,10 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
         key: _scaffoldKey,
         appBar: const CustomAppBar(),
         drawer: CustomLeftDrawer(currentRoute: currentRoute),
-        backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-        body: SafeArea(
-          child: BlocBuilder<ComplaintsBloc, ComplaintsState>(
+        backgroundColor: AppColors.background(context),
+        body: AnnouncementBannerWrapper(
+          child: SafeArea(
+            child: BlocBuilder<ComplaintsBloc, ComplaintsState>(
             builder: (context, state) {
               List<TicketItemModel> items = [];
               TicketCountsModel counts = const TicketCountsModel();
@@ -131,13 +134,13 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
               }
 
               return RefreshIndicator(
-                color: const Color(0xFF8B1D24),
+                color: AppColors.red800,
                 onRefresh: _fetchTickets,
                 child: isLoading && items.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Padding(
-                          padding: EdgeInsets.all(40),
-                          child: CircularProgressIndicator(color: Color(0xFF8B1D24)),
+                          padding: const EdgeInsets.all(40),
+                          child: CircularProgressIndicator(),
                         ),
                       )
                     : SingleChildScrollView(
@@ -181,8 +184,9 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildHeaderRow(AppStrings s, bool isDark, bool isMobile) {
     final String title;
@@ -213,7 +217,7 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
                     style: TextStyle(
                       fontSize: isMobile ? 18 : 22,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      color: AppColors.textPrimary(context),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -221,7 +225,7 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
                     subtitle,
                     style: TextStyle(
                       fontSize: 12.5,
-                      color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                      color: AppColors.textSecondary(context),
                     ),
                   ),
                 ],
@@ -260,9 +264,9 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
             ),
             style: OutlinedButton.styleFrom(
-              foregroundColor: isDark ? Colors.white : const Color(0xFF1E293B),
-              backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-              side: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+              foregroundColor: AppColors.textPrimary(context),
+              backgroundColor: AppColors.card(context),
+              side: BorderSide(color: AppColors.border(context)),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             ),
@@ -281,9 +285,9 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
           ),
           style: OutlinedButton.styleFrom(
-            foregroundColor: isDark ? Colors.white : const Color(0xFF1E293B),
-            backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-            side: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+            foregroundColor: AppColors.textPrimary(context),
+            backgroundColor: AppColors.card(context),
+            side: BorderSide(color: AppColors.border(context)),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
@@ -301,13 +305,13 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
               }
             });
           },
-          icon: const Icon(Icons.add, size: 16, color: Colors.white),
+          icon: const Icon(Icons.add, size: 16, color: AppColors.white),
           label: Text(
             s.raiseRequestButton,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white),
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.white),
           ),
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF8B1D24),
+            backgroundColor: AppColors.button(context),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           ),
@@ -321,18 +325,18 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.red.shade900.withOpacity(0.15),
+        color: AppColors.red900.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.red.shade400.withOpacity(0.3)),
+        border: Border.all(color: AppColors.red.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline_rounded, color: Colors.red, size: 18),
+          const Icon(Icons.error_outline_rounded, color: AppColors.red, size: 18),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               message,
-              style: const TextStyle(color: Colors.red, fontSize: 12),
+              style: const TextStyle(color: AppColors.red, fontSize: 12),
             ),
           ),
         ],
@@ -340,7 +344,6 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
     );
   }
 
-  /// 6 Stat Cards (Everything received, New - not picked up, In progress, Past target date, Resolved this month, Avg. time to resolve)
   Widget _buildStatCardsRow(TicketCountsModel counts, AppStrings s, bool isDark) {
     final totalCount = counts.allTickets > 0
         ? counts.allTickets
@@ -350,7 +353,7 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
       _buildStatCard(
         count: totalCount.toString(),
         label: s.statEverythingReceived,
-        accentColor: const Color(0xFF1E293B),
+        accentColor: AppColors.navyHeader,
         isDark: isDark,
         isSelected: _currentStatusTab == 'everything',
         onTap: () {
@@ -361,7 +364,7 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
       _buildStatCard(
         count: counts.newCount.toString(),
         label: s.statNewNotPickedUp,
-        accentColor: const Color(0xFFF59E0B),
+        accentColor: AppColors.amber,
         isDark: isDark,
         isSelected: false,
         onTap: () {
@@ -372,7 +375,7 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
       _buildStatCard(
         count: counts.inProgress.toString(),
         label: s.statInProgress,
-        accentColor: const Color(0xFF3B82F6),
+        accentColor: AppColors.blue,
         isDark: isDark,
         isSelected: _currentStatusTab == 'open',
         onTap: () {
@@ -383,7 +386,7 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
       _buildStatCard(
         count: counts.overdue.toString(),
         label: s.statPastTargetDate,
-        accentColor: const Color(0xFFEF4444),
+        accentColor: AppColors.red,
         isDark: isDark,
         isSelected: _currentStatusTab == 'overdue',
         onTap: () {
@@ -394,7 +397,7 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
       _buildStatCard(
         count: counts.resolvedMonth.toString(),
         label: s.statResolvedThisMonth,
-        accentColor: const Color(0xFF10B981),
+        accentColor: AppColors.green,
         isDark: isDark,
         isSelected: _currentStatusTab == 'resolved',
         onTap: () {
@@ -405,7 +408,7 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
       _buildStatCard(
         count: counts.avgDays != null ? '${counts.avgDays}' : '—',
         label: s.statAvgTimeToResolve,
-        accentColor: const Color(0xFF06B6D4),
+        accentColor: AppColors.cyan,
         isDark: isDark,
         isSelected: false,
       ),
@@ -439,17 +442,17 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
         width: 148,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          color: AppColors.card(context),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected
-                ? const Color(0xFF8B1D24)
-                : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                ? AppColors.red800
+                : AppColors.border(context),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: AppColors.black.withValues(alpha: 0.02),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -472,7 +475,7 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: accentColor == const Color(0xFF1E293B) && isDark ? Colors.white : accentColor,
+                color: accentColor == AppColors.card(context) ? AppColors.textPrimary(context) : accentColor,
               ),
             ),
             const SizedBox(height: 4),
@@ -484,7 +487,7 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
                 height: 1.2,
-                color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                color: AppColors.textSecondary(context),
               ),
             ),
           ],
@@ -505,7 +508,7 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+            color: AppColors.border(context),
             width: 1,
           ),
         ),
@@ -529,7 +532,7 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
-                      color: isSelected ? const Color(0xFF8B1D24) : Colors.transparent,
+                      color: isSelected ? AppColors.red800 : AppColors.transparent,
                       width: 2.5,
                     ),
                   ),
@@ -540,8 +543,8 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
                     fontSize: 13,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                     color: isSelected
-                        ? const Color(0xFF8B1D24)
-                        : (isDark ? Colors.grey.shade400 : const Color(0xFF64748B)),
+                        ? AppColors.red800
+                        : AppColors.textSecondary(context),
                   ),
                 ),
               ),
@@ -562,68 +565,68 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
         controller: _searchController,
         style: TextStyle(
           fontSize: 12,
-          color: isDark ? Colors.white : const Color(0xFF0F172A),
+          color: AppColors.textPrimary(context),
         ),
+        onSubmitted: (_) => _fetchTickets(),
         decoration: InputDecoration(
           hintText: s.searchTicketsPlaceholder,
           hintStyle: TextStyle(
             fontSize: 12,
-            color: isDark ? Colors.grey.shade500 : Colors.grey.shade400,
+            color: AppColors.textMuted(context),
           ),
-          prefixIcon: const Icon(Icons.search, size: 16),
+          prefixIcon: Icon(Icons.search, size: 16, color: AppColors.textMuted(context)),
           contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
           filled: true,
-          fillColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+          fillColor: AppColors.card(context),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+            borderSide: BorderSide(
+              color: AppColors.border(context),
+            ),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+            borderSide: BorderSide(
+              color: AppColors.border(context),
+            ),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Color(0xFF8B1D24)),
+            borderSide: const BorderSide(
+              color: AppColors.red800,
+              width: 1.5,
+            ),
           ),
         ),
-        onSubmitted: (_) => _fetchTickets(),
       ),
     );
 
-    final typeDropdown = Container(
+    final typeFilter = Container(
       height: 38,
       padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: AppColors.card(context),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+        border: Border.all(
+          color: AppColors.border(context),
+        ),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: _currentTypes,
-          icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 18),
+          icon: const Icon(Icons.arrow_drop_down, size: 18),
           style: TextStyle(
             fontSize: 12,
-            color: isDark ? Colors.white : const Color(0xFF0F172A),
+            color: AppColors.textPrimary(context),
           ),
-          dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+          dropdownColor: AppColors.card(context),
           items: [
-            DropdownMenuItem(
-              value: 'complaint,feedback',
-              child: Text(s.filterComplaintsAndFeedback),
-            ),
-            DropdownMenuItem(
-              value: 'complaint',
-              child: Text(s.filterComplaintsOnly),
-            ),
-            DropdownMenuItem(
-              value: 'feedback',
-              child: Text(s.filterFeedbackOnly),
-            ),
+            DropdownMenuItem(value: 'complaint,feedback', child: Text(s.filterAllTypes)),
+            DropdownMenuItem(value: 'complaint', child: Text(s.filterComplaintsOnly)),
+            DropdownMenuItem(value: 'feedback', child: Text(s.filterFeedbackOnly)),
           ],
           onChanged: (val) {
-            if (val != null) {
+            if (val != null && val != _currentTypes) {
               setState(() => _currentTypes = val);
               _fetchTickets();
             }
@@ -632,48 +635,49 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
       ),
     );
 
-    final categoryDropdown = SearchableFilterDropdown<String>(
+    final categoryFilter = SearchableFilterDropdown<String>(
       value: _selectedCategory,
       hint: s.filterAllCategories,
-      searchHint: 'Search category...',
+      searchHint: s.searchPlaceholder,
+      minPopupWidth: 240,
       items: [
         SearchableDropdownItem<String>(value: 'All categories', label: s.filterAllCategories),
-        ...meta.categories.map(
-          (c) => SearchableDropdownItem<String>(value: c, label: c),
-        ),
+        ...meta.categories.map((c) => SearchableDropdownItem<String>(value: c, label: c)),
       ],
       onChanged: (val) {
-        if (val != null) {
+        if (val != null && val != _selectedCategory) {
           setState(() => _selectedCategory = val);
           _fetchTickets();
         }
       },
     );
 
-    final mineDropdown = Container(
+    final mineFilter = Container(
       height: 38,
       padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: AppColors.card(context),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+        border: Border.all(
+          color: AppColors.border(context),
+        ),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: _selectedMine,
-          icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 18),
+          icon: const Icon(Icons.arrow_drop_down, size: 18),
           style: TextStyle(
             fontSize: 12,
-            color: isDark ? Colors.white : const Color(0xFF0F172A),
+            color: AppColors.textPrimary(context),
           ),
-          dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+          dropdownColor: AppColors.card(context),
           items: [
             DropdownMenuItem(value: "Everyone's", child: Text(s.filterEveryones)),
             DropdownMenuItem(value: "owned", child: Text(s.assignedToMe)),
             DropdownMenuItem(value: "raised", child: Text(s.createdByMe)),
           ],
           onChanged: (val) {
-            if (val != null) {
+            if (val != null && val != _selectedMine) {
               setState(() => _selectedMine = val);
               _fetchTickets();
             }
@@ -682,20 +686,38 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
       ),
     );
 
+    if (isMobile) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          searchField,
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(child: typeFilter),
+              const SizedBox(width: 8),
+              Expanded(child: mineFilter),
+            ],
+          ),
+          const SizedBox(height: 8),
+          categoryFilter,
+        ],
+      );
+    }
+
     return Wrap(
-      spacing: 10,
-      runSpacing: 10,
+      spacing: 8,
+      runSpacing: 8,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         searchField,
-        typeDropdown,
-        categoryDropdown,
-        mineDropdown,
+        typeFilter,
+        categoryFilter,
+        mineFilter,
       ],
     );
   }
 
-  /// Tickets rendered strictly as a container list (not table format) per user specification
   Widget _buildTicketsContainerList(
     List<TicketItemModel> items,
     AppStrings s,
@@ -705,39 +727,37 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
     if (items.isEmpty) {
       return Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+        padding: const EdgeInsets.all(32),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          color: AppColors.card(context),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+          border: Border.all(color: AppColors.border(context)),
         ),
-        child: Center(
-          child: Column(
-            children: [
-              Icon(
-                Icons.inbox_outlined,
-                size: 40,
-                color: isDark ? Colors.grey.shade600 : Colors.grey.shade400,
+        child: Column(
+          children: [
+            Icon(
+              Icons.inbox_outlined,
+              size: 40,
+              color: AppColors.textMuted(context),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              s.noTicketsFound,
+              style: TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary(context),
               ),
-              const SizedBox(height: 10),
-              Text(
-                s.noTicketsFound,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       );
     }
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: AppColors.card(context),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppColors.border(context)),
       ),
       child: Column(
         children: [
@@ -746,14 +766,14 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF0F172A).withOpacity(0.5) : const Color(0xFFF8FAFC),
+                color: AppColors.subtleBg(context),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(12),
                   topRight: Radius.circular(12),
                 ),
                 border: Border(
                   bottom: BorderSide(
-                    color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                    color: AppColors.border(context),
                   ),
                 ),
               ),
@@ -779,7 +799,7 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
             itemCount: items.length,
             separatorBuilder: (context, index) => Divider(
               height: 1,
-              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+              color: AppColors.border(context),
             ),
             itemBuilder: (context, index) {
               final ticket = items[index];
@@ -800,7 +820,7 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
         fontSize: 10.5,
         fontWeight: FontWeight.bold,
         letterSpacing: 0.5,
-        color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+        color: AppColors.textSecondary(context),
       ),
     );
   }
@@ -823,7 +843,7 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
 
     return InkWell(
       onTap: () => _onTicketTapped(ticket),
-      hoverColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+      hoverColor: AppColors.subtleBg(context),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
         child: Row(
@@ -839,7 +859,7 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      color: AppColors.textPrimary(context),
                     ),
                   ),
                   if (isConfidential) ...[
@@ -865,7 +885,7 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
                     : '—',
                 style: TextStyle(
                   fontSize: 11.5,
-                  color: isDark ? Colors.grey.shade300 : const Color(0xFF334155),
+                  color: AppColors.textPrimary(context),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -883,7 +903,7 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
                         : (ticket.aboutText?.isNotEmpty == true ? ticket.aboutText! : '—')),
                 style: TextStyle(
                   fontSize: 11.5,
-                  color: isDark ? Colors.grey.shade300 : const Color(0xFF334155),
+                  color: AppColors.textPrimary(context),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -897,7 +917,7 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
                 ticket.category.isNotEmpty ? ticket.category : '—',
                 style: TextStyle(
                   fontSize: 11.5,
-                  color: isDark ? Colors.grey.shade400 : const Color(0xFF475569),
+                  color: AppColors.textSecondary(context),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -924,7 +944,7 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
                 ticket.ownerName?.isNotEmpty == true ? ticket.ownerName! : '—',
                 style: TextStyle(
                   fontSize: 11.5,
-                  color: isDark ? Colors.grey.shade300 : const Color(0xFF334155),
+                  color: AppColors.textPrimary(context),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -938,7 +958,7 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
                 _formatDate(ticket.receivedAt),
                 style: TextStyle(
                   fontSize: 11,
-                  color: isDark ? Colors.grey.shade400 : const Color(0xFF64748B),
+                  color: AppColors.textSecondary(context),
                 ),
               ),
             ),
@@ -951,7 +971,7 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
                 style: TextStyle(
                   fontSize: 11.5,
                   fontWeight: FontWeight.w500,
-                  color: isDark ? Colors.grey.shade300 : const Color(0xFF334155),
+                  color: AppColors.textPrimary(context),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -973,7 +993,7 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
 
     return InkWell(
       onTap: () => _onTicketTapped(ticket),
-      hoverColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+      hoverColor: AppColors.subtleBg(context),
       child: Container(
         padding: const EdgeInsets.all(14),
         child: Column(
@@ -989,7 +1009,7 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                        color: AppColors.textPrimary(context),
                       ),
                     ),
                     if (isConfidential) ...[
@@ -1008,7 +1028,7 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
                 '${s.studentHeader}: ${ticket.studentName} · ${ticket.classSection ?? ''}',
                 style: TextStyle(
                   fontSize: 12,
-                  color: isDark ? Colors.grey.shade300 : const Color(0xFF334155),
+                  color: AppColors.textPrimary(context),
                 ),
               ),
               const SizedBox(height: 4),
@@ -1019,7 +1039,7 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
                 'About: Staff — ${ticket.aboutUserName}',
                 style: TextStyle(
                   fontSize: 12,
-                  color: isDark ? Colors.grey.shade300 : const Color(0xFF334155),
+                  color: AppColors.textPrimary(context),
                 ),
               ),
               const SizedBox(height: 4),
@@ -1029,7 +1049,7 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
               children: [
                 Text(
                   '${ticket.category} · ',
-                  style: TextStyle(fontSize: 11.5, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600),
+                  style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary(context)),
                 ),
                 _buildStatusPill(ticket.status, isDark),
                 if (isOverdue) ...[
@@ -1045,11 +1065,11 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
               children: [
                 Text(
                   'With: ${ticket.ownerName ?? '—'}',
-                  style: TextStyle(fontSize: 11.5, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600),
+                  style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary(context)),
                 ),
                 Text(
                   _formatDate(ticket.receivedAt),
-                  style: TextStyle(fontSize: 11, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600),
+                  style: TextStyle(fontSize: 11, color: AppColors.textSecondary(context)),
                 ),
               ],
             ),
@@ -1061,10 +1081,10 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
 
   Widget _buildTypePill(String type, bool isDark) {
     final isComplaint = type.toLowerCase().contains('complaint');
-    final color = isComplaint ? const Color(0xFFE11D48) : const Color(0xFF2563EB);
+    final color = isComplaint ? AppColors.rose : AppColors.blue;
     final bg = isComplaint
-        ? (isDark ? const Color(0xFF881337).withOpacity(0.35) : const Color(0xFFFFF1F2))
-        : (isDark ? const Color(0xFF1E3A8A).withOpacity(0.35) : const Color(0xFFEFF6FF));
+        ? (isDark ? AppColors.red900.withValues(alpha: 0.35) : AppColors.redLight)
+        : (isDark ? AppColors.navyHeader.withValues(alpha: 0.35) : AppColors.blueLight);
 
     final label = isComplaint ? 'Complaint' : 'Feedback / Suggestion';
 
@@ -1093,20 +1113,20 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
 
     switch (status.toLowerCase()) {
       case 'new':
-        color = const Color(0xFFD97706);
-        bg = isDark ? const Color(0xFF78350F).withOpacity(0.4) : const Color(0xFFFEF3C7);
+        color = AppColors.amber;
+        bg = isDark ? AppColors.amberDark.withValues(alpha: 0.4) : AppColors.amberLight;
         break;
       case 'in_progress':
-        color = const Color(0xFF2563EB);
-        bg = isDark ? const Color(0xFF1E3A8A).withOpacity(0.4) : const Color(0xFFDBEAFE);
+        color = AppColors.blue;
+        bg = isDark ? AppColors.navyHeader.withValues(alpha: 0.4) : AppColors.blueLight;
         break;
       case 'resolved':
-        color = const Color(0xFF16A34A);
-        bg = isDark ? const Color(0xFF14532D).withOpacity(0.4) : const Color(0xFFDCFCE7);
+        color = AppColors.green600;
+        bg = isDark ? AppColors.green900.withValues(alpha: 0.4) : AppColors.greenLight;
         break;
       default:
-        color = const Color(0xFF64748B);
-        bg = isDark ? const Color(0xFF334155).withOpacity(0.4) : const Color(0xFFF1F5F9);
+        color = AppColors.grey;
+        bg = isDark ? AppColors.border(context).withValues(alpha: 0.4) : AppColors.subtleBg(context);
     }
 
     return Container(
@@ -1130,7 +1150,7 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: const Color(0xFFFEE2E2),
+        color: AppColors.redLight,
         borderRadius: BorderRadius.circular(8),
       ),
       child: const Text(
@@ -1138,7 +1158,7 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
         style: TextStyle(
           fontSize: 9.5,
           fontWeight: FontWeight.bold,
-          color: Color(0xFFDC2626),
+          color: AppColors.red600,
         ),
       ),
     );

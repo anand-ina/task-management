@@ -2,7 +2,9 @@ import '../../../shared_widgets/floating_action_button/todo_floating_action_butt
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/dialogs/new_status_report_dialog.dart';
@@ -61,7 +63,8 @@ class _StatusReportsScreenState extends State<StatusReportsScreen> {
           floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/reports'),
           appBar: const CustomAppBar(),
-          body: BlocBuilder<StatusReportsBloc, StatusReportsState>(
+          body: AnnouncementBannerWrapper(
+            child: BlocBuilder<StatusReportsBloc, StatusReportsState>(
             builder: (context, state) {
               return RefreshIndicator(
                 onRefresh: () async {
@@ -109,7 +112,7 @@ class _StatusReportsScreenState extends State<StatusReportsScreen> {
                             },
                              label: Text(s.newReportButton, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF0F172A),
+                              backgroundColor: AppColors.button(context),
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -140,7 +143,7 @@ class _StatusReportsScreenState extends State<StatusReportsScreen> {
                       if (state is StatusReportsLoadingState)
                         const Padding(
                           padding: EdgeInsets.all(60),
-                          child: Center(child: CircularProgressIndicator(color: Color(0xFF0F172A))),
+                          child: Center(child: CircularProgressIndicator()),
                         )
                       else if (state is StatusReportsErrorState)
                         Center(
@@ -166,6 +169,7 @@ class _StatusReportsScreenState extends State<StatusReportsScreen> {
                 ),
               );
             },
+          ),
           ),
         ),
       ),

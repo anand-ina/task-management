@@ -1,9 +1,11 @@
 import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/schedule_meeting_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/bloc/auth_state.dart';
 import '../bloc/approvals_bloc.dart';
@@ -44,9 +46,10 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
 
     return Scaffold(
       floatingActionButton: const TodoFloatingActionButton(),
-          drawer: const CustomLeftDrawer(currentRoute: '/approvals/meetings'),
+      drawer: const CustomLeftDrawer(currentRoute: '/approvals/meetings'),
       appBar: const CustomAppBar(),
-      body: RefreshIndicator(
+      body: AnnouncementBannerWrapper(
+        child: RefreshIndicator(
         onRefresh: () async {
           context.read<ApprovalsBloc>().add(FetchMeetingApprovalsDataEvent());
         },
@@ -81,7 +84,7 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
                           return Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                              color: AppColors.subtleBorder(context),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
@@ -89,7 +92,7 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
-                                color: isDark ? Colors.white70 : Colors.black87,
+                                color: AppColors.textSecondary(context),
                               ),
                             ),
                           );
@@ -100,8 +103,8 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
                         onPressed: () => ScheduleMeetingDialog.show(context),
                         label: const Text('+ New Meeting', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0F172A),
-                          foregroundColor: Colors.white,
+                          backgroundColor: AppColors.button(context),
+                          foregroundColor: AppColors.white,
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
@@ -116,7 +119,7 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
                 ApprovalsConstStrings.approvalsSubtitle,
                 style: TextStyle(
                   fontSize: 13,
-                  color: isDark ? Colors.white60 : Colors.black54,
+                  color: AppColors.textSecondary(context),
                 ),
               ),
               const SizedBox(height: 16),
@@ -138,7 +141,7 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
                     }
                     return Container(
                       decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                        color: AppColors.chipBg(context),
                         borderRadius: BorderRadius.circular(24),
                       ),
                       padding: const EdgeInsets.all(4),
@@ -171,7 +174,7 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
                     return const Center(
                       child: Padding(
                         padding: EdgeInsets.symmetric(vertical: 40),
-                        child: CircularProgressIndicator(color: Color(0xFFB91C1C)),
+                        child: CircularProgressIndicator(),
                       ),
                     );
                   }
@@ -231,8 +234,9 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildTabButton({
     required String title,
@@ -247,8 +251,8 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? (isDark ? const Color(0xFF0F172A) : const Color(0xFF0F172A))
-              : Colors.transparent,
+              ? AppColors.navyDark
+              : AppColors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
@@ -259,7 +263,7 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                color: isSelected ? AppColors.white : AppColors.textSecondary(context),
               ),
             ),
             if (badgeCount > 0) ...[
@@ -267,7 +271,7 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                  color: isSelected ? AppColors.slate700 : AppColors.slate200,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
@@ -275,7 +279,7 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: isSelected ? Colors.white : Colors.black87,
+                    color: isSelected ? AppColors.white : AppColors.textPrimary(context),
                   ),
                 ),
               ),
@@ -292,11 +296,11 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
         padding: const EdgeInsets.symmetric(vertical: 60),
         child: Column(
           children: [
-            Icon(Icons.calendar_today_outlined, size: 48, color: Colors.grey.shade400),
+            Icon(Icons.calendar_today_outlined, size: 48, color: AppColors.grey),
             const SizedBox(height: 12),
             Text(
               message ?? ApprovalsConstStrings.noMeetingApprovals,
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+              style: TextStyle(color: AppColors.textSecondary(context), fontSize: 14),
             ),
           ],
         ),
@@ -312,14 +316,14 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: AppColors.card(context),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          color: AppColors.border(context),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: AppColors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -345,7 +349,7 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                 decoration: BoxDecoration(
-                  color: isAccepted ? const Color(0xFFDCFCE7) : const Color(0xFFFEF9C3),
+                  color: isAccepted ? AppColors.badgeGreenBg(context) : AppColors.badgeYellowBg(context),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -353,7 +357,7 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: isAccepted ? const Color(0xFF15803D) : const Color(0xFFA16207),
+                    color: isAccepted ? AppColors.badgeGreenFg(context) : AppColors.badgeYellowFg(context),
                   ),
                 ),
               ),
@@ -366,7 +370,7 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
             '${item.startsAt != null && item.startsAt!.isNotEmpty ? _formatDate(item.startsAt!) : ""}${item.location != null && item.location!.isNotEmpty ? " · ${item.location}" : " · In person"}${item.organizer != null && item.organizer!.isNotEmpty ? " · organized by ${item.organizer}" : ""}',
             style: TextStyle(
               fontSize: 12,
-              color: isDark ? Colors.white60 : Colors.grey.shade600,
+              color: AppColors.textSecondary(context),
             ),
           ),
 
@@ -377,14 +381,14 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                color: AppColors.subtleBg(context),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 item.agenda!.trim(),
                 style: TextStyle(
                   fontSize: 12,
-                  color: isDark ? Colors.white : Colors.black87,
+                  color: AppColors.textPrimary(context),
                 ),
               ),
             ),

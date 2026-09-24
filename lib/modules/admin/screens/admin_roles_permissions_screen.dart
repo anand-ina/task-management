@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../bloc/admin_roles_bloc.dart';
 import '../bloc/admin_roles_event.dart';
 import '../bloc/admin_roles_state.dart';
@@ -22,10 +24,10 @@ class AdminRolesPermissionsScreen extends StatelessWidget {
         onPopInvokedWithResult: (didPop, _) async {
           if (!didPop) await ExitConfirmationDialog.show(context);
         },
-        child: Scaffold(
-          drawer: const CustomLeftDrawer(currentRoute: '/admin/roles'),
-          appBar: const CustomAppBar(),
-          body: const _RolesBody(),
+        child: const Scaffold(
+          drawer: CustomLeftDrawer(currentRoute: '/admin/roles'),
+          appBar: CustomAppBar(),
+          body: AnnouncementBannerWrapper(child: _RolesBody()),
         ),
       ),
     );
@@ -65,9 +67,7 @@ class _RolesBody extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 19,
                                   fontWeight: FontWeight.bold,
-                                  color: isDark
-                                      ? Colors.white
-                                      : const Color(0xFF0F172A),
+                                  color: AppColors.textPrimary(context),
                                 ),
                               ),
                               if (state is AdminRolesLoadedState) ...[
@@ -76,18 +76,14 @@ class _RolesBody extends StatelessWidget {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 4, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: isDark
-                                        ? const Color(0xFF334155)
-                                        : const Color(0xFFF1F5F9),
+                                    color: AppColors.subtleBg(context),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Text(
                                     s.rolesCount(state.roles.length),
                                     style: TextStyle(
                                       fontSize: 11,
-                                      color: isDark
-                                          ? Colors.white70
-                                          : const Color(0xFF475569),
+                                      color: AppColors.textSecondary(context),
                                     ),
                                   ),
                                 ),
@@ -99,9 +95,7 @@ class _RolesBody extends StatelessWidget {
                             s.rolesAndPermissionsSubtitle,
                             style: TextStyle(
                               fontSize: 12,
-                              color: isDark
-                                  ? Colors.white54
-                                  : const Color(0xFF64748B),
+                              color: AppColors.textSecondary(context),
                             ),
                           ),
                         ],
@@ -110,8 +104,8 @@ class _RolesBody extends StatelessWidget {
                     ElevatedButton.icon(
                       onPressed: () => _showAddRoleDialog(context, s, isDark),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0F172A),
-                        foregroundColor: Colors.white,
+                        backgroundColor: AppColors.button(context),
+                        foregroundColor: AppColors.white,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8)),
                         padding: const EdgeInsets.symmetric(
@@ -126,18 +120,17 @@ class _RolesBody extends StatelessWidget {
                 const SizedBox(height: 20),
 
                 if (state is AdminRolesLoadingState)
-                  const Padding(
-                    padding: EdgeInsets.all(60),
-                    child: Center(
-                        child: CircularProgressIndicator(
-                            color: Color(0xFF0F172A))),
+                  Padding(
+                    padding: const EdgeInsets.all(60),
+                    child: const Center(
+                        child: CircularProgressIndicator()),
                   )
                 else if (state is AdminRolesErrorState)
                   Center(
                     child: Column(
                       children: [
                         Text(state.message,
-                            style: const TextStyle(color: Colors.red)),
+                            style: TextStyle(color: AppColors.red)),
                         const SizedBox(height: 12),
                         ElevatedButton(
                           onPressed: () => context
@@ -155,9 +148,7 @@ class _RolesBody extends StatelessWidget {
                         padding: const EdgeInsets.all(40),
                         child: Text(s.noRolesFound,
                             style: TextStyle(
-                                color: isDark
-                                    ? Colors.white54
-                                    : Colors.grey.shade500)),
+                                color: AppColors.textMuted)),
                       ),
                     )
                   else
@@ -205,11 +196,11 @@ class _RolesBody extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+        backgroundColor: AppColors.card(ctx),
         title: Text(
           s.addRoleTitle,
           style: TextStyle(
-              color: isDark ? Colors.white : const Color(0xFF0F172A)),
+              color: AppColors.textPrimary(ctx)),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -239,8 +230,8 @@ class _RolesBody extends StatelessWidget {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF0F172A),
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.button(ctx),
+              foregroundColor: AppColors.white,
             ),
             child: Text(s.addButton),
           ),
@@ -268,17 +259,15 @@ class _DialogField extends StatelessWidget {
       controller: ctrl,
       keyboardType: keyboardType,
       style: TextStyle(
-          fontSize: 13, color: isDark ? Colors.white : Colors.black87),
+          fontSize: 13, color: AppColors.textPrimary(context)),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: TextStyle(
             fontSize: 12,
-            color: isDark ? Colors.white54 : Colors.grey.shade600),
+            color: AppColors.textSecondary(context)),
         isDense: true,
         filled: true,
-        fillColor: isDark
-            ? const Color(0xFF0F172A)
-            : const Color(0xFFF8FAFC),
+        fillColor: AppColors.card(context),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
@@ -304,12 +293,12 @@ class _RoleCard extends StatelessWidget {
 
   Color get _levelColor {
     switch (role.level) {
-      case 1: return const Color(0xFF7C3AED);
-      case 2: return const Color(0xFF1D4ED8);
-      case 3: return const Color(0xFF0891B2);
-      case 4: return const Color(0xFF059669);
-      case 5: return const Color(0xFF64748B);
-      default: return const Color(0xFF64748B);
+      case 1: return AppColors.deepPurple;
+      case 2: return AppColors.blue;
+      case 3: return AppColors.cyan;
+      case 4: return AppColors.green;
+      case 5: return AppColors.slate500;
+      default: return AppColors.slate500;
     }
   }
 
@@ -317,12 +306,12 @@ class _RoleCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: AppColors.card(context),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isExpanded
-              ? const Color(0xFF0F172A)
-              : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+              ? (isDark ? AppColors.white : AppColors.black)
+              : AppColors.border(context),
           width: isExpanded ? 1.5 : 1.0,
         ),
       ),
@@ -366,14 +355,14 @@ class _RoleCard extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                            color: AppColors.textPrimary(context),
                           ),
                         ),
                         Text(
                           role.name,
                           style: TextStyle(
                             fontSize: 11,
-                            color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                            color: AppColors.textSecondary(context),
                           ),
                         ),
                       ],
@@ -383,14 +372,14 @@ class _RoleCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                      color: AppColors.subtleBg(context),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       '${role.permissions.length} ${s.permissionsLabel}',
                       style: TextStyle(
                         fontSize: 10,
-                        color: isDark ? Colors.white60 : const Color(0xFF475569),
+                        color: AppColors.textSecondary(context),
                       ),
                     ),
                   ),
@@ -399,14 +388,14 @@ class _RoleCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                      color: AppColors.subtleBg(context),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       '${role.users} ${s.usersLabel}',
                       style: TextStyle(
                         fontSize: 10,
-                        color: isDark ? Colors.white60 : const Color(0xFF475569),
+                        color: AppColors.textSecondary(context),
                       ),
                     ),
                   ),
@@ -416,7 +405,7 @@ class _RoleCard extends StatelessWidget {
                         ? Icons.keyboard_arrow_up_rounded
                         : Icons.keyboard_arrow_down_rounded,
                     size: 20,
-                    color: isDark ? Colors.white60 : Colors.grey.shade500,
+                    color: AppColors.textSecondary(context),
                   ),
                 ],
               ),
@@ -427,9 +416,7 @@ class _RoleCard extends StatelessWidget {
           if (isExpanded) ...[
             Divider(
                 height: 1,
-                color: isDark
-                    ? const Color(0xFF334155)
-                    : const Color(0xFFE2E8F0)),
+                color: AppColors.border(context)),
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -461,15 +448,13 @@ class _RoleCard extends StatelessWidget {
                               horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: checked
-                                ? const Color(0xFF0F172A).withOpacity(0.08)
-                                : Colors.transparent,
+                                ? AppColors.primary(context).withOpacity(0.08)
+                                : AppColors.transparent,
                             borderRadius: BorderRadius.circular(6),
                             border: Border.all(
                               color: checked
-                                  ? const Color(0xFF0F172A).withOpacity(0.4)
-                                  : (isDark
-                                      ? const Color(0xFF334155)
-                                      : const Color(0xFFE2E8F0)),
+                                  ? AppColors.primary(context).withOpacity(0.4)
+                                  : AppColors.border(context),
                             ),
                           ),
                           child: Row(
@@ -480,10 +465,8 @@ class _RoleCard extends StatelessWidget {
                                     : Icons.check_box_outline_blank_rounded,
                                 size: 14,
                                 color: checked
-                                    ? const Color(0xFF0F172A)
-                                    : (isDark
-                                        ? Colors.white38
-                                        : Colors.grey.shade400),
+                                    ? AppColors.primary(context)
+                                    : AppColors.textMuted,
                               ),
                               const SizedBox(width: 6),
                               Expanded(
@@ -494,9 +477,7 @@ class _RoleCard extends StatelessWidget {
                                     fontWeight: checked
                                         ? FontWeight.bold
                                         : FontWeight.normal,
-                                    color: isDark
-                                        ? Colors.white70
-                                        : const Color(0xFF334155),
+                                    color: AppColors.textSecondary(context),
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -519,9 +500,7 @@ class _RoleCard extends StatelessWidget {
                             .add(ToggleRoleExpandEvent(role.id)),
                         child: Text(s.cancelEditButton,
                             style: TextStyle(
-                                color: isDark
-                                    ? Colors.white54
-                                    : Colors.grey)),
+                                color: AppColors.textMuted)),
                       ),
                       const SizedBox(width: 8),
                       ElevatedButton(
@@ -534,8 +513,8 @@ class _RoleCard extends StatelessWidget {
                               );
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0F172A),
-                          foregroundColor: Colors.white,
+                          backgroundColor: AppColors.button(context),
+                          foregroundColor: AppColors.white,
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8)),
                           padding: const EdgeInsets.symmetric(
