@@ -1337,6 +1337,8 @@ class AppStringsEn extends AppStrings {
   @override
   String get receivedFromStudent => 'Student';
   @override
+  String get receivedFromStaff => 'Staff member';
+  @override
   String get channelLabel => 'Channel *';
   @override
   String get whichGroupPlaceLabel => 'Which group / place (optional)';
@@ -1370,6 +1372,10 @@ class AppStringsEn extends AppStrings {
   @override
   String get keepParentAnonymousSubtext => 'Name, mobile and evidence stay visible to the campus head and Director only. The ticket number is still sent.';
   @override
+  String get raiseAnonymously => 'Raise this anonymously';
+  @override
+  String get raiseAnonymouslyDesc => 'Your name stays visible to the Director only — not to the person or department it is about.';
+  @override
   String get aboutLabel => 'About *';
   @override
   String get aboutStaffMember => 'Staff member';
@@ -1383,6 +1389,10 @@ class AppStringsEn extends AppStrings {
   String get aboutGeneral => 'General';
   @override
   String get staffMemberSubtext => 'Staff member (leave as "not named" if they don\'t want to say)';
+  @override
+  String get staffMemberDirectorDecides => 'Not named — the Director decides';
+  @override
+  String staffMemberAppreciationSubtitle(int points) => '(not named -> the Director decides who gets the $points points)';
   @override
   String get notNamedOption => "Not named — they don't want to say";
 
@@ -1423,6 +1433,22 @@ class AppStringsEn extends AppStrings {
       'Ticket $ticketNo and task $taskNo will be created and assigned to $ownerName. The parent gets the ticket number on WhatsApp.';
   @override
   String get registerComplaintButton => 'Register Complaint';
+  @override
+  String get recordAppreciationButton => 'Record Appreciation';
+  @override
+  String get saveDraftButton => 'Save draft';
+  @override
+  String savedDraftsCount(int count) => '$count saved draft${count == 1 ? '' : 's'}';
+  @override
+  String get resumeButton => 'Resume';
+  @override
+  String get draftSavedSuccess => 'Draft saved successfully';
+  @override
+  String get draftDeletedSuccess => 'Draft removed';
+  @override
+  String get draftResumedSuccess => 'Draft loaded successfully';
+  @override
+  String get fillRequiredFieldsDraftError => 'Please enter at least a student name, staff, or description to save a draft';
   @override
   String get complaintRegisteredTitle => 'Complaint registered';
   @override
@@ -1941,8 +1967,6 @@ class AppStringsEn extends AppStrings {
   @override
   String get remarksLabel => 'Remarks';
   @override
-  String get saveDraftButton => 'Save draft';
-  @override
   String get saveTaskButton => 'Save Task';
 
   @override
@@ -2105,5 +2129,173 @@ class AppStringsEn extends AppStrings {
   String get hourlyLogSubmittedSuccess => 'Hourly log submitted successfully!';
   @override
   String get announcementsHeader => 'ANNOUNCEMENTS';
+
+  @override
+  String get joinGoogleMeet => 'Join Google Meet';
+  @override
+  String get needLink => 'Need link';
+  @override
+  String get meetingLinkCopied => 'Meeting link copied to clipboard';
+  @override
+  String get noMeetingLinkAvailable => 'No meeting link available';
+  @override
+  String get syncWithGoogleCalendar => 'Sync with Google Calendar';
+  @override
+  String get syncWithGoogleCalendarSubtitle => '(sends Google invites to participants)';
+  @override
+  String get createGoogleMeetVideoLink => 'Create Google Meet video link automatically';
+  @override
+  String get googleCalendarIntegration => 'Google Calendar Integration';
+  @override
+  String get notConnected => 'Not Connected';
+  @override
+  String get connectedStatus => 'Connected';
+  @override
+  String get googleCalendarConnectDescription =>
+      'Connect your Google Calendar so meeting invites are sent directly from your email address.';
+  @override
+  String get connectGoogleCalendar => 'Connect Google Calendar';
+  @override
+  String get disconnect => 'Disconnect';
+  @override
+  String get disconnectGoogleCalendarConfirmation =>
+      'Are you sure you want to disconnect your Google Calendar?';
+  @override
+  String get disconnectGoogleCalendarTitle => 'Disconnect Google Calendar';
+  @override
+  String googleCalendarConnectedDescription(String email) =>
+      'Connected to $email. Meeting invites will be sent directly from your email address.';
+  @override
+  String get googleCalendarDisconnectedSuccess =>
+      'Google Calendar disconnected successfully';
+
+  @override
+  String get budgetIndents => 'Budget Indents';
+  @override
+  String get budgetIndentsSubtitle =>
+      'Raise a purchase indent; the amount decides how far up it must be approved. A voucher prints once it’s fully signed off.';
+  @override
+  String get toApproveTab => 'To approve';
+  @override
+  String get myIndentsTab => 'My indents';
+  @override
+  String get allIndentsTab => 'All';
+  @override
+  String get raiseIndent => 'Raise indent';
+  @override
+  String get voucherReady => 'ready';
+  @override
+  String get neededBy => 'Needed by';
+  @override
+  String get purposeLabel => 'PURPOSE';
+  @override
+  String get approvalChain => 'Approval chain';
+  @override
+  String get itemHeader => 'ITEM';
+  @override
+  String get qtyHeader => 'QTY';
+  @override
+  String get unitHeader => 'UNIT PRICE';
+
+  @override
+  String get grandTotal => 'Grand Total';
+  @override
+  String get printVoucherPdf => 'Print voucher (PDF)';
+  @override
+  String get printSaveAsPdf => 'Print / Save as PDF';
+  @override
+  String get authorisedSignatory => 'Authorised Signatory';
+  @override
+  String get computerGeneratedNotice =>
+      'This is a computer-generated voucher · no physical signature is required.';
+
+  // Raise Purchase Indent Dialog
+  @override
+  String get raisePurchaseIndent => 'Raise a purchase indent';
+  @override
+  String get indentTitleLabel => 'Title *';
+  @override
+  String get indentTitleHint => 'e.g., Whiteboard markers for Grade 6 block';
+  @override
+  String get purposeJustificationLabel => 'Purpose / justification';
+  @override
+  String get purposeJustificationHint => 'Why is this needed?';
+  @override
+  String get lineItemsLabel => 'Line items *';
+  @override
+  String get descriptionColumn => 'Description';
+  @override
+  String get qtyColumn => 'Qty';
+  @override
+  String get unitPriceColumn => 'Unit ₹';
+  @override
+  String get amountColumn => 'Amount';
+  @override
+  String get itemHint => 'Item';
+  @override
+  String get addItem => '+ Add item';
+  @override
+  String get neededByOptional => 'Needed by (optional)';
+  @override
+  String get totalLabel => 'Total';
+  @override
+  String get autoApprovedNotice =>
+      'You\'re at or above the required level — this indent will be auto-approved and a voucher issued immediately.';
+  @override
+  String get submitIndentButton => 'Submit indent';
+  @override
+  String get indentCreatedSuccess => 'Indent submitted successfully';
+
+  // Appreciation Approvals
+
+  @override
+  String get waitingBadge => 'waiting';
+  @override
+  String get appreciationApprovalsSubtitle =>
+      'Appreciations from parents and students that did not name a faculty member. Read the full entry, then decide who receives the reward points.';
+  @override
+  String get openFullTicket => 'Open full ticket';
+  @override
+  String get awaitingYourApproval => 'Awaiting your approval';
+  @override
+  String get evidenceAttachedNotice =>
+      'Open the full ticket to see the evidence attached by';
+  @override
+  String get approveAppreciationHeader => 'APPROVE APPRECIATION';
+  @override
+  String get noFacultyNamedSubtitle =>
+      'No faculty was named. Choose who receives the points.';
+  @override
+  String get facultyRequiredLabel => 'Faculty *';
+  @override
+  String get selectStaffMemberHint => 'Select staff member...';
+
+  @override
+  String get whyThisFacultyHint => 'Why this faculty / these points?';
+  @override
+  String get approveAndAwardPoints => 'Approve & award';
+  @override
+  String get approveAndAward50Points => '🏅 Approve & award 50 points';
+  @override
+  String get searchStaffHint => 'Search staff member...';
+  @override
+  String get noStaffFound => 'No staff members found';
+  @override
+  String get noAppreciationsWaiting => 'No appreciations waiting for approval';
+  @override
+  String get pointsAwardedSuccess => 'Points awarded successfully';
+  @override
+  String get anonymousLabel => 'Anonymous';
+  @override
+  String get notNamedYetLabel => 'Not named yet';
+  @override
+  String get fromLabel => 'From';
+  @override
+  String get studentLabel => 'Student';
+
+  @override
+  String get receivedLabel => 'Received';
+  @override
+  String get raisedByLabel => 'Raised by';
 }
 

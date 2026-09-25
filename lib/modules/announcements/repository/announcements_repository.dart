@@ -97,7 +97,8 @@ class AnnouncementsRepository {
 
       final parsed = _safeParse(response.data);
       if (parsed is Map && parsed.containsKey('id')) {
-        return parsed['id'] as int?;
+        final rawId = parsed['id'];
+        return rawId is int ? rawId : int.tryParse('$rawId');
       }
       return null;
     } catch (e) {

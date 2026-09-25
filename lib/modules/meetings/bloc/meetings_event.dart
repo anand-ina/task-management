@@ -10,3 +10,5 @@ class FetchScheduleLookupsEvent extends MeetingsEvent {
 }
 
 class FetchMeetingCalendarEvent extends MeetingsEvent {}
+
+class DisconnectGoogleCalendarEvent extends MeetingsEvent {}

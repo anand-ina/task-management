@@ -32,8 +32,6 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     final authState = context.watch<AuthBloc>().state;
     bool isAcademicExecutive = false;
     if (authState is AuthenticatedState) {
@@ -244,7 +242,6 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
     required bool isSelected,
     required VoidCallback onTap,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -309,7 +306,6 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
   }
 
   Widget _buildMeetingCard(MeetingApprovalModel item) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isAccepted = (item.status.toLowerCase() == 'accepted' ||
         item.status.toLowerCase() == 'scheduled' ||
         item.status.toLowerCase() == 'completed');

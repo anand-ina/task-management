@@ -1227,6 +1227,7 @@ abstract class AppStrings {
   String get receivedFromLabel;
   String get receivedFromParent;
   String get receivedFromStudent;
+  String get receivedFromStaff;
   String get channelLabel;
   String get whichGroupPlaceLabel;
   String get whichGroupPlaceHint;
@@ -1243,6 +1244,8 @@ abstract class AppStrings {
   String get parentMobileHint;
   String get keepParentAnonymous;
   String get keepParentAnonymousSubtext;
+  String get raiseAnonymously;
+  String get raiseAnonymouslyDesc;
   String get aboutLabel;
   String get aboutStaffMember;
   String get aboutDepartment;
@@ -1250,6 +1253,8 @@ abstract class AppStrings {
   String get aboutFacility;
   String get aboutGeneral;
   String get staffMemberSubtext;
+  String get staffMemberDirectorDecides;
+  String staffMemberAppreciationSubtitle(int points);
   String get notNamedOption;
     String get priorityLabel;
   String get priorityEmergency;
@@ -1269,6 +1274,14 @@ abstract class AppStrings {
   String get uploadingFile;
   String bannerTicketTaskCreated(String ticketNo, String taskNo, String ownerName);
   String get registerComplaintButton;
+  String get recordAppreciationButton;
+  String get saveDraftButton;
+  String savedDraftsCount(int count);
+  String get resumeButton;
+  String get draftSavedSuccess;
+  String get draftDeletedSuccess;
+  String get draftResumedSuccess;
+  String get fillRequiredFieldsDraftError;
   String get complaintRegisteredTitle;
   String get ticketNumberLabel;
   String get shareNumberNotice;
@@ -1519,7 +1532,6 @@ abstract class AppStrings {
   String get generateButton;
   String get addItemButton;
   String get remarksLabel;
-  String get saveDraftButton;
   String get saveTaskButton;
 
   String get statusLabel;
@@ -1605,4 +1617,88 @@ abstract class AppStrings {
   String entryLoggedSuccess(String slot);
   String get hourlyLogSubmittedSuccess;
   String get announcementsHeader;
+
+  // Meeting Action Strings
+  String get joinGoogleMeet;
+  String get needLink;
+  String get meetingLinkCopied;
+  String get noMeetingLinkAvailable;
+  String get syncWithGoogleCalendar;
+  String get syncWithGoogleCalendarSubtitle;
+  String get createGoogleMeetVideoLink;
+  String get googleCalendarIntegration;
+  String get notConnected;
+  String get connectedStatus;
+  String get googleCalendarConnectDescription;
+  String get connectGoogleCalendar;
+  String get disconnect;
+  String get disconnectGoogleCalendarConfirmation;
+  String get disconnectGoogleCalendarTitle;
+  String googleCalendarConnectedDescription(String email);
+  String get googleCalendarDisconnectedSuccess;
+
+  // Budget Indents Strings
+  String get budgetIndents;
+  String get budgetIndentsSubtitle;
+  String get toApproveTab;
+  String get myIndentsTab;
+  String get allIndentsTab;
+  String get raiseIndent;
+  String get voucherReady;
+  String get neededBy;
+  String get purposeLabel;
+  String get approvalChain;
+  String get itemHeader;
+  String get qtyHeader;
+  String get unitHeader;
+   String get grandTotal;
+  String get printVoucherPdf;
+  String get printSaveAsPdf;
+  String get authorisedSignatory;
+  String get computerGeneratedNotice;
+
+  // Raise Purchase Indent Dialog
+  String get raisePurchaseIndent;
+  String get indentTitleLabel;
+  String get indentTitleHint;
+  String get purposeJustificationLabel;
+  String get purposeJustificationHint;
+  String get lineItemsLabel;
+  String get descriptionColumn;
+  String get qtyColumn;
+  String get unitPriceColumn;
+  String get amountColumn;
+  String get itemHint;
+  String get addItem;
+  String get neededByOptional;
+  String get totalLabel;
+  String get autoApprovedNotice;
+  String get submitIndentButton;
+  String get indentCreatedSuccess;
+
+  // Appreciation Approvals
+   String get waitingBadge;
+  String get appreciationApprovalsSubtitle;
+  String get openFullTicket;
+  String get awaitingYourApproval;
+  String get evidenceAttachedNotice;
+  String get approveAppreciationHeader;
+  String get noFacultyNamedSubtitle;
+  String get facultyRequiredLabel;
+  String get selectStaffMemberHint;
+
+  String get whyThisFacultyHint;
+  String get approveAndAwardPoints;
+  String get approveAndAward50Points;
+  String get searchStaffHint;
+  String get noStaffFound;
+  String get noAppreciationsWaiting;
+  String get pointsAwardedSuccess;
+  String get anonymousLabel;
+  String get notNamedYetLabel;
+  String get fromLabel;
+  String get studentLabel;
+
+  String get receivedLabel;
+  String get raisedByLabel;
 }

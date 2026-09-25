@@ -1,3 +1,4 @@
+import '../models/google_calendar_status_model.dart';
 import '../models/meeting_model.dart';
 import '../models/one_on_one_pending_model.dart';
 import '../repository/meetings_repository.dart';
@@ -15,7 +16,13 @@ class OneOnOnePendingLoadedState extends MeetingsState {
 
 class MyScheduledMeetingsLoadedState extends MeetingsState {
   final List<MeetingItemModel> meetings;
-  MyScheduledMeetingsLoadedState(this.meetings);
+  final GoogleCalendarStatusModel? calendarStatus;
+  final bool isDisconnected;
+  MyScheduledMeetingsLoadedState(
+    this.meetings, {
+    this.calendarStatus,
+    this.isDisconnected = false,
+  });
 }
 
 class ScheduleLookupsLoadedState extends MeetingsState {

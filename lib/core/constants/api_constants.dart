@@ -26,6 +26,8 @@ class ApiConstants {
   static const String oneOnOnePending = '$baseUrl/meetings/one-on-one/pending';
   static const String meetings = '$baseUrl/meetings';
   static const String meetingsAvailability = '$baseUrl/meetings/availability';
+  static const String googleCalendarStatus = '$baseUrl/google-calendar/status';
+  static const String googleCalendarDisconnect = '$baseUrl/google-calendar/disconnect';
   static const String sutraCommand = '$baseUrl/sutra/command';
 
   // Announcements Endpoints
@@ -41,6 +43,10 @@ class ApiConstants {
   static const String meetingCompletionRequests = '$baseUrl/meetings/completion-requests';
   static const String budgetReceived = '$baseUrl/budget/received';
   static const String budgetInitiated = '$baseUrl/budget/initiated';
+  static const String indents = '$baseUrl/indents';
+  static const String indentsInbox = '$baseUrl/indents/inbox';
+  static const String indentsAll = '$baseUrl/indents/all';
+  static String indentDetail(int id) => '$baseUrl/indents/$id';
 
   // Events & Reports Endpoints
   static const String events = '$baseUrl/events';
@@ -90,6 +96,10 @@ class ApiConstants {
   static const String uploads = '$baseUrl/uploads';
   static String ticketMetaBranch(int branchId) => '$baseUrl/tickets/meta?branchId=$branchId';
   static String ticketAward(int ticketId) => '$baseUrl/tickets/$ticketId/award';
+
+  // Drafts Endpoints
+  static const String drafts = '$baseUrl/drafts';
+  static String draftDetail(int id) => '$baseUrl/drafts/$id';
 
   // Audits Endpoints
   static const String audits = '$baseUrl/audits';

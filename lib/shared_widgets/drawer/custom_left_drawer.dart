@@ -11,6 +11,7 @@ import '../../modules/approvals/screens/budget_approvals_screen.dart';
 import '../../modules/approvals/screens/escalations_screen.dart';
 import '../../modules/approvals/screens/meeting_approvals_screen.dart';
 import '../../modules/approvals/screens/task_approvals_screen.dart';
+import '../../modules/approvals/screens/appreciation_approvals_screen.dart';
 import '../../modules/audits/screens/audits_screen.dart';
 import '../../modules/auth/bloc/auth_bloc.dart';
 import '../../modules/auth/bloc/auth_state.dart';
@@ -250,13 +251,14 @@ class CustomLeftDrawer extends StatelessWidget {
                           isSelected: currentRoute == '/dashboard',
                           onTap: () => _navigate(context, '/dashboard'),
                         ),
-                        _buildNavItem(
-                          context,
-                          icon: Icons.campaign_rounded,
-                          title: s.announcements,
-                          isSelected: currentRoute == '/announcements',
-                          onTap: () => _navigate(context, '/announcements'),
-                        ),
+                        if (!isAcademicExecutive)
+                          _buildNavItem(
+                            context,
+                            icon: Icons.campaign_rounded,
+                            title: s.announcements,
+                            isSelected: currentRoute == '/announcements',
+                            onTap: () => _navigate(context, '/announcements'),
+                          ),
                         if (isDirector)
                           _buildNavItem(
                             context,
@@ -306,7 +308,7 @@ class CustomLeftDrawer extends StatelessWidget {
                     ),
 
                     // CARD 3: COMPLAINTS & FEEDBACK
-                    if (isDirector || isPrincipal || isTeamLead || isManager || isAdmin)
+                    if (isDirector || isPrincipal || isTeamLead || isManager || isAdmin || isAcademicExecutive)
                       _buildSectionCard(
                         context,
                         title: s.complaintsAndFeedbackHeader,
@@ -1067,7 +1069,7 @@ class CustomLeftDrawer extends StatelessWidget {
         navigator.popUntil((r) => r.isFirst);
       }
       navigator.push(
-        MaterialPageRoute(builder: (context) => const TaskApprovalsScreen()),
+        MaterialPageRoute(builder: (context) => const AppreciationApprovalsScreen()),
       );
       return;
     }

@@ -5,6 +5,7 @@ import '../models/task_approval_model.dart';
 import '../models/escalation_model.dart';
 import '../models/meeting_approval_model.dart';
 import '../models/budget_approval_model.dart';
+import '../models/indent_model.dart';
 
 class ApprovalsRepository {
   final DioClient _dioClient = DioClient();
@@ -55,9 +56,31 @@ class ApprovalsRepository {
     return [];
   }
 
+  void _logServiceCall({
+    required String serviceMethod,
+    required String url,
+    dynamic payload,
+    dynamic response,
+  }) {
+    debugPrint('---------------- [ApprovalsService: $serviceMethod] ----------------');
+    debugPrint('Service URL: $url');
+    if (payload != null) {
+      debugPrint('Service Payload: $payload');
+    }
+    if (response != null) {
+      debugPrint('Service Response: $response');
+    }
+    debugPrint('---------------------------------------------------------------------');
+  }
+
   Future<List<EscalationModel>> getEscalations() async {
     try {
       final response = await _dioClient.dio.get(ApiConstants.escalations);
+      _logServiceCall(
+        serviceMethod: 'getEscalations',
+        url: ApiConstants.escalations,
+        response: response.data,
+      );
       final rawList = _extractList(response.data);
       return rawList.map((e) => EscalationModel.fromJson(e is Map<String, dynamic> ? e : {})).toList();
     } catch (e) {
@@ -110,6 +133,81 @@ class ApprovalsRepository {
       debugPrint('[ApprovalsRepository] getBudgetInitiated error: $e');
     }
     return [];
+  }
+
+  Future<List<IndentItemModel>> getIndentsInbox() async {
+    try {
+      final response = await _dioClient.dio.get(ApiConstants.indentsInbox);
+      _logServiceCall(
+        serviceMethod: 'getIndentsInbox',
+        url: ApiConstants.indentsInbox,
+        response: response.data,
+      );
+      final rawList = _extractList(response.data);
+      return rawList.map((e) => IndentItemModel.fromJson(e is Map<String, dynamic> ? e : {})).toList();
+    } catch (e) {
+      debugPrint('[ApprovalsRepository] getIndentsInbox error: $e');
+    }
+    return [];
+  }
+
+  Future<List<IndentItemModel>> getIndentsAll() async {
+    try {
+      final response = await _dioClient.dio.get(ApiConstants.indentsAll);
+      _logServiceCall(
+        serviceMethod: 'getIndentsAll',
+        url: ApiConstants.indentsAll,
+        response: response.data,
+      );
+      final rawList = _extractList(response.data);
+      return rawList.map((e) => IndentItemModel.fromJson(e is Map<String, dynamic> ? e : {})).toList();
+    } catch (e) {
+      debugPrint('[ApprovalsRepository] getIndentsAll error: $e');
+    }
+    return [];
+  }
+
+  Future<IndentItemModel?> getIndentDetail(int id) async {
+    final url = ApiConstants.indentDetail(id);
+    try {
+      final response = await _dioClient.dio.get(url);
+      _logServiceCall(
+        serviceMethod: 'getIndentDetail',
+        url: url,
+        response: response.data,
+      );
+      final data = response.data;
+      if (data is Map<String, dynamic>) {
+        return IndentItemModel.fromJson(data);
+      }
+    } catch (e) {
+      debugPrint('[ApprovalsRepository] getIndentDetail error: $e');
+    }
+    return null;
+  }
+
+  Future<CreateIndentResponseModel?> createIndent(Map<String, dynamic> payload) async {
+    final url = ApiConstants.indents;
+    _logServiceCall(
+      serviceMethod: 'createIndent',
+      url: url,
+      payload: payload,
+    );
+    try {
+      final response = await _dioClient.dio.post(url, data: payload);
+      _logServiceCall(
+        serviceMethod: 'createIndent',
+        url: url,
+        response: response.data,
+      );
+      if (response.data is Map<String, dynamic>) {
+        return CreateIndentResponseModel.fromJson(response.data as Map<String, dynamic>);
+      }
+    } catch (e) {
+      debugPrint('[ApprovalsRepository] createIndent error: $e');
+      rethrow;
+    }
+    return null;
   }
 
   Future<bool> decideApproval(int id, String decision) async {

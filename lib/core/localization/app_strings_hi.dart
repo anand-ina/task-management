@@ -1336,6 +1336,8 @@ class AppStringsHi extends AppStrings {
   @override
   String get receivedFromStudent => 'छात्र';
   @override
+  String get receivedFromStaff => 'स्टाफ सदस्य';
+  @override
   String get channelLabel => 'माध्यम *';
   @override
   String get whichGroupPlaceLabel => 'कौन सा समूह / स्थान (वैकल्पिक)';
@@ -1369,6 +1371,10 @@ class AppStringsHi extends AppStrings {
   @override
   String get keepParentAnonymousSubtext => 'नाम, मोबाइल और साक्ष्य केवल कैंपस हेड और डायरेक्टर को दिखाई देंगे। टिकट नंबर भेजा जाएगा।';
   @override
+  String get raiseAnonymously => 'इसे अज्ञात रूप से दर्ज करें';
+  @override
+  String get raiseAnonymouslyDesc => 'आपका नाम केवल डायरेक्टर को दिखाई देगा — संबंधित व्यक्ति या विभाग को नहीं।';
+  @override
   String get aboutLabel => 'के बारे में *';
   @override
   String get aboutStaffMember => 'स्टाफ सदस्य';
@@ -1382,6 +1388,10 @@ class AppStringsHi extends AppStrings {
   String get aboutGeneral => 'सामान्य';
   @override
   String get staffMemberSubtext => 'स्टाफ सदस्य (यदि नाम नहीं बताना चाहते तो "नाम नहीं बताया" रहने दें)';
+  @override
+  String get staffMemberDirectorDecides => 'नाम नहीं बताया — डायरेक्टर तय करेंगे';
+  @override
+  String staffMemberAppreciationSubtitle(int points) => '(नाम नहीं बताया -> डायरेक्टर तय करेंगे कि $points अंक किसे मिलेंगे)';
   @override
   String get notNamedOption => 'नाम नहीं बताया — वे नहीं बताना चाहते';
 
@@ -1422,6 +1432,22 @@ class AppStringsHi extends AppStrings {
       'टिकट $ticketNo और कार्य $taskNo बनाया जाएगा और $ownerName को सौंपा जाएगा। अभिभावक को व्हाट्सएप पर टिकट नंबर प्राप्त होगा।';
   @override
   String get registerComplaintButton => 'शिकायत दर्ज करें';
+  @override
+  String get recordAppreciationButton => 'प्रशंसा दर्ज करें';
+  @override
+  String get saveDraftButton => 'ड्राफ्ट सहेजें';
+  @override
+  String savedDraftsCount(int count) => '$count सहेजे गए ड्राफ्ट';
+  @override
+  String get resumeButton => 'फिर शुरू करें';
+  @override
+  String get draftSavedSuccess => 'ड्राफ्ट सफलतापूर्वक सहेजा गया';
+  @override
+  String get draftDeletedSuccess => 'ड्राफ्ट हटा दिया गया';
+  @override
+  String get draftResumedSuccess => 'ड्राफ्ट लोड किया गया';
+  @override
+  String get fillRequiredFieldsDraftError => 'ड्राफ्ट सहेजने के लिए कृपया कम से कम छात्र का नाम, स्टाफ या विवरण दर्ज करें';
   @override
   String get complaintRegisteredTitle => 'शिकायत दर्ज की गई';
   @override
@@ -1941,8 +1967,6 @@ class AppStringsHi extends AppStrings {
   @override
   String get remarksLabel => 'टिप्पणियाँ';
   @override
-  String get saveDraftButton => 'ड्राफ्ट सहेजें';
-  @override
   String get saveTaskButton => 'टास्क सहेजें';
 
   @override
@@ -2105,5 +2129,173 @@ class AppStringsHi extends AppStrings {
   String get hourlyLogSubmittedSuccess => 'घंटे का लॉग सफलतापूर्वक जमा किया गया!';
   @override
   String get announcementsHeader => 'घोषणाएं';
+
+  @override
+  String get joinGoogleMeet => 'Google Meet में शामिल हों';
+  @override
+  String get needLink => 'लिंक चाहिए';
+  @override
+  String get meetingLinkCopied => 'मीटिंग लिंक क्लिपबोर्ड पर कॉपी किया गया';
+  @override
+  String get noMeetingLinkAvailable => 'कोई मीटिंग लिंक उपलब्ध नहीं है';
+  @override
+  String get syncWithGoogleCalendar => 'Google कैलेंडर के साथ सिंक करें';
+  @override
+  String get syncWithGoogleCalendarSubtitle => '(प्रतिभागियों को Google आमंत्रण भेजता है)';
+  @override
+  String get createGoogleMeetVideoLink => 'स्वचालित रूप से Google Meet वीडियो लिंक बनाएं';
+  @override
+  String get googleCalendarIntegration => 'गूगल कैलेंडर एकीकरण';
+  @override
+  String get notConnected => 'कनेक्ट नहीं है';
+  @override
+  String get connectedStatus => 'जुड़ा हुआ है';
+  @override
+  String get googleCalendarConnectDescription =>
+      'अपने Google कैलेंडर को कनेक्ट करें ताकि मीटिंग आमंत्रण सीधे आपके ईमेल पते से भेजे जाएं।';
+  @override
+  String get connectGoogleCalendar => 'गूगल कैलेंडर कनेक्ट करें';
+  @override
+  String get disconnect => 'डिस्कनेक्ट';
+  @override
+  String get disconnectGoogleCalendarConfirmation =>
+      'क्या आप वाकई अपने Google कैलेंडर को डिस्कनेक्ट करना चाहते हैं?';
+  @override
+  String get disconnectGoogleCalendarTitle => 'Google कैलेंडर डिस्कनेक्ट करें';
+  @override
+  String googleCalendarConnectedDescription(String email) =>
+      '$email से कनेक्टेड है। मीटिंग आमंत्रण सीधे आपके ईमेल पते से भेजे जाएंगे।';
+  @override
+  String get googleCalendarDisconnectedSuccess =>
+      'Google कैलेंडर सफलतापूर्वक डिस्कनेक्ट हो गया';
+
+  @override
+  String get budgetIndents => 'बजट इंडेंट';
+  @override
+  String get budgetIndentsSubtitle =>
+      'खरीद इंडेंट बनाएं; राशि तय करती है कि इसे किस स्तर तक अनुमोदित किया जाना चाहिए। पूरी तरह से स्वीकृत होने के बाद वाउचर प्रिंट होता है।';
+  @override
+  String get toApproveTab => 'स्वीकृति के लिए';
+  @override
+  String get myIndentsTab => 'मेरे इंडेंट';
+  @override
+  String get allIndentsTab => 'सभी';
+  @override
+  String get raiseIndent => 'इंडेंट बनाएं';
+  @override
+  String get voucherReady => 'तैयार है';
+  @override
+  String get neededBy => 'आवश्यकता तिथि';
+  @override
+  String get purposeLabel => 'उद्देश्य';
+  @override
+  String get approvalChain => 'स्वीकृति श्रृंखला';
+  @override
+  String get itemHeader => 'वस्तु';
+  @override
+  String get qtyHeader => 'मात्रा';
+  @override
+  String get unitHeader => 'इकाई मूल्य';
+
+  @override
+  String get grandTotal => 'कुल योग';
+  @override
+  String get printVoucherPdf => 'वाउचर प्रिंट करें (PDF)';
+  @override
+  String get printSaveAsPdf => 'प्रिंट / PDF के रूप में सहेजें';
+  @override
+  String get authorisedSignatory => 'अधिकृत हस्ताक्षरकर्ता';
+  @override
+  String get computerGeneratedNotice =>
+      'यह कंप्यूटर द्वारा जनरेट किया गया वाउचर है · किसी भौतिक हस्ताक्षर की आवश्यकता नहीं है।';
+
+  // Raise Purchase Indent Dialog
+  @override
+  String get raisePurchaseIndent => 'खरीद इंडेंट बनाएं';
+  @override
+  String get indentTitleLabel => 'शीर्षक *';
+  @override
+  String get indentTitleHint => 'उदा: ग्रेड 6 ब्लॉक के लिए व्हाइटबोर्ड मार्कर';
+  @override
+  String get purposeJustificationLabel => 'उद्देश्य / औचित्य';
+  @override
+  String get purposeJustificationHint => 'इसकी आवश्यकता क्यों है?';
+  @override
+  String get lineItemsLabel => 'मद सूची *';
+  @override
+  String get descriptionColumn => 'विवरण';
+  @override
+  String get qtyColumn => 'मात्रा';
+  @override
+  String get unitPriceColumn => 'इकाई ₹';
+  @override
+  String get amountColumn => 'राशि';
+  @override
+  String get itemHint => 'मद';
+  @override
+  String get addItem => '+ मद जोड़ें';
+  @override
+  String get neededByOptional => 'आवश्यकता तिथि (वैकल्पिक)';
+  @override
+  String get totalLabel => 'कुल';
+  @override
+  String get autoApprovedNotice =>
+      'आप आवश्यक स्तर पर या उससे ऊपर हैं — यह इंडेंट स्वचालित रूप से स्वीकृत हो जाएगा और तुरंत वाउचर जारी कर दिया जाएगा।';
+  @override
+  String get submitIndentButton => 'इंडेंट सबमिट करें';
+  @override
+  String get indentCreatedSuccess => 'इंडेंट सफलतापूर्वक सबमिट किया गया';
+
+  // Appreciation Approvals
+
+  @override
+  String get waitingBadge => 'प्रतीक्षारत';
+  @override
+  String get appreciationApprovalsSubtitle =>
+      'माता-पिता और छात्रों से प्राप्त प्रशंसा जिसमें किसी शिक्षक का नाम नहीं दिया गया। पूरा विवरण पढ़ें, फिर तय करें कि पुरस्कार अंक किसे दिए जाएं।';
+  @override
+  String get openFullTicket => 'पूरा टिकट खोलें';
+  @override
+  String get awaitingYourApproval => 'आपकी स्वीकृति की प्रतीक्षा में';
+  @override
+  String get evidenceAttachedNotice =>
+      'संलग्न साक्ष्य देखने के लिए पूरा टिकट खोलें:';
+  @override
+  String get approveAppreciationHeader => 'प्रशंसा स्वीकृत करें';
+  @override
+  String get noFacultyNamedSubtitle =>
+      'किसी शिक्षक का नाम नहीं दिया गया। चुनें कि अंक किसे दिए जाएं।';
+  @override
+  String get facultyRequiredLabel => 'शिक्षक/स्टाफ *';
+  @override
+  String get selectStaffMemberHint => 'स्टाफ सदस्य चुनें...';
+
+  @override
+  String get whyThisFacultyHint => 'यह शिक्षक / यह अंक क्यों?';
+  @override
+  String get approveAndAwardPoints => 'स्वीकृत करें और दें';
+  @override
+  String get approveAndAward50Points => '🏅 स्वीकृत करें और 50 अंक दें';
+  @override
+  String get searchStaffHint => 'स्टाफ खोजें...';
+  @override
+  String get noStaffFound => 'कोई स्टाफ नहीं मिला';
+  @override
+  String get noAppreciationsWaiting => 'अनुमोदन के लिए कोई प्रशंसा प्रतीक्षारत नहीं है';
+  @override
+  String get pointsAwardedSuccess => 'अंक सफलतापूर्वक प्रदान किए गए';
+  @override
+  String get anonymousLabel => 'अनाम';
+  @override
+  String get notNamedYetLabel => 'अभी नाम नहीं दिया गया';
+  @override
+  String get fromLabel => 'प्रेषक';
+  @override
+  String get studentLabel => 'छात्र';
+
+  @override
+  String get receivedLabel => 'प्राप्त';
+  @override
+  String get raisedByLabel => 'द्वारा दर्ज';
 }
 

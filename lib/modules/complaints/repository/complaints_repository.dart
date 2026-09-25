@@ -6,6 +6,7 @@ import '../../../core/network/dio_client.dart';
 import '../models/batch_ticket_request.dart';
 import '../models/batch_ticket_response.dart';
 import '../models/create_ticket_request.dart';
+import '../models/draft_model.dart';
 import '../models/lookup_models.dart';
 import '../models/ticket_insights_model.dart';
 import '../models/ticket_meta_model.dart';
@@ -148,16 +149,26 @@ class ComplaintsRepository {
     }
   }
 
-  Future<TicketMetaModel> getTicketMeta({int? branchId}) async {
-    String url = ApiConstants.ticketMeta;
+  Future<TicketMetaModel> getTicketMeta({int? branchId, String? source}) async {
+    final Map<String, dynamic> queryParams = {};
     if (branchId != null && branchId > 0) {
-      url = ApiConstants.ticketMetaBranch(branchId);
+      queryParams['branchId'] = branchId;
     }
+    if (source != null && source.isNotEmpty) {
+      queryParams['source'] = source;
+    }
+
+    final uri = Uri.parse(ApiConstants.ticketMeta).replace(
+      queryParameters: queryParams.isNotEmpty
+          ? queryParams.map((k, v) => MapEntry(k, v.toString()))
+          : null,
+    );
+    final url = uri.toString();
 
     _logServiceCall(
       serviceMethod: 'getTicketMeta',
       url: url,
-      payload: {'branchId': branchId},
+      payload: queryParams,
     );
 
     try {
@@ -177,6 +188,126 @@ class ComplaintsRepository {
     } catch (e, stack) {
       debugPrint('[ComplaintsRepository] getTicketMeta error: $e\n$stack');
       rethrow;
+    }
+  }
+
+  Future<List<DraftItemModel>> getDrafts({String kind = 'ticket'}) async {
+    final Map<String, dynamic> queryParams = {'kind': kind};
+    final uri = Uri.parse(ApiConstants.drafts).replace(queryParameters: queryParams);
+    final url = uri.toString();
+
+    _logServiceCall(
+      serviceMethod: 'getDrafts',
+      url: url,
+      payload: queryParams,
+    );
+
+    try {
+      final res = await _dioClient.dio.get(url);
+      final parsedData = _safeParse(res.data);
+
+      _logServiceCall(
+        serviceMethod: 'getDrafts',
+        url: url,
+        response: parsedData,
+      );
+
+      if (parsedData is List) {
+        return parsedData
+            .whereType<Map<String, dynamic>>()
+            .map((item) => DraftItemModel.fromJson(item))
+            .toList();
+      }
+      return [];
+    } catch (e, stack) {
+      debugPrint('[ComplaintsRepository] getDrafts error: $e\n$stack');
+      return [];
+    }
+  }
+
+  Future<DraftItemModel?> getDraftDetail(int id) async {
+    final url = ApiConstants.draftDetail(id);
+
+    _logServiceCall(
+      serviceMethod: 'getDraftDetail',
+      url: url,
+      payload: {'id': id},
+    );
+
+    try {
+      final res = await _dioClient.dio.get(url);
+      final parsedData = _safeParse(res.data);
+
+      _logServiceCall(
+        serviceMethod: 'getDraftDetail',
+        url: url,
+        response: parsedData,
+      );
+
+      if (parsedData is Map<String, dynamic>) {
+        return DraftItemModel.fromJson(parsedData);
+      }
+      return null;
+    } catch (e, stack) {
+      debugPrint('[ComplaintsRepository] getDraftDetail error: $e\n$stack');
+      return null;
+    }
+  }
+
+  Future<int?> saveDraft(DraftSaveRequest request) async {
+    const url = ApiConstants.drafts;
+    final payload = request.toJson();
+
+    _logServiceCall(
+      serviceMethod: 'saveDraft',
+      url: url,
+      payload: payload,
+    );
+
+    try {
+      final res = await _dioClient.dio.post(url, data: payload);
+      final parsedData = _safeParse(res.data);
+
+      _logServiceCall(
+        serviceMethod: 'saveDraft',
+        url: url,
+        response: parsedData,
+      );
+
+      if (parsedData is Map<String, dynamic> && parsedData['id'] != null) {
+        return parsedData['id'] is int
+            ? parsedData['id'] as int
+            : int.tryParse(parsedData['id'].toString());
+      }
+      return 1;
+    } catch (e, stack) {
+      debugPrint('[ComplaintsRepository] saveDraft error: $e\n$stack');
+      rethrow;
+    }
+  }
+
+  Future<bool> deleteDraft(int id) async {
+    final url = ApiConstants.draftDetail(id);
+
+    _logServiceCall(
+      serviceMethod: 'deleteDraft',
+      url: url,
+      payload: {'id': id},
+    );
+
+    try {
+      final res = await _dioClient.dio.delete(url);
+      final parsedData = _safeParse(res.data);
+
+      _logServiceCall(
+        serviceMethod: 'deleteDraft',
+        url: url,
+        response: parsedData,
+      );
+      return true;
+    } catch (e, stack) {
+      debugPrint('[ComplaintsRepository] deleteDraft error: $e\n$stack');
+      return false;
     }
   }
 

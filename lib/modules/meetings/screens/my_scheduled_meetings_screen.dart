@@ -2,7 +2,9 @@ import '../../../shared_widgets/floating_action_button/todo_floating_action_butt
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
@@ -15,6 +17,7 @@ import '../../../shared_widgets/dialogs/schedule_meeting_dialog.dart';
 import '../bloc/meetings_bloc.dart';
 import '../bloc/meetings_event.dart';
 import '../bloc/meetings_state.dart';
+import '../models/google_calendar_status_model.dart';
 import '../models/meeting_model.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/bloc/auth_state.dart';
@@ -83,24 +86,23 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
     );
   }
 
-  Future<void> _markAttended(BuildContext context, MeetingItemModel item) async {
+  Future<void> _markAttended(MeetingItemModel item) async {
     try {
       final meetingId = item.rawId ?? item.id;
       final response = await _dioClient.dio.post('${ApiConstants.baseUrl}/meetings/$meetingId/attend');
       debugPrint('[Meetings] attend API URL: ${ApiConstants.baseUrl}/meetings/$meetingId/attend, response: ${response.data}');
-      if (mounted) {
-        setState(() {
-          _attendedMeetingIds.add(item.id);
-          if (item.rawId != null) _attendedMeetingIds.add(item.rawId);
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Attendance marked! +2 points earned 🎉'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        context.read<MeetingsBloc>().add(FetchMyScheduledMeetingsEvent());
-      }
+      if (!mounted) return;
+      setState(() {
+        _attendedMeetingIds.add(item.id);
+        if (item.rawId != null) _attendedMeetingIds.add(item.rawId);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Attendance marked! +2 points earned 🎉'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      context.read<MeetingsBloc>().add(FetchMyScheduledMeetingsEvent());
     } catch (e) {
       if (mounted) {
         _showErrorToast(context, e);
@@ -306,14 +308,14 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
     );
   }
 
-  Future<void> _showMeetingHappenedDialog(BuildContext context, MeetingItemModel item) async {
-    final controller = TextEditingController(text: 'test comment');
+  Future<void> _showMeetingHappenedDialog(MeetingItemModel item) async {
+    final controller = TextEditingController();
 
     final result = await showDialog<String>(
       context: context,
       barrierDismissible: true,
-      builder: (context) {
-        final isDark = Theme.of(context).brightness == Brightness.dark;
+      builder: (dialogCtx) {
+        final isDark = Theme.of(dialogCtx).brightness == Brightness.dark;
         return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
@@ -348,7 +350,7 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
                 foregroundColor: Colors.black87,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               ),
-              onPressed: () => Navigator.pop(context, null),
+              onPressed: () => Navigator.pop(dialogCtx, null),
               child: const Text('Cancel', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
             ),
             ElevatedButton(
@@ -357,7 +359,7 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               ),
-              onPressed: () => Navigator.pop(context, controller.text),
+              onPressed: () => Navigator.pop(dialogCtx, controller.text),
               child: const Text('OK', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
             ),
           ],
@@ -371,18 +373,361 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
           '${ApiConstants.baseUrl}/meetings/${item.id}/complete',
           data: {'note': result},
         );
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Meeting marked as completed!'), backgroundColor: Colors.green),
-          );
-          context.read<MeetingsBloc>().add(FetchMyScheduledMeetingsEvent());
-        }
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Meeting marked as completed!'), backgroundColor: Colors.green),
+        );
+        context.read<MeetingsBloc>().add(FetchMyScheduledMeetingsEvent());
       } catch (e) {
         if (mounted) {
           _showErrorToast(context, e);
         }
       }
     }
+  }
+
+  Future<void> _handleConnectGoogleCalendar(BuildContext context) async {
+    try {
+      final response = await _dioClient.dio.get('${ApiConstants.baseUrl}/google-calendar/auth-url');
+      debugPrint('[Meetings] google-calendar auth-url: ${response.data}');
+      final url = response.data is Map ? response.data['url']?.toString() : null;
+      if (url != null && url.isNotEmpty) {
+        final uri = Uri.tryParse(url);
+        if (uri != null) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint('[Meetings] get auth-url failed: $e, trying connect endpoint');
+      try {
+        final response = await _dioClient.dio.post('${ApiConstants.baseUrl}/google-calendar/connect');
+        debugPrint('[Meetings] google-calendar connect: ${response.data}');
+        final url = response.data is Map ? response.data['url']?.toString() : null;
+        if (url != null && url.isNotEmpty) {
+          final uri = Uri.tryParse(url);
+          if (uri != null) {
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
+            return;
+          }
+        }
+      } catch (_) {}
+    }
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Google Calendar integration connection initiated.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Future<void> _confirmDisconnectGoogleCalendar(BuildContext parentContext) async {
+    final s = AppStrings.of(parentContext);
+    final isDark = Theme.of(parentContext).brightness == Brightness.dark;
+    final meetingsBloc = parentContext.read<MeetingsBloc>();
+
+    final confirm = await showDialog<bool>(
+      context: parentContext,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+        title: Text(
+          s.disconnectGoogleCalendarTitle,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : const Color(0xFF0F172A),
+          ),
+        ),
+        content: Text(
+          s.disconnectGoogleCalendarConfirmation,
+          style: TextStyle(
+            fontSize: 14,
+            color: isDark ? Colors.white70 : const Color(0xFF475569),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(s.cancelButton),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFDC2626),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              s.disconnect,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      meetingsBloc.add(DisconnectGoogleCalendarEvent());
+    }
+  }
+
+  Widget _buildGoogleCalendarIntegrationBanner(
+    BuildContext context,
+    AppStrings s,
+    bool isDark,
+    GoogleCalendarStatusModel? calendarStatus,
+  ) {
+    final isConnected = calendarStatus?.connected == true;
+
+    if (isConnected) {
+      final email = calendarStatus?.googleAccountEmail ??
+          calendarStatus?.systemAccountEmail ??
+          '';
+
+      return Container(
+        width: double.infinity,
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isNarrow = constraints.maxWidth < 600;
+
+            final calendarIcon = Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF334155) : const Color(0xFFEFF6FF),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text('📅', style: TextStyle(fontSize: 20)),
+            );
+
+            final contentDetails = Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: [
+                    Text(
+                      s.googleCalendarIntegration,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF064E3B) : const Color(0xFFDCFCE7),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isDark ? const Color(0xFF047857) : const Color(0xFF86EFAC),
+                        ),
+                      ),
+                      child: Text(
+                        s.connectedStatus,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? const Color(0xFF6EE7B7) : const Color(0xFF16A34A),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  s.googleCalendarConnectedDescription(email),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            );
+
+            final disconnectButton = OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(
+                  color: isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFECACA),
+                ),
+                backgroundColor: isDark
+                    ? const Color(0xFF451A1A).withValues(alpha: 0.3)
+                    : const Color(0xFFFEF2F2),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () => _confirmDisconnectGoogleCalendar(context),
+              child: Text(
+                s.disconnect,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFFDC2626),
+                ),
+              ),
+            );
+
+            if (isNarrow) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      calendarIcon,
+                      const SizedBox(width: 12),
+                      Expanded(child: contentDetails),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: disconnectButton,
+                  ),
+                ],
+              );
+            }
+
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                calendarIcon,
+                const SizedBox(width: 12),
+                Expanded(child: contentDetails),
+                const SizedBox(width: 16),
+                disconnectButton,
+              ],
+            );
+          },
+        ),
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF334155) : const Color(0xFFEFF6FF),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text('📅', style: TextStyle(fontSize: 20)),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: [
+                        Text(
+                          s.googleCalendarIntegration,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF451A1A) : const Color(0xFFFEE2E2),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFECACA),
+                            ),
+                          ),
+                          child: Text(
+                            s.notConnected,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFFDC2626),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      s.googleCalendarConnectDescription,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ElevatedButton.icon(
+            onPressed: () => _handleConnectGoogleCalendar(context),
+            icon: const Icon(Icons.sync_rounded, size: 15),
+            label: Text(
+              s.connectGoogleCalendar,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2563EB),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -399,6 +744,14 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
               SnackBar(
                 content: Text(state.message),
                 backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          } else if (state is MyScheduledMeetingsLoadedState && state.isDisconnected) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(s.googleCalendarDisconnectedSuccess),
+                backgroundColor: const Color(0xFF16A34A),
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -461,8 +814,7 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
                             children: [
                               ElevatedButton.icon(
                                 onPressed: () => ScheduleMeetingDialog.show(context),
-                                icon: const Icon(Icons.add, size: 14),
-                                label: const Text(
+                                 label: const Text(
                                   '+ New meeting',
                                   style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
                                 ),
@@ -548,6 +900,16 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
                         ),
                       ),
 
+                      // Google Calendar Integration Banner
+                      if (state is MyScheduledMeetingsLoadedState) ...[
+                        _buildGoogleCalendarIntegrationBanner(
+                          context,
+                          s,
+                          isDark,
+                          state.calendarStatus,
+                        ),
+                      ],
+
                       // Segmented Tab Control
                       if (state is MyScheduledMeetingsLoadedState) ...[
                         Builder(
@@ -567,17 +929,20 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   _buildTabPill(
-                                    title: '${s.allTab} $total',
+                                    title: s.allTab,
+                                    count: total,
                                     isSelected: _selectedTabIndex == 0,
                                     onTap: () => setState(() => _selectedTabIndex = 0),
                                   ),
                                   _buildTabPill(
-                                    title: '${s.initiatedByMe} $initiated',
+                                    title: s.initiatedByMe,
+                                    count: initiated,
                                     isSelected: _selectedTabIndex == 1,
                                     onTap: () => setState(() => _selectedTabIndex = 1),
                                   ),
                                   _buildTabPill(
-                                    title: '${s.receivedByMe} $received',
+                                    title: s.receivedByMe,
+                                    count: received,
                                     isSelected: _selectedTabIndex == 2,
                                     onTap: () => setState(() => _selectedTabIndex = 2),
                                   ),
@@ -611,7 +976,12 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
                           ),
                         )
                       else if (state is MyScheduledMeetingsLoadedState)
-                        _buildMeetingsList(context, s, state.meetings)
+                        _buildMeetingsList(
+                          context,
+                          s,
+                          state.meetings,
+                          isCalendarConnected: state.calendarStatus?.connected == true,
+                        )
                       else
                         const SizedBox.shrink(),
                       const SizedBox(height: 40),
@@ -629,6 +999,7 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
 
   Widget _buildTabPill({
     required String title,
+    required int count,
     required bool isSelected,
     required VoidCallback onTap,
   }) {
@@ -636,26 +1007,54 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected
               ? (isDark ? const Color(0xFF0F172A) : const Color(0xFF0F172A))
               : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Text(
-          title,
-          style: TextStyle(
-            fontSize: 12.5,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-            color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+              ),
+            ),
+            const SizedBox(width: 3),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1.5),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? Colors.white.withValues(alpha: 0.2)
+                    : (isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '$count',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: isSelected ? Colors.white : (isDark ? Colors.white70 : const Color(0xFF475569)),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildMeetingsList(BuildContext context, AppStrings s, List<MeetingItemModel> meetings) {
+  Widget _buildMeetingsList(
+    BuildContext context,
+    AppStrings s,
+    List<MeetingItemModel> meetings, {
+    bool isCalendarConnected = false,
+  }) {
     final filtered = meetings.where((m) {
       if (_selectedTabIndex == 1) return m.isOrganizer == true;
       if (_selectedTabIndex == 2) return m.isOrganizer != true;
@@ -681,11 +1080,16 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
               crossAxisCount: 2,
               crossAxisSpacing: 14,
               mainAxisSpacing: 14,
-              mainAxisExtent: 220,
+              mainAxisExtent: 265,
             ),
             itemCount: filtered.length,
             itemBuilder: (context, index) {
-              return _buildMeetingCard(context, s, filtered[index]);
+              return _buildMeetingCard(
+                context,
+                s,
+                filtered[index],
+                isCalendarConnected: isCalendarConnected,
+              );
             },
           );
         }
@@ -695,28 +1099,33 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
           itemCount: filtered.length,
           separatorBuilder: (context, index) => const SizedBox(height: 14),
           itemBuilder: (context, index) {
-            return _buildMeetingCard(context, s, filtered[index]);
+            return _buildMeetingCard(
+              context,
+              s,
+              filtered[index],
+              isCalendarConnected: isCalendarConnected,
+            );
           },
         );
       },
     );
   }
 
-  Future<void> _submitRsvp(BuildContext context, MeetingItemModel item, String responseValue) async {
+  Future<void> _submitRsvp(MeetingItemModel item, String responseValue) async {
     try {
+      final meetingId = item.rawId ?? item.id;
       await _dioClient.dio.post(
-        '${ApiConstants.baseUrl}/meetings/${item.id}/rsvp',
+        '${ApiConstants.baseUrl}/meetings/$meetingId/rsvp',
         data: {'response': responseValue},
       );
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('RSVP submitted as $responseValue'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        context.read<MeetingsBloc>().add(FetchMyScheduledMeetingsEvent());
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('RSVP submitted as $responseValue'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      context.read<MeetingsBloc>().add(FetchMyScheduledMeetingsEvent());
     } catch (e) {
       if (mounted) {
         _showErrorToast(context, e);
@@ -724,13 +1133,217 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
     }
   }
 
-  void _cancelMeetingReminder(BuildContext context, MeetingItemModel item) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Reminder cancelled for ${item.title.isNotEmpty ? item.title : "meeting"}'),
-        backgroundColor: Colors.orange,
+  Future<void> _cancelMeeting(MeetingItemModel item) async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+        title: const Text('Cancel Meeting', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+        content: Text('Are you sure you want to cancel "${item.title.isNotEmpty ? item.title : "this meeting"}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('No'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFDC2626),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Yes, Cancel'),
+          ),
+        ],
       ),
     );
+    if (confirm != true) return;
+
+    try {
+      final meetingId = item.rawId ?? item.id;
+      await _dioClient.dio.patch('${ApiConstants.baseUrl}/meetings/$meetingId', data: {'status': 'cancelled'});
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Meeting cancelled successfully'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      context.read<MeetingsBloc>().add(FetchMyScheduledMeetingsEvent());
+    } catch (e) {
+      if (mounted) {
+        _showErrorToast(context, e);
+      }
+    }
+  }
+
+  Future<void> _showRescheduleDialog(MeetingItemModel item) async {
+    DateTime selectedDate = DateTime.now().add(const Duration(days: 1));
+    TimeOfDay selectedTime = const TimeOfDay(hour: 14, minute: 0);
+    final noteController = TextEditingController();
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (dialogCtx, setDialogState) {
+          final isDark = Theme.of(dialogCtx).brightness == Brightness.dark;
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+            title: const Text(
+              'Request Time Change',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Current: ${_formatMeetingDate(item.startsAt)}',
+                    style: TextStyle(fontSize: 12, color: isDark ? Colors.white60 : Colors.black54),
+                  ),
+                  const SizedBox(height: 14),
+                  const Text('New Date & Time *', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 6),
+                  InkWell(
+                    onTap: () async {
+                      final pickedDate = await showDatePicker(
+                        context: dialogCtx,
+                        initialDate: selectedDate,
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime.now().add(const Duration(days: 90)),
+                      );
+                      if (pickedDate != null) {
+                        if (!dialogCtx.mounted) return;
+                        final pickedTime = await showTimePicker(
+                          context: dialogCtx,
+                          initialTime: selectedTime,
+                        );
+                        if (pickedTime != null) {
+                          setDialogState(() {
+                            selectedDate = pickedDate;
+                            selectedTime = pickedTime;
+                          });
+                        }
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: isDark ? Colors.white24 : Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '${selectedDate.day}/${selectedDate.month}/${selectedDate.year} ${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}',
+                            style: const TextStyle(fontSize: 13),
+                          ),
+                          const Icon(Icons.calendar_today_outlined, size: 16),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  const Text('Reason / Note', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: noteController,
+                    maxLines: 2,
+                    decoration: InputDecoration(
+                      hintText: 'e.g. Schedule conflict with urgent class',
+                      hintStyle: TextStyle(fontSize: 12, color: isDark ? Colors.white38 : Colors.black38),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      contentPadding: const EdgeInsets.all(10),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogCtx, false),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2563EB),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                onPressed: () => Navigator.pop(dialogCtx, true),
+                child: const Text('Submit Request'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    if (result == true) {
+      try {
+        final meetingId = item.rawId ?? item.id;
+        final newDateTime = DateTime(
+          selectedDate.year,
+          selectedDate.month,
+          selectedDate.day,
+          selectedTime.hour,
+          selectedTime.minute,
+        ).toUtc().toIso8601String();
+
+        await _dioClient.dio.post(
+          '${ApiConstants.baseUrl}/meetings/$meetingId/reschedule',
+          data: {
+            'reschedule_start': newDateTime,
+            'note': noteController.text.trim(),
+          },
+        );
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Time change request submitted successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        context.read<MeetingsBloc>().add(FetchMyScheduledMeetingsEvent());
+      } catch (e) {
+        if (mounted) {
+          _showErrorToast(context, e);
+        }
+      }
+    }
+  }
+
+  Future<void> _handleRescheduleDecision(MeetingItemModel item, bool accept) async {
+    try {
+      final meetingId = item.rawId ?? item.id;
+      final endpoint = accept ? 'accept' : 'decline';
+      try {
+        await _dioClient.dio.post('${ApiConstants.baseUrl}/meetings/$meetingId/reschedule/$endpoint');
+      } catch (err) {
+        if (item.rescheduleId != null) {
+          await _dioClient.dio.post('${ApiConstants.baseUrl}/meetings/$meetingId/reschedule/${item.rescheduleId}/$endpoint');
+        } else {
+          rethrow;
+        }
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(accept ? 'Reschedule request accepted!' : 'Reschedule request declined.'),
+          backgroundColor: accept ? Colors.green : Colors.orange,
+        ),
+      );
+      context.read<MeetingsBloc>().add(FetchMyScheduledMeetingsEvent());
+    } catch (e) {
+      if (mounted) {
+        _showErrorToast(context, e);
+      }
+    }
   }
 
   String _formatMeetingDate(String isoString) {
@@ -772,22 +1385,22 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
     );
   }
 
-  Widget _buildMeetingCard(BuildContext context, AppStrings s, MeetingItemModel item) {
+  Widget _buildMeetingCard(
+    BuildContext context,
+    AppStrings s,
+    MeetingItemModel item, {
+    bool isCalendarConnected = false,
+  }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final authState = context.watch<AuthBloc>().state;
-    bool isDirector = false;
+    String currentUserName = '';
+    String role = '';
     bool isTeamLead = false;
-    bool isManager = false;
     if (authState is AuthenticatedState) {
-      final role = authState.userProfile.role.toLowerCase();
+      currentUserName = authState.userProfile.name;
+      role = authState.userProfile.role.toLowerCase();
       final roleLabel = authState.userProfile.roleLabel.toLowerCase();
-      if (role.contains('director') || roleLabel.contains('director')) {
-        isDirector = true;
-      }
-      if (role.contains('manager') || roleLabel.contains('manager')) {
-        isManager = true;
-      }
       if (role.contains('team lead') ||
           role.contains('team_lead') ||
           role.contains('team leader') ||
@@ -802,16 +1415,38 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
       }
     }
 
-    final isCancelled = item.status.toLowerCase() == 'cancelled' ||
-        item.status.toLowerCase() == 'canceled';
-    final isPendingCompletion = item.completionStatus?.toLowerCase() == 'pending';
-    final isApprovedCompletion = item.completionStatus?.toLowerCase() == 'approved';
-    final isCompleted = item.status.toLowerCase() == 'completed' ||
-        isApprovedCompletion ||
-        item.completionStatus?.toLowerCase() == 'completed';
-    final showMeetingHappened = !isCancelled && (item.completionStatus == null || item.completionStatus!.trim().isEmpty);
+    final isCancelled = item.isCancelled;
+    final isPendingCompletion = item.isPendingCompletion;
+    final isCompleted = item.isCompleted;
+
+    DateTime? meetingStart;
+    try {
+      meetingStart = DateTime.parse(item.startsAt);
+    } catch (_) {}
+    final isPastMeeting = meetingStart != null && meetingStart.isBefore(DateTime.now());
+
+    final isInvitee = !item.isOrganizer && (
+      item.myResponse != null ||
+      item.myRequired != null ||
+      (currentUserName.isNotEmpty && item.invitees.any((i) => i.name.toLowerCase().trim() == currentUserName.toLowerCase().trim())) ||
+      (role.contains('director') && item.invitees.any((i) => i.name.toLowerCase().trim() == 'test_dir')) ||
+      (isTeamLead && item.invitees.any((i) => i.name.toLowerCase().trim() == 'test_tl'))
+    );
+    final isParticipant = item.isOrganizer || isInvitee;
+
+    final showMeetingHappened = isPastMeeting && !isCancelled && !isCompleted && !isPendingCompletion;
     final isAttended = item.myAttended == true || _attendedMeetingIds.contains(item.id) || (item.rawId != null && _attendedMeetingIds.contains(item.rawId));
-    final showRsvp = !isCancelled && !isAttended && item.myResponse != null && item.myResponse!.toLowerCase() == 'pending';
+    final showRsvp = !isCancelled && !isCompleted && isInvitee && item.myResponse != null && item.myResponse!.toLowerCase() == 'pending';
+    final canCancel = !isCancelled && !isCompleted && (item.isOrganizer || !isTeamLead);
+
+    Color accentColor;
+    if (isCancelled) {
+      accentColor = const Color(0xFFDC2626);
+    } else if (isCompleted) {
+      accentColor = const Color(0xFF10B981);
+    } else {
+      accentColor = const Color(0xFF1E3A8A);
+    }
 
     return Container(
       decoration: BoxDecoration(
@@ -834,10 +1469,10 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Left Blue / Red Accent Strip
+              // Left Accent Strip (Red for Cancelled, Green for Completed, Navy for Scheduled)
               Container(
-                width: 4,
-                color: isCancelled ? const Color(0xFFDC2626) : const Color(0xFF1E3A8A),
+                width: 4.5,
+                color: accentColor,
               ),
               Expanded(
                 child: Padding(
@@ -859,8 +1494,25 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
                               color: isDark ? Colors.white : const Color(0xFF0F172A),
                             ),
                           ),
-                          if (item.isGoogleMeet)
+                          if (item.hasActiveGoogleMeet)
                             _buildGoogleMeetBadge(context, item),
+                          if (item.isOneOnOne == true)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFEDD5),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: const Color(0xFFFDBA74)),
+                              ),
+                              child: const Text(
+                                '1:1 with Director',
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFFC2410C),
+                                ),
+                              ),
+                            ),
                           if (isCancelled)
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -893,7 +1545,7 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
                                 ),
                               ),
                             )
-                          else if (isApprovedCompletion)
+                          else if (isCompleted)
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
@@ -901,7 +1553,7 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Text(
-                                'Completed · Approved',
+                                'Completed',
                                 style: TextStyle(
                                   fontSize: 10.5,
                                   fontWeight: FontWeight.bold,
@@ -920,7 +1572,7 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
-                              '${_formatMeetingDate(item.startsAt)} · ${item.location ?? "In person"}',
+                              '${_formatMeetingDate(item.startsAt)} · ${item.location ?? "Online"}',
                               style: TextStyle(
                                 fontSize: 11,
                                 color: isDark ? Colors.white60 : Colors.black54,
@@ -933,7 +1585,7 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
 
                       // Organizer
                       Text(
-                        'Organizer: ${item.organizer ?? "Vamsi"}',
+                        'Organizer: ${item.organizer?.isNotEmpty == true ? item.organizer! : (item.branchName ?? "Organizer")}',
                         style: TextStyle(
                           fontSize: 12,
                           color: isDark ? Colors.white.withValues(alpha: 0.6) : Colors.grey.shade600,
@@ -947,16 +1599,31 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
                           spacing: 6,
                           runSpacing: 6,
                           children: item.invitees.map((inv) {
-                            final isAccepted = (inv.response ?? '').toLowerCase() == 'accepted';
+                            final resp = (inv.response ?? '').toLowerCase();
+                            final isAccepted = resp == 'accepted';
+                            final isDeclined = resp == 'declined';
                             final isOptional = inv.required == false;
-                            final label = '${inv.name}${isOptional ? " (opt)" : ""}${isAccepted ? " ✓" : ""}';
+                            final suffix = isAccepted ? ' ✓' : (isDeclined ? ' ✕' : '');
+                            final label = '${inv.name}${isOptional ? " (opt)" : ""}$suffix';
+
+                            Color chipBg;
+                            Color chipText;
+
+                            if (isAccepted) {
+                              chipBg = isDark ? const Color(0xFF064E3B) : const Color(0xFFDCFCE7);
+                              chipText = isDark ? const Color(0xFF86EFAC) : const Color(0xFF15803D);
+                            } else if (isDeclined) {
+                              chipBg = isDark ? const Color(0xFF7F1D1D).withValues(alpha: 0.4) : const Color(0xFFFEE2E2);
+                              chipText = isDark ? const Color(0xFFFCA5A5) : const Color(0xFFDC2626);
+                            } else {
+                              chipBg = isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9);
+                              chipText = isDark ? Colors.white70 : const Color(0xFF475569);
+                            }
 
                             return Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: isAccepted
-                                    ? (isDark ? const Color(0xFF064E3B) : const Color(0xFFDCFCE7))
-                                    : (isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
+                                color: chipBg,
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
@@ -964,14 +1631,93 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w600,
-                                  color: isAccepted
-                                      ? (isDark ? const Color(0xFF86EFAC) : const Color(0xFF15803D))
-                                      : (isDark ? Colors.white70 : const Color(0xFF475569)),
+                                  color: chipText,
                                 ),
                               ),
                             );
                           }).toList(),
                         ),
+
+                      // Reschedule Banner
+                      if (item.hasReschedule) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? const Color(0xFF451A03).withValues(alpha: 0.4)
+                                : const Color(0xFFFEF3C7).withValues(alpha: 0.7),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: const Color(0xFFF59E0B).withValues(alpha: 0.5),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.access_time_rounded, size: 13, color: Color(0xFFD97706)),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: RichText(
+                                      text: TextSpan(
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: isDark ? const Color(0xFFFDE68A) : const Color(0xFF92400E),
+                                        ),
+                                        children: [
+                                          TextSpan(
+                                            text: '${item.rescheduleBy ?? "Someone"} requested a new time: ',
+                                            style: const TextStyle(fontWeight: FontWeight.w600),
+                                          ),
+                                          TextSpan(
+                                            text: _formatMeetingDate(item.rescheduleStart ?? ''),
+                                            style: const TextStyle(fontWeight: FontWeight.bold),
+                                          ),
+                                          if (item.rescheduleNote != null && item.rescheduleNote!.trim().isNotEmpty)
+                                            TextSpan(text: ' — ${item.rescheduleNote}'),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (item.isOrganizer && item.rescheduleIsMine == false && !isCancelled && !isCompleted) ...[
+                                const SizedBox(height: 5),
+                                Row(
+                                  children: [
+                                    const SizedBox(width: 19),
+                                    InkWell(
+                                      onTap: () => _handleRescheduleDecision(item, true),
+                                      child: const Text(
+                                        'Accept & move',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF16A34A),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 14),
+                                    InkWell(
+                                      onTap: () => _handleRescheduleDecision(item, false),
+                                      child: const Text(
+                                        'Decline',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFFDC2626),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
 
                       // RSVP Options (Yes / No / Maybe)
                       if (showRsvp) ...[
@@ -986,7 +1732,7 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
                               ),
                             ),
                             InkWell(
-                              onTap: () => _submitRsvp(context, item, 'accepted'),
+                              onTap: () => _submitRsvp(item, 'accepted'),
                               child: const Text(
                                 'Yes',
                                 style: TextStyle(
@@ -996,9 +1742,9 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 10),
+                            const SizedBox(width: 12),
                             InkWell(
-                              onTap: () => _submitRsvp(context, item, 'declined'),
+                              onTap: () => _submitRsvp(item, 'declined'),
                               child: const Text(
                                 'No',
                                 style: TextStyle(
@@ -1008,9 +1754,9 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 10),
+                            const SizedBox(width: 12),
                             InkWell(
-                              onTap: () => _submitRsvp(context, item, 'tentative'),
+                              onTap: () => _submitRsvp(item, 'tentative'),
                               child: Text(
                                 'Maybe',
                                 style: TextStyle(
@@ -1020,30 +1766,129 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 14),
-                            InkWell(
-                              onTap: () => _markAttended(context, item),
-                              child: const Text(
-                                'Join / Mark attended',
-                                style: TextStyle(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF2563EB),
-                                ),
-                              ),
-                            ),
                           ],
                         ),
                       ],
                       const SizedBox(height: 10),
 
                       // Action Links Row
-                      Row(
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 12,
+                        runSpacing: 8,
                         children: [
-                          if (showMeetingHappened) ...[
+                          if (isParticipant && !isCancelled && item.googleMeetUrl != null && item.googleMeetUrl!.trim().isNotEmpty)
+                            ElevatedButton.icon(
+                              onPressed: () async {
+                                final meetUrl = item.googleMeetUrl;
+                                if (meetUrl != null && meetUrl.trim().isNotEmpty) {
+                                  final uri = Uri.tryParse(meetUrl.trim());
+                                  if (uri != null) {
+                                    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                    if (!launched && context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('Could not open $meetUrl')),
+                                      );
+                                    }
+                                  }
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(s.noMeetingLinkAvailable)),
+                                  );
+                                }
+                              },
+                              icon: const Icon(Icons.videocam_rounded, size: 14, color: Colors.white),
+                              label: Text(
+                                s.joinGoogleMeet,
+                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF2563EB),
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                visualDensity: VisualDensity.compact,
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                              ),
+                            ),
+                          if (isParticipant && !isCancelled && item.hasActiveGoogleMeet)
                             InkWell(
-                              onTap: () => _showMeetingHappenedDialog(context, item),
+                              onTap: () {
+                                final meetUrl = item.googleMeetUrl ?? '';
+                                if (meetUrl.trim().isNotEmpty) {
+                                  Clipboard.setData(ClipboardData(text: meetUrl.trim()));
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(s.meetingLinkCopied),
+                                      backgroundColor: const Color(0xFF16A34A),
+                                      duration: const Duration(seconds: 2),
+                                    ),
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(s.noMeetingLinkAvailable)),
+                                  );
+                                }
+                              },
                               child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.link_rounded, size: 14, color: Color(0xFF2563EB)),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    s.needLink,
+                                    style: const TextStyle(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF2563EB),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          if (isInvitee && !isAttended && !isCancelled && !isCompleted)
+                            InkWell(
+                              onTap: () => _markAttended(item),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: const [
+                                  Icon(Icons.people_alt_outlined, size: 14, color: Color(0xFF2563EB)),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'Mark attended',
+                                    style: TextStyle(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF2563EB),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          if (isInvitee && !isCancelled && !isCompleted)
+                            InkWell(
+                              onTap: () => _showRescheduleDialog(item),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.access_time_rounded, size: 14, color: isDark ? Colors.white70 : const Color(0xFF475569)),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'Request time change',
+                                    style: TextStyle(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: isDark ? Colors.white70 : const Color(0xFF475569),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          if (showMeetingHappened)
+                            InkWell(
+                              onTap: () => _showMeetingHappenedDialog(item),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
                                     '✓ ${s.meetingHappenedButton}',
@@ -1056,11 +1901,9 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
                                 ],
                               ),
                             ),
-                            const SizedBox(width: 14),
-                          ],
-                          if (!isTeamLead && !isCompleted && !isCancelled) ...[
+                          if (canCancel)
                             InkWell(
-                              onTap: () => _cancelMeetingReminder(context, item),
+                              onTap: () => _cancelMeeting(item),
                               child: const Text(
                                 'Cancel',
                                 style: TextStyle(
@@ -1070,8 +1913,6 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 14),
-                          ],
                           InkWell(
                             onTap: () => _showMeetingReminder(context, item),
                             child: Text(

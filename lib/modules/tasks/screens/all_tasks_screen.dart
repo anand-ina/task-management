@@ -326,7 +326,6 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
 
                         // Status Checkbox Legend Row
                         _buildStatusCheckboxRow(context, s),
-                        const SizedBox(height: 12),
 
                         // Select All Checkbox Row
                         Row(
@@ -353,7 +352,6 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
 
                         // Tasks List
                         if (items.isEmpty)
@@ -1312,12 +1310,14 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.calendar_today_rounded, size: 9, color: Colors.grey),
+
+                      SizedBox(width: 10,),
+                      const Icon(Icons.calendar_today_rounded, size: 10, color: Colors.grey),
                       const SizedBox(width: 1),
                       Text(
                         _formatDate(item.dueDate),
                         style: const TextStyle(
-                          fontSize: 10,
+                          fontSize: 11,
                           fontWeight: FontWeight.w600,
                           color: Colors.grey,
                         ),

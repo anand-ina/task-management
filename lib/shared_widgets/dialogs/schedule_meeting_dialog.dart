@@ -30,8 +30,10 @@ class _ScheduleMeetingDialogState extends State<ScheduleMeetingDialog> {
   int? _selectedBranchId;
 
   bool _isMandatory1on1 = false;
+  bool _syncToGoogle = true;
+  bool _createGoogleMeet = true;
   String _selectedDuration = '30 min';
-  String _selectedLocation = 'In person';
+  String _selectedLocation = 'Online · Google Meet';
 
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _agendaController = TextEditingController();
@@ -126,7 +128,6 @@ class _ScheduleMeetingDialogState extends State<ScheduleMeetingDialog> {
     try {
       final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
       final timeStr = '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}';
-      final endsAtStr = '${dateStr}T$timeStr';
 
       final inviteesList = _selectedInvitees.entries.map((e) {
         return {
@@ -135,15 +136,28 @@ class _ScheduleMeetingDialogState extends State<ScheduleMeetingDialog> {
         };
       }).toList();
 
+      final durationMinutes = int.tryParse(_selectedDuration.replaceAll(RegExp(r'[^0-9]'), '')) ?? 30;
+      final endsAtDateTime = DateTime(
+        _selectedDate.year,
+        _selectedDate.month,
+        _selectedDate.day,
+        _selectedTime.hour,
+        _selectedTime.minute,
+      ).add(Duration(minutes: durationMinutes));
+      final endsAtStr = '${DateFormat('yyyy-MM-dd').format(endsAtDateTime)}T${endsAtDateTime.hour.toString().padLeft(2, '0')}:${endsAtDateTime.minute.toString().padLeft(2, '0')}';
+
       final payload = {
         'title': title,
         'date': dateStr,
         'time': timeStr,
+        'duration': durationMinutes,
         'endsAt': endsAtStr,
         'branchId': _selectedBranchId ?? 1,
         'agenda': _agendaController.text.trim().isNotEmpty ? _agendaController.text.trim() : 'test',
-        'location': _selectedLocation,
+        'location': _createGoogleMeet ? 'Online · Google Meet' : _selectedLocation,
         'isOneOnOne': _isMandatory1on1,
+        'syncToGoogle': _syncToGoogle,
+        'createGoogleMeet': _createGoogleMeet,
         'invitees': inviteesList.isNotEmpty ? inviteesList : [{'userId': 6, 'required': true}, {'userId': 10, 'required': true}],
       };
 
@@ -263,6 +277,87 @@ class _ScheduleMeetingDialogState extends State<ScheduleMeetingDialog> {
                                   ),
                                   TextSpan(
                                     text: ' — the Director is added automatically; mark it completed once done.',
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Sync with Google Calendar Checkbox
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            height: 22,
+                            width: 22,
+                            child: Checkbox(
+                              value: _syncToGoogle,
+                              activeColor: const Color(0xFF2563EB),
+                              onChanged: (val) => setState(() => _syncToGoogle = val ?? false),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: RichText(
+                              text: TextSpan(
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: isDark ? Colors.grey[300] : const Color(0xFF334155),
+                                ),
+                                children: const [
+                                  TextSpan(text: 'Sync with '),
+                                  TextSpan(
+                                    text: 'Google Calendar',
+                                    style: TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  TextSpan(
+                                    text: ' (sends Google invites to participants)',
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Create Google Meet video link automatically Checkbox
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            height: 22,
+                            width: 22,
+                            child: Checkbox(
+                              value: _createGoogleMeet,
+                              activeColor: const Color(0xFF2563EB),
+                              onChanged: (val) => setState(() {
+                                _createGoogleMeet = val ?? false;
+                                if (_createGoogleMeet) {
+                                  _selectedLocation = 'Online · Google Meet';
+                                }
+                              }),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: RichText(
+                              text: TextSpan(
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: isDark ? Colors.grey[300] : const Color(0xFF334155),
+                                ),
+                                children: const [
+                                  TextSpan(text: 'Create '),
+                                  TextSpan(
+                                    text: 'Google Meet video link',
+                                    style: TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  TextSpan(
+                                    text: ' automatically',
                                   ),
                                 ],
                               ),

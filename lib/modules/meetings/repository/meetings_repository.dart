@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/dio_client.dart';
 import '../../dashboard/models/branch_model.dart';
 import '../models/availability_model.dart';
+import '../models/google_calendar_status_model.dart';
 import '../models/meeting_model.dart';
 import '../models/one_on_one_pending_model.dart';
 
@@ -69,5 +71,44 @@ class MeetingsRepository {
       branches: branches,
       availability: availability,
     );
+  }
+
+  Future<GoogleCalendarStatusModel?> getGoogleCalendarStatus() async {
+    try {
+      final response = await _dioClient.dio.get(ApiConstants.googleCalendarStatus);
+      debugPrint('---------------- [MeetingsService: getGoogleCalendarStatus] ----------------');
+      debugPrint('Service URL: ${ApiConstants.googleCalendarStatus}');
+      debugPrint('Service Response: ${response.data}');
+      debugPrint('-----------------------------------------------------------------------------');
+      if (response.data is Map<String, dynamic>) {
+        return GoogleCalendarStatusModel.fromJson(response.data as Map<String, dynamic>);
+      }
+    } catch (e) {
+      debugPrint('[MeetingsRepository] getGoogleCalendarStatus error: $e');
+    }
+    return null;
+  }
+
+  Future<bool> disconnectGoogleCalendar() async {
+    try {
+      debugPrint('---------------- [MeetingsService: disconnectGoogleCalendar] ----------------');
+      debugPrint('Service URL: ${ApiConstants.googleCalendarDisconnect}');
+      debugPrint('Service Method: POST');
+      debugPrint('Service Payload: {}');
+      final response = await _dioClient.dio.post(
+        ApiConstants.googleCalendarDisconnect,
+        data: {},
+      );
+      debugPrint('Service Status Code: ${response.statusCode}');
+      debugPrint('Service Response: ${response.data}');
+      debugPrint('-----------------------------------------------------------------------------');
+      if (response.data is Map<String, dynamic>) {
+        return response.data['success'] == true;
+      }
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      debugPrint('[MeetingsRepository] disconnectGoogleCalendar error: $e');
+      rethrow;
+    }
   }
 }

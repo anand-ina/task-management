@@ -34,3 +34,22 @@ class DecideBudgetEvent extends ApprovalsEvent {
   @override
   List<Object?> get props => [id, decision];
 }
+
+class FetchIndentDetailEvent extends ApprovalsEvent {
+  final int id;
+
+  const FetchIndentDetailEvent(this.id);
+
+  @override
+  List<Object?> get props => [id];
+}
+
+class CreateIndentEvent extends ApprovalsEvent {
+  final Map<String, dynamic> payload;
+
+  const CreateIndentEvent(this.payload);
+
+  @override
+  List<Object?> get props => [payload];
+}
+

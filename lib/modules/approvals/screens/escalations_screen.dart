@@ -24,8 +24,6 @@ class EscalationsScreen extends StatefulWidget {
 }
 
 class _EscalationsScreenState extends State<EscalationsScreen> {
-  int _selectedTabIndex = 0; // 0: Received by Me, 1: Initiated by Me
-
   @override
   void initState() {
     super.initState();
@@ -34,8 +32,6 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     final authState = context.watch<AuthBloc>().state;
     bool isAcademicExecutive = false;
     bool isTeamLead = false;
@@ -82,9 +78,9 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                     children: [
                       BlocBuilder<ApprovalsBloc, ApprovalsState>(
                         builder: (context, state) {
-                          int awaitingCount = 0;
+                          int totalCount = 0;
                           if (state is ApprovalsLoadedState) {
-                            awaitingCount = state.escalationsToReview.length;
+                            totalCount = state.escalations.length;
                           }
                           return Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -93,7 +89,7 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
-                              '$awaitingCount ${ApprovalsConstStrings.awaitingYou}',
+                              '$totalCount',
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
@@ -132,46 +128,6 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Segmented Pill Tabs (Only visible when NOT Academic Executive)
-              if (!isAcademicExecutive) ...[
-                BlocBuilder<ApprovalsBloc, ApprovalsState>(
-                  builder: (context, state) {
-                    int receivedCount = 0;
-                    int initiatedCount = 0;
-                    if (state is ApprovalsLoadedState) {
-                      receivedCount = state.escalationsToReview.length;
-                      initiatedCount = state.escalations.length;
-                    }
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.chipBg(context),
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      padding: const EdgeInsets.all(4),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _buildTabButton(
-                            title: ApprovalsConstStrings.receivedByMe,
-                            badgeCount: receivedCount,
-                            isSelected: _selectedTabIndex == 0,
-                            onTap: () => setState(() => _selectedTabIndex = 0),
-                          ),
-                          const SizedBox(width: 4),
-                          _buildTabButton(
-                            title: ApprovalsConstStrings.initiatedByMe,
-                            badgeCount: initiatedCount,
-                            isSelected: _selectedTabIndex == 1,
-                            onTap: () => setState(() => _selectedTabIndex = 1),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
-              ],
               BlocBuilder<ApprovalsBloc, ApprovalsState>(
                 builder: (context, state) {
                   if (state is ApprovalsLoadingState) {
@@ -204,11 +160,7 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                   }
 
                   if (state is ApprovalsLoadedState) {
-                    final items = isAcademicExecutive
-                        ? [...state.escalationsToReview, ...state.escalations]
-                        : (_selectedTabIndex == 0
-                            ? state.escalationsToReview
-                            : state.escalations);
+                    final items = state.escalations;
 
                     if (items.isEmpty) {
                       return _buildEmptyState();
@@ -236,57 +188,7 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
   );
 }
 
-  Widget _buildTabButton({
-    required String title,
-    int badgeCount = 0,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.navyDark
-              : AppColors.transparent,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: isSelected ? AppColors.white : AppColors.textSecondary(context),
-              ),
-            ),
-            if (badgeCount > 0) ...[
-              const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: isSelected ? AppColors.slate700 : AppColors.slate200,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  '$badgeCount',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: isSelected ? AppColors.white : AppColors.black,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
+
 
   Widget _buildEmptyState() {
     return Center(
@@ -307,8 +209,6 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
   }
 
   Widget _buildEscalationCard(EscalationModel item, bool isAcademicExecutive, bool isReadOnlyUser) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     final typeLabel = item.type == 'date_change'
         ? AppStrings.of(context).targetDateChange
         : _capitalize(item.type ?? 'Escalation');
@@ -327,7 +227,23 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
 
     final subtitleText = '${item.title ?? ""}$raisedByText$createdAtText$proposedDateText'.trim();
 
-    return Container(
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: (item.taskId != null && item.taskId! > 0)
+          ? () async {
+              await TaskDetailDialog.show(
+                context,
+                taskId: item.taskId!,
+                isReadOnly: isReadOnlyUser,
+                canCloneTask: true,
+                showOnlyCloneAndCancel: true,
+              );
+              if (mounted) {
+                context.read<ApprovalsBloc>().add(FetchEscalationsDataEvent());
+              }
+            }
+          : null,
+      child: Container(
       decoration: BoxDecoration(
         color: AppColors.card(context),
         borderRadius: BorderRadius.circular(12),
@@ -442,10 +358,10 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                       ],
                       const SizedBox(height: 12),
 
-                      // Action Buttons (Resolve · Approve, Reject & View -> only when NOT Academic Executive)
+                      // Action Buttons (Resolve · Approve, Reject & View)
                       Row(
                         children: [
-                          if (!isAcademicExecutive && _selectedTabIndex == 0) ...[
+                          if (!isAcademicExecutive && item.status.toLowerCase() == 'pending') ...[
                             InkWell(
                               onTap: () {
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -484,17 +400,19 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                               ),
                             ),
                             const SizedBox(width: 3),
-                            const Spacer(),
+                          ],
+                          const Spacer(),
+                          if (item.taskId != null && item.taskId! > 0)
                             InkWell(
                               onTap: () async {
                                 await TaskDetailDialog.show(
                                   context,
-                                  taskId: item.taskId ?? 0,
+                                  taskId: item.taskId!,
                                   isReadOnly: isReadOnlyUser,
                                   canCloneTask: true,
                                   showOnlyCloneAndCancel: true,
                                 );
-                                if (context.mounted) {
+                                if (mounted) {
                                   context.read<ApprovalsBloc>().add(FetchEscalationsDataEvent());
                                 }
                               },
@@ -511,7 +429,6 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                                 ],
                               ),
                             ),
-                          ],
                         ],
                       ),
                     ],
@@ -522,8 +439,9 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   String _capitalize(String s) => s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
 

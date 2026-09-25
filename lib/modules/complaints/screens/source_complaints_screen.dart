@@ -305,8 +305,7 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
               }
             });
           },
-          icon: const Icon(Icons.add, size: 16, color: AppColors.white),
-          label: Text(
+           label: Text(
             s.raiseRequestButton,
             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.white),
           ),

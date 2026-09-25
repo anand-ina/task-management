@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../models/google_calendar_status_model.dart';
+import '../models/meeting_model.dart';
 import '../repository/meetings_repository.dart';
 import 'meetings_event.dart';
 import 'meetings_state.dart';
@@ -15,6 +17,7 @@ class MeetingsBloc extends Bloc<MeetingsEvent, MeetingsState> {
     on<FetchMyScheduledMeetingsEvent>(_onFetchMyScheduledMeetings);
     on<FetchScheduleLookupsEvent>(_onFetchScheduleLookups);
     on<FetchMeetingCalendarEvent>(_onFetchMeetingCalendar);
+    on<DisconnectGoogleCalendarEvent>(_onDisconnectGoogleCalendar);
   }
 
   String _parseError(dynamic e) {
@@ -67,8 +70,13 @@ class MeetingsBloc extends Bloc<MeetingsEvent, MeetingsState> {
   ) async {
     emit(MeetingsLoadingState());
     try {
-      final meetings = await repository.getMyScheduledMeetings();
-      emit(MyScheduledMeetingsLoadedState(meetings));
+      final results = await Future.wait([
+        repository.getMyScheduledMeetings(),
+        repository.getGoogleCalendarStatus(),
+      ]);
+      final meetings = results[0] as List<MeetingItemModel>;
+      final calendarStatus = results[1] as GoogleCalendarStatusModel?;
+      emit(MyScheduledMeetingsLoadedState(meetings, calendarStatus: calendarStatus));
     } catch (e) {
       emit(MeetingsErrorState(_parseError(e)));
     }
@@ -94,6 +102,33 @@ class MeetingsBloc extends Bloc<MeetingsEvent, MeetingsState> {
     try {
       final data = await repository.getScheduleLookups(atTime: event.atTime);
       emit(ScheduleLookupsLoadedState(data));
+    } catch (e) {
+      emit(MeetingsErrorState(_parseError(e)));
+    }
+  }
+
+  Future<void> _onDisconnectGoogleCalendar(
+    DisconnectGoogleCalendarEvent event,
+    Emitter<MeetingsState> emit,
+  ) async {
+    emit(MeetingsLoadingState());
+    try {
+      final success = await repository.disconnectGoogleCalendar();
+      if (success) {
+        final results = await Future.wait([
+          repository.getMyScheduledMeetings(),
+          repository.getGoogleCalendarStatus(),
+        ]);
+        final meetings = results[0] as List<MeetingItemModel>;
+        final calendarStatus = results[1] as GoogleCalendarStatusModel?;
+        emit(MyScheduledMeetingsLoadedState(
+          meetings,
+          calendarStatus: calendarStatus,
+          isDisconnected: true,
+        ));
+      } else {
+        emit(MeetingsErrorState('Failed to disconnect Google Calendar'));
+      }
     } catch (e) {
       emit(MeetingsErrorState(_parseError(e)));
     }

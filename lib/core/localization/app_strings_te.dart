@@ -1336,6 +1336,8 @@ class AppStringsTe extends AppStrings {
   @override
   String get receivedFromStudent => 'విద్యార్థి';
   @override
+  String get receivedFromStaff => 'సిబ్బంది సభ్యుడు';
+  @override
   String get channelLabel => 'మాధ్యమం *';
   @override
   String get whichGroupPlaceLabel => 'ఏ సమూహం / ప్రదేశం (ఐచ్ఛికం)';
@@ -1369,6 +1371,10 @@ class AppStringsTe extends AppStrings {
   @override
   String get keepParentAnonymousSubtext => 'పేరు, మొబైల్ మరియు ఆధారాలు క్యాంపస్ హెడ్ మరియు డైరెక్టర్‌కు మాత్రమే కనిపిస్తాయి. టికెట్ నంబర్ పంపబడుతుంది.';
   @override
+  String get raiseAnonymously => 'దీన్ని అనామకంగా నమోదు చేయండి';
+  @override
+  String get raiseAnonymouslyDesc => 'మీ పేరు డైరెక్టర్‌కు మాత్రమే కనిపిస్తుంది — సంబంధిత వ్యక్తికి లేదా విభాగానికి కనిపించదు.';
+  @override
   String get aboutLabel => 'దేని గురించి *';
   @override
   String get aboutStaffMember => 'సిబ్బంది సభ్యుడు';
@@ -1382,6 +1388,10 @@ class AppStringsTe extends AppStrings {
   String get aboutGeneral => 'సాధారణ';
   @override
   String get staffMemberSubtext => 'సిబ్బంది సభ్యుడు (పేరు చెప్పకూడదనుకుంటే "పేరు లేదు" అని వదిలేయండి)';
+  @override
+  String get staffMemberDirectorDecides => 'పేరు పేర్కొనలేదు — డైరెక్టర్ నిర్ణయిస్తారు';
+  @override
+  String staffMemberAppreciationSubtitle(int points) => '(పేరు పేర్కొనలేదు -> ఆ $points పాయింట్లు ఎవరికి ఇవ్వాలో డైరెక్టర్ నిర్ణయిస్తారు)';
   @override
   String get notNamedOption => 'పేరు లేదు — వారు చెప్పకూడదనుకుంటున్నారు';
 
@@ -1422,6 +1432,22 @@ class AppStringsTe extends AppStrings {
       'టికెట్ $ticketNo మరియు టాస్క్ $taskNo సృష్టించబడి $ownerNameకి కేటాయించబడతాయి. తల్లిదండ్రులు వాట్సాప్‌లో టికెట్ నంబర్‌ను పొందుతారు.';
   @override
   String get registerComplaintButton => 'ఫిర్యాదును నమోదు చేయండి';
+  @override
+  String get recordAppreciationButton => 'అభినందన నమోదు చేయండి';
+  @override
+  String get saveDraftButton => 'డ్రాఫ్ట్ సేవ్ చేయండి';
+  @override
+  String savedDraftsCount(int count) => '$count సేవ్ చేసిన డ్రాఫ్ట్${count == 1 ? '' : 'లు'}';
+  @override
+  String get resumeButton => 'కొనసాగించు';
+  @override
+  String get draftSavedSuccess => 'డ్రాఫ్ట్ విజయవంతంగా సేవ్ చేయబడింది';
+  @override
+  String get draftDeletedSuccess => 'డ్రాఫ్ట్ తొలగించబడింది';
+  @override
+  String get draftResumedSuccess => 'డ్రాఫ్ట్ లోడ్ చేయబడింది';
+  @override
+  String get fillRequiredFieldsDraftError => 'డ్రాఫ్ట్ సేవ్ చేయడానికి కనీసం విద్యార్థి పేరు, సిబ్బంది లేదా వివరణను నమోదు చేయండి';
   @override
   String get complaintRegisteredTitle => 'ఫిర్యాదు నమోదు చేయబడింది';
   @override
@@ -1939,8 +1965,6 @@ class AppStringsTe extends AppStrings {
   @override
   String get remarksLabel => 'వ్యాఖ్యలు';
   @override
-  String get saveDraftButton => 'డ్రాఫ్ట్ సేవ్ చేయి';
-  @override
   String get saveTaskButton => 'టాస్క్ సేవ్ చేయి';
 
   @override
@@ -2104,5 +2128,173 @@ class AppStringsTe extends AppStrings {
   String get hourlyLogSubmittedSuccess => 'గంటవారీ లాగ్ విజయవంతంగా సమర్పించబడింది!';
   @override
   String get announcementsHeader => 'ప్రకటనలు';
+
+  @override
+  String get joinGoogleMeet => 'Google Meet లో చేరండి';
+  @override
+  String get needLink => 'లింక్ కావాలి';
+  @override
+  String get meetingLinkCopied => 'సమావేశ లింక్ క్లిప్‌బోర్డ్‌కి కాపీ చేయబడింది';
+  @override
+  String get noMeetingLinkAvailable => 'సమావేశ లింక్ అందుబాటులో లేదు';
+  @override
+  String get syncWithGoogleCalendar => 'Google క్యాలెండర్‌తో సమకాలీకరించండి';
+  @override
+  String get syncWithGoogleCalendarSubtitle => '(పాల్గొనేవారికి Google ఆహ్వానాలను పంపుతుంది)';
+  @override
+  String get createGoogleMeetVideoLink => 'స్వయంచాలకంగా Google Meet వీడియో లింక్‌ను సృష్టించండి';
+  @override
+  String get googleCalendarIntegration => 'గూగుల్ క్యాలెండర్ అనుసంధానం';
+  @override
+  String get notConnected => 'కనెక్ట్ కాలేదు';
+  @override
+  String get connectedStatus => 'కనెక్ట్ అయింది';
+  @override
+  String get googleCalendarConnectDescription =>
+      'మీ ఇమెయిల్ చిరునామా నుండి మీటింగ్ ఆహ్వానాలు నేరుగా పంపబడేలా మీ గూగుల్ క్యాలెండర్‌ను కనెక్ట్ చేయండి.';
+  @override
+  String get connectGoogleCalendar => 'గూగుల్ క్యాలెండర్ కనెక్ట్ చేయండి';
+  @override
+  String get disconnect => 'డిస్‌కనెక్ట్';
+  @override
+  String get disconnectGoogleCalendarConfirmation =>
+      'మీరు మీ Google క్యాలెండర్‌ను డిస్‌కనెక్ట్ చేయాలనుకుంటున్నారా?';
+  @override
+  String get disconnectGoogleCalendarTitle => 'Google క్యాలెండర్ డిస్‌కనెక్ట్ చేయండి';
+  @override
+  String googleCalendarConnectedDescription(String email) =>
+      '$email కి కనెక్ట్ చేయబడింది. మీటింగ్ ఆహ్వానాలు నేరుగా మీ ఇమెయిల్ చిరునామా నుండి పంపబడతాయి.';
+  @override
+  String get googleCalendarDisconnectedSuccess =>
+      'Google క్యాలెండర్ విజయవంతంగా డిస్‌కనెక్ట్ చేయబడింది';
+
+  @override
+  String get budgetIndents => 'బడ్జెట్ ఇండెంట్లు';
+  @override
+  String get budgetIndentsSubtitle =>
+      'కొనుగోలు ఇండెంట్‌ను సృష్టించండి; మొత్తం ఎంతవరకు ఆమోదించబడాలో నిర్ణయిస్తుంది. పూర్తిగా సంతకం చేయబడిన తర్వాత వోచర్ ప్రింట్ అవుతుంది.';
+  @override
+  String get toApproveTab => 'ఆమోదించాల్సినవి';
+  @override
+  String get myIndentsTab => 'నా ఇండెంట్లు';
+  @override
+  String get allIndentsTab => 'అన్నీ';
+  @override
+  String get raiseIndent => 'ఇండెంట్‌ను సృష్టించండి';
+  @override
+  String get voucherReady => 'సిద్ధంగా ఉంది';
+  @override
+  String get neededBy => 'అవసరమైన తేదీ';
+  @override
+  String get purposeLabel => 'ఉద్దేశ్యం';
+  @override
+  String get approvalChain => 'ఆమోద గొలుసు';
+  @override
+  String get itemHeader => 'వస్తువు';
+  @override
+  String get qtyHeader => 'పరిమాణం';
+  @override
+  String get unitHeader => 'యూనిట్ ధర';
+
+  @override
+  String get grandTotal => 'మొత్తం ఖర్చు';
+  @override
+  String get printVoucherPdf => 'వోచర్‌ను ప్రింట్ చేయండి (PDF)';
+  @override
+  String get printSaveAsPdf => 'ప్రింట్ / PDF గా సేవ్ చేయండి';
+  @override
+  String get authorisedSignatory => 'అధికారిక సంతకం';
+  @override
+  String get computerGeneratedNotice =>
+      'ఇది కంప్యూటర్ రూపొందించిన వోచర్ · భౌతిక సంతకం అవసరం లేదు.';
+
+  // Raise Purchase Indent Dialog
+  @override
+  String get raisePurchaseIndent => 'కొనుగోలు ఇండెంట్‌ను సృష్టించండి';
+  @override
+  String get indentTitleLabel => 'శీర్షిక *';
+  @override
+  String get indentTitleHint => 'ఉదా: గ్రేడ్ 6 బ్లాక్ కోసం వైట్‌బోర్డ్ మార్కర్లు';
+  @override
+  String get purposeJustificationLabel => 'ఉద్దేశ్యం / సమర్థన';
+  @override
+  String get purposeJustificationHint => 'ఇది ఎందుకు అవసరం?';
+  @override
+  String get lineItemsLabel => 'వస్తువుల వివరాలు *';
+  @override
+  String get descriptionColumn => 'వివరణ';
+  @override
+  String get qtyColumn => 'పరిమాణం';
+  @override
+  String get unitPriceColumn => 'యూనిట్ ₹';
+  @override
+  String get amountColumn => 'మొత్తం';
+  @override
+  String get itemHint => 'వస్తువు';
+  @override
+  String get addItem => '+ వస్తువును జోడించండి';
+  @override
+  String get neededByOptional => 'అవసరమైన తేదీ (ఐచ్ఛికం)';
+  @override
+  String get totalLabel => 'మొత్తం';
+  @override
+  String get autoApprovedNotice =>
+      'మీరు అవసరమైన స్థాయిలో ఉన్నారు — ఈ ఇండెంట్ స్వయంచాలకంగా ఆమోదించబడుతుంది మరియు వోచర్ వెంటనే జారీ చేయబడుతుంది.';
+  @override
+  String get submitIndentButton => 'ఇండెంట్‌ను సమర్పించండి';
+  @override
+  String get indentCreatedSuccess => 'ఇండెంట్ విజయవంతంగా సమర్పించబడింది';
+
+  // Appreciation Approvals
+
+  @override
+  String get waitingBadge => 'వేచి ఉన్నాయి';
+  @override
+  String get appreciationApprovalsSubtitle =>
+      'ఉపాధ్యాయుల పేరు పేర్కొనని తల్లిదండ్రులు మరియు విద్యార్థుల నుండి ప్రశంసలు. పూర్తి నమోదును చదివి, రివార్డ్ పాయింట్లు ఎవరికి ఇవ్వాలో నిర్ణయించండి.';
+  @override
+  String get openFullTicket => 'పూర్తి టికెట్ తెరవండి';
+  @override
+  String get awaitingYourApproval => 'మీ ఆమోదం కోసం వేచి ఉంది';
+  @override
+  String get evidenceAttachedNotice =>
+      'జోడించిన ఆధారాలను చూడటానికి పూర్తి టికెట్‌ను తెరవండి:';
+  @override
+  String get approveAppreciationHeader => 'ప్రశంసను ఆమోదించండి';
+  @override
+  String get noFacultyNamedSubtitle =>
+      'ఎవరి పేరు పేర్కొనబడలేదు. పాయింట్లు ఎవరికి లభించాలో ఎంచుకోండి.';
+  @override
+  String get facultyRequiredLabel => 'సిబ్బంది *';
+  @override
+  String get selectStaffMemberHint => 'సిబ్బంది సభ్యుడిని ఎంచుకోండి...';
+
+  @override
+  String get whyThisFacultyHint => 'ఈ సిబ్బంది / ఈ పాయింట్లు ఎందుకు?';
+  @override
+  String get approveAndAwardPoints => 'ఆమోదించి ఇవ్వండి';
+  @override
+  String get approveAndAward50Points => '🏅 ఆమోదించి 50 పాయింట్లు ఇవ్వండి';
+  @override
+  String get searchStaffHint => 'సిబ్బందిని వెతకండి...';
+  @override
+  String get noStaffFound => 'సిబ్బంది కనుగొనబడలేదు';
+  @override
+  String get noAppreciationsWaiting => 'ఆమోదం కోసం ప్రశంసలు ఏవీ లేవు';
+  @override
+  String get pointsAwardedSuccess => 'పాయింట్లు విజయవంతంగా ఇవ్వబడ్డాయి';
+  @override
+  String get anonymousLabel => 'అజ్ఞాత';
+  @override
+  String get notNamedYetLabel => 'ఇంకా పేర్కొనబడలేదు';
+  @override
+  String get fromLabel => 'నుండి';
+  @override
+  String get studentLabel => 'విద్యార్థి';
+
+  @override
+  String get receivedLabel => 'స్వీకరించబడింది';
+  @override
+  String get raisedByLabel => 'సమర్పించిన వారు';
 }
 

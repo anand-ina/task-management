@@ -292,6 +292,17 @@ class UserProfile {
     return r.contains('manager') || rl.contains('manager');
   }
 
+  bool get isAcademicExecutive {
+    final r = role.toLowerCase();
+    final rl = roleLabel.toLowerCase();
+    return r.contains('academic_executive') ||
+        r.contains('academic executive') ||
+        r.contains('executive') ||
+        r.contains('ae') ||
+        rl.contains('academic executive') ||
+        rl.contains('executive');
+  }
+
   bool get hasMultiBranchAccess {
     return isDirector || isPrincipal || isAdmin;
   }

@@ -9,6 +9,7 @@ import '../bloc/complaints_bloc.dart';
 import '../bloc/complaints_event.dart';
 import '../bloc/complaints_state.dart';
 import '../models/create_ticket_request.dart';
+import '../models/draft_model.dart';
 import '../models/lookup_models.dart';
 import '../models/ticket_meta_model.dart';
 import '../models/ticket_model.dart';
@@ -41,7 +42,7 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
 
   // Form State
   String _selectedType = 'complaint'; // 'complaint', 'feedback', 'appreciation'
-  String _selectedSource = 'parent'; // 'parent', 'student'
+  String _selectedSource = 'parent'; // 'parent', 'student', 'staff'
   String _selectedChannel = 'whatsapp_group';
   final TextEditingController _channelDetailController = TextEditingController();
   DateTime _receivedAt = DateTime.now();
@@ -52,7 +53,7 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
   final TextEditingController _admissionNoController = TextEditingController();
   final TextEditingController _parentNameController = TextEditingController();
   final TextEditingController _parentMobileController = TextEditingController();
-  bool _isAnonymous = true;
+  bool _isAnonymous = false;
 
   String _selectedAboutKind = 'staff'; // 'staff', 'department', 'transport', 'facility', 'general'
   int? _selectedAboutUserId;
@@ -62,6 +63,11 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
   String _selectedPriority = 'medium'; // 'emergency', 'top_most', 'high', 'medium', 'low'
   String _selectedVisibility = 'general'; // 'general', 'confidential'
   final TextEditingController _descriptionController = TextEditingController();
+
+  // Drafts state
+  List<DraftItemModel> _savedDrafts = [];
+  bool _isLoadingDrafts = false;
+  bool _isSavingDraft = false;
 
   List<TicketAttachmentModel> _attachments = [];
   bool _isUploadingFile = false;
@@ -92,6 +98,7 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
   }
 
   Future<void> _loadInitialLookups() async {
+    _loadDrafts();
     final state = context.read<ComplaintsBloc>().state;
     if (state is ComplaintsLoadedState) {
       setState(() {
@@ -117,7 +124,7 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
 
     try {
       final results = await Future.wait([
-        _repository.getTicketMeta(),
+        _repository.getTicketMeta(source: _selectedSource),
         _repository.getDepartments(),
         _repository.getBranches(),
         _repository.getAssignees(),
@@ -149,6 +156,40 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
     }
   }
 
+  Future<void> _loadDrafts() async {
+    try {
+      final drafts = await _repository.getDrafts(kind: 'ticket');
+      if (mounted) {
+        setState(() {
+          _savedDrafts = drafts;
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _onSourceChanged(String newSource) async {
+    if (newSource == _selectedSource) return;
+    setState(() {
+      _selectedSource = newSource;
+    });
+
+    try {
+      final updatedMeta = await _repository.getTicketMeta(
+        branchId: _selectedBranchId,
+        source: newSource,
+      );
+      if (mounted) {
+        setState(() {
+          _meta = updatedMeta;
+          if (_meta.channels.isNotEmpty &&
+              !_meta.channels.any((c) => c.value == _selectedChannel)) {
+            _selectedChannel = _meta.channels.first.value;
+          }
+        });
+      }
+    } catch (_) {}
+  }
+
   Future<void> _onBranchChanged(int? newBranchId) async {
     if (newBranchId == null || newBranchId == _selectedBranchId) return;
     setState(() {
@@ -156,13 +197,211 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
     });
 
     try {
-      final updatedMeta = await _repository.getTicketMeta(branchId: newBranchId);
+      final updatedMeta = await _repository.getTicketMeta(
+        branchId: newBranchId,
+        source: _selectedSource,
+      );
       if (mounted) {
         setState(() {
           _meta = updatedMeta;
         });
       }
     } catch (_) {}
+  }
+
+  Future<void> _resumeDraft(DraftItemModel draft) async {
+    setState(() {
+      _isLoadingDrafts = true;
+    });
+    try {
+      DraftPayloadModel? payload = draft.payload;
+      if (payload == null) {
+        final detail = await _repository.getDraftDetail(draft.id);
+        payload = detail?.payload;
+      }
+      if (payload != null) {
+        final targetBranchId = payload.branchId ?? _selectedBranchId;
+        final targetSource = payload.source.isNotEmpty ? payload.source : _selectedSource;
+
+        final updatedMeta = await _repository.getTicketMeta(
+          branchId: targetBranchId,
+          source: targetSource,
+        );
+
+        DateTime? parsedDate;
+        if (payload.receivedAt != null && payload.receivedAt!.isNotEmpty) {
+          try {
+            parsedDate = DateTime.parse(payload.receivedAt!).toLocal();
+          } catch (_) {}
+        }
+
+        if (mounted) {
+          setState(() {
+            _meta = updatedMeta;
+            _selectedType = payload!.type.isNotEmpty ? payload.type : 'complaint';
+            _selectedSource = targetSource;
+            if (payload.channel.isNotEmpty) {
+              _selectedChannel = payload.channel;
+            }
+            _channelDetailController.text = payload.channelDetail ?? '';
+            if (parsedDate != null) {
+              _receivedAt = parsedDate;
+            }
+            if (payload.branchId != null) {
+              _selectedBranchId = payload.branchId;
+            }
+            _studentNameController.text = payload.studentName ?? '';
+            _classSectionController.text = payload.classSection ?? '';
+            _admissionNoController.text = payload.admissionNo ?? '';
+            _parentNameController.text = payload.parentName ?? '';
+            _parentMobileController.text = payload.parentMobile ?? '';
+            _isAnonymous = payload.isAnonymous;
+            _selectedVisibility = payload.visibility ?? 'general';
+            _selectedAboutKind = payload.aboutKind ?? 'staff';
+            _selectedAboutUserId = payload.aboutUserId;
+            _selectedAboutDepartmentId = payload.aboutDepartmentId;
+            if (payload.category != null && payload.category!.isNotEmpty) {
+              _selectedCategory = payload.category!;
+            }
+            if (payload.priority != null && payload.priority!.isNotEmpty) {
+              _selectedPriority = payload.priority!;
+            }
+            _descriptionController.text = payload.description ?? '';
+            _attachments = List.from(payload.attachments);
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppStrings.of(context).draftResumedSuccess),
+              backgroundColor: const Color(0xFF132A50),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('[RaiseComplaintDialog] error resuming draft: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingDrafts = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _deleteDraft(int draftId) async {
+    final s = AppStrings.of(context);
+    final success = await _repository.deleteDraft(draftId);
+    if (success && mounted) {
+      setState(() {
+        _savedDrafts.removeWhere((d) => d.id == draftId);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(s.draftDeletedSuccess),
+          backgroundColor: Colors.grey.shade800,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  Future<void> _saveDraft() async {
+    final s = AppStrings.of(context);
+    final desc = _descriptionController.text.trim();
+    final studentName = _studentNameController.text.trim();
+
+    if (desc.isEmpty && studentName.isEmpty && _selectedAboutUserId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(s.fillRequiredFieldsDraftError),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSavingDraft = true;
+    });
+
+    try {
+      DateTime safeReceivedAt = _receivedAt;
+      final formattedDate = DateFormat("yyyy-MM-dd'T'HH:mm").format(safeReceivedAt);
+
+      String typeTitle = 'Complaint';
+      if (_selectedType == 'appreciation') {
+        typeTitle = 'Appreciation';
+      } else if (_selectedType == 'feedback') {
+        typeTitle = 'Feedback';
+      }
+
+      String subject = studentName;
+      if (subject.isEmpty) {
+        if (_selectedAboutUserId != null) {
+          final assignee = _assignees.where((a) => a.id == _selectedAboutUserId).firstOrNull;
+          subject = assignee?.name ?? 'staff';
+        } else {
+          subject = _selectedSource;
+        }
+      }
+
+      final draftDesc = desc.isNotEmpty ? desc : 'testing';
+      final label = '$typeTitle · $subject — $draftDesc';
+
+      final payload = DraftPayloadModel(
+        type: _selectedType,
+        source: _selectedSource,
+        channel: _selectedChannel,
+        channelDetail: _channelDetailController.text.trim(),
+        receivedAt: formattedDate,
+        branchId: _selectedBranchId,
+        studentName: _selectedSource == 'staff' ? '' : studentName,
+        classSection: _selectedSource == 'staff' ? '' : _classSectionController.text.trim(),
+        admissionNo: _selectedSource == 'staff' ? '' : _admissionNoController.text.trim(),
+        parentName: _selectedSource == 'parent' ? _parentNameController.text.trim() : '',
+        parentMobile: _selectedSource == 'parent' ? _parentMobileController.text.trim() : '',
+        isAnonymous: _isAnonymous,
+        visibility: _selectedType == 'appreciation' ? 'general' : _selectedVisibility,
+        aboutKind: _selectedAboutKind,
+        aboutUserId: _selectedAboutKind == 'staff' ? _selectedAboutUserId : null,
+        aboutDepartmentId: _selectedAboutKind == 'department' ? _selectedAboutDepartmentId : null,
+        aboutText: '',
+        category: _selectedCategory,
+        priority: _selectedType == 'appreciation' ? 'low' : _selectedPriority,
+        description: desc,
+        attachments: _attachments,
+      );
+
+      final req = DraftSaveRequest(kind: 'ticket', label: label, payload: payload);
+      await _repository.saveDraft(req);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(s.draftSavedSuccess),
+            backgroundColor: const Color(0xFF132A50),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        _loadDrafts();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to save draft: $e'),
+            backgroundColor: Colors.red.shade700,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSavingDraft = false;
+        });
+      }
+    }
   }
 
   Future<void> _pickAndUploadFile() async {
@@ -240,15 +479,24 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
     final classSection = _classSectionController.text.trim();
     final description = _descriptionController.text.trim();
 
-    if (studentName.isEmpty || classSection.isEmpty || description.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(s.fillRequiredFieldsError), backgroundColor: Colors.red.shade700),
-      );
-      return;
+    if (_selectedSource != 'staff') {
+      if (studentName.isEmpty || classSection.isEmpty || description.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(s.fillRequiredFieldsError), backgroundColor: Colors.red.shade700),
+        );
+        return;
+      }
+    } else {
+      if (description.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(s.fillRequiredFieldsError), backgroundColor: Colors.red.shade700),
+        );
+        return;
+      }
     }
 
     final mobile = _parentMobileController.text.trim();
-    if (mobile.isNotEmpty && mobile.length != 10) {
+    if (_selectedSource == 'parent' && mobile.isNotEmpty && mobile.length != 10) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(s.invalidMobileNumberError), backgroundColor: Colors.red.shade700),
       );
@@ -269,19 +517,19 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
       channelDetail: _channelDetailController.text.trim(),
       receivedAt: formattedDate,
       branchId: _selectedBranchId ?? 1,
-      studentName: studentName,
-      classSection: classSection,
-      admissionNo: _admissionNoController.text.trim(),
-      parentName: _parentNameController.text.trim(),
-      parentMobile: mobile,
+      studentName: _selectedSource == 'staff' ? '' : studentName,
+      classSection: _selectedSource == 'staff' ? '' : classSection,
+      admissionNo: _selectedSource == 'staff' ? '' : _admissionNoController.text.trim(),
+      parentName: _selectedSource == 'parent' ? _parentNameController.text.trim() : '',
+      parentMobile: _selectedSource == 'parent' ? mobile : '',
       isAnonymous: _isAnonymous,
-      visibility: _selectedVisibility,
+      visibility: _selectedType == 'appreciation' ? 'general' : _selectedVisibility,
       aboutKind: _selectedAboutKind,
       aboutUserId: _selectedAboutKind == 'staff' ? _selectedAboutUserId : null,
       aboutDepartmentId: _selectedAboutKind == 'department' ? _selectedAboutDepartmentId : null,
       aboutText: '',
       category: _selectedCategory,
-      priority: _selectedPriority,
+      priority: _selectedType == 'appreciation' ? 'low' : _selectedPriority,
       description: description,
       attachments: _attachments,
     );
@@ -365,6 +613,116 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
                       child: ListView(
                         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                         children: [
+                          // Saved Drafts Banner
+                          if (_savedDrafts.isNotEmpty) ...[
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 16),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF2A1B1F) : const Color(0xFFFFF7F7),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: isDark ? const Color(0xFF5A2A33) : const Color(0xFFFECDD3),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Text('🌯', style: TextStyle(fontSize: 14)),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        s.savedDraftsCount(_savedDrafts.length),
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                          color: isDark ? Colors.white : const Color(0xFF1E293B),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 10),
+                                  ..._savedDrafts.map((draft) {
+                                    return Container(
+                                      margin: const EdgeInsets.only(top: 4),
+                                      child: Row(
+                                        children: [
+                                          InkWell(
+                                            onTap: _isLoadingDrafts ? null : () => _resumeDraft(draft),
+                                            borderRadius: BorderRadius.circular(20),
+                                            child: Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                              decoration: BoxDecoration(
+                                                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                                                borderRadius: BorderRadius.circular(20),
+                                                border: Border.all(
+                                                  color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
+                                                ),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    Icons.reply_rounded,
+                                                    size: 14,
+                                                    color: isDark ? Colors.white70 : const Color(0xFF334155),
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    s.resumeButton,
+                                                    style: TextStyle(
+                                                      fontSize: 11,
+                                                      fontWeight: FontWeight.w600,
+                                                      color: isDark ? Colors.white : const Color(0xFF334155),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Expanded(
+                                            child: Text(
+                                              draft.label,
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w500,
+                                                color: isDark ? Colors.grey.shade200 : const Color(0xFF1E293B),
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            draft.formattedDisplayDate,
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: isDark ? Colors.grey.shade400 : Colors.grey.shade500,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          InkWell(
+                                            onTap: () => _deleteDraft(draft.id),
+                                            borderRadius: BorderRadius.circular(12),
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(4),
+                                              child: Icon(
+                                                Icons.close_rounded,
+                                                size: 15,
+                                                color: Colors.red.shade400,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }),
+                                ],
+                              ),
+                            ),
+                          ],
+
                           // Type Selector
                           _buildLabel(s.typeLabel),
                           const SizedBox(height: 6),
@@ -399,19 +757,19 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
                               _buildPillButton(
                                 title: s.receivedFromParent,
                                 isSelected: _selectedSource == 'parent',
-                                onTap: () => setState(() => _selectedSource = 'parent'),
+                                onTap: () => _onSourceChanged('parent'),
                               ),
                               const SizedBox(width: 8),
                               _buildPillButton(
                                 title: s.receivedFromStudent,
                                 isSelected: _selectedSource == 'student',
-                                onTap: () => setState(() => _selectedSource = 'student'),
+                                onTap: () => _onSourceChanged('student'),
                               ),
                               const SizedBox(width: 8),
                               _buildPillButton(
-                                title: 'Staff Member',
-                                isSelected: _selectedSource == 'staff_member',
-                                onTap: () => setState(() => _selectedSource = 'staff_member'),
+                                title: s.receivedFromStaff,
+                                isSelected: _selectedSource == 'staff',
+                                onTap: () => _onSourceChanged('staff'),
                               ),
                             ],
                           ),
@@ -531,146 +889,200 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
                           ),
                           const SizedBox(height: 16),
 
-                          // Student details: Name, Class & section, Admission no.
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                flex: 2,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _buildLabel(s.studentNameLabel),
-                                    const SizedBox(height: 6),
-                                    TextFormField(
-                                      controller: _studentNameController,
-                                      decoration: _inputDecoration(isDark, hintText: s.studentNameHint),
-                                      style: const TextStyle(fontSize: 13),
-                                    ),
-                                  ],
+                          // If Staff member, show Anonymous Checkbox right under Received On & Branch
+                          if (_selectedSource == 'staff') ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                flex: 1,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _buildLabel(s.classSectionLabel),
-                                    const SizedBox(height: 6),
-                                    TextFormField(
-                                      controller: _classSectionController,
-                                      decoration: _inputDecoration(isDark, hintText: s.classSectionHint),
-                                      style: const TextStyle(fontSize: 13),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Checkbox(
+                                    value: _isAnonymous,
+                                    activeColor: const Color(0xFF132A50),
+                                    onChanged: (v) => setState(() => _isAnonymous = v ?? false),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          s.raiseAnonymously,
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                            color: isDark ? Colors.white : Colors.black87,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          s.raiseAnonymouslyDesc,
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                flex: 1,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _buildLabel(s.admissionNoLabel),
-                                    const SizedBox(height: 6),
-                                    TextFormField(
-                                      controller: _admissionNoController,
-                                      decoration: _inputDecoration(isDark, hintText: s.admissionNoHint),
-                                      style: const TextStyle(fontSize: 13),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-
-                          // Parent name & Mobile
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _buildLabel(s.parentNameLabel),
-                                    const SizedBox(height: 6),
-                                    TextFormField(
-                                      controller: _parentNameController,
-                                      decoration: _inputDecoration(isDark, hintText: s.parentNameHint),
-                                      style: const TextStyle(fontSize: 13),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _buildLabel(s.parentMobileLabel),
-                                    const SizedBox(height: 6),
-                                    TextFormField(
-                                      controller: _parentMobileController,
-                                      keyboardType: TextInputType.phone,
-                                      decoration: _inputDecoration(isDark, hintText: s.parentMobileHint),
-                                      style: const TextStyle(fontSize: 13),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-
-                          // Anonymous Checkbox
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                                  ),
+                                ],
                               ),
                             ),
-                            child: Row(
+                            const SizedBox(height: 16),
+                          ],
+
+                          // Student details (shown only if NOT staff)
+                          if (_selectedSource != 'staff') ...[
+                            Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Checkbox(
-                                  value: _isAnonymous,
-                                  activeColor: const Color(0xFF132A50),
-                                  onChanged: (v) => setState(() => _isAnonymous = v ?? false),
-                                ),
-                                const SizedBox(width: 6),
                                 Expanded(
+                                  flex: 2,
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        s.keepParentAnonymous,
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.bold,
-                                          color: isDark ? Colors.white : Colors.black87,
-                                        ),
+                                      _buildLabel(s.studentNameLabel),
+                                      const SizedBox(height: 6),
+                                      TextFormField(
+                                        controller: _studentNameController,
+                                        decoration: _inputDecoration(isDark, hintText: s.studentNameHint),
+                                        style: const TextStyle(fontSize: 13),
                                       ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        s.keepParentAnonymousSubtext,
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
-                                        ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  flex: 1,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      _buildLabel(s.classSectionLabel),
+                                      const SizedBox(height: 6),
+                                      TextFormField(
+                                        controller: _classSectionController,
+                                        decoration: _inputDecoration(isDark, hintText: s.classSectionHint),
+                                        style: const TextStyle(fontSize: 13),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  flex: 1,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      _buildLabel(s.admissionNoLabel),
+                                      const SizedBox(height: 6),
+                                      TextFormField(
+                                        controller: _admissionNoController,
+                                        decoration: _inputDecoration(isDark, hintText: s.admissionNoHint),
+                                        style: const TextStyle(fontSize: 13),
                                       ),
                                     ],
                                   ),
                                 ),
                               ],
                             ),
-                          ),
-                          const SizedBox(height: 16),
+                            const SizedBox(height: 16),
+                          ],
+
+                          // Parent details (shown only if Parent)
+                          if (_selectedSource == 'parent') ...[
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      _buildLabel(s.parentNameLabel),
+                                      const SizedBox(height: 6),
+                                      TextFormField(
+                                        controller: _parentNameController,
+                                        decoration: _inputDecoration(isDark, hintText: s.parentNameHint),
+                                        style: const TextStyle(fontSize: 13),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      _buildLabel(s.parentMobileLabel),
+                                      const SizedBox(height: 6),
+                                      TextFormField(
+                                        controller: _parentMobileController,
+                                        keyboardType: TextInputType.phone,
+                                        decoration: _inputDecoration(isDark, hintText: s.parentMobileHint),
+                                        style: const TextStyle(fontSize: 13),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+
+                            // Anonymous Checkbox for Parent
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                                ),
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Checkbox(
+                                    value: _isAnonymous,
+                                    activeColor: const Color(0xFF132A50),
+                                    onChanged: (v) => setState(() => _isAnonymous = v ?? false),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          s.keepParentAnonymous,
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                            color: isDark ? Colors.white : Colors.black87,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          s.keepParentAnonymousSubtext,
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
 
                           // About Selector
                           _buildLabel(s.aboutLabel),
@@ -710,16 +1122,25 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
 
                           // Dynamic About details: Staff dropdown or Department dropdown
                           if (_selectedAboutKind == 'staff') ...[
-                            _buildLabel(s.staffMemberSubtext),
+                            _buildLabel(
+                              _selectedType == 'appreciation'
+                                  ? s.staffMemberAppreciationSubtitle(
+                                      _meta.appreciationPoints > 0 ? _meta.appreciationPoints : 50)
+                                  : s.staffMemberSubtext,
+                            ),
                             const SizedBox(height: 6),
                             SearchableFilterDropdown<int?>(
                               value: _selectedAboutUserId,
-                              hint: s.staffMemberSubtext,
+                              hint: _selectedType == 'appreciation'
+                                  ? s.staffMemberDirectorDecides
+                                  : s.staffMemberSubtext,
                               searchHint: 'Search staff member...',
                               items: [
                                 SearchableDropdownItem<int?>(
                                   value: null,
-                                  label: s.notNamedOption,
+                                  label: _selectedType == 'appreciation'
+                                      ? s.staffMemberDirectorDecides
+                                      : s.notNamedOption,
                                 ),
                                 ..._assignees.map((a) {
                                   return SearchableDropdownItem<int?>(
@@ -775,72 +1196,74 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
                           ),
                           const SizedBox(height: 16),
 
-                          // Priority Selector & SLA Note
-                          _buildLabel(s.priorityLabel),
-                          const SizedBox(height: 6),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              _buildPillButton(
-                                title: s.priorityEmergency,
-                                isSelected: _selectedPriority == 'emergency',
-                                onTap: () => setState(() => _selectedPriority = 'emergency'),
-                              ),
-                              _buildPillButton(
-                                title: s.priorityTopMost,
-                                isSelected: _selectedPriority == 'top_most',
-                                onTap: () => setState(() => _selectedPriority = 'top_most'),
-                              ),
-                              _buildPillButton(
-                                title: s.priorityHigh,
-                                isSelected: _selectedPriority == 'high',
-                                onTap: () => setState(() => _selectedPriority = 'high'),
-                              ),
-                              _buildPillButton(
-                                title: s.priorityMedium,
-                                isSelected: _selectedPriority == 'medium',
-                                onTap: () => setState(() => _selectedPriority = 'medium'),
-                              ),
-                              _buildPillButton(
-                                title: s.priorityLow,
-                                isSelected: _selectedPriority == 'low',
-                                onTap: () => setState(() => _selectedPriority = 'low'),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            s.targetDateDaysFromToday(slaDays),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                          // Priority Selector & SLA Note (only shown if NOT appreciation)
+                          if (_selectedType != 'appreciation') ...[
+                            _buildLabel(s.priorityLabel),
+                            const SizedBox(height: 6),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                _buildPillButton(
+                                  title: s.priorityEmergency,
+                                  isSelected: _selectedPriority == 'emergency',
+                                  onTap: () => setState(() => _selectedPriority = 'emergency'),
+                                ),
+                                _buildPillButton(
+                                  title: s.priorityTopMost,
+                                  isSelected: _selectedPriority == 'top_most',
+                                  onTap: () => setState(() => _selectedPriority = 'top_most'),
+                                ),
+                                _buildPillButton(
+                                  title: s.priorityHigh,
+                                  isSelected: _selectedPriority == 'high',
+                                  onTap: () => setState(() => _selectedPriority = 'high'),
+                                ),
+                                _buildPillButton(
+                                  title: s.priorityMedium,
+                                  isSelected: _selectedPriority == 'medium',
+                                  onTap: () => setState(() => _selectedPriority = 'medium'),
+                                ),
+                                _buildPillButton(
+                                  title: s.priorityLow,
+                                  isSelected: _selectedPriority == 'low',
+                                  onTap: () => setState(() => _selectedPriority = 'low'),
+                                ),
+                              ],
                             ),
-                          ),
-                          const SizedBox(height: 16),
+                            const SizedBox(height: 6),
+                            Text(
+                              s.targetDateDaysFromToday(slaDays),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
 
-                          // Visibility
-                          _buildLabel(s.visibilityLabel),
-                          const SizedBox(height: 6),
-                          DropdownButtonFormField<String>(
-                            value: _selectedVisibility,
-                            isExpanded: true,
-                            decoration: _inputDecoration(isDark),
-                            items: [
-                              DropdownMenuItem<String>(
-                                value: 'general',
-                                child: Text(s.visibilityGeneral, style: const TextStyle(fontSize: 13)),
-                              ),
-                              DropdownMenuItem<String>(
-                                value: 'confidential',
-                                child: Text(s.visibilityConfidential, style: const TextStyle(fontSize: 13)),
-                              ),
-                            ],
-                            onChanged: (v) {
-                              if (v != null) setState(() => _selectedVisibility = v);
-                            },
-                          ),
-                          const SizedBox(height: 16),
+                            // Visibility
+                            _buildLabel(s.visibilityLabel),
+                            const SizedBox(height: 6),
+                            DropdownButtonFormField<String>(
+                              value: _selectedVisibility,
+                              isExpanded: true,
+                              decoration: _inputDecoration(isDark),
+                              items: [
+                                DropdownMenuItem<String>(
+                                  value: 'general',
+                                  child: Text(s.visibilityGeneral, style: const TextStyle(fontSize: 13)),
+                                ),
+                                DropdownMenuItem<String>(
+                                  value: 'confidential',
+                                  child: Text(s.visibilityConfidential, style: const TextStyle(fontSize: 13)),
+                                ),
+                              ],
+                              onChanged: (v) {
+                                if (v != null) setState(() => _selectedVisibility = v);
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                          ],
 
                           // What was said? *
                           _buildLabel(s.whatWasSaidLabel),
@@ -947,15 +1370,46 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
                             child: Text(s.cancelButton),
                           ),
                           const SizedBox(width: 12),
+                          OutlinedButton.icon(
+                            onPressed: _isSavingDraft ? null : _saveDraft,
+                            icon: _isSavingDraft
+                                ? const SizedBox(
+                                    width: 14,
+                                    height: 14,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  )
+                                : const Text('💾', style: TextStyle(fontSize: 14)),
+                            label: Text(
+                              s.saveDraftButton,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: isDark ? Colors.white : const Color(0xFF334155),
+                              ),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                              side: BorderSide(
+                                color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
+                              ),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
                           BlocBuilder<ComplaintsBloc, ComplaintsState>(
                             builder: (context, state) {
                               final isSubmitting = state is ComplaintsLoadedState && state.isSubmitting;
+                              final buttonColor = _selectedType == 'appreciation'
+                                  ? const Color(0xFF132A50)
+                                  : (_selectedType == 'complaint'
+                                      ? const Color(0xFF991B1B)
+                                      : AppColors.button(context));
                               return ElevatedButton(
                                 onPressed: isSubmitting ? null : _submitComplaint,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.button(context),
+                                  backgroundColor: buttonColor,
                                   foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                  padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                 ),
                                 child: isSubmitting
@@ -967,7 +1421,12 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
                                           color: Colors.white,
                                         ),
                                       )
-                                    : Text(s.registerComplaintButton),
+                                    : Text(
+                                        _selectedType == 'appreciation'
+                                            ? s.recordAppreciationButton
+                                            : s.registerComplaintButton,
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                      ),
                               );
                             },
                           ),
