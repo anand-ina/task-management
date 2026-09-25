@@ -832,6 +832,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildTotalOrgGrid(BuildContext context, AppStrings s, DashboardStats stats) {
+    String dynamicSubtitle;
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthenticatedState) {
+      dynamicSubtitle = authState.userProfile.academicYearFormatted;
+    } else {
+      final now = DateTime.now();
+      final startYear = now.month >= 6 ? now.year : now.year - 1;
+      final endYear = (startYear + 1).toString().substring(2);
+      dynamicSubtitle = 'FY $startYear–$endYear';
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final count = constraints.maxWidth > 900 ? 6 : (constraints.maxWidth > 600 ? 3 : 3);
@@ -846,7 +857,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _buildStatCard(
               '${stats.total}',
               s.totalTasks,
-              subtitle: 'FY 2025–26',
+              subtitle: dynamicSubtitle,
               color: Colors.blue,
               onTap: () => TasksDueTodayDialog.show(context, scope: 'mine', customTitle: 'All Tasks', badgeColor: Colors.blue),
             ),

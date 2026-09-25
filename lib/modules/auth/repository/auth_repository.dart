@@ -62,6 +62,13 @@ class AuthRepository {
             email: u['email']?.toString(),
             id: u['id'] is int ? u['id'] as int : int.tryParse(u['id']?.toString() ?? ''),
           );
+          final userProfile = UserProfile.fromJson(u);
+          if (userProfile.academicYear != null) {
+            await _prefs.saveAcademicYear(userProfile.academicYear!);
+          }
+          if (userProfile.academicYears.isNotEmpty) {
+            await _prefs.saveAcademicYears(userProfile.academicYears);
+          }
         }
         if (loginRes.role != null && loginRes.role!.isNotEmpty) {
           await _prefs.saveUserRole(
@@ -102,6 +109,12 @@ class AuthRepository {
       final map = data is Map<String, dynamic> ? data : <String, dynamic>{};
       final userProfile = UserProfile.fromJson(map);
       await _prefs.saveUserMe(map);
+      if (userProfile.academicYear != null) {
+        await _prefs.saveAcademicYear(userProfile.academicYear!);
+      }
+      if (userProfile.academicYears.isNotEmpty) {
+        await _prefs.saveAcademicYears(userProfile.academicYears);
+      }
       await _prefs.saveUserRole(userProfile.role, roleLabel: userProfile.roleLabel);
       await _prefs.saveUserDetails(
         name: userProfile.name,

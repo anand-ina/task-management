@@ -45,11 +45,11 @@ class TicketMetaModel {
     this.categories = const [],
     this.channels = const [],
     this.slaDays = const {
-      'emergency': 1,
-      'top_most': 1,
-      'high': 2,
-      'medium': 3,
-      'low': 7,
+      'emergency': 0,
+      'top_most': 0,
+      'high': 0,
+      'medium': 0,
+      'low': 0,
     },
     this.appreciationPoints = 50,
     this.nextTicketNo = '',
@@ -76,11 +76,11 @@ class TicketMetaModel {
     }
 
     Map<String, int> sla = {
-      'emergency': 1,
-      'top_most': 1,
-      'high': 2,
-      'medium': 3,
-      'low': 7,
+      'emergency': 0,
+      'top_most': 0,
+      'high': 0,
+      'medium': 0,
+      'low': 0,
     };
     if (json['slaDays'] is Map) {
       final map = json['slaDays'] as Map;

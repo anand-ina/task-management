@@ -99,6 +99,8 @@ class UserProfile {
   final DepartmentInfo? department;
   final List<String> permissions;
   final UserScope? scope;
+  final String? academicYear;
+  final List<int> academicYears;
 
   UserProfile({
     required this.id,
@@ -114,6 +116,8 @@ class UserProfile {
     this.department,
     required this.permissions,
     this.scope,
+    this.academicYear,
+    this.academicYears = const [],
   });
 
   String get firstBranchName {
@@ -228,6 +232,46 @@ class UserProfile {
       }
     }
 
+    // Dynamic Academic Year Resolution from API or current date
+    String? resolvedAcademicYear;
+    final dynamic rawYear = json['academic_year'] ??
+        json['academicYear'] ??
+        json['current_academic_year'] ??
+        json['currentAcademicYear'] ??
+        json['fy'] ??
+        json['financial_year'];
+    if (rawYear != null && rawYear.toString().trim().isNotEmpty) {
+      resolvedAcademicYear = rawYear.toString().trim();
+    }
+
+    final List<int> parsedAcademicYears = [];
+    final dynamic rawYears = json['academic_years'] ??
+        json['academicYears'] ??
+        json['available_academic_years'] ??
+        json['years'];
+    if (rawYears is List) {
+      for (final item in rawYears) {
+        if (item is int) {
+          if (!parsedAcademicYears.contains(item)) parsedAcademicYears.add(item);
+        } else if (item != null) {
+          final str = item.toString();
+          final match = RegExp(r'\b(20\d{2})\b').firstMatch(str);
+          if (match != null) {
+            final y = int.tryParse(match.group(1)!);
+            if (y != null && !parsedAcademicYears.contains(y)) {
+              parsedAcademicYears.add(y);
+            }
+          }
+        }
+      }
+    }
+
+    final now = DateTime.now();
+    final defaultBaseYear = now.month >= 6 ? now.year : now.year - 1;
+    if (parsedAcademicYears.isEmpty) {
+      parsedAcademicYears.addAll([defaultBaseYear, defaultBaseYear - 1, defaultBaseYear - 2]);
+    }
+
     return UserProfile(
       id: json['id'] as int? ?? (int.tryParse(json['id']?.toString() ?? '0') ?? 0),
       name: resolvedName,
@@ -242,6 +286,8 @@ class UserProfile {
       department: json['department'] is Map<String, dynamic> ? DepartmentInfo.fromJson(json['department'] as Map<String, dynamic>) : null,
       permissions: (json['permissions'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       scope: json['scope'] is Map<String, dynamic> ? UserScope.fromJson(json['scope'] as Map<String, dynamic>) : null,
+      academicYear: resolvedAcademicYear,
+      academicYears: parsedAcademicYears,
     );
   }
 
@@ -259,7 +305,21 @@ class UserProfile {
         'department': department?.toJson(),
         'permissions': permissions,
         'scope': scope?.toJson(),
+        'academic_year': academicYear,
+        'academic_years': academicYears,
       };
+
+  String get academicYearFormatted {
+    if (academicYear != null && academicYear!.trim().isNotEmpty) {
+      final clean = academicYear!.trim();
+      if (clean.toLowerCase().startsWith('fy')) return clean;
+      return 'FY $clean';
+    }
+    final now = DateTime.now();
+    final startYear = now.month >= 6 ? now.year : now.year - 1;
+    final endYearStr = (startYear + 1).toString().substring(2);
+    return 'FY $startYear–$endYearStr';
+  }
 
   bool get isDirector {
     final r = role.toLowerCase();

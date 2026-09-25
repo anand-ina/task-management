@@ -122,8 +122,7 @@ class _BudgetApprovalsScreenState extends State<BudgetApprovalsScreen> {
                             NewBudgetRequestDialog.show(context);
                           }
                         },
-                        icon: const Icon(Icons.add, size: 16),
-                        label: Text(
+                         label: Text(
                           isDirector ? '+ ${s.raiseIndent}' : '+ New budget request',
                           style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                         ),

@@ -16,34 +16,7 @@ class ResponsibilitiesRepository {
       return ResponsibilitiesResponseModel.fromJson(response.data as Map<String, dynamic>);
     } catch (e) {
       debugPrint('[ResponsibilitiesRepository] Error: $e');
-      return _fallbackResponsibilities();
+      rethrow;
     }
-  }
-
-  ResponsibilitiesResponseModel _fallbackResponsibilities() {
-    return const ResponsibilitiesResponseModel(
-      person: ResponsibilityPersonModel(
-        id: 14,
-        name: 'Anusha',
-        initials: 'AN',
-        avatarColor: '#e5484d',
-        designation: 'Admin Executive',
-        department: 'Administration',
-        branchName: 'Moti Nagar & Sanath Nagar',
-        branchCode: 'SS01',
-        level: 1,
-        roleLabel: 'Admin Executive',
-      ),
-      canEdit: true,
-      primary: [
-        ResponsibilityItemModel(
-          id: 13,
-          kind: 'primary',
-          text: 'Store',
-          sort: 0,
-        ),
-      ],
-      secondary: [],
-    );
   }
 }

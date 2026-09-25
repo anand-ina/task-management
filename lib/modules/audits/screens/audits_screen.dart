@@ -243,7 +243,7 @@ class _AuditsScreenState extends State<AuditsScreen> {
                               size: 16,
                             ),
                             label: Text(
-                              _isScheduleFormOpen ? 'Close' : '+ ${s.scheduleAnAudit}',
+                              _isScheduleFormOpen ? 'Close' : '${s.scheduleAnAudit}',
                               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                             ),
                             style: ElevatedButton.styleFrom(

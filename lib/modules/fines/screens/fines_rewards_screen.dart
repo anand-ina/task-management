@@ -210,22 +210,36 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
   }
 
   Widget _buildPolicyGrid(BuildContext context, AppStrings s, FinesOverviewData data) {
-    final policies = data.fineTypes.isNotEmpty
-        ? data.fineTypes
-            .map((ft) => {
-                  'title': ft.label,
-                  'amount': '₹${ft.amount}',
-                  'isFine': ft.kind.toLowerCase() == 'fine',
-                })
-            .toList()
-        : [
-            {'title': 'Late task closure', 'amount': '₹50.00', 'isFine': true},
-            {'title': 'Missed DSR', 'amount': '₹25.00', 'isFine': true},
-            {'title': 'Overdue > 3 days', 'amount': '₹100.00', 'isFine': true},
-            {'title': 'Early completion', 'amount': '₹50.00', 'isFine': false},
-            {'title': 'Top performer', 'amount': '₹150.00', 'isFine': false},
-            {'title': 'Zero overdue (month)', 'amount': '₹200.00', 'isFine': false},
-          ];
+    final policies = data.fineTypes
+        .map((ft) => {
+              'title': ft.label,
+              'amount': '₹${ft.amount}',
+              'isFine': ft.kind.toLowerCase() == 'fine',
+            })
+        .toList();
+
+    if (policies.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.card(context),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: AppColors.border(context),
+          ),
+        ),
+        child: Center(
+          child: Text(
+            s.noDataAvailable,
+            style: TextStyle(
+              fontSize: 13,
+              color: AppColors.textSecondary(context),
+            ),
+          ),
+        ),
+      );
+    }
 
     return LayoutBuilder(
       builder: (context, constraints) {

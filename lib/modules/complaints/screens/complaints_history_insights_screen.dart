@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 
 import '../../../core/localization/app_strings.dart';
 import '../../../core/utils/network_connectivity_service.dart';
+import '../../../core/utils/preferences_service.dart';
+import '../../auth/models/user_profile.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/dialogs/no_internet_dialog.dart';
@@ -29,16 +31,47 @@ class ComplaintsHistoryInsightsScreen extends StatefulWidget {
 class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsightsScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  int _selectedYear = 2026;
+  late int _selectedYear;
   int? _selectedBranchId; // null = All branches
-  final List<int> _academicYears = [2026, 2025, 2024];
+  List<int> _academicYears = [];
 
   @override
   void initState() {
     super.initState();
+    final now = DateTime.now();
+    final defaultBaseYear = now.month >= 6 ? now.year : now.year - 1;
+    _academicYears = [defaultBaseYear, defaultBaseYear - 1, defaultBaseYear - 2];
+    _selectedYear = defaultBaseYear;
+    _loadDynamicAcademicYears();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchDashboard();
     });
+  }
+
+  Future<void> _loadDynamicAcademicYears() async {
+    try {
+      final years = await PreferencesService().getAcademicYears();
+      if (years.isNotEmpty && mounted) {
+        setState(() {
+          _academicYears = years;
+          if (!_academicYears.contains(_selectedYear)) {
+            _selectedYear = _academicYears.first;
+          }
+        });
+      }
+      final userMap = await PreferencesService().getUserMe();
+      if (userMap != null) {
+        final profile = UserProfile.fromJson(userMap);
+        if (profile.academicYears.isNotEmpty && mounted) {
+          setState(() {
+            _academicYears = profile.academicYears;
+            if (!_academicYears.contains(_selectedYear)) {
+              _selectedYear = _academicYears.first;
+            }
+          });
+        }
+      }
+    } catch (_) {}
   }
 
   Future<void> _fetchDashboard() async {
@@ -282,7 +315,9 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<int>(
-              value: _selectedYear,
+              value: _academicYears.contains(_selectedYear)
+                  ? _selectedYear
+                  : (_academicYears.isNotEmpty ? _academicYears.first : null),
               icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 18),
               style: TextStyle(
                 fontSize: 12,

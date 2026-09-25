@@ -20,7 +20,7 @@ class AdminRoleModel {
       id: json['id'] as int,
       name: json['name'] as String? ?? '',
       label: json['label'] as String? ?? '',
-      level: json['level'] as int? ?? 5,
+      level: json['level'] as int? ?? 0,
       permissions: (json['permissions'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       users: json['users'] as int? ?? 0,
     );

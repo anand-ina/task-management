@@ -27,7 +27,7 @@ class AdminReportingRepository {
           .toList();
     } catch (e) {
       debugPrint('[AdminReportingRepository] Error: $e');
-      return _fallbackPeople();
+      rethrow;
     }
   }
 
@@ -51,13 +51,5 @@ class AdminReportingRepository {
       debugPrint('[AdminReportingRepository] Error updateReporting: $e');
       return false;
     }
-  }
-
-  List<ReportingPersonModel> _fallbackPeople() {
-    return [
-      const ReportingPersonModel(id: 1, name: 'Administrator', initials: 'AD', avatarColor: '#132a50', primary: [], secondary: [], level: 1),
-      const ReportingPersonModel(id: 2, name: 'Madhumathi', initials: 'MA', avatarColor: '#e5484d', primary: [1], secondary: [], level: 2),
-      const ReportingPersonModel(id: 3, name: 'Murali', initials: 'MU', avatarColor: '#30a46c', primary: [2], secondary: [], level: 3),
-    ];
   }
 }

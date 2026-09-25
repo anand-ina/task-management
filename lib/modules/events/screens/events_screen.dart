@@ -53,50 +53,20 @@ class _EventsScreenState extends State<EventsScreen> {
           setState(() {
             _eventChecklists[eventId] = data['items'];
           });
+        } else if (data is List) {
+          setState(() {
+            _eventChecklists[eventId] = data;
+          });
         } else {
           setState(() {
-            _eventChecklists[eventId] = [
-              {
-                'id': 17,
-                'text': 'Send invites to parents',
-                'done': true,
-                'status': 'approved',
-                'comment_count': 0,
-                'attachment_count': 0,
-              },
-              {
-                'id': 18,
-                'text': 'Prepare progress cards',
-                'done': false,
-                'status': 'open',
-                'comment_count': 0,
-                'attachment_count': 0,
-              },
-            ];
+            _eventChecklists[eventId] = [];
           });
         }
       }
     } catch (_) {
       if (mounted) {
         setState(() {
-          _eventChecklists[eventId] = [
-            {
-              'id': 17,
-              'text': 'Send invites to parents',
-              'done': true,
-              'status': 'approved',
-              'comment_count': 0,
-              'attachment_count': 0,
-            },
-            {
-              'id': 18,
-              'text': 'Prepare progress cards',
-              'done': false,
-              'status': 'open',
-              'comment_count': 0,
-              'attachment_count': 0,
-            },
-          ];
+          _eventChecklists[eventId] = [];
         });
       }
     } finally {

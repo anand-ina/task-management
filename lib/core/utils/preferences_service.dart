@@ -22,6 +22,9 @@ class PreferencesService {
     return prefs.getString(_keyToken);
   }
 
+  static const String _keyAcademicYear = 'academic_year';
+  static const String _keyAcademicYears = 'academic_years';
+
   // User Profile / Me Data
   Future<void> saveUserMe(Map<String, dynamic> userData) async {
     final prefs = await SharedPreferences.getInstance();
@@ -37,6 +40,32 @@ class PreferencesService {
     } catch (_) {
       return null;
     }
+  }
+
+  // Academic Year / Years
+  Future<void> saveAcademicYear(String year) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyAcademicYear, year);
+  }
+
+  Future<String?> getAcademicYear() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keyAcademicYear);
+  }
+
+  Future<void> saveAcademicYears(List<int> years) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_keyAcademicYears, years.map((e) => e.toString()).toList());
+  }
+
+  Future<List<int>> getAcademicYears() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = prefs.getStringList(_keyAcademicYears);
+    if (list != null && list.isNotEmpty) {
+      final parsed = list.map((e) => int.tryParse(e)).whereType<int>().toList();
+      if (parsed.isNotEmpty) return parsed;
+    }
+    return [];
   }
 
   // Language Code

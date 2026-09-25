@@ -68,7 +68,7 @@ class TaskCounterResponse {
           .map((b) => TaskCounterBranch.fromJson(b as Map<String, dynamic>))
           .toList(),
       periodStart: json['periodStart'] as String?,
-      max: json['max'] as int? ?? 9999,
+      max: json['max'] as int? ?? 0,
     );
   }
 }
