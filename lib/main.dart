@@ -116,6 +116,7 @@ class _MyAppState extends State<MyApp> {
                     child: child ?? const SizedBox.shrink(),
                   );
                 },
+                onGenerateRoute: (settings) => null,
                 home: BlocListener<AuthBloc, AuthState>(
                   listener: (context, state) {
                     if (state is UnauthenticatedState) {

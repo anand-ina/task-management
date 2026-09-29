@@ -18,6 +18,7 @@ class MeetingsBloc extends Bloc<MeetingsEvent, MeetingsState> {
     on<FetchScheduleLookupsEvent>(_onFetchScheduleLookups);
     on<FetchMeetingCalendarEvent>(_onFetchMeetingCalendar);
     on<DisconnectGoogleCalendarEvent>(_onDisconnectGoogleCalendar);
+    on<CompleteGoogleCalendarCallbackEvent>(_onCompleteGoogleCalendarCallback);
   }
 
   String _parseError(dynamic e) {
@@ -129,6 +130,30 @@ class MeetingsBloc extends Bloc<MeetingsEvent, MeetingsState> {
       } else {
         emit(MeetingsErrorState('Failed to disconnect Google Calendar'));
       }
+    } catch (e) {
+      emit(MeetingsErrorState(_parseError(e)));
+    }
+  }
+
+  Future<void> _onCompleteGoogleCalendarCallback(
+    CompleteGoogleCalendarCallbackEvent event,
+    Emitter<MeetingsState> emit,
+  ) async {
+    try {
+      await repository.callGoogleCalendarCallback(
+        code: event.code,
+        state: event.state,
+      );
+      final results = await Future.wait([
+        repository.getMyScheduledMeetings(),
+        repository.getGoogleCalendarStatus(),
+      ]);
+      final meetings = results[0] as List<MeetingItemModel>;
+      final calendarStatus = results[1] as GoogleCalendarStatusModel?;
+      emit(MyScheduledMeetingsLoadedState(
+        meetings,
+        calendarStatus: calendarStatus,
+      ));
     } catch (e) {
       emit(MeetingsErrorState(_parseError(e)));
     }

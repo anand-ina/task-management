@@ -372,7 +372,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 1),
+                const SizedBox(width: 6),
 
                 // Branch Selector: if hasMultiBranchAccess and (branches > 1 or isPrincipal or isDirector), show dropdown; otherwise direct branch name
                 if (hasMultiBranchAccess && (branches.length > 1 || isPrincipal || isDirector))
@@ -443,8 +443,8 @@ class _CustomAppBarState extends State<CustomAppBar> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
-                            width: 6,
-                            height: 6,
+                            width: 5,
+                            height: 5,
                             decoration: BoxDecoration(
                               color: AppColors.textPrimary(context),
                               shape: BoxShape.circle,
@@ -455,7 +455,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                             child: Text(
                               directBranchDisplayName,
                               style: TextStyle(
-                                fontSize: 11,
+                                fontSize: 10,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.textSecondary(context),
                               ),
@@ -478,6 +478,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                     decoration: BoxDecoration(
                       color: AppColors.chipBg(context),
                       borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.subtleBorder(context)),
                     ),
                     alignment: Alignment.center,
                     child: Text(

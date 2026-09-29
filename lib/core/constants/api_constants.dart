@@ -26,6 +26,8 @@ class ApiConstants {
   static const String oneOnOnePending = '$baseUrl/meetings/one-on-one/pending';
   static const String meetings = '$baseUrl/meetings';
   static const String meetingsAvailability = '$baseUrl/meetings/availability';
+  static const String googleCalendarAuth = '$baseUrl/auth/google-calendar';
+  static const String googleCalendarCallback = '$baseUrl/auth/google-calendar/callback';
   static const String googleCalendarStatus = '$baseUrl/google-calendar/status';
   static const String googleCalendarDisconnect = '$baseUrl/google-calendar/disconnect';
   static const String sutraCommand = '$baseUrl/sutra/command';

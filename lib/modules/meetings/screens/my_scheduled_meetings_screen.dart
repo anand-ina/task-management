@@ -11,7 +11,7 @@ import '../../../core/localization/app_strings.dart';
 import '../../../core/network/dio_client.dart';
 import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
-import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
+import '../../dashboard/screens/dashboard_screen.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
 import '../../../shared_widgets/dialogs/schedule_meeting_dialog.dart';
 import '../bloc/meetings_bloc.dart';
@@ -22,6 +22,7 @@ import '../models/meeting_model.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/bloc/auth_state.dart';
 import '../../reports/screens/status_reports_screen.dart';
+import 'google_calendar_auth_webview_screen.dart';
 
 class MyScheduledMeetingsScreen extends StatefulWidget {
   const MyScheduledMeetingsScreen({super.key});
@@ -30,10 +31,61 @@ class MyScheduledMeetingsScreen extends StatefulWidget {
   State<MyScheduledMeetingsScreen> createState() => _MyScheduledMeetingsScreenState();
 }
 
-class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
+class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
+    with WidgetsBindingObserver {
   int _selectedTabIndex = 0; // 0: All, 1: Initiated by Me, 2: Received by Me
   final DioClient _dioClient = DioClient();
   final Set<dynamic> _attendedMeetingIds = {};
+  bool _isAwaitingGoogleAuthReturn = false;
+
+  late final MeetingsBloc _meetingsBloc;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _meetingsBloc = MeetingsBloc()..add(FetchMyScheduledMeetingsEvent());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _meetingsBloc.close();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _isAwaitingGoogleAuthReturn) {
+      _isAwaitingGoogleAuthReturn = false;
+      _handleReturnFromGoogleAuth();
+    }
+  }
+
+  Future<void> _handleReturnFromGoogleAuth() async {
+    if (!mounted) return;
+    try {
+      final repo = _meetingsBloc.repository;
+      // 1. Call API 3 (The OAuth Callback check)
+      await repo.callGoogleCalendarCallback();
+      if (!mounted) return;
+      // 2. Dispatch event to refresh state with API 1: /google-calendar/status
+      _meetingsBloc.add(CompleteGoogleCalendarCallbackEvent());
+      // 3. Verify status for user notification
+      final status = await repo.getGoogleCalendarStatus();
+      if (!mounted) return;
+      final s = AppStrings.of(context);
+      if (status != null && status.connected) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(s.googleCalendarConnectedSuccess),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (_) {}
+  }
 
   String _extractErrorMessage(dynamic error) {
     if (error is DioException) {
@@ -77,11 +129,11 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
 
   void _showErrorToast(BuildContext context, dynamic error) {
     final msg = _extractErrorMessage(error);
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(msg),
         backgroundColor: Colors.red,
-        behavior: SnackBarBehavior.floating,
       ),
     );
   }
@@ -102,7 +154,7 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
           backgroundColor: Colors.green,
         ),
       );
-      context.read<MeetingsBloc>().add(FetchMyScheduledMeetingsEvent());
+      _meetingsBloc.add(FetchMyScheduledMeetingsEvent());
     } catch (e) {
       if (mounted) {
         _showErrorToast(context, e);
@@ -377,7 +429,7 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Meeting marked as completed!'), backgroundColor: Colors.green),
         );
-        context.read<MeetingsBloc>().add(FetchMyScheduledMeetingsEvent());
+        _meetingsBloc.add(FetchMyScheduledMeetingsEvent());
       } catch (e) {
         if (mounted) {
           _showErrorToast(context, e);
@@ -386,47 +438,65 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
     }
   }
 
-  Future<void> _handleConnectGoogleCalendar(BuildContext context) async {
+  Future<void> _handleConnectGoogleCalendar() async {
     try {
-      final response = await _dioClient.dio.get('${ApiConstants.baseUrl}/google-calendar/auth-url');
-      debugPrint('[Meetings] google-calendar auth-url: ${response.data}');
-      final url = response.data is Map ? response.data['url']?.toString() : null;
+      final repo = _meetingsBloc.repository;
+      // 1. Call API 2: Initiate Google Calendar Connection (Get OAuth URL)
+      final url = await repo.getGoogleCalendarAuthUrl();
       if (url != null && url.isNotEmpty) {
-        final uri = Uri.tryParse(url);
-        if (uri != null) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-          return;
-        }
-      }
-    } catch (e) {
-      debugPrint('[Meetings] get auth-url failed: $e, trying connect endpoint');
-      try {
-        final response = await _dioClient.dio.post('${ApiConstants.baseUrl}/google-calendar/connect');
-        debugPrint('[Meetings] google-calendar connect: ${response.data}');
-        final url = response.data is Map ? response.data['url']?.toString() : null;
-        if (url != null && url.isNotEmpty) {
-          final uri = Uri.tryParse(url);
-          if (uri != null) {
-            await launchUrl(uri, mode: LaunchMode.externalApplication);
-            return;
+        if (!mounted) return;
+        // 2. Open Google Login directly in-app (not external browser, no web redirection)
+        final result = await Navigator.of(context).push<dynamic>(
+          MaterialPageRoute(
+            builder: (_) => GoogleCalendarAuthWebViewScreen(authUrl: url),
+          ),
+        );
+
+        if (!mounted) return;
+
+        if (result == true) {
+          // 3. Authenticated: Call API 3 callback check and refresh status via API 1
+          await repo.callGoogleCalendarCallback();
+          _meetingsBloc.add(CompleteGoogleCalendarCallbackEvent());
+          await repo.getGoogleCalendarStatus();
+          if (mounted) {
+            final s = AppStrings.of(context);
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(s.googleCalendarConnectedSuccess),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        } else if (result is String && result.isNotEmpty) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result),
+              backgroundColor: Colors.red,
+            ),
+          );
+        } else {
+          // Check status in case connection was established before dismissing
+          final status = await repo.getGoogleCalendarStatus();
+          if (status != null && status.connected) {
+            _meetingsBloc.add(CompleteGoogleCalendarCallbackEvent());
           }
         }
-      } catch (_) {}
-    }
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Google Calendar integration connection initiated.'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+        return;
+      }
+      throw Exception('Failed to obtain Google Calendar authorization URL.');
+    } catch (e) {
+      if (mounted) {
+        _showErrorToast(context, e);
+      }
     }
   }
 
   Future<void> _confirmDisconnectGoogleCalendar(BuildContext parentContext) async {
     final s = AppStrings.of(parentContext);
     final isDark = Theme.of(parentContext).brightness == Brightness.dark;
-    final meetingsBloc = parentContext.read<MeetingsBloc>();
 
     final confirm = await showDialog<bool>(
       context: parentContext,
@@ -470,7 +540,7 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
     );
 
     if (confirm == true && mounted) {
-      meetingsBloc.add(DisconnectGoogleCalendarEvent());
+      _meetingsBloc.add(DisconnectGoogleCalendarEvent());
     }
   }
 
@@ -711,7 +781,7 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
           ),
           const SizedBox(height: 14),
           ElevatedButton.icon(
-            onPressed: () => _handleConnectGoogleCalendar(context),
+            onPressed: _handleConnectGoogleCalendar,
             icon: const Icon(Icons.sync_rounded, size: 15),
             label: Text(
               s.connectGoogleCalendar,
@@ -735,36 +805,36 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen> {
     final s = AppStrings.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return BlocProvider(
-      create: (context) => MeetingsBloc()..add(FetchMyScheduledMeetingsEvent()),
+    return BlocProvider<MeetingsBloc>.value(
+      value: _meetingsBloc,
       child: BlocListener<MeetingsBloc, MeetingsState>(
         listener: (context, state) {
           if (state is MeetingsErrorState) {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
                 backgroundColor: Colors.red,
-                behavior: SnackBarBehavior.floating,
               ),
             );
           } else if (state is MyScheduledMeetingsLoadedState && state.isDisconnected) {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(s.googleCalendarDisconnectedSuccess),
                 backgroundColor: const Color(0xFF16A34A),
-                behavior: SnackBarBehavior.floating,
               ),
             );
           }
         },
         child: PopScope(
           canPop: false,
-          onPopInvokedWithResult: (didPop, result) async {
+          onPopInvokedWithResult: (didPop, result) {
             if (didPop) return;
-            final shouldExit = await ExitConfirmationDialog.show(context);
-            if (shouldExit) {
-              // Handled inside exit dialog
-            }
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const DashboardScreen()),
+              (route) => false,
+            );
           },
           child: Scaffold(
             floatingActionButton: const TodoFloatingActionButton(),

@@ -116,7 +116,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        final shouldExit = await ExitConfirmationDialog.show(context);
+        final shouldExit = await ExitConfirmationDialog.show(context, isDashboard: true);
         if (shouldExit) {
           // Exit handled inside dialog
         }

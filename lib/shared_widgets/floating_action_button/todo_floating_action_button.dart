@@ -35,9 +35,13 @@ class TodoFloatingActionButton extends StatelessWidget {
       openTodosCount = dashState.todos.where((t) => !t.isCompleted).length;
     }
 
-    return Stack(
-      children: [
-        FloatingActionButton(
+    return SizedBox(
+      width: 56,
+      height: 56,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          FloatingActionButton(
           backgroundColor: AppColors.button(context),
           foregroundColor: Colors.white,
           onPressed: () => TodoTodayDialog.show(context),
@@ -66,6 +70,7 @@ class TodoFloatingActionButton extends StatelessWidget {
             ),
           ),
       ],
+      ),
     );
   }
 }

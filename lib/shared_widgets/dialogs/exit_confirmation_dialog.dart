@@ -1,11 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/localization/app_strings.dart';
+import '../../modules/dashboard/screens/dashboard_screen.dart';
 
 class ExitConfirmationDialog extends StatelessWidget {
   const ExitConfirmationDialog({super.key});
 
-  static Future<bool> show(BuildContext context) async {
+  static Future<bool> show(BuildContext context, {bool isDashboard = false}) async {
+    final isDirectDashboard =
+        isDashboard || context.findAncestorWidgetOfExactType<DashboardScreen>() != null;
+
+    if (!isDirectDashboard) {
+      if (context.mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const DashboardScreen()),
+          (route) => false,
+        );
+      }
+      return false;
+    }
+
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => const ExitConfirmationDialog(),

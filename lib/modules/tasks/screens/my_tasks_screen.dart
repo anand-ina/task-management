@@ -1542,63 +1542,147 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: isDark ? Colors.white24 : const Color(0xFFBFDBFE)),
       ),
-      child: Row(
-        children: [
-          Checkbox(
-            value: items.isNotEmpty && _selectedTaskIds.length == items.length,
-            activeColor: const Color(0xFF0F172A),
-            onChanged: (val) {
-              setState(() {
-                if (val == true) {
-                  _selectedTaskIds.addAll(items.map((e) => e.id));
-                } else {
-                  _selectedTaskIds.clear();
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            Checkbox(
+              value: items.isNotEmpty && _selectedTaskIds.length == items.length,
+              activeColor: const Color(0xFF0F172A),
+              onChanged: (val) {
+                setState(() {
+                  if (val == true) {
+                    _selectedTaskIds.addAll(items.map((e) => e.id));
+                  } else {
+                    _selectedTaskIds.clear();
+                  }
+                });
+              },
+            ),
+            const SizedBox(width: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0F172A),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '$selectedCount selected',
+                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+            ),
+            const SizedBox(width: 8),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.button(context),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                visualDensity: VisualDensity.compact,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              icon: const Icon(Icons.settings_outlined, size: 14),
+              label: const Text('Bulk actions', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+              onPressed: () async {
+                final result = await BulkActionsDialog.show(
+                  context,
+                  selectedTaskIds: _selectedTaskIds.toList(),
+                );
+                if (result == true) {
+                  setState(() => _selectedTaskIds.clear());
+                  if (context.mounted) {
+                    _dispatchFetch(offset: 0);
+                  }
                 }
-              });
-            },
-          ),
-          const SizedBox(width: 4),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-            decoration: BoxDecoration(
-              color: const Color(0xFF0F172A),
-              borderRadius: BorderRadius.circular(12),
+              },
             ),
-            child: Text(
-              '$selectedCount selected',
-              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
-            ),
-          ),
-          const SizedBox(width: 8),
-          ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.button(context),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              visualDensity: VisualDensity.compact,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            icon: const Icon(Icons.settings_outlined, size: 14),
-            label: const Text('Bulk actions', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-            onPressed: () async {
-              final result = await BulkActionsDialog.show(
-                context,
-                selectedTaskIds: _selectedTaskIds.toList(),
-              );
-              if (result == true) {
-                setState(() => _selectedTaskIds.clear());
-                if (context.mounted) {
-                  _dispatchFetch(offset: 0);
+            const SizedBox(width: 8),
+            PopupMenuButton<String>(
+              tooltip: 'Export selected',
+              onSelected: (val) {
+                final selectedTasks = items.where((e) => _selectedTaskIds.contains(e.id)).toList();
+                if (selectedTasks.isEmpty) return;
+                final title = '${s.myTasks}_Selected';
+                if (val == 'csv') {
+                  ExportService.exportCsv(context, selectedTasks, title);
+                } else if (val == 'excel') {
+                  ExportService.exportExcel(context, selectedTasks, title);
+                } else if (val == 'pdf') {
+                  ExportService.exportPdf(context, selectedTasks, title);
                 }
-              }
-            },
-          ),
-          const Spacer(),
-          TextButton(
-            onPressed: () => setState(() => _selectedTaskIds.clear()),
-            child: const Text('Clear', style: TextStyle(fontSize: 10, color: Colors.red, fontWeight: FontWeight.bold)),
-          ),
-        ],
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'csv',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.table_chart_outlined, size: 16, color: Colors.teal),
+                      const SizedBox(width: 8),
+                      Text(s.exportCsv, style: const TextStyle(fontSize: 12)),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'excel',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.grid_on_outlined, size: 16, color: Colors.green),
+                      const SizedBox(width: 8),
+                      Text(s.exportExcel, style: const TextStyle(fontSize: 12)),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'pdf',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.picture_as_pdf_outlined, size: 16, color: Colors.red),
+                      const SizedBox(width: 8),
+                      Text(s.exportPdf, style: const TextStyle(fontSize: 12)),
+                    ],
+                  ),
+                ),
+              ],
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF334155) : Colors.white,
+                  border: Border.all(color: isDark ? Colors.white24 : const Color(0xFFCBD5E1)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.north_east_rounded,
+                      size: 13,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Export selected',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      ),
+                    ),
+                    const SizedBox(width: 2),
+                    Icon(
+                      Icons.arrow_drop_down,
+                      size: 14,
+                      color: isDark ? Colors.white70 : const Color(0xFF0F172A),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            TextButton(
+              onPressed: () => setState(() => _selectedTaskIds.clear()),
+              child: const Text('Clear', style: TextStyle(fontSize: 11, color: Colors.red, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
       ),
     );
   }

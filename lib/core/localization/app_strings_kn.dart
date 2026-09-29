@@ -2167,6 +2167,9 @@ class AppStringsKn extends AppStrings {
   @override
   String get googleCalendarDisconnectedSuccess =>
       'Google ಕ್ಯಾಲೆಂಡರ್ ಯಶಸ್ವಿಯಾಗಿ ಸಂಪರ್ಕ ಕಡಿತಗೊಂಡಿದೆ';
+  @override
+  String get googleCalendarConnectedSuccess =>
+      'Google ಕ್ಯಾಲೆಂಡರ್ ಯಶಸ್ವಿಯಾಗಿ ಸಂಪರ್ಕಗೊಂಡಿದೆ!';
 
   @override
   String get budgetIndents => 'ಬಜೆಟ್ ಇಂಡೆಂಟ್‌ಗಳು';

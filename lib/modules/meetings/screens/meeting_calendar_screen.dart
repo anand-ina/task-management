@@ -5,7 +5,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
-import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
+import '../../dashboard/screens/dashboard_screen.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
 import '../bloc/meetings_bloc.dart';
 import '../bloc/meetings_event.dart';
@@ -41,12 +41,12 @@ class _MeetingCalendarScreenState extends State<MeetingCalendarScreen> {
       create: (context) => MeetingsBloc()..add(FetchMeetingCalendarEvent()),
       child: PopScope(
         canPop: false,
-        onPopInvokedWithResult: (didPop, result) async {
+        onPopInvokedWithResult: (didPop, result) {
           if (didPop) return;
-          final shouldExit = await ExitConfirmationDialog.show(context);
-          if (shouldExit) {
-            // Handled inside exit dialog
-          }
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const DashboardScreen()),
+            (route) => false,
+          );
         },
         child: Scaffold(
           floatingActionButton: const TodoFloatingActionButton(),

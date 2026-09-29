@@ -153,12 +153,12 @@ class _ScheduleMeetingDialogState extends State<ScheduleMeetingDialog> {
         'duration': durationMinutes,
         'endsAt': endsAtStr,
         'branchId': _selectedBranchId ?? 1,
-        'agenda': _agendaController.text.trim().isNotEmpty ? _agendaController.text.trim() : 'test',
+        'agenda': _agendaController.text.trim(),
         'location': _createGoogleMeet ? 'Online · Google Meet' : _selectedLocation,
         'isOneOnOne': _isMandatory1on1,
         'syncToGoogle': _syncToGoogle,
         'createGoogleMeet': _createGoogleMeet,
-        'invitees': inviteesList.isNotEmpty ? inviteesList : [{'userId': 6, 'required': true}, {'userId': 10, 'required': true}],
+        'invitees': inviteesList,
       };
 
       await _dioClient.dio.post(ApiConstants.meetings, data: payload);

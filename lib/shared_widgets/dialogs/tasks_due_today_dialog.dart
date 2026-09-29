@@ -186,7 +186,7 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final dialogTitle = widget.customTitle ?? s.tasksDueTodayTitle;
-    final totalToShow = _totalCount > 0 ? _totalCount : (_items.isNotEmpty ? _items.length : 10);
+    final totalToShow = _totalCount > 0 ? _totalCount : (_items.isNotEmpty ? _items.length : 0);
     final colorBadge = widget.badgeColor ?? (widget.overdue == true || (widget.priority?.contains('emergency') == true) ? Colors.red : Colors.green);
 
     return Dialog(

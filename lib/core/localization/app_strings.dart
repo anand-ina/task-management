@@ -1636,6 +1636,7 @@ abstract class AppStrings {
   String get disconnectGoogleCalendarTitle;
   String googleCalendarConnectedDescription(String email);
   String get googleCalendarDisconnectedSuccess;
+  String get googleCalendarConnectedSuccess;
 
   // Budget Indents Strings
   String get budgetIndents;

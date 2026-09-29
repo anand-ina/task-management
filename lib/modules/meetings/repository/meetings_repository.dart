@@ -89,6 +89,57 @@ class MeetingsRepository {
     return null;
   }
 
+  Future<String?> getGoogleCalendarAuthUrl() async {
+    try {
+      debugPrint('---------------- [MeetingsService: getGoogleCalendarAuthUrl] ----------------');
+      debugPrint('Service URL: ${ApiConstants.googleCalendarAuth}');
+      debugPrint('Service Method: GET');
+      final response = await _dioClient.dio.get(ApiConstants.googleCalendarAuth);
+      debugPrint('Service Status Code: ${response.statusCode}');
+      debugPrint('Service Response: ${response.data}');
+      debugPrint('-----------------------------------------------------------------------------');
+      if (response.data is Map<String, dynamic>) {
+        final url = response.data['url']?.toString();
+        if (url != null && url.isNotEmpty) return url;
+      }
+    } catch (e) {
+      debugPrint('[MeetingsRepository] getGoogleCalendarAuthUrl error: $e, trying alternative url');
+      try {
+        final fallbackUrl = '${ApiConstants.baseUrl}/google-calendar/auth-url';
+        final response = await _dioClient.dio.get(fallbackUrl);
+        if (response.data is Map<String, dynamic>) {
+          final url = response.data['url']?.toString();
+          if (url != null && url.isNotEmpty) return url;
+        }
+      } catch (_) {}
+      rethrow;
+    }
+    return null;
+  }
+
+  Future<dynamic> callGoogleCalendarCallback({String? code, String? state}) async {
+    try {
+      debugPrint('---------------- [MeetingsService: callGoogleCalendarCallback] ----------------');
+      debugPrint('Service URL: ${ApiConstants.googleCalendarCallback}');
+      debugPrint('Service Method: GET');
+      final Map<String, dynamic> qParams = {};
+      if (code != null && code.isNotEmpty) qParams['code'] = code;
+      if (state != null && state.isNotEmpty) qParams['state'] = state;
+      debugPrint('Service Query Parameters: $qParams');
+      final response = await _dioClient.dio.get(
+        ApiConstants.googleCalendarCallback,
+        queryParameters: qParams.isNotEmpty ? qParams : null,
+      );
+      debugPrint('Service Status Code: ${response.statusCode}');
+      debugPrint('Service Response: ${response.data}');
+      debugPrint('-----------------------------------------------------------------------------');
+      return response.data;
+    } catch (e) {
+      debugPrint('[MeetingsRepository] callGoogleCalendarCallback error: $e');
+    }
+    return null;
+  }
+
   Future<bool> disconnectGoogleCalendar() async {
     try {
       debugPrint('---------------- [MeetingsService: disconnectGoogleCalendar] ----------------');

@@ -12,3 +12,9 @@ class FetchScheduleLookupsEvent extends MeetingsEvent {
 class FetchMeetingCalendarEvent extends MeetingsEvent {}
 
 class DisconnectGoogleCalendarEvent extends MeetingsEvent {}
+
+class CompleteGoogleCalendarCallbackEvent extends MeetingsEvent {
+  final String? code;
+  final String? state;
+  CompleteGoogleCalendarCallbackEvent({this.code, this.state});
+}

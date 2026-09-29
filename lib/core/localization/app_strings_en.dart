@@ -2168,6 +2168,9 @@ class AppStringsEn extends AppStrings {
   @override
   String get googleCalendarDisconnectedSuccess =>
       'Google Calendar disconnected successfully';
+  @override
+  String get googleCalendarConnectedSuccess =>
+      'Google Calendar connected successfully!';
 
   @override
   String get budgetIndents => 'Budget Indents';
