@@ -600,38 +600,22 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
       ),
     );
 
-    final typeFilter = Container(
-      height: 38,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      decoration: BoxDecoration(
-        color: AppColors.card(context),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: AppColors.border(context),
-        ),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: _currentTypes,
-          icon: const Icon(Icons.arrow_drop_down, size: 18),
-          style: TextStyle(
-            fontSize: 12,
-            color: AppColors.textPrimary(context),
-          ),
-          dropdownColor: AppColors.card(context),
-          items: [
-            DropdownMenuItem(value: 'complaint,feedback', child: Text(s.filterAllTypes)),
-            DropdownMenuItem(value: 'complaint', child: Text(s.filterComplaintsOnly)),
-            DropdownMenuItem(value: 'feedback', child: Text(s.filterFeedbackOnly)),
-          ],
-          onChanged: (val) {
-            if (val != null && val != _currentTypes) {
-              setState(() => _currentTypes = val);
-              _fetchTickets();
-            }
-          },
-        ),
-      ),
+    final typeFilter = SearchableFilterDropdown<String>(
+      value: _currentTypes,
+      hint: s.filterAllTypes,
+      searchHint: s.searchPlaceholder,
+      isExpanded: isMobile,
+      items: [
+        SearchableDropdownItem<String>(value: 'complaint,feedback', label: s.filterAllTypes),
+        SearchableDropdownItem<String>(value: 'complaint', label: s.filterComplaintsOnly),
+        SearchableDropdownItem<String>(value: 'feedback', label: s.filterFeedbackOnly),
+      ],
+      onChanged: (val) {
+        if (val != null && val != _currentTypes) {
+          setState(() => _currentTypes = val);
+          _fetchTickets();
+        }
+      },
     );
 
     final categoryFilter = SearchableFilterDropdown<String>(
@@ -651,38 +635,22 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
       },
     );
 
-    final mineFilter = Container(
-      height: 38,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      decoration: BoxDecoration(
-        color: AppColors.card(context),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: AppColors.border(context),
-        ),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: _selectedMine,
-          icon: const Icon(Icons.arrow_drop_down, size: 18),
-          style: TextStyle(
-            fontSize: 12,
-            color: AppColors.textPrimary(context),
-          ),
-          dropdownColor: AppColors.card(context),
-          items: [
-            DropdownMenuItem(value: "Everyone's", child: Text(s.filterEveryones)),
-            DropdownMenuItem(value: "owned", child: Text(s.assignedToMe)),
-            DropdownMenuItem(value: "raised", child: Text(s.createdByMe)),
-          ],
-          onChanged: (val) {
-            if (val != null && val != _selectedMine) {
-              setState(() => _selectedMine = val);
-              _fetchTickets();
-            }
-          },
-        ),
-      ),
+    final mineFilter = SearchableFilterDropdown<String>(
+      value: _selectedMine,
+      hint: s.filterEveryones,
+      searchHint: s.searchPlaceholder,
+      isExpanded: isMobile,
+      items: [
+        SearchableDropdownItem<String>(value: "Everyone's", label: s.filterEveryones),
+        SearchableDropdownItem<String>(value: "owned", label: s.assignedToMe),
+        SearchableDropdownItem<String>(value: "raised", label: s.createdByMe),
+      ],
+      onChanged: (val) {
+        if (val != null && val != _selectedMine) {
+          setState(() => _selectedMine = val);
+          _fetchTickets();
+        }
+      },
     );
 
     if (isMobile) {

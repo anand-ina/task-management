@@ -18,6 +18,8 @@ import '../models/team_performance.dart';
 import '../models/recent_activity_model.dart';
 import '../models/login_group_model.dart';
 import '../../reports/screens/status_reports_screen.dart';
+import '../../approvals/screens/task_approvals_screen.dart';
+import '../../tasks/screens/all_tasks_screen.dart';
 import '../../performance/screens/team_performance_screen.dart';
 import '../../announcements/bloc/announcements_bloc.dart';
 import '../../announcements/bloc/announcements_event.dart';
@@ -167,7 +169,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
             if (state is DashboardLoadedState) {
               final stats = state.dashboardData.stats;
-              final performance = state.dashboardData.performance;
               final actionCenter = state.dashboardData.actionCenter;
               final overdueByAge = state.dashboardData.overdueByAge;
               final myLogin = state.dashboardData.myLogin;
@@ -223,28 +224,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       const SizedBox(height: 10),
 
                       // Status Report Due Today Banner (shown when submitted is false, hidden when true)
-                      if (timeline.isNotEmpty && !timeline.first.submitted)
+                      if (timeline.isNotEmpty && !timeline.first.submitted) ...[
                         _buildStatusReportAlertCard(context, timeline.first),
-
-                      // My Performance Section
-                      Text(
-                        s.performanceTitle,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        s.performanceSubtitle,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isDark ? Colors.white60 : Colors.black54,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildPerformanceGrid(context, s, performance),
+                        const SizedBox(height: 10),
+                      ],
 
                       // Tasks by Priority Section
                       Text(
@@ -257,45 +240,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       const SizedBox(height: 12),
                       _buildPriorityGrid(context, s, stats, teamData.recentActivity),
-
-                      // Total Organisation Section
-                      Wrap(
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: 10,
-                        runSpacing: 6,
-                        children: [
-                          Text(
-                            s.totalOrganisation,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : const Color(0xFF0F172A),
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.05),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.remove_red_eye_outlined, size: 12),
-                                const SizedBox(width: 4),
-                                Text(
-                                  s.readOnlyTransparency,
-                                  style: const TextStyle(fontSize: 11),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-
-                      _buildTotalOrgGrid(context, s, stats),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 24),
 
                       // Action Center & Scheduled Meetings Row
                       LayoutBuilder(
@@ -475,9 +420,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              _buildHeaderBadge('✅ ${s.approvalsBadge(actionCenter.approvals)}'),
+              _buildHeaderBadge(
+                '✅ ${s.approvalsBadge(actionCenter.approvals)}',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const TaskApprovalsScreen()),
+                ),
+              ),
               _buildHeaderBadge('📋 ${s.toReviewBadge(actionCenter.reviews)}'),
-              _buildHeaderBadge('☀️ ${s.toStartBadge(stats.toBeStarted)}'),
+              _buildHeaderBadge(
+                '☀️ ${s.toStartBadge(stats.toBeStarted)}',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AllTasksScreen()),
+                ),
+              ),
               _buildHeaderBadge('⏳ ${s.inProgressBadge(stats.inProgress)}'),
               _buildHeaderBadge('⚑ ${s.overdueBadge(stats.overdue)}'),
               _buildHeaderBadge('🎯 ${s.completionBadge(stats.completionRate)}'),
@@ -488,8 +445,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildHeaderBadge(String label) {
-    return Container(
+  Widget _buildHeaderBadge(String label, {VoidCallback? onTap}) {
+    final badge = Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.12),
@@ -505,147 +462,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
     );
-  }
 
-  Widget _buildPerformanceGrid(
-      BuildContext context, AppStrings s, DashboardPerformance performance) {
-    final now = DateTime.now();
-    final monthStr = DateFormat('MMMM yyyy').format(now);
-    final dayStr = DateFormat('EEE d MMM').format(now);
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final count = constraints.maxWidth > 900 ? 5 : (constraints.maxWidth > 600 ? 3 : 2);
-        return GridView.count(
-          crossAxisCount: count,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 5,
-          crossAxisSpacing: 5,
-          mainAxisExtent: 135,
-          children: [
-            _buildProgressCard(
-              s.dayWise,
-              dayStr,
-              performance.day,
-              color: Colors.green,
-              onTap: () => TasksDueTodayDialog.show(
-                context,
-                scope: 'mine',
-                period: 'day',
-                customTitle: '${s.dayWise} Tasks',
-                badgeColor: Colors.green,
-              ),
-            ),
-            _buildProgressCard(
-              s.weekWise,
-              'This week',
-              performance.week,
-              color: const Color(0xFF1E3A8A),
-              onTap: () => TasksDueTodayDialog.show(
-                context,
-                scope: 'mine',
-                period: 'week',
-                customTitle: '${s.weekWise} Tasks',
-                badgeColor: const Color(0xFF1E3A8A),
-              ),
-            ),
-            _buildProgressCard(
-              s.monthWise,
-              monthStr,
-              performance.month,
-              color: Colors.orange,
-              onTap: () => TasksDueTodayDialog.show(
-                context,
-                scope: 'mine',
-                period: 'month',
-                customTitle: '${s.monthWise} Tasks',
-                badgeColor: Colors.orange,
-              ),
-            ),
-            _buildProgressCard(
-              s.quarterly,
-              'This quarter',
-              performance.quarter,
-              color: const Color(0xFF1E3A8A),
-              onTap: () => TasksDueTodayDialog.show(
-                context,
-                scope: 'mine',
-                period: 'quarter',
-                customTitle: '${s.quarterly} Tasks',
-                badgeColor: const Color(0xFF1E3A8A),
-              ),
-            ),
-            _buildProgressCard(
-              s.yearly,
-              'FY ${now.year - 1}–${now.year.toString().substring(2)}',
-              performance.year,
-              color: Colors.green,
-              onTap: () => TasksDueTodayDialog.show(
-                context,
-                scope: 'mine',
-                period: null,
-                customTitle: '${s.yearly} Tasks',
-                badgeColor: Colors.green,
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildProgressCard(String title, String subtitle, int? percent,
-      {required Color color, VoidCallback? onTap}) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final val = percent ?? 0;
-
-    return Card(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  SizedBox(
-                    width: 52,
-                    height: 52,
-                    child: CircularProgressIndicator(
-                      value: (val / 100).clamp(0.0, 1.0),
-                      backgroundColor: Colors.grey.shade200,
-                      color: color,
-                      strokeWidth: 6,
-                    ),
-                  ),
-                  Text(
-                    '$val%',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                      color: isDark ? Colors.white : Colors.black87,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Text(
-                title,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-              ),
-              Text(
-                subtitle,
-                style: const TextStyle(fontSize: 11, color: Colors.grey),
-              ),
-            ],
-          ),
+    if (onTap != null) {
+      return Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: badge,
         ),
-      ),
-    );
+      );
+    }
+    return badge;
   }
 
   Widget _buildPriorityGrid(BuildContext context, AppStrings s, DashboardStats stats, List<RecentActivityItem> activities) {
@@ -831,125 +659,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildTotalOrgGrid(BuildContext context, AppStrings s, DashboardStats stats) {
-    String dynamicSubtitle;
-    final authState = context.read<AuthBloc>().state;
-    if (authState is AuthenticatedState) {
-      dynamicSubtitle = authState.userProfile.academicYearFormatted;
-    } else {
-      final now = DateTime.now();
-      final startYear = now.month >= 6 ? now.year : now.year - 1;
-      final endYear = (startYear + 1).toString().substring(2);
-      dynamicSubtitle = 'FY $startYear–$endYear';
-    }
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final count = constraints.maxWidth > 900 ? 6 : (constraints.maxWidth > 600 ? 3 : 3);
-        return GridView.count(
-          crossAxisCount: count,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 5,
-          crossAxisSpacing: 5,
-          mainAxisExtent: 135,
-          children: [
-            _buildStatCard(
-              '${stats.total}',
-              s.totalTasks,
-              subtitle: dynamicSubtitle,
-              color: Colors.blue,
-              onTap: () => TasksDueTodayDialog.show(context, scope: 'mine', customTitle: 'All Tasks', badgeColor: Colors.blue),
-            ),
-            _buildStatCard(
-              '${stats.completed}',
-              s.completed,
-              subtitle: '${stats.completionRate}% completion',
-              color: Colors.green,
-              onTap: () => TasksDueTodayDialog.show(context, scope: 'mine', customTitle: 'Completed Tasks', status: 'completed', badgeColor: Colors.green),
-            ),
-            _buildStatCard(
-              '${stats.inProgress}',
-              s.inProgress,
-              subtitle: s.workUnderway,
-              color: Colors.blue.shade700,
-              onTap: () => TasksDueTodayDialog.show(context, scope: 'mine', customTitle: 'In Progress Tasks', status: 'in_progress', badgeColor: Colors.blue.shade700),
-            ),
-            _buildStatCard(
-              '${stats.overdue}',
-              s.overdue,
-              subtitle: s.needsAttention,
-              color: Colors.red,
-              onTap: () => TasksDueTodayDialog.show(context, scope: 'mine', customTitle: 'Overdue Tasks', overdue: true, badgeColor: Colors.red),
-            ),
-            _buildStatCard(
-              '${stats.toBeStarted}',
-              s.toBeStarted,
-              subtitle: s.notYetPickedUp,
-              color: Colors.indigo,
-              onTap: () => TasksDueTodayDialog.show(context, scope: 'mine', customTitle: 'To be Started Tasks', status: 'to_be_started', badgeColor: Colors.indigo),
-            ),
-            _buildStatCard(
-              '${stats.dropped}',
-              s.dropped,
-              subtitle: s.closedWithoutCompletion,
-              color: Colors.grey,
-              onTap: () => TasksDueTodayDialog.show(context, scope: 'mine', customTitle: 'Dropped Tasks', status: 'dropped', badgeColor: Colors.grey),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildStatCard(String val, String title, {String? subtitle, required Color color, VoidCallback? onTap}) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Card(
-      // elevation: 1,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-
-        side: BorderSide(color: isDark ? Color(0xFF1E293B) : Colors.grey.shade300,width: 0.6),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                val,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black87,
-                ),
-              ),
-              if (subtitle != null)
-                Text(
-                  subtitle,
-                  style: const TextStyle(fontSize: 10, color: Colors.grey),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildActionCenterCard(
       BuildContext context, AppStrings s, DashboardActionCenter actionCenter) {
     final maxCount = [
@@ -997,11 +706,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               '${actionCenter.approvals}',
               approvalsProgress,
               Colors.orange,
-              onTap: () => TasksDueTodayDialog.show(
+              onTap: () => Navigator.push(
                 context,
-                scope: 'mine',
-                customTitle: s.approvalsToReview,
-                badgeColor: Colors.orange,
+                MaterialPageRoute(builder: (context) => const TaskApprovalsScreen()),
               ),
             ),
             const SizedBox(height: 12),

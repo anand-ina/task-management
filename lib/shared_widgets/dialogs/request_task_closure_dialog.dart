@@ -4,6 +4,7 @@ import '../../core/constants/app_colors.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/dio_client.dart';
 import '../../../modules/tasks/models/task_model.dart';
+import '../dropdowns/searchable_filter_dropdown.dart';
 
 class RequestTaskClosureDialog extends StatefulWidget {
   const RequestTaskClosureDialog({super.key});
@@ -202,25 +203,16 @@ class _RequestTaskClosureDialogState extends State<RequestTaskClosureDialog> {
                         child: const Text('No open tasks available', style: TextStyle(fontSize: 11, color: Colors.grey)),
                       )
                     else
-                      DropdownButtonFormField<TaskItemModel>(
+                      SearchableFilterDropdown<TaskItemModel>(
                         value: _selectedTask,
-                        isDense: true,
+                        hint: 'Select task',
+                        searchHint: 'Search task...',
                         isExpanded: true,
-                        decoration: InputDecoration(
-                          isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                          filled: true,
-                          fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-                        ),
+                        triggerHeight: 40,
                         items: _myTasks.map((task) {
-                          return DropdownMenuItem<TaskItemModel>(
+                          return SearchableDropdownItem<TaskItemModel?>(
                             value: task,
-                            child: Text(
-                              '${task.taskNo} — ${task.title}',
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            label: '${task.taskNo} — ${task.title}',
                           );
                         }).toList(),
                         onChanged: (val) {

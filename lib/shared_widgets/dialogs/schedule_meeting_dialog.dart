@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../core/constants/app_colors.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/dio_client.dart';
+import '../dropdowns/searchable_filter_dropdown.dart';
 
 class ScheduleMeetingDialog extends StatefulWidget {
   const ScheduleMeetingDialog({super.key});
@@ -453,19 +454,13 @@ class _ScheduleMeetingDialogState extends State<ScheduleMeetingDialog> {
                               children: [
                                 const Text('Duration', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                                 const SizedBox(height: 4),
-                                DropdownButtonFormField<String>(
-                                  initialValue: _selectedDuration,
-                                  isDense: true,
+                                SearchableFilterDropdown<String>(
+                                  value: _selectedDuration,
+                                  hint: 'Duration',
                                   isExpanded: true,
-                                  decoration: InputDecoration(
-                                    isDense: true,
-                                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                    filled: true,
-                                    fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-                                  ),
+                                  triggerHeight: 34,
                                   items: ['15 min', '30 min', '45 min', '60 min'].map((d) {
-                                    return DropdownMenuItem(value: d, child: Text(d, style: const TextStyle(fontSize: 11)));
+                                    return SearchableDropdownItem<String?>(value: d, label: d);
                                   }).toList(),
                                   onChanged: (val) => setState(() => _selectedDuration = val ?? '30 min'),
                                 ),
@@ -479,21 +474,15 @@ class _ScheduleMeetingDialogState extends State<ScheduleMeetingDialog> {
                       // Branch Dropdown
                       const Text('Branch', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 4),
-                      DropdownButtonFormField<int>(
-                        initialValue: _selectedBranchId,
-                        isDense: true,
+                      SearchableFilterDropdown<int>(
+                        value: _selectedBranchId,
+                        hint: 'Branch',
                         isExpanded: true,
-                        decoration: InputDecoration(
-                          isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                          filled: true,
-                          fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-                        ),
+                        triggerHeight: 34,
                         items: _branches.map((b) {
                           final id = b['id'] as int? ?? 1;
                           final name = b['name']?.toString() ?? 'Head Office';
-                          return DropdownMenuItem<int>(value: id, child: Text(name, style: const TextStyle(fontSize: 11)));
+                          return SearchableDropdownItem<int?>(value: id, label: name);
                         }).toList(),
                         onChanged: (val) => setState(() => _selectedBranchId = val),
                       ),

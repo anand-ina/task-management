@@ -29,6 +29,15 @@ class SearchableFilterDropdown<T> extends StatefulWidget {
   final bool isExpanded;
   final Widget Function(BuildContext context, VoidCallback onTap, bool isOpen)? customTrigger;
 
+  /// When false, the trigger is greyed out and the popup cannot be opened.
+  final bool enabled;
+
+  /// Height of the default trigger. Use ~44-48 for form fields.
+  final double triggerHeight;
+
+  /// Optional icon shown before the selected text in the default trigger.
+  final Widget? prefixIcon;
+
   const SearchableFilterDropdown({
     super.key,
     required this.value,
@@ -41,6 +50,9 @@ class SearchableFilterDropdown<T> extends StatefulWidget {
     this.maxVisibleCount = 4,
     this.isExpanded = false,
     this.customTrigger,
+    this.enabled = true,
+    this.triggerHeight = 38,
+    this.prefixIcon,
   });
 
   @override
@@ -175,15 +187,17 @@ class _SearchableFilterDropdownState<T> extends State<SearchableFilterDropdown<T
     final displayText = isSelected ? (selectedItem?.label ?? widget.hint) : widget.hint;
 
     final triggerContent = Container(
-      height: 38,
+      height: widget.triggerHeight,
       padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: !widget.enabled
+            ? (isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9))
+            : (isDark ? const Color(0xFF1E293B) : Colors.white),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: _isOpen
               ? const Color(0xFF991B1B)
-              : (isSelected
+              : (isSelected && widget.enabled
                   ? const Color(0xFF991B1B).withValues(alpha: 0.5)
                   : (isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1))),
           width: _isOpen ? 1.5 : 1.0,
@@ -193,7 +207,12 @@ class _SearchableFilterDropdownState<T> extends State<SearchableFilterDropdown<T
         mainAxisSize: widget.isExpanded ? MainAxisSize.max : MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          if (widget.prefixIcon != null) ...[
+            widget.prefixIcon!,
+            const SizedBox(width: 8),
+          ],
           Flexible(
+            fit: widget.isExpanded || widget.width != null ? FlexFit.tight : FlexFit.loose,
             child: Text(
               displayText,
               maxLines: 1,
@@ -201,9 +220,11 @@ class _SearchableFilterDropdownState<T> extends State<SearchableFilterDropdown<T
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                color: isSelected
-                    ? (isDark ? Colors.white : const Color(0xFF0F172A))
-                    : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                color: !widget.enabled
+                    ? (isDark ? Colors.white38 : Colors.black38)
+                    : isSelected
+                        ? (isDark ? Colors.white : const Color(0xFF0F172A))
+                        : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
               ),
             ),
           ),
@@ -220,7 +241,7 @@ class _SearchableFilterDropdownState<T> extends State<SearchableFilterDropdown<T
     return CompositedTransformTarget(
       link: _layerLink,
       child: InkWell(
-        onTap: _toggleDropdown,
+        onTap: widget.enabled ? _toggleDropdown : null,
         borderRadius: BorderRadius.circular(8),
         child: widget.width != null
             ? SizedBox(width: widget.width, child: triggerContent)

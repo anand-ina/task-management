@@ -9,6 +9,7 @@ import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/dialogs/no_internet_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../../shared_widgets/dropdowns/searchable_filter_dropdown.dart';
 import '../models/batch_ticket_request.dart';
 import '../models/batch_ticket_response.dart';
 import '../models/lookup_models.dart';
@@ -519,31 +520,17 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
           ),
 
           // Branch Dropdown
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            decoration: BoxDecoration(
-              border: Border.all(color: AppColors.border(context)),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<int>(
-                value: _selectedBranchId,
-                hint: Text(s.branchPlaceholder, style: const TextStyle(fontSize: 12)),
-                icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 16),
-                style: TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textPrimary(context),
-                ),
-                dropdownColor: AppColors.card(context),
-                onChanged: _onBranchChanged,
-                items: _branches.map((b) {
-                  return DropdownMenuItem<int>(
-                    value: b.id,
-                    child: Text(b.name),
-                  );
-                }).toList(),
-              ),
-            ),
+          SearchableFilterDropdown<int>(
+            value: _selectedBranchId,
+            hint: s.branchPlaceholder,
+            minPopupWidth: 220,
+            onChanged: _onBranchChanged,
+            items: _branches.map((b) {
+              return SearchableDropdownItem<int>(
+                value: b.id,
+                label: b.name,
+              );
+            }).toList(),
           ),
 
           // Add Row Button
@@ -880,33 +867,23 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
           ),
         ),
         const SizedBox(height: 4),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-            color: AppColors.subtleBg(context),
-            border: Border.all(color: AppColors.border(context)),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              isExpanded: true,
-              value: slip.type,
-              style: TextStyle(fontSize: 12, color: AppColors.textPrimary(context)),
-              dropdownColor: AppColors.card(context),
-              onChanged: (val) {
-                if (val != null) {
-                  setState(() {
-                    slip.type = val;
-                  });
-                }
-              },
-              items: [
-                DropdownMenuItem(value: 'complaint', child: Text(s.typeComplaint)),
-                DropdownMenuItem(value: 'feedback', child: Text(s.typeFeedbackSuggestion)),
-                DropdownMenuItem(value: 'appreciation', child: Text(s.typeAppreciation)),
-              ],
-            ),
-          ),
+        SearchableFilterDropdown<String>(
+          isExpanded: true,
+          triggerHeight: 44,
+          value: slip.type,
+          hint: s.typeLabel,
+          onChanged: (val) {
+            if (val != null) {
+              setState(() {
+                slip.type = val;
+              });
+            }
+          },
+          items: [
+            SearchableDropdownItem<String>(value: 'complaint', label: s.typeComplaint),
+            SearchableDropdownItem<String>(value: 'feedback', label: s.typeFeedbackSuggestion),
+            SearchableDropdownItem<String>(value: 'appreciation', label: s.typeAppreciation),
+          ],
         ),
       ],
     );
@@ -1003,34 +980,24 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
           ),
         ),
         const SizedBox(height: 4),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-            color: AppColors.subtleBg(context),
-            border: Border.all(color: AppColors.border(context)),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              isExpanded: true,
-              value: slip.aboutKind,
-              style: TextStyle(fontSize: 12, color: AppColors.textPrimary(context)),
-              dropdownColor: AppColors.card(context),
-              onChanged: (val) {
-                if (val != null) {
-                  setState(() {
-                    slip.aboutKind = val;
-                  });
-                }
-              },
-              items: [
-                DropdownMenuItem(value: 'general', child: Text(s.generalOption)),
-                DropdownMenuItem(value: 'staff', child: Text(s.staffMemberOption)),
-                DropdownMenuItem(value: 'transport', child: Text(s.transportOption)),
-                DropdownMenuItem(value: 'facility', child: Text(s.facilityOption)),
-              ],
-            ),
-          ),
+        SearchableFilterDropdown<String>(
+          isExpanded: true,
+          triggerHeight: 44,
+          value: slip.aboutKind,
+          hint: s.aboutLabelSimple,
+          onChanged: (val) {
+            if (val != null) {
+              setState(() {
+                slip.aboutKind = val;
+              });
+            }
+          },
+          items: [
+            SearchableDropdownItem<String>(value: 'general', label: s.generalOption),
+            SearchableDropdownItem<String>(value: 'staff', label: s.staffMemberOption),
+            SearchableDropdownItem<String>(value: 'transport', label: s.transportOption),
+            SearchableDropdownItem<String>(value: 'facility', label: s.facilityOption),
+          ],
         ),
       ],
     );
@@ -1049,39 +1016,28 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
           ),
         ),
         const SizedBox(height: 4),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-            color: AppColors.subtleBg(context),
-            border: Border.all(color: AppColors.border(context)),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<int?>(
-              isExpanded: true,
-              value: slip.aboutUserId,
-              hint: Text(s.notNamedOption, style: const TextStyle(fontSize: 12)),
-              style: TextStyle(fontSize: 12, color: AppColors.textPrimary(context)),
-              dropdownColor: AppColors.card(context),
-              onChanged: (val) {
-                setState(() {
-                  slip.aboutUserId = val;
-                });
-              },
-              items: [
-                DropdownMenuItem<int?>(
-                  value: null,
-                  child: Text(s.notNamedOption),
-                ),
-                ..._assignees.map((a) {
-                  return DropdownMenuItem<int?>(
-                    value: a.id,
-                    child: Text(a.name),
-                  );
-                }),
-              ],
+        SearchableFilterDropdown<int>(
+          isExpanded: true,
+          triggerHeight: 44,
+          value: slip.aboutUserId,
+          hint: s.notNamedOption,
+          onChanged: (val) {
+            setState(() {
+              slip.aboutUserId = val;
+            });
+          },
+          items: [
+            SearchableDropdownItem<int?>(
+              value: null,
+              label: s.notNamedOption,
             ),
-          ),
+            ..._assignees.map((a) {
+              return SearchableDropdownItem<int?>(
+                value: a.id,
+                label: a.name,
+              );
+            }),
+          ],
         ),
       ],
     );
@@ -1103,31 +1059,21 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
           ),
         ),
         const SizedBox(height: 4),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-            color: AppColors.subtleBg(context),
-            border: Border.all(color: AppColors.border(context)),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              isExpanded: true,
-              value: validCategory,
-              style: TextStyle(fontSize: 12, color: AppColors.textPrimary(context)),
-              dropdownColor: AppColors.card(context),
-              onChanged: (val) {
-                if (val != null) {
-                  setState(() {
-                    slip.category = val;
-                  });
-                }
-              },
-              items: categories.map((c) {
-                return DropdownMenuItem(value: c, child: Text(c));
-              }).toList(),
-            ),
-          ),
+        SearchableFilterDropdown<String>(
+          isExpanded: true,
+          triggerHeight: 44,
+          value: validCategory,
+          hint: s.categoryLabelSimple,
+          onChanged: (val) {
+            if (val != null) {
+              setState(() {
+                slip.category = val;
+              });
+            }
+          },
+          items: categories.map((c) {
+            return SearchableDropdownItem<String>(value: c, label: c);
+          }).toList(),
         ),
       ],
     );
@@ -1146,32 +1092,22 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
           ),
         ),
         const SizedBox(height: 4),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-            color: AppColors.subtleBg(context),
-            border: Border.all(color: AppColors.border(context)),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              isExpanded: true,
-              value: slip.visibility,
-              style: TextStyle(fontSize: 12, color: AppColors.textPrimary(context)),
-              dropdownColor: AppColors.card(context),
-              onChanged: (val) {
-                if (val != null) {
-                  setState(() {
-                    slip.visibility = val;
-                  });
-                }
-              },
-              items: [
-                DropdownMenuItem(value: 'general', child: Text(s.visibilityGeneral)),
-                DropdownMenuItem(value: 'confidential', child: Text(s.visibilityConfidential)),
-              ],
-            ),
-          ),
+        SearchableFilterDropdown<String>(
+          isExpanded: true,
+          triggerHeight: 44,
+          value: slip.visibility,
+          hint: s.visibilityLabel,
+          onChanged: (val) {
+            if (val != null) {
+              setState(() {
+                slip.visibility = val;
+              });
+            }
+          },
+          items: [
+            SearchableDropdownItem<String>(value: 'general', label: s.visibilityGeneral),
+            SearchableDropdownItem<String>(value: 'confidential', label: s.visibilityConfidential),
+          ],
         ),
       ],
     );

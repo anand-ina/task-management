@@ -722,12 +722,14 @@ class _LoginScreenState extends State<LoginScreen> {
         TextFormField(
           controller: _passwordController,
           obscureText: !_isPasswordVisible,
+
           style: TextStyle(
             color: isDark ? Colors.white : const Color(0xFF111827),
             fontSize: 14.5,
           ),
           decoration: InputDecoration(
             isDense: true,
+            hintText: '******',
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),

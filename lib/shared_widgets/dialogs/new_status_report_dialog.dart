@@ -4,6 +4,7 @@ import '../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../modules/reports/models/pull_tasks_model.dart';
 import '../../../modules/reports/repository/reports_repository.dart';
+import '../dropdowns/searchable_filter_dropdown.dart';
 
 class NewStatusReportDialog extends StatefulWidget {
   const NewStatusReportDialog({super.key});
@@ -198,20 +199,15 @@ class _NewStatusReportDialogState extends State<NewStatusReportDialog> {
                             children: [
                               Text(s.reportTypeLabel, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                               const SizedBox(height: 4),
-                              DropdownButtonFormField<String>(
-                                initialValue: _selectedType,
-                                isDense: true,
-                                decoration: InputDecoration(
-                                  isDense: true,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                  filled: true,
-                                  fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-                                ),
+                              SearchableFilterDropdown<String>(
+                                value: _selectedType,
+                                hint: s.reportTypeLabel,
+                                isExpanded: true,
+                                triggerHeight: 34,
                                 items: [
-                                  DropdownMenuItem(value: 'dsr', child: Text(s.dailyDsr, style: const TextStyle(fontSize: 11))),
-                                  DropdownMenuItem(value: 'wsr', child: Text(s.weeklyWsr, style: const TextStyle(fontSize: 11))),
-                                  DropdownMenuItem(value: 'msr', child: Text(s.monthlyMsr, style: const TextStyle(fontSize: 11))),
+                                  SearchableDropdownItem<String?>(value: 'dsr', label: s.dailyDsr),
+                                  SearchableDropdownItem<String?>(value: 'wsr', label: s.weeklyWsr),
+                                  SearchableDropdownItem<String?>(value: 'msr', label: s.monthlyMsr),
                                 ],
                                 onChanged: (val) {
                                   if (val != null) {

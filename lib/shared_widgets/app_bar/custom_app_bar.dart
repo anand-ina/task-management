@@ -72,6 +72,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
   Widget build(BuildContext context) {
     final s = AppStrings.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    final isTablet = screenWidth >= 600;
 
     final authState = context.watch<AuthBloc>().state;
     String userName = 'User';
@@ -240,57 +243,95 @@ class _CustomAppBarState extends State<CustomAppBar> {
               //   ),
               // ),
               if (isAdmin) ...[
-                Container(
-                  height: 36,
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  decoration: BoxDecoration(
-                    color: AppColors.chipBg(context),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.subtleBorder(context)),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    userRoleLabel.isNotEmpty
-                        ? (userRoleLabel.toLowerCase().contains('admin') ? 'Administrator' : userRoleLabel)
-                        : 'Administrator',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textSecondary(context),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 1),
-                Flexible(
-                  child: Container(
+                if (!isMobile) ...[
+                  Container(
                     height: 36,
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
                     decoration: BoxDecoration(
                       color: AppColors.chipBg(context),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: AppColors.subtleBorder(context)),
                     ),
-                    alignment: Alignment.centerLeft,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text('🏫 ', style: TextStyle(fontSize: 11)),
-                        Flexible(
-                          child: Text(
-                            adminBranchName,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textSecondary(context),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+                    alignment: Alignment.center,
+                    child: Text(
+                      userRoleLabel.isNotEmpty
+                          ? (userRoleLabel.toLowerCase().contains('admin') ? 'Administrator' : userRoleLabel)
+                          : 'Administrator',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textSecondary(context),
+                      ),
                     ),
                   ),
-                ),
+                  const SizedBox(width: 8),
+                ],
+                if (isTablet)
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 240),
+                    child: Container(
+                      height: 36,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.chipBg(context),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColors.subtleBorder(context)),
+                      ),
+                      alignment: Alignment.centerLeft,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text('🏫 ', style: TextStyle(fontSize: 12)),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              adminBranchName,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textSecondary(context),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                else
+                  Flexible(
+                    child: Container(
+                      height: 36,
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.chipBg(context),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColors.subtleBorder(context)),
+                      ),
+                      alignment: Alignment.centerLeft,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text('🏫 ', style: TextStyle(fontSize: 11)),
+                          const SizedBox(width: 3),
+                          Flexible(
+                            child: Text(
+                              adminBranchName,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textSecondary(context),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                if (isTablet) const Spacer(),
               ] else ...[
                 // + New Popup Button (non-admin users)
                 PopupMenuButton<String>(
@@ -372,109 +413,202 @@ class _CustomAppBarState extends State<CustomAppBar> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 6),
+                SizedBox(width: isTablet ? 8 : 6),
 
                 // Branch Selector: if hasMultiBranchAccess and (branches > 1 or isPrincipal or isDirector), show dropdown; otherwise direct branch name
                 if (hasMultiBranchAccess && (branches.length > 1 || isPrincipal || isDirector))
-                  Flexible(
-                    child: Container(
-                      height: 36,
-                      padding: const EdgeInsets.symmetric(horizontal: 2),
-                      decoration: BoxDecoration(
-                        color: AppColors.chipBg(context),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppColors.subtleBorder(context)),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<BranchModel>(
-                          value: selectedBranch,
-                          isDense: true,
-                          isExpanded: true,
-                          icon: const Icon(Icons.arrow_drop_down_rounded, size: 16),
-                          items: branches.map((b) {
-                            final isAllItem = b.id == 0 || b.code.toUpperCase() == 'ALL' || b.name.toLowerCase().contains('all branches');
-                            final displayName = isAllItem
-                                ? 'All Branches'
-                                : (b.code.isNotEmpty ? '${b.code} · ${b.name}' : b.name);
-                            return DropdownMenuItem<BranchModel>(
-                              value: b,
-                              child: Row(
-                                // mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(isAllItem ? '🏛️ ' : '🏫 ', style: const TextStyle(fontSize: 9)),
-                                  Expanded(
-                                    child: Text(
-                                      displayName,
-                                      style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold),
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 3,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }).toList(),
-                          onChanged: (val) {
-                            if (val != null) {
-                              context.read<DashboardBloc>().add(
-                                SelectBranchEvent(
-                                  val,
-                                  mine: (isDirector || isPrincipal) ? null : 1,
-                                ),
-                              );
-                            }
-                          },
-                        ),
-                      ),
-                    ),
-                  )
-                else
-                  Flexible(
-                    child: Container(
-                      height: 36,
-                      padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: AppColors.chipBg(context),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppColors.subtleBorder(context)),
-                      ),
-                      alignment: Alignment.centerLeft,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 5,
-                            height: 5,
+                  isTablet
+                      ? SizedBox(
+                          width: 220,
+                          child: Container(
+                            height: 36,
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
                             decoration: BoxDecoration(
-                              color: AppColors.textPrimary(context),
-                              shape: BoxShape.circle,
+                              color: AppColors.chipBg(context),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: AppColors.subtleBorder(context)),
                             ),
-                          ),
-                          const SizedBox(width: 3),
-                          Flexible(
-                            child: Text(
-                              directBranchDisplayName,
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textSecondary(context),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<BranchModel>(
+                                value: selectedBranch,
+                                isDense: true,
+                                isExpanded: true,
+                                icon: const Icon(Icons.arrow_drop_down_rounded, size: 18),
+                                items: branches.map((b) {
+                                  final isAllItem = b.id == 0 || b.code.toUpperCase() == 'ALL' || b.name.toLowerCase().contains('all branches');
+                                  final displayName = isAllItem
+                                      ? 'All Branches'
+                                      : (b.code.isNotEmpty ? '${b.code} · ${b.name}' : b.name);
+                                  return DropdownMenuItem<BranchModel>(
+                                    value: b,
+                                    child: Row(
+                                      children: [
+                                        Text(isAllItem ? '🏛️ ' : '🏫 ', style: const TextStyle(fontSize: 12)),
+                                        const SizedBox(width: 4),
+                                        Expanded(
+                                          child: Text(
+                                            displayName,
+                                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 1,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }).toList(),
+                                onChanged: (val) {
+                                  if (val != null) {
+                                    context.read<DashboardBloc>().add(
+                                      SelectBranchEvent(
+                                        val,
+                                        mine: (isDirector || isPrincipal) ? null : 1,
+                                      ),
+                                    );
+                                  }
+                                },
                               ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
+                        )
+                      : Flexible(
+                          child: Container(
+                            height: 36,
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.chipBg(context),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: AppColors.subtleBorder(context)),
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<BranchModel>(
+                                value: selectedBranch,
+                                isDense: true,
+                                isExpanded: true,
+                                icon: const Icon(Icons.arrow_drop_down_rounded, size: 16),
+                                items: branches.map((b) {
+                                  final isAllItem = b.id == 0 || b.code.toUpperCase() == 'ALL' || b.name.toLowerCase().contains('all branches');
+                                  final displayName = isAllItem
+                                      ? 'All Branches'
+                                      : (b.code.isNotEmpty ? '${b.code} · ${b.name}' : b.name);
+                                  return DropdownMenuItem<BranchModel>(
+                                    value: b,
+                                    child: Row(
+                                      children: [
+                                        Text(isAllItem ? '🏛️ ' : '🏫 ', style: const TextStyle(fontSize: 10)),
+                                        const SizedBox(width: 2),
+                                        Expanded(
+                                          child: Text(
+                                            displayName,
+                                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 1,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }).toList(),
+                                onChanged: (val) {
+                                  if (val != null) {
+                                    context.read<DashboardBloc>().add(
+                                      SelectBranchEvent(
+                                        val,
+                                        mine: (isDirector || isPrincipal) ? null : 1,
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
+                            ),
+                          ),
+                        )
+                else
+                  isTablet
+                      ? SizedBox(
+                          width: 220,
+                          child: Container(
+                            height: 36,
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.chipBg(context),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: AppColors.subtleBorder(context)),
+                            ),
+                            alignment: Alignment.centerLeft,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 6,
+                                  height: 6,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.textPrimary(context),
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    directBranchDisplayName,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.textSecondary(context),
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      : Flexible(
+                          child: Container(
+                            height: 36,
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.chipBg(context),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: AppColors.subtleBorder(context)),
+                            ),
+                            alignment: Alignment.centerLeft,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 5,
+                                  height: 5,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.textPrimary(context),
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 3),
+                                Flexible(
+                                  child: Text(
+                                    directBranchDisplayName,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.textSecondary(context),
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
 
-                // Dynamic Role Badge (e.g. Academic Executive)
-                if (userRoleLabel.isNotEmpty && !isAdmin) ...[
-                  const SizedBox(width: 6),
+                // Dynamic Role Badge (e.g. Academic Executive) - hidden on mobile view, shown comfortably on tablet/desktop
+                if (!isMobile && userRoleLabel.isNotEmpty && !isAdmin) ...[
+                  const SizedBox(width: 8),
                   Container(
-                    width: 55,
                     height: 36,
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
                     decoration: BoxDecoration(
                       color: AppColors.chipBg(context),
                       borderRadius: BorderRadius.circular(8),
@@ -483,16 +617,17 @@ class _CustomAppBarState extends State<CustomAppBar> {
                     alignment: Alignment.center,
                     child: Text(
                       userRoleLabel,
-                      maxLines: 3,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 9,
+                        fontSize: 11,
                         fontWeight: FontWeight.bold,
                         color: AppColors.textSecondary(context),
                       ),
                     ),
                   ),
                 ],
+                if (isTablet) const Spacer(),
               ],
 
               // Direct 2-Way Theme Mode Switching (Light White, Dark Black - No Dropdown)

@@ -1,7 +1,10 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/dio_client.dart';
 import '../../dashboard/models/branch_model.dart';
+import '../models/clone_task_models.dart' hide BranchModel;
+import '../models/subtask_models.dart';
 import '../models/task_model.dart';
 
 class TaskRepository {
@@ -15,6 +18,7 @@ class TaskRepository {
     debugPrint('==================== API RESPONSE ====================');
     debugPrint('URL: [GET] ${ApiConstants.branches}');
     debugPrint('Status Code: ${response.statusCode}');
+    debugPrint('Response Data: ${response.data}');
     debugPrint('======================================================');
     if (response.data is List) {
       return (response.data as List).map((e) => BranchModel.fromJson(e)).toList();
@@ -76,8 +80,165 @@ class TaskRepository {
   }
 
   Future<TaskDetailModel> getTaskDetail(int taskId) async {
-    final response = await _dioClient.dio.get('${ApiConstants.tasks}/$taskId');
+    final url = '${ApiConstants.tasks}/$taskId';
+    debugPrint('==================== API REQUEST ====================');
+    debugPrint('URL: [GET] $url');
+    debugPrint('=====================================================');
+    final response = await _dioClient.dio.get(url);
+    debugPrint('==================== API RESPONSE ====================');
+    debugPrint('URL: [GET] $url');
+    debugPrint('Status Code: ${response.statusCode}');
+    debugPrint('Response Data: ${response.data}');
+    debugPrint('======================================================');
     return TaskDetailModel.fromJson(response.data);
+  }
+
+  Future<List<AssigneeModel>> getAssigneesLookup() async {
+    const url = ApiConstants.assignees;
+    debugPrint('==================== API REQUEST ====================');
+    debugPrint('URL: [GET] $url');
+    debugPrint('=====================================================');
+    final response = await _dioClient.dio.get(url);
+    debugPrint('==================== API RESPONSE ====================');
+    debugPrint('URL: [GET] $url');
+    debugPrint('Status Code: ${response.statusCode}');
+    debugPrint('Response Data: ${response.data}');
+    debugPrint('======================================================');
+    if (response.data is List) {
+      return (response.data as List)
+          .map((e) => AssigneeModel.fromJson(e is Map<String, dynamic> ? e : {}))
+          .toList();
+    }
+    return [];
+  }
+
+  Future<Map<String, dynamic>> getEnumsLookup() async {
+    const url = ApiConstants.enums;
+    debugPrint('==================== API REQUEST ====================');
+    debugPrint('URL: [GET] $url');
+    debugPrint('=====================================================');
+    final response = await _dioClient.dio.get(url);
+    debugPrint('==================== API RESPONSE ====================');
+    debugPrint('URL: [GET] $url');
+    debugPrint('Status Code: ${response.statusCode}');
+    debugPrint('Response Data: ${response.data}');
+    debugPrint('======================================================');
+    if (response.data is Map<String, dynamic>) {
+      return response.data as Map<String, dynamic>;
+    }
+    return {};
+  }
+
+  Future<List<dynamic>> getDraftsLookup({String kind = 'task'}) async {
+    final url = '${ApiConstants.drafts}?kind=$kind';
+    debugPrint('==================== API REQUEST ====================');
+    debugPrint('URL: [GET] $url');
+    debugPrint('=====================================================');
+    final response = await _dioClient.dio.get(
+      ApiConstants.drafts,
+      queryParameters: {'kind': kind},
+    );
+    debugPrint('==================== API RESPONSE ====================');
+    debugPrint('URL: [GET] $url');
+    debugPrint('Status Code: ${response.statusCode}');
+    debugPrint('Response Data: ${response.data}');
+    debugPrint('======================================================');
+    if (response.data is List) {
+      return response.data as List;
+    }
+    return [];
+  }
+
+  Future<String> getNextSubtaskId(int parentId) async {
+    final url = '${ApiConstants.tasksNextId}?parentId=$parentId';
+    debugPrint('==================== API REQUEST ====================');
+    debugPrint('URL: [GET] $url');
+    debugPrint('=====================================================');
+    final response = await _dioClient.dio.get(
+      ApiConstants.tasksNextId,
+      queryParameters: {'parentId': parentId},
+    );
+    debugPrint('==================== API RESPONSE ====================');
+    debugPrint('URL: [GET] $url');
+    debugPrint('Status Code: ${response.statusCode}');
+    debugPrint('Response Data: ${response.data}');
+    debugPrint('======================================================');
+    if (response.data is Map && response.data['taskNo'] != null) {
+      return response.data['taskNo'].toString();
+    }
+    return '';
+  }
+
+  Future<SubtaskCreateResult> createSubTask(Map<String, dynamic> payload) async {
+    const url = ApiConstants.tasks;
+    debugPrint('==================== API REQUEST ====================');
+    debugPrint('URL: [POST] $url');
+    debugPrint('Payload: $payload');
+    debugPrint('=====================================================');
+    try {
+      final response = await _dioClient.dio.post(url, data: payload);
+      debugPrint('==================== API RESPONSE ====================');
+      debugPrint('URL: [POST] $url');
+      debugPrint('Status Code: ${response.statusCode}');
+      debugPrint('Response Data: ${response.data}');
+      debugPrint('======================================================');
+      final isOk = response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300;
+      return SubtaskCreateResult(
+        isSuccess: isOk,
+        statusCode: response.statusCode,
+        data: response.data,
+      );
+    } on DioException catch (e) {
+      final statusCode = e.response?.statusCode;
+      String? errorMessage;
+      if (e.response?.data is Map) {
+        errorMessage = e.response?.data['message']?.toString();
+      }
+      errorMessage ??= e.message ?? 'An error occurred';
+
+      debugPrint('==================== API ERROR ====================');
+      debugPrint('URL: [POST] $url');
+      debugPrint('Status Code: $statusCode');
+      debugPrint('Error Response: ${e.response?.data}');
+      debugPrint('Error Message: $errorMessage');
+      debugPrint('===================================================');
+
+      return SubtaskCreateResult(
+        isSuccess: false,
+        statusCode: statusCode,
+        message: errorMessage,
+        data: e.response?.data,
+      );
+    } catch (e) {
+      debugPrint('==================== API ERROR ====================');
+      debugPrint('URL: [POST] $url');
+      debugPrint('Error: $e');
+      debugPrint('===================================================');
+      return SubtaskCreateResult(
+        isSuccess: false,
+        message: e.toString(),
+      );
+    }
+  }
+
+  Future<Map<String, dynamic>> updateTaskDetail(int taskId, Map<String, dynamic> payload) async {
+    final url = '${ApiConstants.tasks}/$taskId';
+    debugPrint('==================== API REQUEST ====================');
+    debugPrint('URL: [PATCH] $url');
+    debugPrint('Payload: $payload');
+    debugPrint('=====================================================');
+    final response = await _dioClient.dio.patch(url, data: payload);
+    debugPrint('==================== API RESPONSE ====================');
+    debugPrint('URL: [PATCH] $url');
+    debugPrint('Status Code: ${response.statusCode}');
+    debugPrint('Response Data: ${response.data}');
+    debugPrint('======================================================');
+    if (response.data is Map<String, dynamic>) {
+      return response.data as Map<String, dynamic>;
+    }
+    return {};
   }
 
   Future<TaskDetailModel> reviewTask({
@@ -140,3 +301,4 @@ class TaskRepository {
     return {};
   }
 }
+

@@ -81,7 +81,8 @@ class CustomLeftDrawer extends StatelessWidget {
         isAdmin = true;
         roleTitle = s.administratorRole;
         roleScope = s.administratorBadgeScope;
-      } else if (roleLower.contains('director') ||
+      } else if (user.isDirector ||
+          roleLower.contains('director') ||
           roleLabelLower.contains('director')) {
         isDirector = true;
         roleTitle = s.directorRole;
@@ -177,6 +178,22 @@ class CustomLeftDrawer extends StatelessWidget {
                       ),
                     ],
                   ),
+                  const Spacer(),
+                  IconButton(
+                    tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+                    onPressed: () {
+                      final scaffold = Scaffold.maybeOf(context);
+                      if (scaffold != null && scaffold.isDrawerOpen) {
+                        scaffold.closeDrawer();
+                      }
+                    },
+                    icon: Icon(
+                      Icons.close_rounded,
+                      size: 22,
+                      color: isDark ? Colors.white70 : const Color(0xFF334155),
+                    ),
+                    visualDensity: VisualDensity.compact,
+                  ),
                 ],
               ),
             ),
@@ -259,14 +276,6 @@ class CustomLeftDrawer extends StatelessWidget {
                             isSelected: currentRoute == '/announcements',
                             onTap: () => _navigate(context, '/announcements'),
                           ),
-                        if (isDirector)
-                          _buildNavItem(
-                            context,
-                            icon: Icons.table_chart_outlined,
-                            title: s.organizationOverview,
-                            isSelected: currentRoute == '/org-overview',
-                            onTap: () => _navigate(context, '/org-overview'),
-                          ),
                         if (isPrincipal)
                           _buildNavItem(
                             context,
@@ -283,13 +292,14 @@ class CustomLeftDrawer extends StatelessWidget {
                       context,
                       title: s.tasksHeader,
                       children: [
-                        _buildNavItem(
-                          context,
-                          icon: Icons.check_circle_outline,
-                          title: s.allTasks,
-                          isSelected: currentRoute == '/tasks',
-                          onTap: () => _navigate(context, '/tasks'),
-                        ),
+                        if (!isDirector)
+                          _buildNavItem(
+                            context,
+                            icon: Icons.check_circle_outline,
+                            title: s.allTasks,
+                            isSelected: currentRoute == '/tasks',
+                            onTap: () => _navigate(context, '/tasks'),
+                          ),
                         _buildNavItem(
                           context,
                           icon: Icons.check_box_outlined,
@@ -297,13 +307,14 @@ class CustomLeftDrawer extends StatelessWidget {
                           isSelected: currentRoute == '/my-tasks',
                           onTap: () => _navigate(context, '/my-tasks'),
                         ),
-                        _buildNavItem(
-                          context,
-                          icon: Icons.autorenew_rounded,
-                          title: s.recurringTasks,
-                          isSelected: currentRoute == '/recurring',
-                          onTap: () => _navigate(context, '/recurring'),
-                        ),
+                        if (!isDirector)
+                          _buildNavItem(
+                            context,
+                            icon: Icons.autorenew_rounded,
+                            title: s.recurringTasks,
+                            isSelected: currentRoute == '/recurring',
+                            onTap: () => _navigate(context, '/recurring'),
+                          ),
                       ],
                     ),
 
@@ -363,45 +374,47 @@ class CustomLeftDrawer extends StatelessWidget {
                           isSelected: currentRoute == '/reports',
                           onTap: () => _navigate(context, '/reports'),
                         ),
-                        _buildNavItem(
-                          context,
-                          icon: Icons.bar_chart_rounded,
-                          title: s.reportsDashboard,
-                          isSelected: currentRoute == '/reports-dashboard',
-                          onTap: () => _navigate(context, '/reports-dashboard'),
-                        ),
+                        if (!isDirector)
+                          _buildNavItem(
+                            context,
+                            icon: Icons.bar_chart_rounded,
+                            title: s.reportsDashboard,
+                            isSelected: currentRoute == '/reports-dashboard',
+                            onTap: () => _navigate(context, '/reports-dashboard'),
+                          ),
                       ],
                     ),
 
                     // CARD 5: TO-DO
-                    _buildSectionCard(
-                      context,
-                      title: s.todoHeader,
-                      children: [
-                        _buildNavItem(
-                          context,
-                          icon: Icons.pie_chart_outline_rounded,
-                          title: s.today,
-                          isSelected: currentRoute == '/todo',
-                          onTap: () => _navigate(context, '/todo'),
-                        ),
-                        _buildNavItem(
-                          context,
-                          icon: Icons.history_rounded,
-                          title: s.history,
-                          isSelected: currentRoute == '/todo-history',
-                          onTap: () => _navigate(context, '/todo-history'),
-                        ),
-                        if (isAcademicExecutive || isTeamLead)
+                    if (!isDirector)
+                      _buildSectionCard(
+                        context,
+                        title: s.todoHeader,
+                        children: [
                           _buildNavItem(
                             context,
-                            icon: Icons.access_time_rounded,
-                            title: s.hourlyLog,
-                            isSelected: currentRoute == '/hourly-log',
-                            onTap: () => _navigate(context, '/hourly-log'),
+                            icon: Icons.pie_chart_outline_rounded,
+                            title: s.today,
+                            isSelected: currentRoute == '/todo',
+                            onTap: () => _navigate(context, '/todo'),
                           ),
-                      ],
-                    ),
+                          _buildNavItem(
+                            context,
+                            icon: Icons.history_rounded,
+                            title: s.history,
+                            isSelected: currentRoute == '/todo-history',
+                            onTap: () => _navigate(context, '/todo-history'),
+                          ),
+                          if (isAcademicExecutive || isTeamLead)
+                            _buildNavItem(
+                              context,
+                              icon: Icons.access_time_rounded,
+                              title: s.hourlyLog,
+                              isSelected: currentRoute == '/hourly-log',
+                              onTap: () => _navigate(context, '/hourly-log'),
+                            ),
+                        ],
+                      ),
 
                     // CARD 6: REQUESTS & APPROVALS
                     _buildSectionCard(
@@ -453,14 +466,6 @@ class CustomLeftDrawer extends StatelessWidget {
                       context,
                       title: s.meetingsHeader,
                       children: [
-                        if (isDirector)
-                          _buildNavItem(
-                            context,
-                            icon: Icons.person_outline_rounded,
-                            title: s.monthlyOneOnOnePending,
-                            isSelected: currentRoute == '/one-on-one-pending' || currentRoute == '/one-on-one',
-                            onTap: () => _navigate(context, '/one-on-one-pending'),
-                          ),
                         _buildNavItem(
                           context,
                           icon: Icons.access_time_rounded,
@@ -499,121 +504,6 @@ class CustomLeftDrawer extends StatelessWidget {
                         ),
                       ],
                     ),
-
-                    // CARD 9: PERFORMANCE
-                    _buildSectionCard(
-                      context,
-                      title: s.performanceHeader,
-                      children: [
-                        _buildNavItem(
-                          context,
-                          icon: Icons.emoji_events_outlined,
-                          title: s.leaderboard,
-                          isSelected: currentRoute == '/leaderboard',
-                          onTap: () => _navigate(context, '/leaderboard'),
-                        ),
-                        if (!isAcademicExecutive)
-                          _buildNavItem(
-                            context,
-                            icon: Icons.people_alt_outlined,
-                            title: s.teamPerformance,
-                            isSelected: currentRoute == '/team-performance',
-                            onTap: () => _navigate(context, '/team-performance'),
-                          ),
-                        _buildNavItem(
-                          context,
-                          icon: Icons.diamond_outlined,
-                          title: s.finesAndRewards,
-                          isSelected: currentRoute == '/fines-rewards' || currentRoute == '/fines',
-                          onTap: () => _navigate(context, '/fines-rewards'),
-                        ),
-                        if (isDirector)
-                          _buildNavItem(
-                            context,
-                            icon: Icons.settings_outlined,
-                            title: s.settings,
-                            isSelected: currentRoute == '/performance-settings' ||
-                                currentRoute == '/perf-settings',
-                            onTap: () => _navigate(context, '/performance-settings'),
-                          ),
-                      ],
-                    ),
-
-                    // CARD 11: ORGANIZATION
-                    _buildSectionCard(
-                      context,
-                      title: s.organizationHeader,
-                      children: [
-                        _buildNavItem(
-                          context,
-                          icon: Icons.corporate_fare_rounded,
-                          title: s.adminOrgChart,
-                          isSelected: currentRoute == '/org-chart',
-                          onTap: () => _navigate(context, '/org-chart'),
-                        ),
-                        _buildNavItem(
-                          context,
-                          icon: Icons.subdirectory_arrow_right_rounded,
-                          title: s.myReportingStructure,
-                          isSelected: currentRoute == '/my-reporting',
-                          onTap: () => _navigate(context, '/my-reporting'),
-                        ),
-                      ],
-                    ),
-
-                    // CARD 12: ROLES & RESPONSIBILITIES
-                    _buildSectionCard(
-                      context,
-                      title: s.rolesAndResponsibilitiesHeader,
-                      children: [
-                        _buildNavItem(
-                          context,
-                          icon: Icons.pie_chart_outline_rounded,
-                          title: s.myResponsibilities,
-                          isSelected: currentRoute == '/responsibilities',
-                          onTap: () => _navigate(context, '/responsibilities'),
-                        ),
-                      ],
-                    ),
-
-                    // CARD 13: MY AUDITS
-                    _buildSectionCard(
-                      context,
-                      title: s.myAuditsHeader,
-                      children: [
-                        _buildNavItem(
-                          context,
-                          icon: Icons.search_rounded,
-                          title: s.asAnInternalAuditor,
-                          isSelected: currentRoute == '/audits/auditor',
-                          onTap: () => _navigate(context, '/audits/auditor'),
-                        ),
-                        _buildNavItem(
-                          context,
-                          icon: Icons.assignment_outlined,
-                          title: s.asAnAuditee,
-                          isSelected: currentRoute == '/audits/auditee',
-                          onTap: () => _navigate(context, '/audits/auditee'),
-                        ),
-                      ],
-                    ),
-
-                    // CARD 14: AI & SETTINGS (Shown for all logins except administrator)
-                    if (!isAdmin)
-                      _buildSectionCard(
-                        context,
-                        title: s.sutraAi,
-                        children: [
-                          _buildNavItem(
-                            context,
-                            icon: Icons.auto_awesome_rounded,
-                            title: s.sutraAi,
-                            iconColor: Colors.amber,
-                            isSelected: currentRoute == '/sutra',
-                            onTap: () => _navigate(context, '/sutra'),
-                          ),
-                        ],
-                      ),
                   ],
 
                   const SizedBox(height: 12),
@@ -671,38 +561,13 @@ class CustomLeftDrawer extends StatelessWidget {
     String? title,
     required List<Widget> children,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF131D31) : const Color(0xFFF1F5F9).withValues(alpha: 0.85),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (title != null && title.isNotEmpty) ...[
-            Padding(
-              padding: const EdgeInsets.only(left: 8, top: 4, bottom: 6),
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.0,
-                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
-                ),
-              ),
-            ),
-          ],
-          ...children,
-        ],
-      ),
+    final containsSelected =
+        children.whereType<_DrawerNavItem>().any((item) => item.isSelected);
+    return _CollapsibleDrawerSection(
+      key: ValueKey<String>('drawer-section-${title ?? ''}'),
+      title: title,
+      containsSelected: containsSelected,
+      children: children,
     );
   }
 
@@ -714,45 +579,12 @@ class CustomLeftDrawer extends StatelessWidget {
     required VoidCallback onTap,
     Color? iconColor,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final activeBg = isDark ? const Color(0xFF1E3A8A).withValues(alpha: 0.35) : const Color(0xFFDBEAFE);
-
-    return InkWell(
+    return _DrawerNavItem(
+      icon: icon,
+      title: title,
+      isSelected: isSelected,
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 2),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? activeBg : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              size: 18,
-              color: isSelected
-                  ? (isDark ? Colors.white : const Color(0xFF1E3A8A))
-                  : (iconColor ?? (isDark ? Colors.grey.shade400 : Colors.grey.shade600)),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                  color: isSelected
-                      ? (isDark ? Colors.white : const Color(0xFF1E3A8A))
-                      : (isDark ? Colors.white70 : const Color(0xFF334155)),
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-      ),
+      iconColor: iconColor,
     );
   }
 
@@ -1496,5 +1328,179 @@ class CustomLeftDrawer extends StatelessWidget {
     if (navigator.canPop()) {
       navigator.popUntil((r) => r.isFirst);
     }
+  }
+}
+
+/// Remembers which drawer sections the user expanded/collapsed so the state
+/// survives closing and re-opening the drawer (the drawer is rebuilt each time).
+final Map<String, bool> _drawerSectionExpansion = <String, bool>{};
+
+/// A drawer section card with a tappable header and a down-arrow that
+/// expands/collapses its items. Sections without a title are always expanded.
+class _CollapsibleDrawerSection extends StatefulWidget {
+  final String? title;
+  final bool containsSelected;
+  final List<Widget> children;
+
+  const _CollapsibleDrawerSection({
+    super.key,
+    required this.title,
+    required this.containsSelected,
+    required this.children,
+  });
+
+  @override
+  State<_CollapsibleDrawerSection> createState() => _CollapsibleDrawerSectionState();
+}
+
+class _CollapsibleDrawerSectionState extends State<_CollapsibleDrawerSection> {
+  late bool _expanded;
+
+  bool get _hasTitle => widget.title != null && widget.title!.isNotEmpty;
+
+  @override
+  void initState() {
+    super.initState();
+    // The section holding the current page is always opened; otherwise use the
+    // last state the user chose (collapsed by default).
+    _expanded = !_hasTitle ||
+        widget.containsSelected ||
+        (_drawerSectionExpansion[widget.title!] ?? false);
+  }
+
+  void _toggle() {
+    setState(() => _expanded = !_expanded);
+    _drawerSectionExpansion[widget.title!] = _expanded;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final headerColor = isDark ? Colors.grey.shade400 : Colors.grey.shade600;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF131D31) : const Color(0xFFF1F5F9).withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (_hasTitle)
+            InkWell(
+              onTap: _toggle,
+              borderRadius: BorderRadius.circular(10),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(8, 4, 4, 4),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        widget.title!,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.0,
+                          color: headerColor,
+                        ),
+                      ),
+                    ),
+                    AnimatedRotation(
+                      turns: _expanded ? 0.5 : 0.0,
+                      duration: const Duration(milliseconds: 200),
+                      child: Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        size: 20,
+                        color: headerColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
+            alignment: Alignment.topCenter,
+            child: _expanded
+                ? Padding(
+                    padding: EdgeInsets.only(top: _hasTitle ? 2 : 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: widget.children,
+                    ),
+                  )
+                : const SizedBox(width: double.infinity),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A single navigation entry inside a drawer section.
+class _DrawerNavItem extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final Color? iconColor;
+
+  const _DrawerNavItem({
+    required this.icon,
+    required this.title,
+    required this.isSelected,
+    required this.onTap,
+    this.iconColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeBg = isDark ? const Color(0xFF1E3A8A).withValues(alpha: 0.35) : const Color(0xFFDBEAFE);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? activeBg : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: isSelected
+                  ? (isDark ? Colors.white : const Color(0xFF1E3A8A))
+                  : (iconColor ?? (isDark ? Colors.grey.shade400 : Colors.grey.shade600)),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                  color: isSelected
+                      ? (isDark ? Colors.white : const Color(0xFF1E3A8A))
+                      : (isDark ? Colors.white70 : const Color(0xFF334155)),
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

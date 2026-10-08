@@ -9,6 +9,8 @@ import '../../../modules/tasks/models/task_model.dart';
 import '../../../modules/tasks/repository/task_repository.dart';
 import '../../modules/complaints/screens/complaints_screen.dart';
 import 'clone_task_dialog.dart';
+import 'add_subtask_dialog.dart';
+import 'edit_task_dialog.dart';
 import 'mark_done_dialog.dart';
 import 'move_task_dialog.dart';
 import 'raise_escalation_dialog.dart';
@@ -80,10 +82,13 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
 
   Future<void> _fetchDetail() async {
     try {
-      final res = await _repository.getTaskDetail(widget.taskId);
+      final results = await Future.wait([
+        _repository.getTaskDetail(widget.taskId),
+        _repository.getAssigneesLookup(),
+      ]);
       if (mounted) {
         setState(() {
-          _detail = res;
+          _detail = results[0] as TaskDetailModel;
           _isLoading = false;
         });
       }
@@ -136,6 +141,27 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
     }
   }
 
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'to_be_started':
+        return Colors.blueGrey;
+      case 'in_progress':
+        return Colors.blue;
+      case 'blocked':
+        return Colors.red;
+      case 'done':
+        return Colors.purple;
+      case 'completed':
+        return Colors.green;
+      case 'scrapped':
+        return Colors.grey;
+      case 'paused':
+        return Colors.orange;
+      default:
+        return Colors.blueGrey;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = AppStrings.of(context);
@@ -162,6 +188,13 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
     final taskNo = _detail?.taskNo ?? widget.initialTask?.taskNo ?? 'Task';
     final title = _detail?.title ?? widget.initialTask?.title ?? '';
     final description = _detail?.description ?? widget.initialTask?.description ?? '';
+
+    final parentTaskNo = _detail?.parentTaskNo ?? widget.initialTask?.parentTaskNo;
+    final parentTaskId = _detail?.parentTaskId ?? widget.initialTask?.parentTaskId;
+    final bool isSubtask = (_detail?.isSubtask ?? widget.initialTask?.isSubtask ?? false) ||
+        (parentTaskId != null) ||
+        (parentTaskNo != null && parentTaskNo.isNotEmpty) ||
+        taskNo.contains(RegExp(r'/[\d-]+-\d+$'));
 
     int? ticketId = _detail?.ticketId ?? widget.initialTask?.ticketId;
     String? ticketNo = _detail?.ticketNo ?? widget.initialTask?.ticketNo;
@@ -221,12 +254,131 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '$taskNo · $title',
+                          title.isNotEmpty ? title : taskNo,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                             color: isDark ? Colors.white : const Color(0xFF0F172A),
                           ),
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: isDark ? Colors.white12 : const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
+                              ),
+                              child: Text(
+                                'Task ID $taskNo',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? Colors.white70 : const Color(0xFF334155),
+                                ),
+                              ),
+                            ),
+                            if (isSubtask && parentTaskNo != null && parentTaskNo.isNotEmpty) ...[
+                              InkWell(
+                                onTap: parentTaskId != null
+                                    ? () async {
+                                        Navigator.of(context).pop(_hasReviewed);
+                                        TaskDetailDialog.show(context, taskId: parentTaskId);
+                                      }
+                                    : null,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: isDark ? const Color(0xFF1E293B) : const Color(0xFFEFF6FF),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(
+                                      color: isDark ? const Color(0xFF3B82F6).withValues(alpha: 0.4) : const Color(0xFFBFDBFE),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.subdirectory_arrow_right_rounded,
+                                        size: 13,
+                                        color: isDark ? const Color(0xFF93C5FD) : const Color(0xFF2563EB),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        'Sub-task of $parentTaskNo',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: isDark ? const Color(0xFF93C5FD) : const Color(0xFF1D4ED8),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: priorityColor.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                priority.isNotEmpty ? priority[0].toUpperCase() + priority.substring(1) : '',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: priorityColor,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: _getStatusColor(status).withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 5,
+                                    height: 5,
+                                    decoration: BoxDecoration(color: _getStatusColor(status), shape: BoxShape.circle),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    _formatStatusLabel(status),
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: _getStatusColor(status),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (branchName.isNotEmpty)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: isDark ? Colors.white12 : const Color(0xFFF1F5F9),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  branchName,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: isDark ? Colors.white70 : const Color(0xFF475569),
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                         if (ticketNo != null && ticketNo.isNotEmpty) ...[
                           const SizedBox(height: 6),
@@ -336,40 +488,14 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
               const SizedBox(height: 16),
 
               // 5. Assignees Section with Reassign Button
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Assignees', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
-                  if (!widget.isReadOnly && !isAcademicExecutive && !(isDirector && isDoneOrCompleted) && !widget.showOnlyCloneAndCancel) ...[
-                    InkWell(
-                      onTap: () async {
-                        final result = await ReassignTaskDialog.show(
-                          context,
-                          taskId: widget.taskId,
-                          currentAssignees: assignees,
-                        );
-                        if (result == true) {
-                          _fetchDetail();
-                        }
-                      },
-                      child: const Text(
-                        'Reassign',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2563EB),
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
+              const Text('Assignees', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
               const SizedBox(height: 6),
               Row(
                 children: [
                   Wrap(
                     spacing: 6,
                     runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       ...assignees.take(2).map((a) {
                         final badgeColor = _hexToColor(a.color);
@@ -418,11 +544,236 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                             ),
                           ),
                         ),
+                      if (!widget.isReadOnly && !isAcademicExecutive && !(isDirector && isDoneOrCompleted) && !widget.showOnlyCloneAndCancel)
+                        ElevatedButton.icon(
+                          onPressed: () async {
+                            final result = await ReassignTaskDialog.show(
+                              context,
+                              taskId: widget.taskId,
+                              currentAssignees: assignees,
+                            );
+                            if (result == true) {
+                              _fetchDetail();
+                            }
+                          },
+                          icon: const Icon(Icons.sync, size: 13, color: Colors.white),
+                          label: Text(
+                            s.reassignButton,
+                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF8B1D2C),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            visualDensity: VisualDensity.compact,
+                            elevation: 0,
+                          ),
+                        ),
                     ],
                   ),
                 ],
               ),
               const SizedBox(height: 16),
+
+              // Sub-tasks Section (ONLY FOR PARENT TASKS - hidden when viewing a sub-task)
+              if (!isSubtask) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          s.subTasksTitle,
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                        ),
+                        if (_detail != null) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: isDark ? Colors.white12 : const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              '${_detail!.subtasksCompleted}/${_detail!.subtasksTotal > 0 ? _detail!.subtasksTotal : _detail!.subtasks.length} ${s.completedLabel.toLowerCase()}',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: isDark ? Colors.white70 : const Color(0xFF475569),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    if (!widget.isReadOnly && !widget.showOnlyCloneAndCancel)
+                      ElevatedButton.icon(
+                        onPressed: () async {
+                          final taskDetail = _detail ??
+                              TaskDetailModel(
+                                id: widget.taskId,
+                                taskNo: taskNo,
+                                fy: '2025-26',
+                                title: title,
+                                description: description,
+                                category: category,
+                                priority: priority,
+                                status: status,
+                                progress: progress,
+                                entryDate: entryDate,
+                                dueDate: dueDate,
+                                isConfidential: false,
+                                assignedByText: assignedBy,
+                                assignedByUserId: 1,
+                                assignedByName: assignedBy,
+                                branchId: 1,
+                                branchCode: 'SS00',
+                                branchName: branchName,
+                                assignees: assignees,
+                                timeline: [],
+                                attachments: [],
+                                checklist: [],
+                              );
+                          final created = await AddSubTaskDialog.show(
+                            context,
+                            parentTask: taskDetail,
+                          );
+                          if (created != null && created != false) {
+                            if (created is TaskItemModel && _detail != null) {
+                              setState(() {
+                                final updatedList = List<TaskItemModel>.from(_detail!.subtasks);
+                                updatedList.insert(0, created);
+                                _detail = _detail!.copyWithSubtasks(updatedList);
+                              });
+                            }
+                            _fetchDetail();
+                          }
+                        },
+                        icon: const Icon(Icons.add, size: 14, color: Colors.white),
+                        label: Text(
+                          s.addSubTaskButton,
+                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF8B1D2C),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          visualDensity: VisualDensity.compact,
+                          elevation: 0,
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                if (_detail == null || _detail!.subtasks.isEmpty)
+                  Text(
+                    s.subTasksSubtitle,
+                    style: const TextStyle(fontSize: 10.5, color: Colors.grey),
+                  ),
+                if (_detail != null && _detail!.subtasks.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  ..._detail!.subtasks.map((st) {
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 6),
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: isDark ? Colors.white12 : Colors.grey.shade300),
+                      ),
+                      child: InkWell(
+                        onTap: () async {
+                          await TaskDetailDialog.show(context, taskId: st.id);
+                          _fetchDetail();
+                        },
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  'Task ID ',
+                                  style: TextStyle(fontSize: 11, color: isDark ? Colors.white60 : Colors.grey.shade600),
+                                ),
+                                Text(
+                                  st.taskNo,
+                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    st.title,
+                                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: _getStatusColor(st.status).withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        width: 5,
+                                        height: 5,
+                                        decoration: BoxDecoration(
+                                          color: _getStatusColor(st.status),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        _formatStatusLabel(st.status),
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: _getStatusColor(st.status),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (st.assignees.isNotEmpty) ...[
+                                  const SizedBox(width: 6),
+                                  CircleAvatar(
+                                    radius: 9,
+                                    backgroundColor: _hexToColor(st.assignees.first.color),
+                                    child: Text(
+                                      st.assignees.first.initials,
+                                      style: const TextStyle(fontSize: 8, color: Colors.white, fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                            if (st.dueDate.isNotEmpty) ...[
+                              const SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  const Icon(Icons.calendar_month_outlined, size: 12, color: Colors.grey),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    _formatDateStr(st.dueDate),
+                                    style: const TextStyle(fontSize: 10.5, color: Colors.grey),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
+                  }),
+                ],
+                const SizedBox(height: 16),
+              ],
 
               // 6. Attachments Section (Dynamic)
               if (attachments.isNotEmpty) ...[
@@ -816,8 +1167,53 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      if (!widget.isReadOnly && !widget.showOnlyCloneAndCancel) ...[
+                        OutlinedButton.icon(
+                          onPressed: () async {
+                            final taskItem = _detail ??
+                                TaskDetailModel(
+                                  id: widget.taskId,
+                                  taskNo: taskNo,
+                                  fy: '2025-26',
+                                  title: title,
+                                  description: description,
+                                  category: category,
+                                  priority: priority,
+                                  status: status,
+                                  progress: progress,
+                                  entryDate: entryDate,
+                                  dueDate: dueDate,
+                                  isConfidential: false,
+                                  assignedByText: assignedBy,
+                                  assignedByUserId: 1,
+                                  assignedByName: assignedBy,
+                                  branchId: 1,
+                                  branchCode: 'SS00',
+                                  branchName: branchName,
+                                  assignees: assignees,
+                                  timeline: [],
+                                  attachments: [],
+                                  checklist: [],
+                                );
+                            final updated = await EditTaskDialog.show(
+                              context,
+                              task: taskItem,
+                            );
+                            if (updated == true) {
+                              _fetchDetail();
+                            }
+                          },
+                          icon: const Icon(Icons.edit_outlined, size: 14),
+                          label: Text(s.editButton, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
                       OutlinedButton.icon(
                         onPressed: () async {
                           final taskItem = _detail ??
@@ -922,16 +1318,19 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                         ),
                         const SizedBox(width: 8),
                       ],
-                      OutlinedButton(
-                        onPressed: () => Navigator.of(context).pop(_hasReviewed),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          side: BorderSide(color: isDark ? Colors.white24 : Colors.black26),
-                        ),
-                        child: Text(s.closeButton, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                      ),
                     ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Center(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(_hasReviewed),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 8),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      side: BorderSide(color: isDark ? Colors.white24 : Colors.black26),
+                    ),
+                    child: Text(s.closeButton, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],

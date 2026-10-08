@@ -96,6 +96,11 @@ class TaskItemModel {
   final String? ticketNo;
   final int subtasksTotal;
   final int subtasksCompleted;
+  final int? parentTaskId;
+  final String? parentTaskNo;
+  final String? parentTitle;
+
+  bool get isSubtask => parentTaskId != null || (parentTaskNo != null && parentTaskNo!.isNotEmpty);
 
   TaskItemModel({
     required this.id,
@@ -127,6 +132,9 @@ class TaskItemModel {
     this.ticketNo,
     this.subtasksTotal = 0,
     this.subtasksCompleted = 0,
+    this.parentTaskId,
+    this.parentTaskNo,
+    this.parentTitle,
   });
 
   factory TaskItemModel.fromJson(Map<String, dynamic> json) {
@@ -186,6 +194,9 @@ class TaskItemModel {
       ticketNo: ticketNumber,
       subtasksTotal: totalSubtasks,
       subtasksCompleted: doneSubtasks,
+      parentTaskId: json['parent_task_id'] as int?,
+      parentTaskNo: json['parent_task_no']?.toString(),
+      parentTitle: json['parent_title']?.toString(),
     );
   }
 
@@ -219,6 +230,9 @@ class TaskItemModel {
         'ticket_no': ticketNo,
         'subtasks_total': subtasksTotal,
         'subtasks_completed': subtasksCompleted,
+        'parent_task_id': parentTaskId,
+        'parent_task_no': parentTaskNo,
+        'parent_title': parentTitle,
       };
 }
 
@@ -226,6 +240,7 @@ class TaskDetailModel extends TaskItemModel {
   final List<TaskTimelineItem> timeline;
   final List<dynamic> attachments;
   final List<dynamic> checklist;
+  final List<TaskItemModel> subtasks;
   final String? ticketType;
 
   TaskDetailModel({
@@ -259,9 +274,13 @@ class TaskDetailModel extends TaskItemModel {
     this.ticketType,
     super.subtasksTotal,
     super.subtasksCompleted,
+    super.parentTaskId,
+    super.parentTaskNo,
+    super.parentTitle,
     required this.timeline,
     required this.attachments,
     required this.checklist,
+    this.subtasks = const [],
   });
 
   factory TaskDetailModel.fromJson(Map<String, dynamic> json) {
@@ -301,12 +320,64 @@ class TaskDetailModel extends TaskItemModel {
       ticketType: tType,
       subtasksTotal: baseTask.subtasksTotal,
       subtasksCompleted: baseTask.subtasksCompleted,
+      parentTaskId: baseTask.parentTaskId,
+      parentTaskNo: baseTask.parentTaskNo,
+      parentTitle: baseTask.parentTitle,
       timeline: (json['timeline'] as List<dynamic>?)
               ?.map((e) => TaskTimelineItem.fromJson(e))
               .toList() ??
           [],
       attachments: json['attachments'] as List<dynamic>? ?? [],
       checklist: json['checklist'] as List<dynamic>? ?? [],
+      subtasks: (json['subtasks'] as List<dynamic>?)
+              ?.map((e) => e is Map<String, dynamic>
+                  ? TaskItemModel.fromJson(e)
+                  : (e is Map ? TaskItemModel.fromJson(Map<String, dynamic>.from(e)) : null))
+              .whereType<TaskItemModel>()
+              .toList() ??
+          [],
+    );
+  }
+
+  TaskDetailModel copyWithSubtasks(List<TaskItemModel> newSubtasks) {
+    return TaskDetailModel(
+      id: id,
+      taskNo: taskNo,
+      legacyTaskNo: legacyTaskNo,
+      fy: fy,
+      title: title,
+      description: description,
+      category: category,
+      priority: priority,
+      status: status,
+      progress: progress,
+      location: location,
+      entryDate: entryDate,
+      dueDate: dueDate,
+      completedDate: completedDate,
+      remarks: remarks,
+      isConfidential: isConfidential,
+      blockReason: blockReason,
+      reviewComment: reviewComment,
+      assignedByText: assignedByText,
+      assignedByUserId: assignedByUserId,
+      assignedByName: assignedByName,
+      branchId: branchId,
+      branchCode: branchCode,
+      branchName: branchName,
+      assignees: assignees,
+      ticketId: ticketId,
+      ticketNo: ticketNo,
+      ticketType: ticketType,
+      subtasksTotal: newSubtasks.length,
+      subtasksCompleted: newSubtasks.where((s) => s.status == 'completed').length,
+      parentTaskId: parentTaskId,
+      parentTaskNo: parentTaskNo,
+      parentTitle: parentTitle,
+      timeline: timeline,
+      attachments: attachments,
+      checklist: checklist,
+      subtasks: newSubtasks,
     );
   }
 }

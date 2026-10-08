@@ -8,6 +8,7 @@ import '../../../modules/staff/bloc/staff_event.dart';
 import '../../../modules/staff/models/department_model.dart';
 import '../../../modules/staff/models/role_model.dart';
 import '../../../modules/staff/models/staff_model.dart';
+import '../dropdowns/searchable_filter_dropdown.dart';
 
 class EditUserDialog extends StatefulWidget {
   final StaffModel user;
@@ -472,32 +473,16 @@ class _EditUserDialogState extends State<EditUserDialog> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildLabel('Staff Type *'),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
-                      ),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        isExpanded: true,
-                        value: _staffType,
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'Non-Teaching',
-                            child: Text('Non-Teaching', style: TextStyle(fontSize: 13)),
-                          ),
-                          DropdownMenuItem(
-                            value: 'Teaching',
-                            child: Text('Teaching', style: TextStyle(fontSize: 13)),
-                          ),
-                        ],
-                        onChanged: (val) => setState(() => _staffType = val ?? 'Non-Teaching'),
-                      ),
-                    ),
+                  SearchableFilterDropdown<String>(
+                    isExpanded: true,
+                    triggerHeight: 44,
+                    value: _staffType,
+                    hint: 'Staff Type',
+                    items: const [
+                      SearchableDropdownItem<String?>(value: 'Non-Teaching', label: 'Non-Teaching'),
+                      SearchableDropdownItem<String?>(value: 'Teaching', label: 'Teaching'),
+                    ],
+                    onChanged: (val) => setState(() => _staffType = val ?? 'Non-Teaching'),
                   ),
                 ],
               ),
@@ -511,28 +496,16 @@ class _EditUserDialogState extends State<EditUserDialog> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildLabel('Department'),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
-                            ),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<int>(
-                              isExpanded: true,
-                              value: _selectedDepartmentId,
-                              hint: const Text('—', style: TextStyle(fontSize: 13)),
-                              items: widget.departments.map((d) {
-                                return DropdownMenuItem<int>(
-                                  value: d.id,
-                                  child: Text(d.name, style: const TextStyle(fontSize: 13)),
-                                );
-                              }).toList(),
-                              onChanged: (val) => setState(() => _selectedDepartmentId = val),
-                            ),
-                          ),
+                        SearchableFilterDropdown<int>(
+                          isExpanded: true,
+                          triggerHeight: 44,
+                          value: _selectedDepartmentId,
+                          hint: '—',
+                          searchHint: 'Search Department...',
+                          items: widget.departments.map((d) {
+                            return SearchableDropdownItem<int?>(value: d.id, label: d.name);
+                          }).toList(),
+                          onChanged: (val) => setState(() => _selectedDepartmentId = val),
                         ),
                       ],
                     ),
@@ -543,31 +516,19 @@ class _EditUserDialogState extends State<EditUserDialog> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildLabel('RBAC Role'),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
-                            ),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<int>(
-                              isExpanded: true,
-                              value: _selectedRoleId,
-                              hint: const Text('—', style: TextStyle(fontSize: 13)),
-                              items: widget.roles.map((r) {
-                                return DropdownMenuItem<int>(
-                                  value: r.id,
-                                  child: Text(
-                                    r.label.isNotEmpty ? r.label : r.name,
-                                    style: const TextStyle(fontSize: 13),
-                                  ),
-                                );
-                              }).toList(),
-                              onChanged: (val) => setState(() => _selectedRoleId = val),
-                            ),
-                          ),
+                        SearchableFilterDropdown<int>(
+                          isExpanded: true,
+                          triggerHeight: 44,
+                          value: _selectedRoleId,
+                          hint: '—',
+                          searchHint: 'Search Role...',
+                          items: widget.roles.map((r) {
+                            return SearchableDropdownItem<int?>(
+                              value: r.id,
+                              label: r.label.isNotEmpty ? r.label : r.name,
+                            );
+                          }).toList(),
+                          onChanged: (val) => setState(() => _selectedRoleId = val),
                         ),
                       ],
                     ),
@@ -581,37 +542,21 @@ class _EditUserDialogState extends State<EditUserDialog> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildLabel('Branch'),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
-                      ),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<int?>(
-                        isExpanded: true,
-                        value: _selectedBranchId,
-                        hint: const Text('—', style: TextStyle(fontSize: 13)),
-                        items: [
-                          const DropdownMenuItem<int?>(
-                            value: null,
-                            child: Text('—', style: TextStyle(fontSize: 13)),
-                          ),
-                          ...widget.branches.map((b) {
-                            final bId = b['id'] as int?;
-                            final bName = b['name'] as String? ?? 'Branch';
-                            return DropdownMenuItem<int?>(
-                              value: bId,
-                              child: Text(bName, style: const TextStyle(fontSize: 13)),
-                            );
-                          }),
-                        ],
-                        onChanged: (val) => setState(() => _selectedBranchId = val),
-                      ),
-                    ),
+                  SearchableFilterDropdown<int>(
+                    isExpanded: true,
+                    triggerHeight: 44,
+                    value: _selectedBranchId,
+                    hint: '—',
+                    searchHint: 'Search Branch...',
+                    items: [
+                      const SearchableDropdownItem<int?>(value: null, label: '—'),
+                      ...widget.branches.map((b) {
+                        final bId = b['id'] as int?;
+                        final bName = b['name'] as String? ?? 'Branch';
+                        return SearchableDropdownItem<int?>(value: bId, label: bName);
+                      }),
+                    ],
+                    onChanged: (val) => setState(() => _selectedBranchId = val),
                   ),
                 ],
               ),
@@ -638,25 +583,16 @@ class _EditUserDialogState extends State<EditUserDialog> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildLabel('Task Creator'),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
-                            ),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<bool>(
-                              isExpanded: true,
-                              value: _isTaskCreator,
-                              items: const [
-                                DropdownMenuItem(value: false, child: Text('No', style: TextStyle(fontSize: 13))),
-                                DropdownMenuItem(value: true, child: Text('Yes', style: TextStyle(fontSize: 13))),
-                              ],
-                              onChanged: (val) => setState(() => _isTaskCreator = val ?? false),
-                            ),
-                          ),
+                        SearchableFilterDropdown<bool>(
+                          isExpanded: true,
+                          triggerHeight: 44,
+                          value: _isTaskCreator,
+                          hint: 'Task Creator',
+                          items: const [
+                            SearchableDropdownItem<bool?>(value: false, label: 'No'),
+                            SearchableDropdownItem<bool?>(value: true, label: 'Yes'),
+                          ],
+                          onChanged: (val) => setState(() => _isTaskCreator = val ?? false),
                         ),
                       ],
                     ),
@@ -667,25 +603,16 @@ class _EditUserDialogState extends State<EditUserDialog> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildLabel('Confidential Task Access'),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
-                            ),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<bool>(
-                              isExpanded: true,
-                              value: _confidentialAccess,
-                              items: const [
-                                DropdownMenuItem(value: false, child: Text('No', style: TextStyle(fontSize: 13))),
-                                DropdownMenuItem(value: true, child: Text('Yes', style: TextStyle(fontSize: 13))),
-                              ],
-                              onChanged: (val) => setState(() => _confidentialAccess = val ?? false),
-                            ),
-                          ),
+                        SearchableFilterDropdown<bool>(
+                          isExpanded: true,
+                          triggerHeight: 44,
+                          value: _confidentialAccess,
+                          hint: 'Confidential Task Access',
+                          items: const [
+                            SearchableDropdownItem<bool?>(value: false, label: 'No'),
+                            SearchableDropdownItem<bool?>(value: true, label: 'Yes'),
+                          ],
+                          onChanged: (val) => setState(() => _confidentialAccess = val ?? false),
                         ),
                       ],
                     ),
