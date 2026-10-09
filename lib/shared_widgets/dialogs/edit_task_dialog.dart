@@ -5,6 +5,7 @@ import '../../modules/dashboard/models/branch_model.dart';
 import '../../modules/tasks/models/clone_task_models.dart' hide BranchModel;
 import '../../modules/tasks/models/task_model.dart';
 import '../../modules/tasks/repository/task_repository.dart';
+import '../animations/app_animations.dart';
 
 class EditTaskDialog extends StatefulWidget {
   final TaskDetailModel task;
@@ -18,7 +19,7 @@ class EditTaskDialog extends StatefulWidget {
     BuildContext context, {
     required TaskDetailModel task,
   }) {
-    return showDialog<bool>(
+    return showSmoothDialog<bool>(
       context: context,
       barrierDismissible: true,
       builder: (context) => EditTaskDialog(task: task),

@@ -4,6 +4,7 @@ import '../../core/constants/app_colors.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/dio_client.dart';
 import '../../../modules/tasks/models/task_model.dart';
+import '../animations/app_animations.dart';
 
 class MarkDoneDialog extends StatefulWidget {
   final TaskItemModel task;
@@ -17,7 +18,7 @@ class MarkDoneDialog extends StatefulWidget {
     BuildContext context, {
     required TaskItemModel task,
   }) async {
-    return showDialog<bool>(
+    return showSmoothDialog<bool>(
       context: context,
       barrierDismissible: true,
       builder: (context) => MarkDoneDialog(task: task),

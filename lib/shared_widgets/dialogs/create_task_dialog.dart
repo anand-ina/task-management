@@ -4,12 +4,13 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/dio_client.dart';
+import '../animations/app_animations.dart';
 
 class CreateTaskDialog extends StatefulWidget {
   const CreateTaskDialog({super.key});
 
   static Future<void> show(BuildContext context) async {
-    return showDialog<void>(
+    return showSmoothDialog<void>(
       context: context,
       barrierDismissible: true,
       builder: (context) => const CreateTaskDialog(),

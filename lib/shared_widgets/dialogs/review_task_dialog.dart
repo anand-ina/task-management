@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../../modules/tasks/models/task_model.dart';
 import '../../../modules/tasks/repository/task_repository.dart';
+import '../animations/app_animations.dart';
 
 class ReviewTaskDialog extends StatefulWidget {
   final int taskId;
@@ -24,7 +25,7 @@ class ReviewTaskDialog extends StatefulWidget {
     required String title,
     String? assigneeNote,
   }) {
-    return showDialog<TaskDetailModel?>(
+    return showSmoothDialog<TaskDetailModel?>(
       context: context,
       barrierDismissible: true,
       builder: (context) => ReviewTaskDialog(

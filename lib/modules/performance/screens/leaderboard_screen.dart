@@ -12,6 +12,7 @@ import '../bloc/performance_state.dart';
 import '../models/leaderboard_model.dart';
 import '../models/ledger_model.dart';
 import '../repository/performance_repository.dart';
+import '../../../shared_widgets/animations/app_animations.dart';
 
 class LeaderboardScreen extends StatelessWidget {
   const LeaderboardScreen({super.key});
@@ -49,10 +50,7 @@ class LeaderboardScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (state is PerformanceLoadingState)
-                        const Padding(
-                          padding: EdgeInsets.all(60),
-                          child: Center(child: CircularProgressIndicator()),
-                        )
+                        _buildLeaderboardSkeleton()
                       else if (state is PerformanceErrorState)
                         Center(
                           child: Column(
@@ -68,19 +66,31 @@ class LeaderboardScreen extends StatelessWidget {
                         )
                       else if (state is LeaderboardLoadedState) ...[
                         // Header Red Banner
-                        _buildHeaderBanner(context, s, state.data),
+                        StaggeredSlideFade(
+                          delay: Duration.zero,
+                          child: _buildHeaderBanner(context, s, state.data),
+                        ),
                         const SizedBox(height: 20),
 
                         // Team Leaderboard Table Section
-                        _buildTeamLeaderboard(context, s, state.data.members),
+                        StaggeredSlideFade(
+                          delay: const Duration(milliseconds: 60),
+                          child: _buildTeamLeaderboard(context, s, state.data.members),
+                        ),
                         const SizedBox(height: 24),
 
                         // My Points Ledger Table Section
-                        _buildMyPointsLedger(context, s, state.data.ledger),
+                        StaggeredSlideFade(
+                          delay: const Duration(milliseconds: 120),
+                          child: _buildMyPointsLedger(context, s, state.data.ledger),
+                        ),
                         const SizedBox(height: 24),
 
                         // Achievement Badges Grid
-                        _buildAchievementBadges(context, s),
+                        StaggeredSlideFade(
+                          delay: const Duration(milliseconds: 180),
+                          child: _buildAchievementBadges(context, s),
+                        ),
                       ] else
                         const SizedBox.shrink(),
                       const SizedBox(height: 40),
@@ -372,7 +382,7 @@ class LeaderboardScreen extends StatelessWidget {
                 final b = badges[index];
                 final isEarned = b['earned'] as bool;
 
-                return Container(
+                final badgeWidget = Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: isDark ? const Color(0xFF1E293B) : Colors.white,
@@ -432,9 +442,42 @@ class LeaderboardScreen extends StatelessWidget {
                     ],
                   ),
                 );
+
+                return ScaleTap(child: badgeWidget);
               },
             );
           },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLeaderboardSkeleton() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AnimatedShimmerBox(
+          width: double.infinity,
+          height: 110,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        const SizedBox(height: 20),
+        AnimatedShimmerBox(
+          width: 160,
+          height: 20,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        const SizedBox(height: 12),
+        AnimatedShimmerBox(
+          width: double.infinity,
+          height: 220,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        const SizedBox(height: 24),
+        AnimatedShimmerBox(
+          width: double.infinity,
+          height: 180,
+          borderRadius: BorderRadius.circular(12),
         ),
       ],
     );

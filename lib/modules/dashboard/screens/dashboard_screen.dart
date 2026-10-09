@@ -25,6 +25,7 @@ import '../../announcements/bloc/announcements_bloc.dart';
 import '../../announcements/bloc/announcements_event.dart';
 import '../../announcements/bloc/announcements_state.dart';
 import '../../announcements/widgets/announcement_ticker_bar.dart';
+import '../../../shared_widgets/animations/app_animations.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -129,9 +130,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         body: BlocBuilder<DashboardBloc, DashboardState>(
           builder: (context, state) {
             if (state is DashboardLoadingState) {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
+              return _buildDashboardSkeleton(isDark);
             }
 
             if (state is DashboardErrorState) {
@@ -211,21 +210,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Header Banner Card
-                      _buildHeaderBanner(
-                        context,
-                        s,
-                        userName: userName,
-                        roleName: roleName,
-                        branchName: branchName,
-                        currentDateStr: currentDateStr,
-                        stats: stats,
-                        actionCenter: actionCenter,
+                      StaggeredSlideFade(
+                        delay: Duration.zero,
+                        child: _buildHeaderBanner(
+                          context,
+                          s,
+                          userName: userName,
+                          roleName: roleName,
+                          branchName: branchName,
+                          currentDateStr: currentDateStr,
+                          stats: stats,
+                          actionCenter: actionCenter,
+                        ),
                       ),
                       const SizedBox(height: 10),
 
                       // Status Report Due Today Banner (shown when submitted is false, hidden when true)
                       if (timeline.isNotEmpty && !timeline.first.submitted) ...[
-                        _buildStatusReportAlertCard(context, timeline.first),
+                        StaggeredSlideFade(
+                          delay: const Duration(milliseconds: 50),
+                          child: _buildStatusReportAlertCard(context, timeline.first),
+                        ),
                         const SizedBox(height: 10),
                       ],
 
@@ -243,56 +248,65 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       const SizedBox(height: 24),
 
                       // Action Center & Scheduled Meetings Row
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          final isWide = constraints.maxWidth > 800;
-                          return isWide
-                              ? Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Expanded(child: _buildActionCenterCard(context, s, actionCenter)),
-                                    const SizedBox(width: 16),
-                                    Expanded(child: _buildScheduledMeetingsCard(context, s, timeline)),
-                                  ],
-                                )
-                              : Column(
-                                  children: [
-                                    _buildActionCenterCard(context, s, actionCenter),
-                                    const SizedBox(height: 16),
-                                    _buildScheduledMeetingsCard(context, s, timeline),
-                                  ],
-                                );
-                        },
+                      StaggeredSlideFade(
+                        delay: const Duration(milliseconds: 120),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final isWide = constraints.maxWidth > 800;
+                            return isWide
+                                ? Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(child: _buildActionCenterCard(context, s, actionCenter)),
+                                      const SizedBox(width: 16),
+                                      Expanded(child: _buildScheduledMeetingsCard(context, s, timeline)),
+                                    ],
+                                  )
+                                : Column(
+                                    children: [
+                                      _buildActionCenterCard(context, s, actionCenter),
+                                      const SizedBox(height: 16),
+                                      _buildScheduledMeetingsCard(context, s, timeline),
+                                    ],
+                                  );
+                          },
+                        ),
                       ),
                       const SizedBox(height: 24),
 
                       // My Login Activity & Overdue Tasks by Age Row
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          final isWide = constraints.maxWidth > 800;
-                          return isWide
-                              ? Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Expanded(child: _buildLoginActivityCard(context, s, myLogin)),
-                                    const SizedBox(width: 16),
-                                    Expanded(child: _buildOverdueByAgeCard(context, s, overdueByAge)),
-                                  ],
-                                )
-                              : Column(
-                                  children: [
-                                    _buildLoginActivityCard(context, s, myLogin),
-                                    const SizedBox(height: 16),
-                                    _buildOverdueByAgeCard(context, s, overdueByAge),
-                                  ],
-                                );
-                        },
+                      StaggeredSlideFade(
+                        delay: const Duration(milliseconds: 180),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final isWide = constraints.maxWidth > 800;
+                            return isWide
+                                ? Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(child: _buildLoginActivityCard(context, s, myLogin)),
+                                      const SizedBox(width: 16),
+                                      Expanded(child: _buildOverdueByAgeCard(context, s, overdueByAge)),
+                                    ],
+                                  )
+                                : Column(
+                                    children: [
+                                      _buildLoginActivityCard(context, s, myLogin),
+                                      const SizedBox(height: 16),
+                                      _buildOverdueByAgeCard(context, s, overdueByAge),
+                                    ],
+                                  );
+                          },
+                        ),
                       ),
                       const SizedBox(height: 24),
 
                       // Team Section (Only shown for non-executives)
                       if (!isExecutive) ...[
-                        _buildTeamSection(context, s, teamData),
+                        StaggeredSlideFade(
+                          delay: const Duration(milliseconds: 240),
+                          child: _buildTeamSection(context, s, teamData),
+                        ),
                         const SizedBox(height: 40),
                       ],
                     ],
@@ -473,13 +487,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
 
     if (onTap != null) {
-      return Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
-          child: badge,
-        ),
+      return ScaleTap(
+        onTap: onTap,
+        child: badge,
       );
     }
     return badge;
@@ -500,105 +510,120 @@ class _DashboardScreenState extends State<DashboardScreen> {
               crossAxisSpacing: 12,
               mainAxisExtent: 135,
               children: [
-                _buildCardWithTopBorder(
-                  '★★★★★',
-                  '${stats.emergency}',
-                  s.emergencyPriority,
-                  borderColor: Colors.red,
-                  isSelected: _selectedPriorityFilter == s.emergencyPriority,
-                  onTap: () {
-                    setState(() {
-                      _selectedPriorityFilter = (_selectedPriorityFilter == s.emergencyPriority) ? 'All' : s.emergencyPriority;
-                    });
-                    TasksDueTodayDialog.show(
-                      context,
-                      scope: 'all',
-                      activeOnly: true,
-                      customTitle: '${s.emergencyPriority} tasks',
-                      priority: 'emergency',
-                      badgeColor: Colors.red,
-                    );
-                  },
+                StaggeredSlideFade(
+                  delay: Duration.zero,
+                  child: _buildCardWithTopBorder(
+                    '★★★★★',
+                    '${stats.emergency}',
+                    s.emergencyPriority,
+                    borderColor: Colors.red,
+                    isSelected: _selectedPriorityFilter == s.emergencyPriority,
+                    onTap: () {
+                      setState(() {
+                        _selectedPriorityFilter = (_selectedPriorityFilter == s.emergencyPriority) ? 'All' : s.emergencyPriority;
+                      });
+                      TasksDueTodayDialog.show(
+                        context,
+                        scope: 'all',
+                        activeOnly: true,
+                        customTitle: '${s.emergencyPriority} tasks',
+                        priority: 'emergency',
+                        badgeColor: Colors.red,
+                      );
+                    },
+                  ),
                 ),
-                _buildCardWithTopBorder(
-                  '★★★★',
-                  '${stats.topMost}',
-                  s.topMostPriority,
-                  borderColor: Colors.orange,
-                  isSelected: _selectedPriorityFilter == s.topMostPriority,
-                  onTap: () {
-                    setState(() {
-                      _selectedPriorityFilter = (_selectedPriorityFilter == s.topMostPriority) ? 'All' : s.topMostPriority;
-                    });
-                    TasksDueTodayDialog.show(
-                      context,
-                      scope: 'all',
-                      activeOnly: true,
-                      customTitle: '${s.topMostPriority} tasks',
-                      priority: 'top_most',
-                      badgeColor: Colors.orange,
-                    );
-                  },
+                StaggeredSlideFade(
+                  delay: const Duration(milliseconds: 40),
+                  child: _buildCardWithTopBorder(
+                    '★★★★',
+                    '${stats.topMost}',
+                    s.topMostPriority,
+                    borderColor: Colors.orange,
+                    isSelected: _selectedPriorityFilter == s.topMostPriority,
+                    onTap: () {
+                      setState(() {
+                        _selectedPriorityFilter = (_selectedPriorityFilter == s.topMostPriority) ? 'All' : s.topMostPriority;
+                      });
+                      TasksDueTodayDialog.show(
+                        context,
+                        scope: 'all',
+                        activeOnly: true,
+                        customTitle: '${s.topMostPriority} tasks',
+                        priority: 'top_most',
+                        badgeColor: Colors.orange,
+                      );
+                    },
+                  ),
                 ),
-                _buildCardWithTopBorder(
-                  '★★★',
-                  '${stats.high}',
-                  s.highPriority,
-                  borderColor: Colors.amber.shade700,
-                  isSelected: _selectedPriorityFilter == s.highPriority,
-                  onTap: () {
-                    setState(() {
-                      _selectedPriorityFilter = (_selectedPriorityFilter == s.highPriority) ? 'All' : s.highPriority;
-                    });
-                    TasksDueTodayDialog.show(
-                      context,
-                      scope: 'all',
-                      activeOnly: true,
-                      customTitle: '${s.highPriority} tasks',
-                      priority: 'high',
-                      badgeColor: Colors.amber.shade700,
-                    );
-                  },
+                StaggeredSlideFade(
+                  delay: const Duration(milliseconds: 80),
+                  child: _buildCardWithTopBorder(
+                    '★★★',
+                    '${stats.high}',
+                    s.highPriority,
+                    borderColor: Colors.amber.shade700,
+                    isSelected: _selectedPriorityFilter == s.highPriority,
+                    onTap: () {
+                      setState(() {
+                        _selectedPriorityFilter = (_selectedPriorityFilter == s.highPriority) ? 'All' : s.highPriority;
+                      });
+                      TasksDueTodayDialog.show(
+                        context,
+                        scope: 'all',
+                        activeOnly: true,
+                        customTitle: '${s.highPriority} tasks',
+                        priority: 'high',
+                        badgeColor: Colors.amber.shade700,
+                      );
+                    },
+                  ),
                 ),
-                _buildCardWithTopBorder(
-                  '★★',
-                  '${stats.medium}',
-                  s.mediumPriority,
-                  borderColor: Colors.blue,
-                  isSelected: _selectedPriorityFilter == s.mediumPriority,
-                  onTap: () {
-                    setState(() {
-                      _selectedPriorityFilter = (_selectedPriorityFilter == s.mediumPriority) ? 'All' : s.mediumPriority;
-                    });
-                    TasksDueTodayDialog.show(
-                      context,
-                      scope: 'all',
-                      activeOnly: true,
-                      customTitle: '${s.mediumPriority} tasks',
-                      priority: 'medium',
-                      badgeColor: Colors.blue,
-                    );
-                  },
+                StaggeredSlideFade(
+                  delay: const Duration(milliseconds: 120),
+                  child: _buildCardWithTopBorder(
+                    '★★',
+                    '${stats.medium}',
+                    s.mediumPriority,
+                    borderColor: Colors.blue,
+                    isSelected: _selectedPriorityFilter == s.mediumPriority,
+                    onTap: () {
+                      setState(() {
+                        _selectedPriorityFilter = (_selectedPriorityFilter == s.mediumPriority) ? 'All' : s.mediumPriority;
+                      });
+                      TasksDueTodayDialog.show(
+                        context,
+                        scope: 'all',
+                        activeOnly: true,
+                        customTitle: '${s.mediumPriority} tasks',
+                        priority: 'medium',
+                        badgeColor: Colors.blue,
+                      );
+                    },
+                  ),
                 ),
-                _buildCardWithTopBorder(
-                  '★',
-                  '${stats.low}',
-                  s.lowPriority,
-                  borderColor: Colors.grey,
-                  isSelected: _selectedPriorityFilter == s.lowPriority,
-                  onTap: () {
-                    setState(() {
-                      _selectedPriorityFilter = (_selectedPriorityFilter == s.lowPriority) ? 'All' : s.lowPriority;
-                    });
-                    TasksDueTodayDialog.show(
-                      context,
-                      scope: 'all',
-                      activeOnly: true,
-                      customTitle: '${s.lowPriority} tasks',
-                      priority: 'low',
-                      badgeColor: Colors.grey,
-                    );
-                  },
+                StaggeredSlideFade(
+                  delay: const Duration(milliseconds: 160),
+                  child: _buildCardWithTopBorder(
+                    '★',
+                    '${stats.low}',
+                    s.lowPriority,
+                    borderColor: Colors.grey,
+                    isSelected: _selectedPriorityFilter == s.lowPriority,
+                    onTap: () {
+                      setState(() {
+                        _selectedPriorityFilter = (_selectedPriorityFilter == s.lowPriority) ? 'All' : s.lowPriority;
+                      });
+                      TasksDueTodayDialog.show(
+                        context,
+                        scope: 'all',
+                        activeOnly: true,
+                        customTitle: '${s.lowPriority} tasks',
+                        priority: 'low',
+                        badgeColor: Colors.grey,
+                      );
+                    },
+                  ),
                 ),
               ],
             );
@@ -608,8 +633,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ],
     );
   }
-
-
 
   Widget _buildCardWithTopBorder(
     String stars,
@@ -621,27 +644,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return InkWell(
+    return ScaleTap(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E293B) : Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: isDark ? Border.all(color:  Color(0xFF1E293B), width: 1.0,) : Border.all(color: Colors.grey.shade300, width: 0.7,),
-          // boxShadow: [
-          //   BoxShadow(
-          //     color: borderColor.withValues(alpha: isSelected ? 0.20 : 0.10),
-          //     blurRadius: isSelected ? 10 : 3,
-          //     offset: const Offset(0, 2),
-          //   ),
-          // ],
-          // border: Border(
-          //   top: BorderSide(color: borderColor, width: isSelected ? 4.5 : 3.0),
-          //   left: BorderSide(color: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.06)),
-          //   right: BorderSide(color: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.06)),
-          //   bottom: BorderSide(color: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.06)),
-          // ),
+          border: isDark ? Border.all(color: const Color(0xFF1E293B), width: 1.0) : Border.all(color: Colors.grey.shade300, width: 0.7),
         ),
         padding: const EdgeInsets.all(14),
         child: Column(
@@ -774,9 +783,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildActionCenterRow(String label, String countStr, double progress, Color color, {VoidCallback? onTap}) {
-    return InkWell(
+    return ScaleTap(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Column(
@@ -790,12 +798,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
             const SizedBox(height: 4),
-            LinearProgressIndicator(
-              value: progress,
-              backgroundColor: Colors.grey.shade200,
-              color: color,
-              minHeight: 4,
-              borderRadius: BorderRadius.circular(4),
+            TweenAnimationBuilder<double>(
+              tween: Tween<double>(begin: 0.0, end: progress),
+              duration: const Duration(milliseconds: 750),
+              curve: Curves.easeOutCubic,
+              builder: (context, animatedVal, _) {
+                return LinearProgressIndicator(
+                  value: animatedVal,
+                  backgroundColor: Colors.grey.shade200,
+                  color: color,
+                  minHeight: 4,
+                  borderRadius: BorderRadius.circular(4),
+                );
+              },
             ),
           ],
         ),
@@ -1129,9 +1144,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildAgeRow(String label, int count, double progress, Color color, {VoidCallback? onTap}) {
-    return InkWell(
+    return ScaleTap(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
         child: Row(
@@ -1141,12 +1155,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
             ),
             Expanded(
-              child: LinearProgressIndicator(
-                value: progress,
-                backgroundColor: Colors.grey.shade200,
-                color: color,
-                minHeight: 8,
-                borderRadius: BorderRadius.circular(4),
+              child: TweenAnimationBuilder<double>(
+                tween: Tween<double>(begin: 0.0, end: progress),
+                duration: const Duration(milliseconds: 750),
+                curve: Curves.easeOutCubic,
+                builder: (context, animatedVal, _) {
+                  return LinearProgressIndicator(
+                    value: animatedVal,
+                    backgroundColor: Colors.grey.shade200,
+                    color: color,
+                    minHeight: 8,
+                    borderRadius: BorderRadius.circular(4),
+                  );
+                },
               ),
             ),
             const SizedBox(width: 12),
@@ -1709,6 +1730,56 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildDashboardSkeleton(bool isDark) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(12),
+      physics: const NeverScrollableScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Banner Skeleton
+          AnimatedShimmerBox(
+            width: double.infinity,
+            height: 140,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          const SizedBox(height: 16),
+          // Section Title Skeleton
+          AnimatedShimmerBox(
+            width: 140,
+            height: 20,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          const SizedBox(height: 12),
+          // Priority Grid Skeleton
+          GridView.count(
+            crossAxisCount: 3,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            mainAxisExtent: 135,
+            children: List.generate(
+              3,
+              (_) => AnimatedShimmerBox(
+                width: double.infinity,
+                height: 135,
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          // Action Center Skeleton
+          AnimatedShimmerBox(
+            width: double.infinity,
+            height: 200,
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ],
       ),
     );
   }

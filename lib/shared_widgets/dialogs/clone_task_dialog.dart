@@ -10,6 +10,7 @@ import '../../modules/tasks/bloc/clone_task_event.dart';
 import '../../modules/tasks/bloc/clone_task_state.dart';
 import '../../modules/tasks/models/clone_task_models.dart';
 import '../../modules/tasks/models/task_model.dart';
+import '../animations/app_animations.dart';
 
 /// Full Clone Task Dialog — matches uploaded screenshots.
 /// Pre-fills from [sourceTask] if provided.
@@ -24,7 +25,7 @@ class CloneTaskDialog extends StatelessWidget {
     TaskDetailModel? sourceTask,
     TaskItemModel? sourceItem,
   }) {
-    return showDialog<bool>(
+    return showSmoothDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (_) => BlocProvider(

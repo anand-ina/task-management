@@ -5,6 +5,7 @@ import '../../../modules/dashboard/models/branch_model.dart';
 import '../../../modules/tasks/models/task_model.dart';
 import '../../../modules/tasks/repository/task_repository.dart';
 import 'task_detail_dialog.dart';
+import '../animations/app_animations.dart';
 
 class TasksDueTodayDialog extends StatefulWidget {
   final String? customTitle;
@@ -51,7 +52,7 @@ class TasksDueTodayDialog extends StatefulWidget {
     Color? badgeColor,
     String scope = 'mine',
   }) {
-    return showDialog(
+    return showSmoothDialog(
       context: context,
       barrierDismissible: true,
       builder: (context) => TasksDueTodayDialog(
@@ -392,10 +393,38 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
 
               // Task Container Cards List
               if (_isLoading)
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(24),
-                    child: CircularProgressIndicator(),
+                Column(
+                  children: List.generate(
+                    4,
+                    (index) => Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: isDark ? Colors.white12 : Colors.grey.shade200),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Row(
+                              children: [
+                                AnimatedShimmerBox(width: 80, height: 16, borderRadius: 4),
+                                SizedBox(width: 8),
+                                AnimatedShimmerBox(width: 65, height: 16, borderRadius: 4),
+                                Spacer(),
+                                AnimatedShimmerBox(width: 70, height: 16, borderRadius: 4),
+                              ],
+                            ),
+                            SizedBox(height: 10),
+                            AnimatedShimmerBox(width: double.infinity, height: 18, borderRadius: 4),
+                            SizedBox(height: 8),
+                            AnimatedShimmerBox(width: 140, height: 14, borderRadius: 4),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
                 )
               else if (_items.isEmpty)
@@ -430,15 +459,9 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
                       priorityColor = Colors.grey;
                     }
 
-                    return Card(
-                      elevation: 1,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(
-                          color: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.08),
-                        ),
-                      ),
-                      child: InkWell(
+                    return StaggeredSlideFade(
+                      delay: Duration(milliseconds: (index * 35).clamp(0, 300)),
+                      child: ScaleTap(
                         onTap: () {
                           TaskDetailDialog.show(
                             context,
@@ -448,9 +471,16 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
                             showOnlyCloneAndCancel: true,
                           );
                         },
-                        borderRadius: BorderRadius.circular(12),
-                        child: Padding(
-                          padding: const EdgeInsets.all(10),
+                        child: Card(
+                          elevation: 1,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(
+                              color: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.08),
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(10),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -645,9 +675,10 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
                           ),
                         ),
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  );
+                },
+              ),
 
               if (_isLoadingMore)
                 const Padding(
