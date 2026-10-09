@@ -13,6 +13,7 @@ import '../bloc/hourly_log_state.dart';
 import '../models/hourly_log_model.dart';
 import '../repository/hourly_log_repository.dart';
 import '../screens/hourly_log_screen.dart';
+import '../../../../shared_widgets/animations/app_animations.dart';
 
 class HourlyLogPromptOverlay extends StatefulWidget {
   final Widget child;
@@ -69,35 +70,18 @@ class _HourlyLogPromptOverlayState extends State<HourlyLogPromptOverlay> {
   bool _showPrompt = false;
   bool _isLogging = false;
   final TextEditingController _entryController = TextEditingController();
-  OverlayEntry? _overlayEntry;
 
   static String computeCurrentSlot([DateTime? now]) => HourlyLogPromptOverlay.computeCurrentSlot(now);
-
-  OverlayEntry _getOrCreateOverlayEntry() {
-    return _overlayEntry ??= OverlayEntry(
-      builder: (context) => _buildOverlayContent(context),
-    );
-  }
 
   @override
   void initState() {
     super.initState();
-    _getOrCreateOverlayEntry();
     _startTimer();
-  }
-
-  @override
-  void didUpdateWidget(covariant HourlyLogPromptOverlay oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.child != widget.child) {
-      _getOrCreateOverlayEntry().markNeedsBuild();
-    }
   }
 
   void _setPromptState(VoidCallback fn) {
     if (!mounted) return;
     setState(fn);
-    _getOrCreateOverlayEntry().markNeedsBuild();
   }
 
   void _startTimer([Duration duration = const Duration(seconds: 5)]) {
@@ -270,7 +254,6 @@ class _HourlyLogPromptOverlayState extends State<HourlyLogPromptOverlay> {
   void dispose() {
     _scheduleTimer?.cancel();
     _entryController.dispose();
-    _overlayEntry?.dispose();
     super.dispose();
   }
 
@@ -308,9 +291,7 @@ class _HourlyLogPromptOverlayState extends State<HourlyLogPromptOverlay> {
           },
         ),
       ],
-      child: Overlay(
-        initialEntries: [_getOrCreateOverlayEntry()],
-      ),
+      child: _buildOverlayContent(context),
     );
   }
 
@@ -327,72 +308,85 @@ class _HourlyLogPromptOverlayState extends State<HourlyLogPromptOverlay> {
         widget.child,
         if (_showPrompt)
           AnimatedPositioned(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOut,
+            duration: const Duration(milliseconds: 280),
+            curve: Curves.easeOutCubic,
             bottom: (isCompact ? 16 : 24) + keyboardHeight,
             right: isCompact ? 16 : 24,
             left: isCompact ? 16 : null,
-            child: Material(
-              color: AppColors.transparent,
-              child: Container(
-                width: isCompact ? null : 380,
-                decoration: BoxDecoration(
-                  color: AppColors.card(context),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.black.withValues(alpha: 0.22),
-                      blurRadius: 24,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                  border: Border.all(color: AppColors.border(context)),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Teal Header matching Image 1
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-                      decoration: const BoxDecoration(
-                        color: AppColors.tealHeader,
+            child: TweenAnimationBuilder<double>(
+              duration: const Duration(milliseconds: 260),
+              curve: Curves.easeOutBack,
+              tween: Tween<double>(begin: 0.88, end: 1.0),
+              builder: (context, scale, child) {
+                return Transform.scale(
+                  scale: scale,
+                  child: child,
+                );
+              },
+              child: Material(
+                color: AppColors.transparent,
+                child: Container(
+                  width: isCompact ? null : 380,
+                  decoration: BoxDecoration(
+                    color: AppColors.card(context),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.black.withValues(alpha: 0.22),
+                        blurRadius: 24,
+                        offset: const Offset(0, 8),
                       ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.timer_outlined,
-                            size: 18,
-                            color: AppColors.white,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              s.hourlyLogPromptTitle(slot),
-                              style: const TextStyle(
-                                color: AppColors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13.5,
-                              ),
-                              overflow: TextOverflow.ellipsis,
+                    ],
+                    border: Border.all(color: AppColors.border(context)),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Teal Header matching Image 1
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                        decoration: const BoxDecoration(
+                          color: AppColors.tealHeader,
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.timer_outlined,
+                              size: 18,
+                              color: AppColors.white,
                             ),
-                          ),
-                          InkWell(
-                            onTap: () => _dismissPrompt(),
-                            borderRadius: BorderRadius.circular(16),
-                            child: const Padding(
-                              padding: EdgeInsets.all(2),
-                              child: Icon(
-                                Icons.close_rounded,
-                                size: 18,
-                                color: AppColors.white,
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                s.hourlyLogPromptTitle(slot),
+                                style: const TextStyle(
+                                  color: AppColors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13.5,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                          ),
-                        ],
+                            ScaleTap(
+                              onTap: () => _dismissPrompt(),
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: const Icon(
+                                  Icons.close_rounded,
+                                  size: 16,
+                                  color: AppColors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
 
                     // Body
                     Padding(
@@ -481,35 +475,38 @@ class _HourlyLogPromptOverlayState extends State<HourlyLogPromptOverlay> {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              SizedBox(
-                                height: 38,
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppColors.navyHeader,
-                                    foregroundColor: AppColors.white,
-                                    elevation: 0,
-                                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
+                              ScaleTap(
+                                onTap: _isLogging ? null : _submitQuickLog,
+                                child: SizedBox(
+                                  height: 38,
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.navyHeader,
+                                      foregroundColor: AppColors.white,
+                                      elevation: 0,
+                                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
                                     ),
+                                    onPressed: _isLogging ? null : _submitQuickLog,
+                                    child: _isLogging
+                                        ? const SizedBox(
+                                            width: 14,
+                                            height: 14,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: AppColors.white,
+                                            ),
+                                          )
+                                        : Text(
+                                            s.logButton,
+                                            style: const TextStyle(
+                                              fontSize: 12.5,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
                                   ),
-                                  onPressed: _isLogging ? null : _submitQuickLog,
-                                  child: _isLogging
-                                      ? const SizedBox(
-                                          width: 14,
-                                          height: 14,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: AppColors.white,
-                                          ),
-                                        )
-                                      : Text(
-                                          s.logButton,
-                                          style: const TextStyle(
-                                            fontSize: 12.5,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
                                 ),
                               ),
                             ],
@@ -520,9 +517,8 @@ class _HourlyLogPromptOverlayState extends State<HourlyLogPromptOverlay> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              InkWell(
+                              ScaleTap(
                                 onTap: _openFullLog,
-                                borderRadius: BorderRadius.circular(20),
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                   decoration: BoxDecoration(
@@ -540,9 +536,8 @@ class _HourlyLogPromptOverlayState extends State<HourlyLogPromptOverlay> {
                                   ),
                                 ),
                               ),
-                              InkWell(
+                              ScaleTap(
                                 onTap: () => _dismissPrompt(remindLater: true),
-                                borderRadius: BorderRadius.circular(20),
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                   decoration: BoxDecoration(
@@ -569,7 +564,8 @@ class _HourlyLogPromptOverlayState extends State<HourlyLogPromptOverlay> {
               ),
             ),
           ),
-        ],
-      );
+        ),
+      ],
+    );
   }
 }

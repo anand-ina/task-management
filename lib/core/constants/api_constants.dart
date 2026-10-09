@@ -25,6 +25,7 @@ class ApiConstants {
   static const String recurring = '$baseUrl/recurring';
   static const String oneOnOnePending = '$baseUrl/meetings/one-on-one/pending';
   static const String meetings = '$baseUrl/meetings';
+  static String meetingRespond(dynamic id) => '$baseUrl/meetings/$id/respond';
   static const String meetingsAvailability = '$baseUrl/meetings/availability';
   static const String googleCalendarAuth = '$baseUrl/auth/google-calendar';
   static const String googleCalendarCallback = '$baseUrl/auth/google-calendar/callback';

@@ -1361,7 +1361,7 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
                     // Dialog Actions
                     const Divider(height: 1),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
@@ -1369,33 +1369,33 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
                             onPressed: () => Navigator.of(context).pop(),
                             child: Text(s.cancelButton),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 4),
                           OutlinedButton.icon(
                             onPressed: _isSavingDraft ? null : _saveDraft,
                             icon: _isSavingDraft
                                 ? const SizedBox(
-                                    width: 14,
-                                    height: 14,
+                                    width: 12,
+                                    height: 12,
                                     child: CircularProgressIndicator(strokeWidth: 2),
                                   )
-                                : const Text('💾', style: TextStyle(fontSize: 14)),
+                                : const Text('💾', style: TextStyle(fontSize: 10)),
                             label: Text(
                               s.saveDraftButton,
                               style: TextStyle(
-                                fontSize: 13,
+                                fontSize: 11,
                                 fontWeight: FontWeight.w600,
                                 color: isDark ? Colors.white : const Color(0xFF334155),
                               ),
                             ),
                             style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 12),
                               side: BorderSide(
                                 color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
                               ),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 3),
                           BlocBuilder<ComplaintsBloc, ComplaintsState>(
                             builder: (context, state) {
                               final isSubmitting = state is ComplaintsLoadedState && state.isSubmitting;
@@ -1409,13 +1409,13 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: buttonColor,
                                   foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                 ),
                                 child: isSubmitting
                                     ? const SizedBox(
-                                        width: 18,
-                                        height: 18,
+                                        width: 15,
+                                        height: 15,
                                         child: CircularProgressIndicator(
                                           strokeWidth: 2,
                                           color: Colors.white,
@@ -1425,7 +1425,7 @@ class _RaiseComplaintDialogState extends State<RaiseComplaintDialog> {
                                         _selectedType == 'appreciation'
                                             ? s.recordAppreciationButton
                                             : s.registerComplaintButton,
-                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
                                       ),
                               );
                             },

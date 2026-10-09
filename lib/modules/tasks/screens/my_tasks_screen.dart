@@ -23,6 +23,7 @@ import '../../../shared_widgets/dropdowns/searchable_filter_dropdown.dart';
 import '../../../shared_widgets/dialogs/change_status_dialog.dart';
 import '../../dashboard/bloc/dashboard_bloc.dart';
 import '../../dashboard/bloc/dashboard_state.dart';
+import '../../../shared_widgets/animations/app_animations.dart';
 
 class DashedRectPainter extends CustomPainter {
   final Color color;
@@ -409,12 +410,15 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
                             itemCount: items.length,
                             separatorBuilder: (context, index) => const SizedBox(height: 10),
                             itemBuilder: (context, index) {
-                              return _buildMyTaskCardItem(
-                                context,
-                                s,
-                                items[index],
-                                currentUserId: currentUserId,
-                                currentUserName: currentUserName,
+                              return StaggeredSlideFade(
+                                delay: Duration(milliseconds: (index.clamp(0, 6)) * 40),
+                                child: _buildMyTaskCardItem(
+                                  context,
+                                  s,
+                                  items[index],
+                                  currentUserId: currentUserId,
+                                  currentUserName: currentUserName,
+                                ),
                               );
                             },
                           ),
@@ -451,90 +455,94 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
 
   // 7 Stat Cards Row
   Widget _buildStatCardsRow(BuildContext context, AppStrings s, TasksResponseModel response) {
+    final statList = [
+      _buildStatCard(
+        title: '${response.total}',
+        label: s.statTotalCard,
+        color: const Color(0xFF06B6D4),
+        isSelected: _selectedStatusFilter == 'all',
+        onTap: () {
+          setState(() => _selectedStatusFilter = 'all');
+          _dispatchFetch(offset: 0);
+        },
+      ),
+      _buildStatCard(
+        title: '${response.needsAction}',
+        label: s.toBeStarted,
+        color: const Color(0xFFF59E0B),
+        isSelected: _selectedStatusFilter == 'to_be_started',
+        onTap: () {
+          setState(() => _selectedStatusFilter = 'to_be_started');
+          _dispatchFetch(offset: 0);
+        },
+      ),
+      _buildStatCard(
+        title: '${response.inProgress}',
+        label: s.inProgress,
+        color: const Color(0xFF3B82F6),
+        isSelected: _selectedStatusFilter == 'in_progress',
+        onTap: () {
+          setState(() => _selectedStatusFilter = 'in_progress');
+          _dispatchFetch(offset: 0);
+        },
+      ),
+      _buildStatCard(
+        title: '${response.needsReview}',
+        label: s.statNeedsReview,
+        subtitle: s.statAwaitingSignOff,
+        color: const Color(0xFF0D9488),
+        isSelected: _selectedStatusFilter == 'needs_review',
+        onTap: () {
+          setState(() => _selectedStatusFilter = 'needs_review');
+          _dispatchFetch(offset: 0);
+        },
+      ),
+      _buildStatCard(
+        title: '${response.completed}',
+        label: s.completed,
+        color: const Color(0xFF10B981),
+        isSelected: _selectedStatusFilter == 'completed',
+        onTap: () {
+          setState(() => _selectedStatusFilter = 'completed');
+          _dispatchFetch(offset: 0);
+        },
+      ),
+      _buildStatCard(
+        title: '${response.dropped}',
+        label: s.dropped,
+        color: const Color(0xFF8B5CF6),
+        isSelected: _selectedStatusFilter == 'dropped',
+        onTap: () {
+          setState(() => _selectedStatusFilter = 'dropped');
+          _dispatchFetch(offset: 0);
+        },
+      ),
+      _buildStatCard(
+        title: '${response.overdue}',
+        label: s.overdue,
+        subtitle: s.statAcrossStatuses,
+        color: const Color(0xFFEF4444),
+        isDashed: true,
+        isSelected: _selectedStatusFilter == 'overdue',
+        onTap: () {
+          setState(() => _selectedStatusFilter = 'overdue');
+          _dispatchFetch(offset: 0);
+        },
+      ),
+    ];
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
-        children: [
-          _buildStatCard(
-            title: '${response.total}',
-            label: s.statTotalCard,
-            color: const Color(0xFF06B6D4),
-            isSelected: _selectedStatusFilter == 'all',
-            onTap: () {
-              setState(() => _selectedStatusFilter = 'all');
-              _dispatchFetch(offset: 0);
-            },
-          ),
-          const SizedBox(width: 8),
-          _buildStatCard(
-            title: '${response.needsAction}',
-            label: s.toBeStarted,
-            color: const Color(0xFFF59E0B),
-            isSelected: _selectedStatusFilter == 'to_be_started',
-            onTap: () {
-              setState(() => _selectedStatusFilter = 'to_be_started');
-              _dispatchFetch(offset: 0);
-            },
-          ),
-          const SizedBox(width: 8),
-          _buildStatCard(
-            title: '${response.inProgress}',
-            label: s.inProgress,
-            color: const Color(0xFF3B82F6),
-            isSelected: _selectedStatusFilter == 'in_progress',
-            onTap: () {
-              setState(() => _selectedStatusFilter = 'in_progress');
-              _dispatchFetch(offset: 0);
-            },
-          ),
-          const SizedBox(width: 8),
-          _buildStatCard(
-            title: '${response.needsReview}',
-            label: s.statNeedsReview,
-            subtitle: s.statAwaitingSignOff,
-            color: const Color(0xFF0D9488),
-            isSelected: _selectedStatusFilter == 'needs_review',
-            onTap: () {
-              setState(() => _selectedStatusFilter = 'needs_review');
-              _dispatchFetch(offset: 0);
-            },
-          ),
-          const SizedBox(width: 8),
-          _buildStatCard(
-            title: '${response.completed}',
-            label: s.completed,
-            color: const Color(0xFF10B981),
-            isSelected: _selectedStatusFilter == 'completed',
-            onTap: () {
-              setState(() => _selectedStatusFilter = 'completed');
-              _dispatchFetch(offset: 0);
-            },
-          ),
-          const SizedBox(width: 8),
-          _buildStatCard(
-            title: '${response.dropped}',
-            label: s.dropped,
-            color: const Color(0xFF8B5CF6),
-            isSelected: _selectedStatusFilter == 'dropped',
-            onTap: () {
-              setState(() => _selectedStatusFilter = 'dropped');
-              _dispatchFetch(offset: 0);
-            },
-          ),
-          const SizedBox(width: 8),
-          _buildStatCard(
-            title: '${response.overdue}',
-            label: s.overdue,
-            subtitle: s.statAcrossStatuses,
-            color: const Color(0xFFEF4444),
-            isDashed: true,
-            isSelected: _selectedStatusFilter == 'overdue',
-            onTap: () {
-              setState(() => _selectedStatusFilter = 'overdue');
-              _dispatchFetch(offset: 0);
-            },
-          ),
-        ],
+        children: statList.asMap().entries.map((entry) {
+          return Padding(
+            padding: EdgeInsets.only(right: entry.key < statList.length - 1 ? 8 : 0),
+            child: StaggeredSlideFade(
+              delay: Duration(milliseconds: entry.key * 35),
+              child: entry.value,
+            ),
+          );
+        }).toList(),
       ),
     );
   }
@@ -549,6 +557,7 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
     required VoidCallback onTap,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final intCount = int.tryParse(title);
 
     final cardChild = Container(
       width: 125,
@@ -571,14 +580,23 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 21,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
+          intCount != null
+              ? AnimatedCountText(
+                  value: intCount,
+                  style: TextStyle(
+                    fontSize: 21,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                )
+              : Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 21,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                ),
           const SizedBox(height: 2),
           Text(
             label,
@@ -606,9 +624,9 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
       ),
     );
 
-    return InkWell(
+    return ScaleTap(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
+      scaleDown: 0.95,
       child: isDashed
           ? CustomPaint(
               painter: DashedRectPainter(
@@ -729,32 +747,38 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
           const SizedBox(width: 8),
 
           // + New Task
-          ElevatedButton.icon(
-            onPressed: () => CreateTaskDialog.show(context),
-            icon: const Icon(Icons.add_rounded, size: 14),
-            label: Text(s.newTaskButton, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.button(context),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ScaleTap(
+            scaleDown: 0.94,
+            child: ElevatedButton.icon(
+              onPressed: () => CreateTaskDialog.show(context),
+              icon: const Icon(Icons.add_rounded, size: 14),
+              label: Text(s.newTaskButton, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.button(context),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
             ),
           ),
           const SizedBox(width: 8),
 
           // Bulk Upload
-          OutlinedButton.icon(
-            onPressed: () async {
-              final result = await BulkUploadDialog.show(context);
-              if (result == true && context.mounted) {
-                _dispatchFetch(offset: 0);
-              }
-            },
-            icon: const Icon(Icons.arrow_upward_rounded, size: 14),
-            label: Text(s.bulkUploadButton, style: const TextStyle(fontSize: 11)),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ScaleTap(
+            scaleDown: 0.94,
+            child: OutlinedButton.icon(
+              onPressed: () async {
+                final result = await BulkUploadDialog.show(context);
+                if (result == true && context.mounted) {
+                  _dispatchFetch(offset: 0);
+                }
+              },
+              icon: const Icon(Icons.arrow_upward_rounded, size: 14),
+              label: Text(s.bulkUploadButton, style: const TextStyle(fontSize: 11)),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
             ),
           ),
         ],
@@ -766,9 +790,9 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
     final isSelected = _selectedView == key;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return InkWell(
+    return ScaleTap(
       onTap: () => setState(() => _selectedView = key),
-      borderRadius: BorderRadius.circular(6),
+      scaleDown: 0.94,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
@@ -1624,6 +1648,10 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
                         ),
                     ],
                   ),
+                  if (item.progress > 0) ...[
+                    const SizedBox(height: 8),
+                    AnimatedTaskProgressBar(progress: item.progress, height: 4),
+                  ],
                   const SizedBox(height: 10),
 
                   // Subtle Divider
@@ -1727,42 +1755,48 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
                       const Spacer(),
 
                       // Due Date
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: isOverdue
-                              ? const Color(0xFFFEF2F2)
-                              : (isDark ? Colors.white.withOpacity(0.06) : const Color(0xFFF8FAFC)),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
+                      PulsingBadge(
+                        enabled: isOverdue,
+                        duration: const Duration(milliseconds: 2400),
+                        maxScale: 1.07,
+                        minScale: 0.96,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                          decoration: BoxDecoration(
                             color: isOverdue
-                                ? const Color(0xFFFECACA)
-                                : (isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
-                            width: 0.8,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.calendar_today_rounded,
-                              size: 11,
+                                ? const Color(0xFFFEF2F2)
+                                : (isDark ? Colors.white.withOpacity(0.06) : const Color(0xFFF8FAFC)),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
                               color: isOverdue
-                                  ? const Color(0xFFDC2626)
-                                  : (isDark ? Colors.white60 : const Color(0xFF64748B)),
+                                  ? const Color(0xFFFECACA)
+                                  : (isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+                              width: 0.8,
                             ),
-                            const SizedBox(width: 4),
-                            Text(
-                              _formatDate(item.dueDate),
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.calendar_today_rounded,
+                                size: 11,
                                 color: isOverdue
                                     ? const Color(0xFFDC2626)
-                                    : (isDark ? Colors.white70 : const Color(0xFF475569)),
+                                    : (isDark ? Colors.white60 : const Color(0xFF64748B)),
                               ),
-                            ),
-                          ],
+                              const SizedBox(width: 4),
+                              Text(
+                                _formatDate(item.dueDate),
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: isOverdue
+                                      ? const Color(0xFFDC2626)
+                                      : (isDark ? Colors.white70 : const Color(0xFF475569)),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -2022,20 +2056,20 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
                     children: colTasks.map((task) {
                       final pColor = _getPriorityColor(task.priority);
 
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        elevation: 1,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          side: BorderSide(
-                            color: _getStatusBorderColor(task.status, isDark),
-                            width: 1.0,
+                      return ScaleTap(
+                        onTap: () => TaskDetailDialog.show(context, taskId: task.id, initialTask: task),
+                        scaleDown: 0.985,
+                        child: Card(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          elevation: 1,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            side: BorderSide(
+                              color: _getStatusBorderColor(task.status, isDark),
+                              width: 1.0,
+                            ),
                           ),
-                        ),
-                        color: _getStatusBgColor(task.status, isDark),
-                        child: InkWell(
-                          onTap: () => TaskDetailDialog.show(context, taskId: task.id, initialTask: task),
-                          borderRadius: BorderRadius.circular(10),
+                          color: _getStatusBgColor(task.status, isDark),
                           child: Padding(
                             padding: const EdgeInsets.all(10),
                             child: Column(

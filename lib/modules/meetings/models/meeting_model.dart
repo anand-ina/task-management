@@ -56,6 +56,7 @@ class MeetingItemModel {
   final String? googleMeetUrl;
   final String? googleSyncStatus;
   final String? googleSyncError;
+  final bool? isPast;
   final List<InviteeItemModel> invitees;
 
   MeetingItemModel({
@@ -70,6 +71,7 @@ class MeetingItemModel {
     this.isOneOnOne,
     this.kind,
     required this.isOrganizer,
+    this.isPast,
     this.completionStatus,
     this.completionNote,
     this.completionDecisionNote,
@@ -116,6 +118,22 @@ class MeetingItemModel {
 
   bool get isPendingCompletion => completionStatus?.toLowerCase() == 'pending';
 
+  bool get isPastMeeting {
+    if (isPast == true) return true;
+    try {
+      final dt = DateTime.parse(startsAt);
+      return dt.isBefore(DateTime.now());
+    } catch (_) {
+      return false;
+    }
+  }
+
+  bool get isPastPendingMom {
+    if (isCancelled) return false;
+    if (isCompleted) return false;
+    return isPastMeeting;
+  }
+
   bool get hasReschedule =>
       rescheduleId != null || (rescheduleStart != null && rescheduleStart!.trim().isNotEmpty);
 
@@ -147,6 +165,7 @@ class MeetingItemModel {
       isOneOnOne: json['is_one_on_one'] is bool ? json['is_one_on_one'] as bool : null,
       kind: json['kind']?.toString(),
       isOrganizer: json['is_organizer'] == true || json['is_initiated_by_me'] == true,
+      isPast: json['is_past'] is bool ? json['is_past'] as bool : null,
       completionStatus: json['completion_status']?.toString(),
       completionNote: json['completion_note']?.toString(),
       completionDecisionNote: json['completion_decision_note']?.toString(),

@@ -16,6 +16,7 @@ import '../dialogs/ticket_details_dialog.dart';
 import '../models/ticket_model.dart';
 import 'complaints_history_insights_screen.dart';
 import 'suggestion_box_entry_screen.dart';
+import '../../../shared_widgets/animations/app_animations.dart';
 
 class ComplaintsScreen extends StatefulWidget {
   final int? initialTicketId;
@@ -274,50 +275,59 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
       spacing: 8,
       runSpacing: 8,
       children: [
-        OutlinedButton.icon(
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const SuggestionBoxEntryScreen()),
-            );
-          },
-          icon: const Text('🗳', style: TextStyle(fontSize: 14)),
-          label: Text(s.suggestionBoxEntryButton, style: const TextStyle(fontSize: 12)),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: isDark ? Colors.white70 : const Color(0xFF334155),
-            side: BorderSide(color: isDark ? Colors.grey.shade700 : const Color(0xFFCBD5E1)),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          ),
-        ),
-        OutlinedButton.icon(
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const ComplaintsHistoryInsightsScreen()),
-            );
-          },
-          icon: const Text('▤', style: TextStyle(fontSize: 14)),
-          label: Text(s.historyAndInsightsButton, style: const TextStyle(fontSize: 12)),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: isDark ? Colors.white70 : const Color(0xFF334155),
-            side: BorderSide(color: isDark ? Colors.grey.shade700 : const Color(0xFFCBD5E1)),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          ),
-        ),
-        ElevatedButton.icon(
-          onPressed: () => RaiseComplaintDialog.show(
-            context,
-            onTicketCreated: () {
-              final tabKey = _tabs[_tabController.index];
-              _dispatchFetchWithCurrentFilters(status: tabKey);
+        ScaleTap(
+          scaleDown: 0.94,
+          child: OutlinedButton.icon(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SuggestionBoxEntryScreen()),
+              );
             },
+            icon: const Text('🗳', style: TextStyle(fontSize: 14)),
+            label: Text(s.suggestionBoxEntryButton, style: const TextStyle(fontSize: 12)),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: isDark ? Colors.white70 : const Color(0xFF334155),
+              side: BorderSide(color: isDark ? Colors.grey.shade700 : const Color(0xFFCBD5E1)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            ),
           ),
-           label: Text(s.raiseRequestButton, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.button(context),
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        ),
+        ScaleTap(
+          scaleDown: 0.94,
+          child: OutlinedButton.icon(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ComplaintsHistoryInsightsScreen()),
+              );
+            },
+            icon: const Text('▤', style: TextStyle(fontSize: 14)),
+            label: Text(s.historyAndInsightsButton, style: const TextStyle(fontSize: 12)),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: isDark ? Colors.white70 : const Color(0xFF334155),
+              side: BorderSide(color: isDark ? Colors.grey.shade700 : const Color(0xFFCBD5E1)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            ),
+          ),
+        ),
+        ScaleTap(
+          scaleDown: 0.94,
+          child: ElevatedButton.icon(
+            onPressed: () => RaiseComplaintDialog.show(
+              context,
+              onTicketCreated: () {
+                final tabKey = _tabs[_tabController.index];
+                _dispatchFetchWithCurrentFilters(status: tabKey);
+              },
+            ),
+            label: Text(s.raiseRequestButton, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.button(context),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            ),
           ),
         ),
       ],
@@ -413,12 +423,15 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
         return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
-            children: cards
-                .map((card) => Padding(
-                      padding: const EdgeInsets.only(right: 12),
-                      child: card,
-                    ))
-                .toList(),
+            children: cards.asMap().entries.map((entry) {
+              return Padding(
+                padding: EdgeInsets.only(right: entry.key < cards.length - 1 ? 12 : 0),
+                child: StaggeredSlideFade(
+                  delay: Duration(milliseconds: entry.key * 35),
+                  child: entry.value,
+                ),
+              );
+            }).toList(),
           ),
         );
       },
@@ -433,9 +446,11 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
     required bool isSelected,
     VoidCallback? onTap,
   }) {
-    return InkWell(
+    final intCount = int.tryParse(count);
+
+    return ScaleTap(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      scaleDown: 0.94,
       child: Container(
         width: 150,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -468,14 +483,23 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
               ),
             ),
             const SizedBox(height: 8),
-            Text(
-              count,
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: accentColor == const Color(0xFF1E293B) && isDark ? Colors.white : accentColor,
-              ),
-            ),
+            intCount != null
+                ? AnimatedCountText(
+                    value: intCount,
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: accentColor == const Color(0xFF1E293B) && isDark ? Colors.white : accentColor,
+                    ),
+                  )
+                : Text(
+                    count,
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: accentColor == const Color(0xFF1E293B) && isDark ? Colors.white : accentColor,
+                    ),
+                  ),
             const SizedBox(height: 4),
             Text(
               label,
@@ -728,7 +752,10 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
           if (screenWidth < 750) {
             // Mobile comfortable card view!
             return Column(
-              children: items.map((ticket) => _buildMobileTicketCard(ticket, s, isDark)).toList(),
+              children: items.asMap().entries.map((entry) => StaggeredSlideFade(
+                delay: Duration(milliseconds: (entry.key.clamp(0, 8)) * 40),
+                child: _buildMobileTicketCard(entry.value, s, isDark),
+              )).toList(),
             );
           }
 
@@ -744,14 +771,15 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
   Widget _buildMobileTicketCard(TicketItemModel ticket, AppStrings s, bool isDark) {
     final statusBg = _getStatusBgColor(ticket.status, isDark);
     final statusText = _getStatusTextColor(ticket.status);
+    final isOverdue = ticket.status.toLowerCase() == 'overdue';
 
-    return InkWell(
+    return ScaleTap(
       onTap: () => TicketDetailsDialog.show(
         context,
         ticketId: ticket.id,
         onUpdated: () => _dispatchFetchWithCurrentFilters(),
       ),
-      borderRadius: BorderRadius.circular(12),
+      scaleDown: 0.985,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
@@ -761,6 +789,13 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
           border: Border.all(
             color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -777,18 +812,24 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
                     letterSpacing: 0.3,
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: statusBg,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    ticket.status.toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: statusText,
+                PulsingBadge(
+                  enabled: isOverdue,
+                  duration: const Duration(milliseconds: 2400),
+                  maxScale: 1.07,
+                  minScale: 0.96,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: statusBg,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      ticket.status.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: statusText,
+                      ),
                     ),
                   ),
                 ),

@@ -160,4 +160,50 @@ class MeetingApprovalModel {
       'invitees': invitees.map((e) => e.toJson()).toList(),
     };
   }
+
+  InviteeModel? findInviteeForUser(String? userName) {
+    if (invitees.isEmpty) return null;
+    if (userName != null && userName.trim().isNotEmpty) {
+      final clean = userName.trim().toLowerCase();
+      for (final inv in invitees) {
+        final invClean = inv.name.trim().toLowerCase();
+        if (invClean == clean || invClean.contains(clean) || clean.contains(invClean)) {
+          return inv;
+        }
+      }
+    }
+    return null;
+  }
+
+  bool isResponsePendingForUser(String? userName) {
+    if (isOrganizer == true) return false;
+    if (myResponse != null && myResponse!.trim().isNotEmpty) {
+      return myResponse!.toLowerCase() == 'pending';
+    }
+    final inv = findInviteeForUser(userName);
+    if (inv != null && inv.response != null && inv.response!.trim().isNotEmpty) {
+      return inv.response!.toLowerCase() == 'pending';
+    }
+    // If not found by username, check if there's any invitee with pending response
+    if (invitees.isNotEmpty) {
+      return invitees.any((i) => i.response?.toLowerCase() == 'pending');
+    }
+    return false;
+  }
+
+  String? getEffectiveResponse(String? userName) {
+    if (myResponse != null && myResponse!.trim().isNotEmpty) {
+      return myResponse!.toLowerCase();
+    }
+    final inv = findInviteeForUser(userName);
+    if (inv != null && inv.response != null && inv.response!.trim().isNotEmpty) {
+      return inv.response!.toLowerCase();
+    }
+    for (final i in invitees) {
+      if (i.response != null && i.response!.trim().isNotEmpty) {
+        return i.response!.toLowerCase();
+      }
+    }
+    return null;
+  }
 }

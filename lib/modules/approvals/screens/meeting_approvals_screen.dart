@@ -74,8 +74,9 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
                       builder: (context, state) {
                         int awaitingCount = 0;
                         if (state is ApprovalsLoadedState) {
+                          final currentUserName = authState is AuthenticatedState ? authState.userProfile.name : '';
                           awaitingCount = state.meetings
-                              .where((m) => m.status.toLowerCase() == 'pending')
+                              .where((m) => m.isResponsePendingForUser(currentUserName))
                               .length;
                         }
                         return Container(
@@ -646,9 +647,18 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
     final organizerStr = item.organizer != null && item.organizer!.isNotEmpty ? 'organized by ${item.organizer}' : '';
     final subtitle = [dateStr, locStr, organizerStr].where((s) => s.isNotEmpty).join(' · ');
 
+    final authState = context.watch<AuthBloc>().state;
+    String currentUserName = '';
+    if (authState is AuthenticatedState) {
+      currentUserName = authState.userProfile.name;
+    }
+
+    final isPending = item.isResponsePendingForUser(currentUserName);
+    final effectiveResponse = item.getEffectiveResponse(currentUserName);
+
     final showRsvpButtons = _selectedTabIndex == 0 &&
         item.isOrganizer != true &&
-        (item.myResponse == null || item.myResponse?.toLowerCase() == 'pending' || item.status.toLowerCase() == 'pending');
+        isPending;
 
     return Container(
       decoration: BoxDecoration(
@@ -742,6 +752,45 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
                         ),
                       ),
 
+                      // Invitee Chips
+                      if (item.invitees.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: item.invitees.map((inv) {
+                            final resp = (inv.response ?? '').toLowerCase();
+                            final isAcc = resp == 'accepted';
+                            final isDec = resp == 'declined';
+                            final isTent = resp == 'tentative';
+                            final suffix = isAcc ? ' ✓' : (isDec ? ' ✕' : (isTent ? ' ?' : ''));
+                            return Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: isAcc
+                                    ? const Color(0xFFDCFCE7)
+                                    : (isDec
+                                        ? const Color(0xFFFEE2E2)
+                                        : (isTent ? const Color(0xFFFEF3C7) : AppColors.subtleBg(context))),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                '${inv.name}$suffix',
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: isAcc
+                                      ? const Color(0xFF16A34A)
+                                      : (isDec
+                                          ? const Color(0xFFDC2626)
+                                          : (isTent ? const Color(0xFFD97706) : AppColors.textPrimary(context))),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+
                       // Agenda Box
                       if (item.agenda != null && item.agenda!.trim().isNotEmpty) ...[
                         const SizedBox(height: 8),
@@ -762,7 +811,45 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
                         ),
                       ],
 
-                      // RSVP Action Buttons (Accept, Decline, Tentative)
+                      // Already Responded Badge (if not pending)
+                      if (!showRsvpButtons && effectiveResponse != null && effectiveResponse.isNotEmpty && effectiveResponse != 'pending') ...[
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Text(
+                              'Your RSVP: ',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppColors.textSecondary(context),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: effectiveResponse == 'accepted'
+                                    ? const Color(0xFFDCFCE7)
+                                    : (effectiveResponse == 'declined' ? const Color(0xFFFEE2E2) : const Color(0xFFFEF3C7)),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                effectiveResponse == 'accepted'
+                                    ? '✓ Accepted'
+                                    : (effectiveResponse == 'declined' ? '✕ Declined' : '? Tentative'),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: effectiveResponse == 'accepted'
+                                      ? const Color(0xFF16A34A)
+                                      : (effectiveResponse == 'declined' ? const Color(0xFFDC2626) : const Color(0xFFD97706)),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+
+                      // RSVP Action Buttons (Accept, Decline, Tentative) - ONLY shown when invitee response is pending
                       if (showRsvpButtons) ...[
                         const SizedBox(height: 12),
                         Row(

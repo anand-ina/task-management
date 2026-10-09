@@ -307,7 +307,7 @@ class ApprovalsRepository {
       } catch (_) {
         try {
           final fallbackUrl2 = '${ApiConstants.baseUrl}/meetings/$id/complete';
-          final response = await _dioClient.dio.post(fallbackUrl2, data: payload);
+          await _dioClient.dio.post(fallbackUrl2, data: payload);
           return true;
         } catch (_) {}
       }
@@ -316,7 +316,7 @@ class ApprovalsRepository {
   }
 
   Future<bool> rsvpMeeting(int id, String responseValue) async {
-    final url = '${ApiConstants.baseUrl}/meetings/$id/rsvp';
+    final url = ApiConstants.meetingRespond(id);
     final payload = {'response': responseValue};
     _logServiceCall(
       serviceMethod: 'rsvpMeeting',
@@ -332,8 +332,20 @@ class ApprovalsRepository {
       );
       return true;
     } catch (e) {
-      debugPrint('[ApprovalsRepository] rsvpMeeting error: $e');
+      debugPrint('[ApprovalsRepository] rsvpMeeting /respond failed: $e, trying fallback to /rsvp');
+      try {
+        final fallbackUrl = '${ApiConstants.baseUrl}/meetings/$id/rsvp';
+        final response = await _dioClient.dio.post(fallbackUrl, data: payload);
+        _logServiceCall(
+          serviceMethod: 'rsvpMeetingFallback',
+          url: fallbackUrl,
+          response: response.data,
+        );
+        return true;
+      } catch (_) {}
       return false;
     }
   }
+
+  Future<bool> respondToMeeting(int id, String responseValue) => rsvpMeeting(id, responseValue);
 }

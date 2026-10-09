@@ -142,19 +142,24 @@ class _ScaleTapState extends State<ScaleTap> {
   }
 }
 
-/// Subtle pulsing animation for emergency/urgent/overdue badges or active indicators.
+/// Slow, elegant pulsing animation for emergency/urgent/overdue badges or active indicators.
+/// Continuously zooms in and zooms out with a silky smooth sinusoidal breathing cycle.
 class PulsingBadge extends StatefulWidget {
   final Widget child;
   final bool enabled;
   final Duration duration;
   final double maxScale;
+  final double minScale;
+  final Curve curve;
 
   const PulsingBadge({
     super.key,
     required this.child,
     this.enabled = true,
-    this.duration = const Duration(milliseconds: 1300),
+    this.duration = const Duration(milliseconds: 2400),
     this.maxScale = 1.07,
+    this.minScale = 0.96,
+    this.curve = Curves.easeInOutSine,
   });
 
   @override
@@ -171,11 +176,11 @@ class _PulsingBadgeState extends State<PulsingBadge>
   void initState() {
     super.initState();
     _controller = AnimationController(vsync: this, duration: widget.duration);
-    _scaleAnimation = Tween<double>(begin: 1.0, end: widget.maxScale).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    _scaleAnimation = Tween<double>(begin: widget.minScale, end: widget.maxScale).animate(
+      CurvedAnimation(parent: _controller, curve: widget.curve),
     );
-    _opacityAnimation = Tween<double>(begin: 0.85, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    _opacityAnimation = Tween<double>(begin: 0.88, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: widget.curve),
     );
 
     if (widget.enabled) {
@@ -186,6 +191,9 @@ class _PulsingBadgeState extends State<PulsingBadge>
   @override
   void didUpdateWidget(PulsingBadge oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.duration != oldWidget.duration) {
+      _controller.duration = widget.duration;
+    }
     if (widget.enabled != oldWidget.enabled) {
       if (widget.enabled) {
         _controller.repeat(reverse: true);
@@ -403,3 +411,39 @@ class _AnimatedShimmerBoxState extends State<AnimatedShimmerBox>
     );
   }
 }
+
+/// Animated rolling number text for stats and counters.
+class AnimatedCountText extends StatelessWidget {
+  final num value;
+  final TextStyle? style;
+  final Duration duration;
+  final String prefix;
+  final String suffix;
+  final int decimalDigits;
+
+  const AnimatedCountText({
+    super.key,
+    required this.value,
+    this.style,
+    this.duration = const Duration(milliseconds: 750),
+    this.prefix = '',
+    this.suffix = '',
+    this.decimalDigits = 0,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0.0, end: value.toDouble()),
+      duration: duration,
+      curve: Curves.easeOutCubic,
+      builder: (context, animVal, child) {
+        final formatted = decimalDigits > 0
+            ? animVal.toStringAsFixed(decimalDigits)
+            : animVal.round().toString();
+        return Text('$prefix$formatted$suffix', style: style);
+      },
+    );
+  }
+}
+

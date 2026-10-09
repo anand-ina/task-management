@@ -23,6 +23,7 @@ import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/bloc/auth_state.dart';
 import '../../reports/screens/status_reports_screen.dart';
 import 'google_calendar_auth_webview_screen.dart';
+import '../../../shared_widgets/animations/app_animations.dart';
 
 class MyScheduledMeetingsScreen extends StatefulWidget {
   const MyScheduledMeetingsScreen({super.key});
@@ -882,28 +883,31 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
                           ),
                           Column(
                             children: [
-                              ElevatedButton.icon(
-                                onPressed: () => ScheduleMeetingDialog.show(context),
-                                 label: const Text(
-                                  '+ New meeting',
-                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.button(context),
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                ),
-                              ),
                               OutlinedButton.icon(
                                 onPressed: () => _showPreviewRemindersDialog(context, state is MyScheduledMeetingsLoadedState ? state.meetings : []),
                                 icon: const Icon(Icons.notifications_active_outlined, size: 14, color: Colors.amber),
-                                label: Text(s.previewRemindersButton, style: const TextStyle(fontSize: 11)),
+                                label: Text(s.previewRemindersButton, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                                 style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                   side: BorderSide(color: isDark ? Colors.white24 : Colors.black12),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                 ),
                               ),
+                              SizedBox(height: 10,),
+                              ElevatedButton.icon(
+                                onPressed: () => ScheduleMeetingDialog.show(context),
+                                label: const Text(
+                                  '+ New Meeting',
+                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF0F172A),
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                              ),
+
                             ],
                           ),
 
@@ -980,48 +984,63 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
                         ),
                       ],
 
-                      // Segmented Tab Control
+                      // Segmented Tab Control & Legend
                       if (state is MyScheduledMeetingsLoadedState) ...[
                         Builder(
                           builder: (context) {
                             final meetings = state.meetings;
-                            final initiated = meetings.where((m) => m.isOrganizer == true).length;
-                            final received = meetings.where((m) => m.isOrganizer != true).length;
-                            final total = meetings.length;
+                            final pastPendingMom = meetings.where((m) => m.isPastPendingMom).toList();
+                            final scheduled = meetings.where((m) => !m.isPastPendingMom).toList();
 
-                            return Container(
-                              decoration: BoxDecoration(
-                                color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
-                                borderRadius: BorderRadius.circular(24),
-                              ),
-                              padding: const EdgeInsets.all(4),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  _buildTabPill(
-                                    title: s.allTab,
-                                    count: total,
-                                    isSelected: _selectedTabIndex == 0,
-                                    onTap: () => setState(() => _selectedTabIndex = 0),
+                            final initiated = scheduled.where((m) => m.isOrganizer == true).length;
+                            final received = scheduled.where((m) => m.isOrganizer != true).length;
+                            final totalScheduled = scheduled.length;
+                            final totalPastPendingMom = pastPendingMom.length;
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: Row(
+                                    children: [
+                                      _buildTabPill(
+                                        title: 'All',
+                                        count: totalScheduled,
+                                        isSelected: _selectedTabIndex == 0,
+                                        onTap: () => setState(() => _selectedTabIndex = 0),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      _buildTabPill(
+                                        title: 'Initiated by Me',
+                                        count: initiated > 0 ? initiated : null,
+                                        isSelected: _selectedTabIndex == 1,
+                                        onTap: () => setState(() => _selectedTabIndex = 1),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      _buildTabPill(
+                                        title: 'Received by Me',
+                                        count: received,
+                                        isSelected: _selectedTabIndex == 2,
+                                        onTap: () => setState(() => _selectedTabIndex = 2),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      _buildTabPill(
+                                        title: 'Past - pending MOM',
+                                        count: totalPastPendingMom,
+                                        isSelected: _selectedTabIndex == 3,
+                                        onTap: () => setState(() => _selectedTabIndex = 3),
+                                      ),
+                                    ],
                                   ),
-                                  _buildTabPill(
-                                    title: s.initiatedByMe,
-                                    count: initiated,
-                                    isSelected: _selectedTabIndex == 1,
-                                    onTap: () => setState(() => _selectedTabIndex = 1),
-                                  ),
-                                  _buildTabPill(
-                                    title: s.receivedByMe,
-                                    count: received,
-                                    isSelected: _selectedTabIndex == 2,
-                                    onTap: () => setState(() => _selectedTabIndex = 2),
-                                  ),
-                                ],
-                              ),
+                                ),
+                                const SizedBox(height: 14),
+                                _buildLegendBar(isDark),
+                              ],
                             );
                           },
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 16),
                       ],
 
                       // State Handling
@@ -1069,20 +1088,34 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
 
   Widget _buildTabPill({
     required String title,
-    required int count,
+    int? count,
     required bool isSelected,
     required VoidCallback onTap,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return GestureDetector(
+    return ScaleTap(
       onTap: onTap,
+      scaleDown: 0.94,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
           color: isSelected
-              ? (isDark ? const Color(0xFF0F172A) : const Color(0xFF0F172A))
-              : Colors.transparent,
+              ? const Color(0xFF0F172A)
+              : (isDark ? const Color(0xFF1E293B) : Colors.white),
           borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected
+                ? const Color(0xFF0F172A)
+                : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+          ),
+          boxShadow: [
+            if (!isSelected)
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 2,
+                offset: const Offset(0, 1),
+              ),
+          ],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -1090,30 +1123,133 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
             Text(
               title,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 12.5,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                color: isSelected
+                    ? Colors.white
+                    : (isDark ? Colors.white : const Color(0xFF1E293B)),
               ),
             ),
-            const SizedBox(width: 3),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1.5),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? Colors.white.withValues(alpha: 0.2)
-                    : (isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                '$count',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: isSelected ? Colors.white : (isDark ? Colors.white70 : const Color(0xFF475569)),
+            if (count != null && count > 0) ...[
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1.5),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? (isDark ? const Color(0xFF334155) : const Color(0xFF1E293B))
+                      : (isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '$count',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: isSelected
+                        ? Colors.white
+                        : (isDark ? Colors.white70 : const Color(0xFF475569)),
+                  ),
                 ),
               ),
-            ),
+            ],
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLegendBar(bool isDark) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Invited by me
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: const Color(0xFF0F172A),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            'Invited by me',
+            style: TextStyle(
+              fontSize: 11.5,
+              color: isDark ? Colors.white70 : const Color(0xFF475569),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(width: 16),
+
+          // Received by me
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: const Color(0xFF991B1B),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            'Received by me',
+            style: TextStyle(
+              fontSize: 11.5,
+              color: isDark ? Colors.white70 : const Color(0xFF475569),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(width: 20),
+
+          // RSVP:
+          Text(
+            'RSVP:  ',
+            style: TextStyle(
+              fontSize: 11.5,
+              color: isDark ? Colors.white60 : const Color(0xFF64748B),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          _buildLegendChip(text: '✓ Yes', bg: const Color(0xFFDCFCE7), fg: const Color(0xFF16A34A)),
+          const SizedBox(width: 6),
+          _buildLegendChip(text: '✕ No', bg: const Color(0xFFFEE2E2), fg: const Color(0xFFDC2626)),
+          const SizedBox(width: 6),
+          _buildLegendChip(text: '? Maybe', bg: const Color(0xFFFEF3C7), fg: const Color(0xFFD97706)),
+          const SizedBox(width: 20),
+
+          // After the meeting:
+          Text(
+            'After the meeting:  ',
+            style: TextStyle(
+              fontSize: 11.5,
+              color: isDark ? Colors.white60 : const Color(0xFF64748B),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          _buildLegendChip(text: 'Present', bg: const Color(0xFFDCFCE7), fg: const Color(0xFF16A34A)),
+          const SizedBox(width: 6),
+          _buildLegendChip(text: 'Absent', bg: const Color(0xFFFEE2E2), fg: const Color(0xFFDC2626)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLegendChip({required String text, required Color bg, required Color fg}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 10.5,
+          fontWeight: FontWeight.w600,
+          color: fg,
         ),
       ),
     );
@@ -1125,17 +1261,31 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
     List<MeetingItemModel> meetings, {
     bool isCalendarConnected = false,
   }) {
-    final filtered = meetings.where((m) {
-      if (_selectedTabIndex == 1) return m.isOrganizer == true;
-      if (_selectedTabIndex == 2) return m.isOrganizer != true;
-      return true;
-    }).toList();
+    final pastPendingMomMeetings = meetings.where((m) => m.isPastPendingMom).toList();
+    final scheduledMeetings = meetings.where((m) => !m.isPastPendingMom).toList();
+
+    List<MeetingItemModel> filtered;
+    if (_selectedTabIndex == 1) {
+      filtered = scheduledMeetings.where((m) => m.isOrganizer == true).toList();
+    } else if (_selectedTabIndex == 2) {
+      filtered = scheduledMeetings.where((m) => m.isOrganizer != true).toList();
+    } else if (_selectedTabIndex == 3) {
+      filtered = pastPendingMomMeetings;
+    } else {
+      // Tab 0: All
+      filtered = scheduledMeetings.isNotEmpty ? scheduledMeetings : meetings;
+    }
 
     if (filtered.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(40),
+      final msg = _selectedTabIndex == 3
+          ? 'No past meetings pending minutes of meeting. 🎉'
+          : (_selectedTabIndex == 1
+              ? 'You haven’t organized any meetings yet.'
+              : 'No scheduled meetings found.');
+      return Padding(
+        padding: const EdgeInsets.all(40),
         child: Center(
-          child: Text('No meetings found.', style: TextStyle(color: Colors.grey)),
+          child: Text(msg, style: const TextStyle(color: Colors.grey)),
         ),
       );
     }
@@ -1154,11 +1304,14 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
             ),
             itemCount: filtered.length,
             itemBuilder: (context, index) {
-              return _buildMeetingCard(
-                context,
-                s,
-                filtered[index],
-                isCalendarConnected: isCalendarConnected,
+              return StaggeredSlideFade(
+                delay: Duration(milliseconds: (index.clamp(0, 8)) * 40),
+                child: _buildMeetingCard(
+                  context,
+                  s,
+                  filtered[index],
+                  isCalendarConnected: isCalendarConnected,
+                ),
               );
             },
           );
@@ -1169,11 +1322,14 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
           itemCount: filtered.length,
           separatorBuilder: (context, index) => const SizedBox(height: 14),
           itemBuilder: (context, index) {
-            return _buildMeetingCard(
-              context,
-              s,
-              filtered[index],
-              isCalendarConnected: isCalendarConnected,
+            return StaggeredSlideFade(
+              delay: Duration(milliseconds: (index.clamp(0, 8)) * 40),
+              child: _buildMeetingCard(
+                context,
+                s,
+                filtered[index],
+                isCalendarConnected: isCalendarConnected,
+              ),
             );
           },
         );
@@ -1184,10 +1340,19 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
   Future<void> _submitRsvp(MeetingItemModel item, String responseValue) async {
     try {
       final meetingId = item.rawId ?? item.id;
-      await _dioClient.dio.post(
-        '${ApiConstants.baseUrl}/meetings/$meetingId/rsvp',
-        data: {'response': responseValue},
-      );
+      final parsedId = meetingId is int ? meetingId : int.tryParse(meetingId.toString()) ?? 0;
+      try {
+        await _dioClient.dio.post(
+          ApiConstants.meetingRespond(parsedId),
+          data: {'response': responseValue},
+        );
+      } catch (err) {
+        debugPrint('[Meetings] respond failed: $err, trying fallback /rsvp');
+        await _dioClient.dio.post(
+          '${ApiConstants.baseUrl}/meetings/$meetingId/rsvp',
+          data: {'response': responseValue},
+        );
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -1429,28 +1594,33 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
 
   Widget _buildGoogleMeetBadge(BuildContext context, MeetingItemModel item) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0C4A6E).withValues(alpha: 0.4) : const Color(0xFFE0F2FE),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isDark ? const Color(0xFF0284C7).withValues(alpha: 0.4) : const Color(0xFFBAE6FD),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text('📹 ', style: TextStyle(fontSize: 10)),
-          Text(
-            'Google Meet',
-            style: TextStyle(
-              fontSize: 10.5,
-              fontWeight: FontWeight.bold,
-              color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
-            ),
+    return PulsingBadge(
+      duration: const Duration(milliseconds: 2500),
+      maxScale: 1.06,
+      minScale: 0.96,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF0C4A6E).withValues(alpha: 0.4) : const Color(0xFFE0F2FE),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isDark ? const Color(0xFF0284C7).withValues(alpha: 0.4) : const Color(0xFFBAE6FD),
           ),
-        ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('📹 ', style: TextStyle(fontSize: 10)),
+            Text(
+              'Google Meet',
+              style: TextStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.bold,
+                color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1504,18 +1674,30 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
     );
     final isParticipant = item.isOrganizer || isInvitee;
 
+    final myInvitee = item.invitees.where((i) {
+      if (currentUserName.isNotEmpty && i.name.toLowerCase().trim() == currentUserName.toLowerCase().trim()) return true;
+      if (role.contains('director') && i.name.toLowerCase().trim() == 'test_dir') return true;
+      if (isTeamLead && i.name.toLowerCase().trim() == 'test_tl') return true;
+      return false;
+    }).firstOrNull;
+
+    final isMyResponsePending = (item.myResponse?.toLowerCase() == 'pending') ||
+        (myInvitee != null && (myInvitee.response?.toLowerCase() == 'pending' || myInvitee.response == null));
+
     final showMeetingHappened = isPastMeeting && !isCancelled && !isCompleted && !isPendingCompletion;
     final isAttended = item.myAttended == true || _attendedMeetingIds.contains(item.id) || (item.rawId != null && _attendedMeetingIds.contains(item.rawId));
-    final showRsvp = !isCancelled && !isCompleted && isInvitee && item.myResponse != null && item.myResponse!.toLowerCase() == 'pending';
-    final canCancel = !isCancelled && !isCompleted && (item.isOrganizer || !isTeamLead);
+    final showRsvp = !isCancelled && !isCompleted && !item.isOrganizer && isMyResponsePending;
+    final canCancel = !isCancelled && !isCompleted;
 
     Color accentColor;
     if (isCancelled) {
       accentColor = const Color(0xFFDC2626);
     } else if (isCompleted) {
       accentColor = const Color(0xFF10B981);
+    } else if (item.isOrganizer) {
+      accentColor = const Color(0xFF0F172A);
     } else {
-      accentColor = const Color(0xFF1E3A8A);
+      accentColor = const Color(0xFF991B1B);
     }
 
     return Container(
@@ -1539,7 +1721,7 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Left Accent Strip (Red for Cancelled, Green for Completed, Navy for Scheduled)
+              // Left Accent Strip (Red for Cancelled, Green for Completed, Navy for Invited, Maroon for Received)
               Container(
                 width: 4.5,
                 color: accentColor,
@@ -1550,12 +1732,60 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Meeting Title & Badges
+                      // Meeting Badges & Title
                       Wrap(
                         crossAxisAlignment: WrapCrossAlignment.center,
                         spacing: 6,
                         runSpacing: 4,
                         children: [
+                          if (!item.isOrganizer)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF4C0519).withValues(alpha: 0.5) : const Color(0xFFFFE4E6),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: isDark ? const Color(0xFF9F1239) : const Color(0xFFFECDD3)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.inbox_rounded, size: 11, color: isDark ? const Color(0xFFFDA4AF) : const Color(0xFFBE123C)),
+                                  const SizedBox(width: 3),
+                                  Text(
+                                    'Received',
+                                    style: TextStyle(
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: isDark ? const Color(0xFFFDA4AF) : const Color(0xFFBE123C),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          else
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.outbox_rounded, size: 11, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569)),
+                                  const SizedBox(width: 3),
+                                  Text(
+                                    'Initiated',
+                                    style: TextStyle(
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           Text(
                             item.title.isNotEmpty ? item.title : 'Untitled Meeting',
                             style: TextStyle(
@@ -1599,19 +1829,24 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
                                 ),
                               ),
                             )
-                          else if (isPendingCompletion)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFFEDD5),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                s.completionAwaitingApproval,
-                                style: const TextStyle(
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF9A3412),
+                          else if (isPendingCompletion || item.isPastPendingMom)
+                            PulsingBadge(
+                              duration: const Duration(milliseconds: 2500),
+                              maxScale: 1.06,
+                              minScale: 0.96,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFEDD5),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Text(
+                                  'Pending MOM',
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF9A3412),
+                                  ),
                                 ),
                               ),
                             )
@@ -1642,7 +1877,7 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
-                              '${_formatMeetingDate(item.startsAt)} · ${item.location ?? "Online"}',
+                              '${_formatMeetingDate(item.startsAt)} · ${item.location ?? "Online"}${item.hasActiveGoogleMeet ? " · Google Meet" : ""}',
                               style: TextStyle(
                                 fontSize: 11,
                                 color: isDark ? Colors.white60 : Colors.black54,
@@ -1672,29 +1907,39 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
                             final resp = (inv.response ?? '').toLowerCase();
                             final isAccepted = resp == 'accepted';
                             final isDeclined = resp == 'declined';
+                            final isTentative = resp == 'tentative';
                             final isOptional = inv.required == false;
-                            final suffix = isAccepted ? ' ✓' : (isDeclined ? ' ✕' : '');
+                            final suffix = isAccepted ? ' ✓' : (isDeclined ? ' ✕' : (isTentative ? ' ?' : ''));
                             final label = '${inv.name}${isOptional ? " (opt)" : ""}$suffix';
 
                             Color chipBg;
+                            Color chipBorder;
                             Color chipText;
 
                             if (isAccepted) {
                               chipBg = isDark ? const Color(0xFF064E3B) : const Color(0xFFDCFCE7);
+                              chipBorder = isDark ? const Color(0xFF047857) : const Color(0xFF86EFAC);
                               chipText = isDark ? const Color(0xFF86EFAC) : const Color(0xFF15803D);
                             } else if (isDeclined) {
                               chipBg = isDark ? const Color(0xFF7F1D1D).withValues(alpha: 0.4) : const Color(0xFFFEE2E2);
+                              chipBorder = isDark ? const Color(0xFF991B1B) : const Color(0xFFFCA5A5);
                               chipText = isDark ? const Color(0xFFFCA5A5) : const Color(0xFFDC2626);
+                            } else if (isTentative) {
+                              chipBg = isDark ? const Color(0xFF78350F).withValues(alpha: 0.4) : const Color(0xFFFEF3C7);
+                              chipBorder = isDark ? const Color(0xFFB45309) : const Color(0xFFFDE68A);
+                              chipText = isDark ? const Color(0xFFFDE68A) : const Color(0xFFD97706);
                             } else {
                               chipBg = isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9);
+                              chipBorder = isDark ? const Color(0xFF475569) : const Color(0xFFE2E8F0);
                               chipText = isDark ? Colors.white70 : const Color(0xFF475569);
                             }
 
                             return Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
                                 color: chipBg,
                                 borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: chipBorder),
                               ),
                               child: Text(
                                 label,
@@ -1801,88 +2046,113 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
                                 color: isDark ? Colors.white60 : Colors.grey.shade600,
                               ),
                             ),
-                            InkWell(
+                            ScaleTap(
                               onTap: () => _submitRsvp(item, 'accepted'),
-                              child: const Text(
-                                'Yes',
-                                style: TextStyle(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF16A34A),
+                              scaleDown: 0.92,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFDCFCE7),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: const Text(
+                                  '✓ Yes',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF16A34A),
+                                  ),
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            InkWell(
+                            const SizedBox(width: 8),
+                            ScaleTap(
                               onTap: () => _submitRsvp(item, 'declined'),
-                              child: const Text(
-                                'No',
-                                style: TextStyle(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFFDC2626),
+                              scaleDown: 0.92,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFEE2E2),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: const Text(
+                                  '✕ No',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFFDC2626),
+                                  ),
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            InkWell(
+                            const SizedBox(width: 8),
+                            ScaleTap(
                               onTap: () => _submitRsvp(item, 'tentative'),
-                              child: Text(
-                                'Maybe',
-                                style: TextStyle(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.white70 : const Color(0xFF0F172A),
+                              scaleDown: 0.92,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFEF3C7),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: const Text(
+                                  '? Maybe',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFFD97706),
+                                  ),
                                 ),
                               ),
                             ),
                           ],
                         ),
                       ],
-                      const SizedBox(height: 10),
-
-                      // Action Links Row
+                                // Action Links Row
                       Wrap(
                         crossAxisAlignment: WrapCrossAlignment.center,
                         spacing: 12,
                         runSpacing: 8,
                         children: [
                           if (isParticipant && !isCancelled && item.googleMeetUrl != null && item.googleMeetUrl!.trim().isNotEmpty)
-                            ElevatedButton.icon(
-                              onPressed: () async {
-                                final meetUrl = item.googleMeetUrl;
-                                if (meetUrl != null && meetUrl.trim().isNotEmpty) {
-                                  final uri = Uri.tryParse(meetUrl.trim());
-                                  if (uri != null) {
-                                    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-                                    if (!launched && context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Could not open $meetUrl')),
-                                      );
+                            ScaleTap(
+                              scaleDown: 0.94,
+                              child: ElevatedButton.icon(
+                                onPressed: () async {
+                                  final meetUrl = item.googleMeetUrl;
+                                  if (meetUrl != null && meetUrl.trim().isNotEmpty) {
+                                    final uri = Uri.tryParse(meetUrl.trim());
+                                    if (uri != null) {
+                                      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                      if (!launched && context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Could not open $meetUrl')),
+                                        );
+                                      }
                                     }
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(s.noMeetingLinkAvailable)),
+                                    );
                                   }
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(s.noMeetingLinkAvailable)),
-                                  );
-                                }
-                              },
-                              icon: const Icon(Icons.videocam_rounded, size: 14, color: Colors.white),
-                              label: Text(
-                                s.joinGoogleMeet,
-                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF2563EB),
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                visualDensity: VisualDensity.compact,
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                                },
+                                icon: const Icon(Icons.videocam_rounded, size: 14, color: Colors.white),
+                                label: Text(
+                                  s.joinGoogleMeet,
+                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF2563EB),
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  visualDensity: VisualDensity.compact,
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                                ),
                               ),
                             ),
                           if (isParticipant && !isCancelled && item.hasActiveGoogleMeet)
-                            InkWell(
+                            ScaleTap(
                               onTap: () {
                                 final meetUrl = item.googleMeetUrl ?? '';
                                 if (meetUrl.trim().isNotEmpty) {
@@ -1900,6 +2170,7 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
                                   );
                                 }
                               },
+                              scaleDown: 0.94,
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -1917,8 +2188,9 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
                               ),
                             ),
                           if (isInvitee && !isAttended && !isCancelled && !isCompleted)
-                            InkWell(
+                            ScaleTap(
                               onTap: () => _markAttended(item),
+                              scaleDown: 0.94,
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: const [
@@ -1936,8 +2208,9 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
                               ),
                             ),
                           if (isInvitee && !isCancelled && !isCompleted)
-                            InkWell(
+                            ScaleTap(
                               onTap: () => _showRescheduleDialog(item),
+                              scaleDown: 0.94,
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -1955,8 +2228,9 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
                               ),
                             ),
                           if (showMeetingHappened)
-                            InkWell(
+                            ScaleTap(
                               onTap: () => _showMeetingHappenedDialog(item),
+                              scaleDown: 0.94,
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -1972,25 +2246,27 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
                               ),
                             ),
                           if (canCancel)
-                            InkWell(
+                            ScaleTap(
                               onTap: () => _cancelMeeting(item),
-                              child: const Text(
+                              scaleDown: 0.94,
+                              child: Text(
                                 'Cancel',
                                 style: TextStyle(
                                   fontSize: 11.5,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFFDC2626),
+                                  color: isDark ? Colors.white70 : const Color(0xFF0F172A),
                                 ),
                               ),
                             ),
-                          InkWell(
+                          ScaleTap(
                             onTap: () => _showMeetingReminder(context, item),
+                            scaleDown: 0.94,
                             child: Text(
                               s.reminderButton,
                               style: TextStyle(
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.bold,
-                                color: isDark ? Colors.white70 : Colors.black87,
+                                color: isDark ? Colors.white70 : const Color(0xFF0F172A),
                               ),
                             ),
                           ),

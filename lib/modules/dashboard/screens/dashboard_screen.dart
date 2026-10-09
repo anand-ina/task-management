@@ -245,7 +245,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       const SizedBox(height: 12),
                       _buildPriorityGrid(context, s, stats, teamData.recentActivity),
-                      const SizedBox(height: 24),
 
                       // Action Center & Scheduled Meetings Row
                       StaggeredSlideFade(
@@ -378,122 +377,143 @@ class _DashboardScreenState extends State<DashboardScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
 
- Spacer(),              Wrap(
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: 6,
-                children: [
-                  Container(
+            const Spacer(),
+            Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 6,
+              children: [
+                PulsingBadge(
+                  duration: const Duration(milliseconds: 2400),
+                  maxScale: 1.25,
+                  minScale: 0.85,
+                  child: Container(
                     width: 8,
                     height: 8,
                     decoration: const BoxDecoration(
-                      color: Colors.green,
+                      color: Color(0xFF22C55E),
                       shape: BoxShape.circle,
-                    ),
-                  ),
-                  Column(
-                    children: [
-                      Text(
-                        currentDateStr,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0xFF22C55E),
+                          blurRadius: 6,
+                          spreadRadius: 1,
                         ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    nowTimeStr,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 11,
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'Namaste, $userName 🙏',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
+                ),
+                Text(
+                  currentDateStr,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  nowTimeStr,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            s.dashboardSubtitle,
-            style: const TextStyle(color: Colors.white70, fontSize: 13),
-          ),
-          const SizedBox(height: 18),
-
-          // Dynamic Stat Badges
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _buildHeaderBadge(
-                '✅ ${s.approvalsBadge(actionCenter.approvals)}',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const TaskApprovalsScreen()),
-                ),
-              ),
-              _buildHeaderBadge('📋 ${s.toReviewBadge(actionCenter.reviews)}'),
-              _buildHeaderBadge(
-                '☀️ ${s.toStartBadge(stats.toBeStarted)}',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const AllTasksScreen()),
-                ),
-              ),
-              _buildHeaderBadge('⏳ ${s.inProgressBadge(stats.inProgress)}'),
-              _buildHeaderBadge(
-                '⚑ ${s.overdueBadge(stats.overdue)}',
-                onTap: () => TasksDueTodayDialog.show(
-                  context,
-                  scope: 'all',
-                  customTitle: 'Overdue Tasks',
-                  overdue: true,
-                  badgeColor: Colors.red,
-                ),
-              ),
-              _buildHeaderBadge('🎯 ${s.completionBadge(stats.completionRate)}'),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeaderBadge(String label, {VoidCallback? onTap}) {
-    final badge = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
+          ],
         ),
-      ),
-    );
+        const SizedBox(height: 10),
+        Text(
+          'Namaste, $userName 🙏',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 26,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          s.dashboardSubtitle,
+          style: const TextStyle(color: Colors.white70, fontSize: 13),
+        ),
+        const SizedBox(height: 18),
 
-    if (onTap != null) {
-      return ScaleTap(
-        onTap: onTap,
-        child: badge,
-      );
-    }
-    return badge;
+        // Dynamic Stat Badges
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _buildHeaderBadge(
+              '✅ ${s.approvalsBadge(actionCenter.approvals)}',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const TaskApprovalsScreen()),
+              ),
+            ),
+            _buildHeaderBadge('📋 ${s.toReviewBadge(actionCenter.reviews)}'),
+            _buildHeaderBadge(
+              '☀️ ${s.toStartBadge(stats.toBeStarted)}',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AllTasksScreen()),
+              ),
+            ),
+            _buildHeaderBadge('⏳ ${s.inProgressBadge(stats.inProgress)}'),
+            _buildHeaderBadge(
+              '⚑ ${s.overdueBadge(stats.overdue)}',
+              isPulsing: stats.overdue > 0,
+              accentColor: stats.overdue > 0 ? const Color(0xFFFCA5A5) : null,
+              onTap: () => TasksDueTodayDialog.show(
+                context,
+                scope: 'all',
+                customTitle: 'Overdue Tasks',
+                overdue: true,
+                badgeColor: Colors.red,
+              ),
+            ),
+            _buildHeaderBadge('🎯 ${s.completionBadge(stats.completionRate)}'),
+          ],
+        ),
+      ],
+    ),
+  );
+}
+
+Widget _buildHeaderBadge(String label, {VoidCallback? onTap, bool isPulsing = false, Color? accentColor}) {
+  final badge = Container(
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+    decoration: BoxDecoration(
+      color: accentColor != null ? accentColor.withValues(alpha: 0.22) : Colors.white.withValues(alpha: 0.12),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: accentColor != null ? accentColor.withValues(alpha: 0.5) : Colors.white.withValues(alpha: 0.15)),
+    ),
+    child: Text(
+      label,
+      style: TextStyle(
+        color: accentColor ?? Colors.white,
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+      ),
+    ),
+  );
+
+  Widget result = badge;
+  if (isPulsing) {
+    result = PulsingBadge(
+      duration: const Duration(milliseconds: 2400),
+      maxScale: 1.08,
+      minScale: 0.96,
+      child: result,
+    );
   }
+
+  if (onTap != null) {
+    return ScaleTap(
+      onTap: onTap,
+      child: result,
+    );
+  }
+  return result;
+}
 
   Widget _buildPriorityGrid(BuildContext context, AppStrings s, DashboardStats stats, List<RecentActivityItem> activities) {
     return Column(
@@ -643,42 +663,101 @@ class _DashboardScreenState extends State<DashboardScreen> {
     VoidCallback? onTap,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final intCount = int.tryParse(count) ?? 0;
+    final isEmergency = (borderColor == Colors.red || borderColor == Colors.orange) && intCount > 0;
 
-    return ScaleTap(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E293B) : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: isDark ? Border.all(color: const Color(0xFF1E293B), width: 1.0) : Border.all(color: Colors.grey.shade300, width: 0.7),
+    Widget cardContent = Container(
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isSelected
+              ? borderColor
+              : (isDark ? const Color(0xFF334155) : Colors.grey.shade300),
+          width: isSelected ? 1.6 : 0.8,
         ),
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
+        boxShadow: isSelected
+            ? [
+                BoxShadow(
+                  color: borderColor.withValues(alpha: 0.28),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ]
+            : (isDark
+                ? []
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.035),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Stack(
           children: [
-            Text(stars, style: TextStyle(color: borderColor, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
-            const SizedBox(height: 4),
-            Text(
-              count,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w800,
-                color: borderColor,
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 3.5,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: borderColor,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                ),
               ),
             ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: isDark ? Colors.white70 : const Color(0xFF475569),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(stars, style: TextStyle(color: borderColor, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+                  const SizedBox(height: 4),
+                  AnimatedCountText(
+                    value: intCount,
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                      color: borderColor,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white70 : const Color(0xFF475569),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
             ),
           ],
         ),
       ),
+    );
+
+    if (isEmergency && borderColor == Colors.red) {
+      cardContent = PulsingBadge(
+        duration: const Duration(milliseconds: 2600),
+        maxScale: 1.03,
+        minScale: 0.98,
+        child: cardContent,
+      );
+    }
+
+    return ScaleTap(
+      onTap: onTap,
+      scaleDown: 0.95,
+      child: cardContent,
     );
   }
 
@@ -783,32 +862,86 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildActionCenterRow(String label, String countStr, double progress, Color color, {VoidCallback? onTap}) {
+    final intCount = int.tryParse(countStr) ?? 0;
+    final isUrgent = (color == Colors.red || color == Colors.red.shade700) && intCount > 0;
+
     return ScaleTap(
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 4),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
-                Text(countStr, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color)),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                isUrgent
+                    ? PulsingBadge(
+                        duration: const Duration(milliseconds: 2400),
+                        maxScale: 1.08,
+                        minScale: 0.96,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: AnimatedCountText(
+                            value: intCount,
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color),
+                          ),
+                        ),
+                      )
+                    : AnimatedCountText(
+                        value: intCount,
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color),
+                      ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             TweenAnimationBuilder<double>(
               tween: Tween<double>(begin: 0.0, end: progress),
-              duration: const Duration(milliseconds: 750),
+              duration: const Duration(milliseconds: 800),
               curve: Curves.easeOutCubic,
               builder: (context, animatedVal, _) {
-                return LinearProgressIndicator(
-                  value: animatedVal,
-                  backgroundColor: Colors.grey.shade200,
-                  color: color,
-                  minHeight: 4,
-                  borderRadius: BorderRadius.circular(4),
+                return Container(
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                  child: FractionallySizedBox(
+                    alignment: Alignment.centerLeft,
+                    widthFactor: animatedVal.clamp(0.0, 1.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            color.withValues(alpha: 0.8),
+                            color,
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(3),
+                        boxShadow: [
+                          BoxShadow(
+                            color: color.withValues(alpha: 0.3),
+                            blurRadius: 3,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 );
               },
             ),
@@ -830,7 +963,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       child: Row(
         children: [
-          const Text('📝', style: TextStyle(fontSize: 16)),
+          const PulsingBadge(
+            duration: Duration(milliseconds: 2400),
+            maxScale: 1.2,
+            minScale: 0.9,
+            child: Text('📝', style: TextStyle(fontSize: 16)),
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: RichText(
@@ -852,7 +990,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
           const SizedBox(width: 10),
-          InkWell(
+          ScaleTap(
             onTap: () {
               Navigator.push(
                 context,
@@ -864,6 +1002,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
               decoration: BoxDecoration(
                 color: const Color(0xFF2563EB),
                 borderRadius: BorderRadius.circular(6),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF2563EB).withValues(alpha: 0.35),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: const Text(
                 'File now →',
@@ -918,65 +1063,73 @@ class _DashboardScreenState extends State<DashboardScreen> {
               )
             else
               Column(
-                children: timeline.map((item) {
+                children: timeline.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final item = entry.value;
                   String timeStr = '17:30';
                   try {
                     final dt = DateTime.parse(item.at);
                     timeStr = DateFormat('HH:mm').format(dt);
                   } catch (_) {}
 
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          timeStr,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white70 : const Color(0xFF334155),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item.title,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                  return StaggeredSlideFade(
+                    delay: Duration(milliseconds: 35 * index),
+                    child: ScaleTap(
+                      onTap: () {},
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              timeStr,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.white70 : const Color(0xFF334155),
                               ),
-                              const SizedBox(height: 2),
-                              Text(
-                                item.location,
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF451A03) : const Color(0xFFFEF3C7),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            item.kind == 'report' ? 'Auto' : item.kind,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: isDark ? const Color(0xFFFDE68A) : const Color(0xFFD97706),
                             ),
-                          ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item.title,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    item.location,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF451A03) : const Color(0xFFFEF3C7),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                item.kind == 'report' ? 'Auto' : item.kind,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark ? const Color(0xFFFDE68A) : const Color(0xFFD97706),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   );
                 }).toList(),
@@ -1031,13 +1184,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildLoginStatItem(String val, String label, Color color) {
+    final intVal = int.tryParse(val);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          val,
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color),
-        ),
+        intVal != null
+            ? AnimatedCountText(
+                value: intVal,
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color),
+              )
+            : Text(
+                val,
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color),
+              ),
         const SizedBox(height: 2),
         Text(
           label,
@@ -1144,37 +1303,87 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildAgeRow(String label, int count, double progress, Color color, {VoidCallback? onTap}) {
+    final isCritical = color == Colors.red.shade700 && count > 0;
+
     return ScaleTap(
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 4),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+        ),
         child: Row(
           children: [
             SizedBox(
-              width: 80,
+              width: 82,
               child: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
             ),
             Expanded(
               child: TweenAnimationBuilder<double>(
                 tween: Tween<double>(begin: 0.0, end: progress),
-                duration: const Duration(milliseconds: 750),
+                duration: const Duration(milliseconds: 800),
                 curve: Curves.easeOutCubic,
                 builder: (context, animatedVal, _) {
-                  return LinearProgressIndicator(
-                    value: animatedVal,
-                    backgroundColor: Colors.grey.shade200,
-                    color: color,
-                    minHeight: 8,
-                    borderRadius: BorderRadius.circular(4),
+                  return Container(
+                    height: 7,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: FractionallySizedBox(
+                      alignment: Alignment.centerLeft,
+                      widthFactor: animatedVal.clamp(0.0, 1.0),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              color.withValues(alpha: 0.75),
+                              color,
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(4),
+                          boxShadow: [
+                            BoxShadow(
+                              color: color.withValues(alpha: 0.35),
+                              blurRadius: 4,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   );
                 },
               ),
             ),
-            const SizedBox(width: 12),
-            Text(
-              '$count',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color),
-            ),
+            const SizedBox(width: 14),
+            isCritical
+                ? PulsingBadge(
+                    duration: const Duration(milliseconds: 2400),
+                    maxScale: 1.08,
+                    minScale: 0.96,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: AnimatedCountText(
+                        value: count,
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color),
+                      ),
+                    ),
+                  )
+                : SizedBox(
+                    width: 24,
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: AnimatedCountText(
+                        value: count,
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color),
+                      ),
+                    ),
+                  ),
           ],
         ),
       ),
@@ -1275,9 +1484,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   final act = activities[index];
                   final isSelected = index == _selectedActivityIndex;
 
-                  return Column(
+                  return StaggeredSlideFade(
+                    delay: Duration(milliseconds: (index.clamp(0, 8)) * 30),
+                    child: Column(
                     children: [
-                      InkWell(
+                      ScaleTap(
+                        scaleDown: 0.98,
                         onTap: () {
                           setState(() {
                             _selectedActivityIndex = isSelected ? null : index;
@@ -1324,142 +1536,153 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 style: const TextStyle(fontSize: 10, color: Colors.grey),
                               ),
                               const SizedBox(width: 6),
-                              Icon(
-                                isSelected ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
-                                size: 18,
-                                color: isSelected ? const Color(0xFF2563EB) : Colors.grey,
+                              AnimatedRotation(
+                                turns: isSelected ? 0.5 : 0.0,
+                                duration: const Duration(milliseconds: 250),
+                                curve: Curves.easeInOutCubic,
+                                child: Icon(
+                                  Icons.keyboard_arrow_down_rounded,
+                                  size: 18,
+                                  color: isSelected ? const Color(0xFF2563EB) : Colors.grey,
+                                ),
                               ),
                             ],
                           ),
                         ),
                       ),
-                      if (isSelected)
-                        Container(
-                          width: double.infinity,
-                          margin: const EdgeInsets.only(left: 8, right: 8, bottom: 8, top: 4),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      '${act.taskNo} · ${act.title}',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.bold,
-                                        color: isDark ? Colors.white : const Color(0xFF0F172A),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  OutlinedButton.icon(
-                                    onPressed: () {
-                                      TasksDueTodayDialog.show(
-                                        context,
-                                        customTitle: '${act.taskNo} · ${act.title}',
-                                        searchQuery: act.taskNo,
-                                        badgeColor: Colors.blue,
-                                      );
-                                    },
-                                    icon: const Icon(Icons.open_in_new, size: 11),
-                                    label: Text(s.viewTask, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold)),
-                                    style: OutlinedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                      visualDensity: VisualDensity.compact,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Wrap(
-                                spacing: 6,
-                                runSpacing: 4,
-                                children: [
-                                  Chip(
-                                    label: Text(act.priority, style: TextStyle(fontSize: 9.5, color: Colors.amber.shade800, fontWeight: FontWeight.bold)),
-                                    backgroundColor: Colors.amber.shade50,
-                                    padding: EdgeInsets.zero,
-                                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                  ),
-                                  Chip(
-                                    label: Text('${act.status} · ${act.progress}%', style: const TextStyle(fontSize: 9.5, color: Color(0xFF0284C7), fontWeight: FontWeight.bold)),
-                                    backgroundColor: Colors.blue.shade50,
-                                    padding: EdgeInsets.zero,
-                                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                  ),
-                                  Chip(
-                                    label: Text(act.branchCode.isNotEmpty ? act.branchCode : 'SS00', style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold)),
-                                    backgroundColor: isDark ? Colors.white12 : Colors.grey.shade100,
-                                    padding: EdgeInsets.zero,
-                                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                  ),
-                                ],
-                              ),
-                              if (act.description.isNotEmpty) ...[
-                                const SizedBox(height: 8),
-                                Text(
-                                  act.description,
-                                  style: TextStyle(
-                                    fontSize: 11.5,
-                                    color: isDark ? Colors.white70 : Colors.black87,
+                      AnimatedSize(
+                        duration: const Duration(milliseconds: 280),
+                        curve: Curves.easeInOutCubic,
+                        child: isSelected
+                            ? Container(
+                                width: double.infinity,
+                                margin: const EdgeInsets.only(left: 8, right: 8, bottom: 8, top: 4),
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
                                   ),
                                 ),
-                              ],
-                              const SizedBox(height: 10),
-                              const Divider(height: 1),
-                              const SizedBox(height: 8),
-                              Wrap(
-                                spacing: 18,
-                                runSpacing: 8,
-                                children: [
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(s.dueLabel, style: const TextStyle(fontSize: 9.5, color: Colors.grey)),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            '${act.taskNo} · ${act.title}',
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.bold,
+                                              color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        OutlinedButton.icon(
+                                          onPressed: () {
+                                            TasksDueTodayDialog.show(
+                                              context,
+                                              customTitle: '${act.taskNo} · ${act.title}',
+                                              searchQuery: act.taskNo,
+                                              badgeColor: Colors.blue,
+                                            );
+                                          },
+                                          icon: const Icon(Icons.open_in_new, size: 11),
+                                          label: Text(s.viewTask, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold)),
+                                          style: OutlinedButton.styleFrom(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                            visualDensity: VisualDensity.compact,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Wrap(
+                                      spacing: 6,
+                                      runSpacing: 4,
+                                      children: [
+                                        Chip(
+                                          label: Text(act.priority, style: TextStyle(fontSize: 9.5, color: Colors.amber.shade800, fontWeight: FontWeight.bold)),
+                                          backgroundColor: Colors.amber.shade50,
+                                          padding: EdgeInsets.zero,
+                                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                        ),
+                                        Chip(
+                                          label: Text('${act.status} · ${act.progress}%', style: const TextStyle(fontSize: 9.5, color: Color(0xFF0284C7), fontWeight: FontWeight.bold)),
+                                          backgroundColor: Colors.blue.shade50,
+                                          padding: EdgeInsets.zero,
+                                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                        ),
+                                        Chip(
+                                          label: Text(act.branchCode.isNotEmpty ? act.branchCode : 'SS00', style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold)),
+                                          backgroundColor: isDark ? Colors.white12 : Colors.grey.shade100,
+                                          padding: EdgeInsets.zero,
+                                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                        ),
+                                      ],
+                                    ),
+                                    if (act.description.isNotEmpty) ...[
+                                      const SizedBox(height: 8),
                                       Text(
-                                        (act.dueDate == null || act.dueDate!.isEmpty) ? '—' : act.dueDate!,
-                                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black87),
+                                        act.description,
+                                        style: TextStyle(
+                                          fontSize: 11.5,
+                                          color: isDark ? Colors.white70 : Colors.black87,
+                                        ),
                                       ),
                                     ],
-                                  ),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(s.completedLabel, style: const TextStyle(fontSize: 9.5, color: Colors.grey)),
-                                      Text(
-                                        (act.completedDate == null || act.completedDate!.isEmpty) ? act.at : act.completedDate!,
-                                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.green),
-                                      ),
-                                    ],
-                                  ),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(s.branchLabel, style: const TextStyle(fontSize: 9.5, color: Colors.grey)),
-                                      Text(
-                                        act.branchName,
-                                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black87),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
+                                    const SizedBox(height: 10),
+                                    const Divider(height: 1),
+                                    const SizedBox(height: 8),
+                                    Wrap(
+                                      spacing: 18,
+                                      runSpacing: 8,
+                                      children: [
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(s.dueLabel, style: const TextStyle(fontSize: 9.5, color: Colors.grey)),
+                                            Text(
+                                              (act.dueDate == null || act.dueDate!.isEmpty) ? '—' : act.dueDate!,
+                                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black87),
+                                            ),
+                                          ],
+                                        ),
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(s.completedLabel, style: const TextStyle(fontSize: 9.5, color: Colors.grey)),
+                                            Text(
+                                              (act.completedDate == null || act.completedDate!.isEmpty) ? act.at : act.completedDate!,
+                                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.green),
+                                            ),
+                                          ],
+                                        ),
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(s.branchLabel, style: const TextStyle(fontSize: 9.5, color: Colors.grey)),
+                                            Text(
+                                              act.branchName,
+                                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black87),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
                     ],
-                  );
-                },
+                  ),
+                );
+              },
               ),
           ],
         ),
@@ -1475,14 +1698,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            InkWell(
+            ScaleTap(
               onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const TeamPerformanceScreen()),
                 );
               },
-              borderRadius: BorderRadius.circular(6),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -1509,15 +1731,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 itemBuilder: (context, index) {
                   final m = members[index];
                   final rate = m.assigned > 0 ? ((m.done / m.assigned) * 100).round() : 0;
+                  final progress = m.assigned > 0 ? (m.done / m.assigned).clamp(0.0, 1.0) : 0.0;
 
-                  return InkWell(
+                  return ScaleTap(
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => const TeamPerformanceScreen()),
                       );
                     },
-                    borderRadius: BorderRadius.circular(8),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
                       child: Row(
@@ -1552,13 +1774,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 4),
-                                LinearProgressIndicator(
-                                  value: m.assigned > 0 ? (m.done / m.assigned).clamp(0.0, 1.0) : 0.0,
-                                  backgroundColor: Colors.grey.shade200,
-                                  color: Colors.teal,
-                                  minHeight: 4,
-                                  borderRadius: BorderRadius.circular(4),
+                                const SizedBox(height: 5),
+                                TweenAnimationBuilder<double>(
+                                  tween: Tween<double>(begin: 0.0, end: progress),
+                                  duration: const Duration(milliseconds: 750),
+                                  curve: Curves.easeOutCubic,
+                                  builder: (context, animVal, _) {
+                                    return Container(
+                                      height: 5,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade200,
+                                        borderRadius: BorderRadius.circular(3),
+                                      ),
+                                      child: FractionallySizedBox(
+                                        alignment: Alignment.centerLeft,
+                                        widthFactor: animVal,
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            gradient: const LinearGradient(
+                                              colors: [Color(0xFF0D9488), Color(0xFF14B8A6)],
+                                            ),
+                                            borderRadius: BorderRadius.circular(3),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
                               ],
                             ),
@@ -1567,8 +1808,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Text(
-                                '$rate%',
+                              AnimatedCountText(
+                                value: rate,
+                                suffix: '%',
                                 style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.green),
                               ),
                               Text(
@@ -1639,7 +1881,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     child: Column(
                       children: [
-                        InkWell(
+                        ScaleTap(
+                          scaleDown: 0.98,
                           onTap: () {
                             setState(() {
                               if (isExpanded) {
@@ -1649,7 +1892,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               }
                             });
                           },
-                          borderRadius: BorderRadius.circular(8),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                             child: Row(
@@ -1670,59 +1912,70 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                                 ),
                                 const SizedBox(width: 6),
-                                Icon(
-                                  isExpanded
-                                      ? Icons.keyboard_arrow_up_rounded
-                                      : Icons.keyboard_arrow_down_rounded,
-                                  size: 16,
-                                  color: Colors.grey,
+                                AnimatedRotation(
+                                  turns: isExpanded ? 0.5 : 0.0,
+                                  duration: const Duration(milliseconds: 250),
+                                  curve: Curves.easeInOutCubic,
+                                  child: const Icon(
+                                    Icons.keyboard_arrow_down_rounded,
+                                    size: 16,
+                                    color: Colors.grey,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
                         ),
 
-                        // Expanded Member List
-                        if (isExpanded && group.members.isNotEmpty) ...[
-                          const Divider(height: 1),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            child: Column(
-                              children: group.members.map((m) {
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 4),
-                                  child: Row(
-                                    children: [
-                                      CircleAvatar(
-                                        radius: 12,
-                                        backgroundColor: _hexToColor(m.color),
-                                        child: Text(
-                                          m.initials.isNotEmpty
-                                              ? m.initials
-                                              : (m.name.isNotEmpty ? m.name[0] : 'U'),
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 9,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
+                        // Expanded Member List with Smooth Animation
+                        AnimatedSize(
+                          duration: const Duration(milliseconds: 280),
+                          curve: Curves.easeInOutCubic,
+                          child: isExpanded && group.members.isNotEmpty
+                              ? Column(
+                                  children: [
+                                    const Divider(height: 1),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                      child: Column(
+                                        children: group.members.map((m) {
+                                          return Padding(
+                                            padding: const EdgeInsets.symmetric(vertical: 4),
+                                            child: Row(
+                                              children: [
+                                                CircleAvatar(
+                                                  radius: 12,
+                                                  backgroundColor: _hexToColor(m.color),
+                                                  child: Text(
+                                                    m.initials.isNotEmpty
+                                                        ? m.initials
+                                                        : (m.name.isNotEmpty ? m.name[0] : 'U'),
+                                                    style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 9,
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 10),
+                                                Text(
+                                                  m.name,
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: isDark ? Colors.white70 : const Color(0xFF1E293B),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        }).toList(),
                                       ),
-                                      const SizedBox(width: 10),
-                                      Text(
-                                        m.name,
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                          color: isDark ? Colors.white70 : const Color(0xFF1E293B),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                        ],
+                                    ),
+                                  ],
+                                )
+                              : const SizedBox.shrink(),
+                        ),
                       ],
                     ),
                   );
