@@ -34,6 +34,8 @@ class TaskRepository {
     String? overdueAge,
     String? status,
     String? search,
+    bool? activeOnly,
+    int? assigneeId,
     String sort = 'entry',
     String dir = 'desc',
     int limit = 50,
@@ -41,20 +43,23 @@ class TaskRepository {
   }) async {
     final Map<String, dynamic> params = {
       'scope': scope,
-      'sort': sort,
-      'dir': dir,
-      'limit': limit,
-      'offset': offset,
     };
 
+    if (assigneeId != null) params['assigneeId'] = assigneeId;
     if (period != null && period.isNotEmpty && period != 'year') {
       params['period'] = period;
     }
     if (priority != null && priority.isNotEmpty) params['priority'] = priority;
+    if (activeOnly == true) params['activeOnly'] = 'true';
     if (overdue == true) params['overdue'] = 'true';
     if (overdueAge != null && overdueAge.isNotEmpty) params['overdueAge'] = overdueAge;
     if (status != null && status.isNotEmpty) params['status'] = status;
     if (search != null && search.isNotEmpty) params['q'] = search;
+
+    params['sort'] = sort;
+    params['dir'] = dir;
+    params['limit'] = limit;
+    params['offset'] = offset;
 
     final uri = Uri.parse(ApiConstants.tasks).replace(
       queryParameters: params.map((k, v) => MapEntry(k, v.toString())),
@@ -106,7 +111,7 @@ class TaskRepository {
     debugPrint('======================================================');
     if (response.data is List) {
       return (response.data as List)
-          .map((e) => AssigneeModel.fromJson(e is Map<String, dynamic> ? e : {}))
+          .map((e) => AssigneeModel.fromJson(e is Map ? Map<String, dynamic>.from(e) : {}))
           .toList();
     }
     return [];

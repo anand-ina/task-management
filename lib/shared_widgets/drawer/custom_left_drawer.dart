@@ -204,245 +204,151 @@ class CustomLeftDrawer extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 children: [
-                  // ADMIN EXCLUSIVE SECTION (When Admin Logged In)
-                  if (isAdmin) ...[
-                    _buildSectionCard(
-                      context,
-                      title: s.administrationHeader,
-                      children: [
-                        _buildNavItem(
-                          context,
-                          icon: Icons.person_outline_rounded,
-                          title: s.userManagement,
-                          isSelected: currentRoute == '/staff',
-                          onTap: () => _navigate(context, '/staff'),
-                        ),
-                        _buildNavItem(
-                          context,
-                          icon: Icons.folder_open_outlined,
-                          title: s.branchesAndDepartments,
-                          isSelected: currentRoute == '/admin/access',
-                          onTap: () => _navigate(context, '/admin/access'),
-                        ),
-                        _buildNavItem(
-                          context,
-                          icon: Icons.alt_route_rounded,
-                          title: s.reportingStructure,
-                          isSelected: currentRoute == '/admin/reporting',
-                          onTap: () => _navigate(context, '/admin/reporting'),
-                        ),
-                        _buildNavItem(
-                          context,
-                          icon: Icons.shield_outlined,
-                          title: s.rolesAndPermissions,
-                          isSelected: currentRoute == '/admin/roles',
-                          onTap: () => _navigate(context, '/admin/roles'),
-                        ),
-                        _buildNavItem(
-                          context,
-                          icon: Icons.tag_rounded,
-                          title: s.taskIdSettings,
-                          isSelected: currentRoute == '/admin/task-ids',
-                          onTap: () => _navigate(context, '/admin/task-ids'),
-                        ),
-                        _buildNavItem(
-                          context,
-                          icon: Icons.receipt_long_outlined,
-                          title: s.auditLog,
-                          isSelected: currentRoute == '/admin/audit',
-                          onTap: () => _navigate(context, '/admin/audit'),
-                        ),
-                      ],
-                    ),
-                  ] else ...[
-                    // ALL OTHER ROLES (Center Head / Principal, Team Lead, Academic Executive, Manager, Director)
-
-                    // CARD 1: DASHBOARD & OVERVIEW
-                    _buildSectionCard(
-                      context,
-                      children: [
-                        _buildNavItem(
-                          context,
-                          icon: Icons.grid_view_rounded,
-                          title: s.dashboard,
-                          isSelected: currentRoute == '/dashboard',
-                          onTap: () => _navigate(context, '/dashboard'),
-                        ),
-                        if (!isAcademicExecutive)
-                          _buildNavItem(
-                            context,
-                            icon: Icons.campaign_rounded,
-                            title: s.announcements,
-                            isSelected: currentRoute == '/announcements',
-                            onTap: () => _navigate(context, '/announcements'),
-                          ),
-                        if (isPrincipal)
-                          _buildNavItem(
-                            context,
-                            icon: Icons.table_chart_outlined,
-                            title: s.campusOverview,
-                            isSelected: currentRoute == '/campus-overview' || currentRoute == '/org-overview',
-                            onTap: () => _navigate(context, '/campus-overview'),
-                          ),
-                      ],
-                    ),
-
-                    // CARD 2: TASKS
-                    _buildSectionCard(
-                      context,
-                      title: s.tasksHeader,
-                      children: [
-                        if (!isDirector)
-                          _buildNavItem(
-                            context,
-                            icon: Icons.check_circle_outline,
-                            title: s.allTasks,
-                            isSelected: currentRoute == '/tasks',
-                            onTap: () => _navigate(context, '/tasks'),
-                          ),
-                        _buildNavItem(
-                          context,
-                          icon: Icons.check_box_outlined,
-                          title: s.myTasks,
-                          isSelected: currentRoute == '/my-tasks',
-                          onTap: () => _navigate(context, '/my-tasks'),
-                        ),
-                        if (!isDirector)
-                          _buildNavItem(
-                            context,
-                            icon: Icons.autorenew_rounded,
-                            title: s.recurringTasks,
-                            isSelected: currentRoute == '/recurring',
-                            onTap: () => _navigate(context, '/recurring'),
-                          ),
-                      ],
-                    ),
-
-                    // CARD 3: COMPLAINTS & FEEDBACK
-                    if (isDirector || isPrincipal || isTeamLead || isManager || isAdmin || isAcademicExecutive)
-                      _buildSectionCard(
+                  // CARD 1: DASHBOARD
+                  _buildSectionCard(
+                    context,
+                    children: [
+                      _buildNavItem(
                         context,
-                        title: s.complaintsAndFeedbackHeader,
-                        children: [
-                          _buildNavItem(
-                            context,
-                            icon: Icons.dashboard_outlined,
-                            title: s.complaintsDashboardTitle,
-                            isSelected: currentRoute == '/complaints/dashboard' || currentRoute == '/complaints/history',
-                            onTap: () => _navigate(context, '/complaints/dashboard'),
-                          ),
-                          _buildNavItem(
-                            context,
-                            icon: Icons.family_restroom_outlined,
-                            title: s.parentsComplaintsAndFeedbacks,
-                            isSelected: currentRoute == '/complaints/parents',
-                            onTap: () => _navigate(context, '/complaints/parents'),
-                          ),
-                          _buildNavItem(
-                            context,
-                            icon: Icons.school_outlined,
-                            title: s.studentsComplaintsAndFeedbacks,
-                            isSelected: currentRoute == '/complaints/students',
-                            onTap: () => _navigate(context, '/complaints/students'),
-                          ),
-                          _buildNavItem(
-                            context,
-                            icon: Icons.badge_outlined,
-                            title: s.staffComplaintsAndFeedbacks,
-                            isSelected: currentRoute == '/complaints/staff',
-                            onTap: () => _navigate(context, '/complaints/staff'),
-                          ),
-                          _buildNavItem(
-                            context,
-                            icon: Icons.military_tech_outlined,
-                            title: s.appreciations,
-                            isSelected: currentRoute == '/complaints/appreciations',
-                            onTap: () => _navigate(context, '/complaints/appreciations'),
-                          ),
-                        ],
+                        icon: Icons.grid_view_rounded,
+                        title: s.dashboard,
+                        isSelected: currentRoute == '/dashboard',
+                        onTap: () => _navigate(context, '/dashboard'),
                       ),
-
-                    // CARD 4: REPORTS
-                    _buildSectionCard(
-                      context,
-                      title: s.reportsHeader,
-                      children: [
+                      if (!isAcademicExecutive)
                         _buildNavItem(
                           context,
-                          icon: Icons.article_outlined,
-                          title: s.statusReports,
-                          isSelected: currentRoute == '/reports',
-                          onTap: () => _navigate(context, '/reports'),
+                          icon: Icons.campaign_rounded,
+                          title: s.announcements,
+                          isSelected: currentRoute == '/announcements',
+                          onTap: () => _navigate(context, '/announcements'),
                         ),
-                        if (!isDirector)
-                          _buildNavItem(
-                            context,
-                            icon: Icons.bar_chart_rounded,
-                            title: s.reportsDashboard,
-                            isSelected: currentRoute == '/reports-dashboard',
-                            onTap: () => _navigate(context, '/reports-dashboard'),
-                          ),
-                      ],
-                    ),
+                    ],
+                  ),
 
-                    // CARD 5: TO-DO
-                    if (!isDirector)
-                      _buildSectionCard(
+                  // CARD 2: TASKS
+                  _buildSectionCard(
+                    context,
+                    title: s.tasksHeader,
+                    children: [
+                      _buildNavItem(
                         context,
-                        title: s.todoHeader,
-                        children: [
-                          _buildNavItem(
-                            context,
-                            icon: Icons.pie_chart_outline_rounded,
-                            title: s.today,
-                            isSelected: currentRoute == '/todo',
-                            onTap: () => _navigate(context, '/todo'),
-                          ),
-                          _buildNavItem(
-                            context,
-                            icon: Icons.history_rounded,
-                            title: s.history,
-                            isSelected: currentRoute == '/todo-history',
-                            onTap: () => _navigate(context, '/todo-history'),
-                          ),
-                          if (isAcademicExecutive || isTeamLead)
-                            _buildNavItem(
-                              context,
-                              icon: Icons.access_time_rounded,
-                              title: s.hourlyLog,
-                              isSelected: currentRoute == '/hourly-log',
-                              onTap: () => _navigate(context, '/hourly-log'),
-                            ),
-                        ],
+                        icon: Icons.check_box_outlined,
+                        title: s.myTasks,
+                        isSelected: currentRoute == '/my-tasks',
+                        onTap: () => _navigate(context, '/my-tasks'),
                       ),
+                    ],
+                  ),
 
-                    // CARD 6: REQUESTS & APPROVALS
-                    _buildSectionCard(
-                      context,
-                      title: s.approvalsHeader,
-                      children: [
-                        _buildNavItem(
-                          context,
-                          icon: Icons.check_circle_rounded,
-                          title: s.taskApprovals,
-                          iconColor: Colors.green,
-                          isSelected: currentRoute == '/approvals/tasks',
-                          onTap: () => _navigate(context, '/approvals/tasks'),
-                        ),
-                        _buildNavItem(
-                          context,
-                          icon: Icons.outlined_flag_rounded,
-                          title: s.escalations,
-                          isSelected: currentRoute == '/approvals/escalations',
-                          onTap: () => _navigate(context, '/approvals/escalations'),
-                        ),
-                        _buildNavItem(
-                          context,
-                          icon: Icons.calendar_today_rounded,
-                          title: s.meetingApprovals,
-                          isSelected: currentRoute == '/approvals/meetings',
-                          onTap: () => _navigate(context, '/approvals/meetings'),
-                        ),
+                  // CARD 3: COMPLAINTS & FEEDBACK
+                  _buildSectionCard(
+                    context,
+                    title: s.complaintsAndFeedbackHeader,
+                    children: [
+                      _buildNavItem(
+                        context,
+                        icon: Icons.dashboard_outlined,
+                        title: s.complaintsDashboardTitle,
+                        isSelected: currentRoute == '/complaints/dashboard' || currentRoute == '/complaints/history',
+                        onTap: () => _navigate(context, '/complaints/dashboard'),
+                      ),
+                      _buildNavItem(
+                        context,
+                        icon: Icons.family_restroom_outlined,
+                        title: s.parentsComplaintsAndFeedbacks,
+                        isSelected: currentRoute == '/complaints/parents',
+                        onTap: () => _navigate(context, '/complaints/parents'),
+                      ),
+                      _buildNavItem(
+                        context,
+                        icon: Icons.school_outlined,
+                        title: s.studentsComplaintsAndFeedbacks,
+                        isSelected: currentRoute == '/complaints/students',
+                        onTap: () => _navigate(context, '/complaints/students'),
+                      ),
+                      _buildNavItem(
+                        context,
+                        icon: Icons.badge_outlined,
+                        title: s.staffComplaintsAndFeedbacks,
+                        isSelected: currentRoute == '/complaints/staff',
+                        onTap: () => _navigate(context, '/complaints/staff'),
+                      ),
+                      _buildNavItem(
+                        context,
+                        icon: Icons.military_tech_outlined,
+                        title: s.appreciations,
+                        isSelected: currentRoute == '/complaints/appreciations',
+                        onTap: () => _navigate(context, '/complaints/appreciations'),
+                      ),
+                    ],
+                  ),
+
+                  // CARD 4: REPORTS
+                  _buildSectionCard(
+                    context,
+                    title: s.reportsHeader,
+                    children: [
+                      _buildNavItem(
+                        context,
+                        icon: Icons.article_outlined,
+                        title: s.statusReports,
+                        isSelected: currentRoute == '/reports',
+                        onTap: () => _navigate(context, '/reports'),
+                      ),
+                    ],
+                  ),
+
+                  // CARD 5: MEETINGS
+                  _buildSectionCard(
+                    context,
+                    title: s.meetingsHeader,
+                    children: [
+                      _buildNavItem(
+                        context,
+                        icon: Icons.access_time_rounded,
+                        title: s.myScheduledMeetings,
+                        isSelected: currentRoute == '/my-meetings' || currentRoute == '/meetings',
+                        onTap: () => _navigate(context, '/my-meetings'),
+                      ),
+                      _buildNavItem(
+                        context,
+                        icon: Icons.calendar_month_outlined,
+                        title: s.meetingCalendar,
+                        isSelected: currentRoute == '/meetings-calendar',
+                        onTap: () => _navigate(context, '/meetings-calendar'),
+                      ),
+                    ],
+                  ),
+
+                  // CARD 6: REQUESTS & APPROVALS
+                  _buildSectionCard(
+                    context,
+                    title: s.approvalsHeader,
+                    children: [
+                      _buildNavItem(
+                        context,
+                        icon: Icons.check_circle_rounded,
+                        title: s.taskApprovals,
+                        iconColor: Colors.green,
+                        isSelected: currentRoute == '/approvals/tasks',
+                        onTap: () => _navigate(context, '/approvals/tasks'),
+                      ),
+                      _buildNavItem(
+                        context,
+                        icon: Icons.outlined_flag_rounded,
+                        title: s.escalations,
+                        isSelected: currentRoute == '/approvals/escalations',
+                        onTap: () => _navigate(context, '/approvals/escalations'),
+                      ),
+                      _buildNavItem(
+                        context,
+                        icon: Icons.calendar_today_rounded,
+                        title: s.meetingApprovals,
+                        isSelected: currentRoute == '/approvals/meetings',
+                        onTap: () => _navigate(context, '/approvals/meetings'),
+                      ),
+                      if (!isTeamLead)
                         _buildNavItem(
                           context,
                           icon: Icons.currency_rupee_rounded,
@@ -450,61 +356,38 @@ class CustomLeftDrawer extends StatelessWidget {
                           isSelected: currentRoute == '/approvals/budget',
                           onTap: () => _navigate(context, '/approvals/budget'),
                         ),
-                        if (!isManager)
-                          _buildNavItem(
-                            context,
-                            icon: Icons.military_tech_outlined,
-                            title: s.appreciationApprovals,
-                            isSelected: currentRoute == '/approvals/appreciations',
-                            onTap: () => _navigate(context, '/approvals/appreciations'),
-                          ),
-                      ],
-                    ),
+                      if (!isManager && !isTeamLead)
+                        _buildNavItem(
+                          context,
+                          icon: Icons.military_tech_outlined,
+                          title: s.appreciationApprovals,
+                          isSelected: currentRoute == '/approvals/appreciations',
+                          onTap: () => _navigate(context, '/approvals/appreciations'),
+                        ),
+                    ],
+                  ),
 
-                    // CARD 7: MEETINGS
-                    _buildSectionCard(
-                      context,
-                      title: s.meetingsHeader,
-                      children: [
-                        _buildNavItem(
-                          context,
-                          icon: Icons.access_time_rounded,
-                          title: s.myScheduledMeetings,
-                          isSelected: currentRoute == '/my-meetings' || currentRoute == '/meetings',
-                          onTap: () => _navigate(context, '/my-meetings'),
-                        ),
-                        _buildNavItem(
-                          context,
-                          icon: Icons.calendar_month_outlined,
-                          title: s.meetingCalendar,
-                          isSelected: currentRoute == '/meetings-calendar',
-                          onTap: () => _navigate(context, '/meetings-calendar'),
-                        ),
-                      ],
-                    ),
-
-                    // CARD 8: EVENTS
-                    _buildSectionCard(
-                      context,
-                      title: s.eventsHeader,
-                      children: [
-                        _buildNavItem(
-                          context,
-                          icon: Icons.star_border_rounded,
-                          title: s.events,
-                          isSelected: currentRoute == '/events',
-                          onTap: () => _navigate(context, '/events'),
-                        ),
-                        _buildNavItem(
-                          context,
-                          icon: Icons.calendar_today_outlined,
-                          title: s.eventsCalendar,
-                          isSelected: currentRoute == '/events-calendar',
-                          onTap: () => _navigate(context, '/events-calendar'),
-                        ),
-                      ],
-                    ),
-                  ],
+                  // CARD 7: EVENTS
+                  _buildSectionCard(
+                    context,
+                    title: s.eventsHeader,
+                    children: [
+                      _buildNavItem(
+                        context,
+                        icon: Icons.star_border_rounded,
+                        title: s.events,
+                        isSelected: currentRoute == '/events',
+                        onTap: () => _navigate(context, '/events'),
+                      ),
+                      _buildNavItem(
+                        context,
+                        icon: Icons.calendar_today_outlined,
+                        title: s.eventsCalendar,
+                        isSelected: currentRoute == '/events-calendar',
+                        onTap: () => _navigate(context, '/events-calendar'),
+                      ),
+                    ],
+                  ),
 
                   const SizedBox(height: 12),
                 ],

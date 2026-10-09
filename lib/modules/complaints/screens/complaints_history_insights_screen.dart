@@ -109,10 +109,16 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
         final year = int.parse(parts[0]);
         final month = int.parse(parts[1]);
         final dt = DateTime(year, month, 1);
-        return DateFormat('MMM').format(dt);
+        final formatted = DateFormat('MMM').format(dt);
+        if (formatted.toLowerCase() == 'sep') return 'Sept';
+        return formatted;
       }
+      final lower = monthStr.toLowerCase();
+      if (lower == 'sep' || lower == 'september') return 'Sept';
       return monthStr;
     } catch (_) {
+      final lower = monthStr.toLowerCase();
+      if (lower == 'sep' || lower == 'september') return 'Sept';
       return monthStr;
     }
   }
@@ -193,7 +199,7 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
 
                             // Middle Visuals: Stacked Bar Chart & Category Progress
                             if (isMobile) ...[
-                              _buildMonthlyChartCard(insights.byMonth, s, isDark),
+                              _buildMonthlyChartCard(insights.byMonth, s, isDark, totals: insights.totals),
                               const SizedBox(height: 16),
                               _buildCategoryProgressCard(insights.byCategory, s, isDark),
                             ] else ...[
@@ -202,7 +208,7 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
                                 children: [
                                   Expanded(
                                     flex: 6,
-                                    child: _buildMonthlyChartCard(insights.byMonth, s, isDark),
+                                    child: _buildMonthlyChartCard(insights.byMonth, s, isDark, totals: insights.totals),
                                   ),
                                   const SizedBox(width: 16),
                                   Expanded(
@@ -650,20 +656,55 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
     );
   }
 
-  Widget _buildMonthlyChartCard(List<InsightsMonthItem> months, AppStrings s, bool isDark) {
+  Widget _buildMonthlyChartCard(
+    List<InsightsMonthItem> months,
+    AppStrings s,
+    bool isDark, {
+    InsightsTotalsItem? totals,
+  }) {
+    final displayMonths = months.isNotEmpty
+        ? months
+        : ((totals != null && (totals.total > 0 || totals.complaints > 0 || totals.feedback > 0 || totals.appreciations > 0))
+            ? [
+                InsightsMonthItem(
+                  month: DateTime.now().toIso8601String().substring(0, 7),
+                  complaints: totals.complaints,
+                  feedback: totals.feedback,
+                  appreciations: totals.appreciations,
+                )
+              ]
+            : <InsightsMonthItem>[]);
+
+    int maxVal = 0;
+    for (final m in displayMonths) {
+      if (m.complaints > maxVal) maxVal = m.complaints;
+      if (m.feedback > maxVal) maxVal = m.feedback;
+      if (m.appreciations > maxVal) maxVal = m.appreciations;
+    }
+    if (maxVal < 5) maxVal = 5;
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+        boxShadow: isDark
+            ? []
+            : [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.02),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Title and Legend Header
           Wrap(
-            spacing: 12,
+            spacing: 16,
             runSpacing: 8,
             crossAxisAlignment: WrapCrossAlignment.center,
             alignment: WrapAlignment.spaceBetween,
@@ -672,27 +713,27 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
                 s.receivedPerMonth,
                 style: TextStyle(
                   fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
-                  color: isDark ? Colors.grey.shade300 : const Color(0xFF475569),
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.1,
+                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                 ),
               ),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildLegendItem('●', const Color(0xFFEF4444), s.statComplaints, isDark),
-                  const SizedBox(width: 8),
-                  _buildLegendItem('●', const Color(0xFF3B82F6), s.statFeedback, isDark),
-                  const SizedBox(width: 8),
-                  _buildLegendItem('●', const Color(0xFF10B981), s.statAppreciations, isDark),
+                  _buildLegendPill(const Color(0xFFE05252), s.statComplaints, isDark),
+                  const SizedBox(width: 14),
+                  _buildLegendPill(const Color(0xFF3B82F6), s.statFeedback, isDark),
+                  const SizedBox(width: 14),
+                  _buildLegendPill(const Color(0xFF22C55E), s.statAppreciations, isDark),
                 ],
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 28),
 
           // Chart Area
-          if (months.isEmpty)
+          if (displayMonths.isEmpty)
             Container(
               height: 160,
               alignment: Alignment.center,
@@ -702,73 +743,22 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
               ),
             )
           else
-            SizedBox(
-              height: 190,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: months.map((m) {
-                  final total = m.total;
-                  final monthLabel = _formatMonth(m.month);
-
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 24),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        if (total > 0)
-                          Text(
-                            '$total',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : const Color(0xFF0F172A),
-                            ),
-                          ),
-                        const SizedBox(height: 4),
-
-                        // Stacked Bar
-                        Container(
-                          width: 24,
-                          height: (total * 22.0).clamp(20.0, 130.0),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                          child: Column(
-                            children: [
-                              // Appreciations (Green - Top)
-                              if (m.appreciations > 0)
-                                Expanded(
-                                  flex: m.appreciations,
-                                  child: Container(color: const Color(0xFF10B981)),
-                                ),
-                              // Feedback (Blue - Middle)
-                              if (m.feedback > 0)
-                                Expanded(
-                                  flex: m.feedback,
-                                  child: Container(color: const Color(0xFF3B82F6)),
-                                ),
-                              // Complaints (Red - Bottom)
-                              if (m.complaints > 0)
-                                Expanded(
-                                  flex: m.complaints,
-                                  child: Container(color: const Color(0xFFEF4444)),
-                                ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          monthLabel,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
+            Container(
+              height: 175,
+              alignment: Alignment.center,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: displayMonths.map((m) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: _buildMonthBarGroup(m, maxVal, isDark),
+                    );
+                  }).toList(),
+                ),
               ),
             ),
         ],
@@ -776,17 +766,147 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
     );
   }
 
-  Widget _buildLegendItem(String dot, Color color, String label, bool isDark) {
+  Widget _buildMonthBarGroup(InsightsMonthItem m, int maxVal, bool isDark) {
+    final total = m.total;
+    final monthLabel = _formatMonth(m.month);
+
+    // Height scaling: max bar height is 85 px
+    const double maxBarHeight = 85.0;
+    final double complaintsH = m.complaints > 0
+        ? (m.complaints / maxVal * maxBarHeight).clamp(10.0, maxBarHeight)
+        : 0.0;
+    final double feedbackH = m.feedback > 0
+        ? (m.feedback / maxVal * maxBarHeight).clamp(10.0, maxBarHeight)
+        : 0.0;
+    final double appreciationsH = m.appreciations > 0
+        ? (m.appreciations / maxVal * maxBarHeight).clamp(10.0, maxBarHeight)
+        : 0.0;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // Total number above the group (e.g. "8")
+        Text(
+          total > 0 ? '$total' : '0',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: isDark ? Colors.white : const Color(0xFF0F172A),
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        // 3 side-by-side vertical bars sitting on the baseline
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            _buildSingleBar(
+              count: m.complaints,
+              barHeight: complaintsH,
+              color: const Color(0xFFE05252),
+              isDark: isDark,
+            ),
+            const SizedBox(width: 4),
+            _buildSingleBar(
+              count: m.feedback,
+              barHeight: feedbackH,
+              color: const Color(0xFF3B82F6),
+              isDark: isDark,
+            ),
+            const SizedBox(width: 4),
+            _buildSingleBar(
+              count: m.appreciations,
+              barHeight: appreciationsH,
+              color: const Color(0xFF22C55E),
+              isDark: isDark,
+            ),
+          ],
+        ),
+
+        // Baseline line underneath the 3 bars
+        Container(
+          width: 58,
+          height: 1.5,
+          margin: const EdgeInsets.only(top: 2),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+            borderRadius: BorderRadius.circular(1),
+          ),
+        ),
+        const SizedBox(height: 8),
+
+        // Month label below baseline
+        Text(
+          monthLabel,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSingleBar({
+    required int count,
+    required double barHeight,
+    required Color color,
+    required bool isDark,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // Count text above the bar (only shown if count > 0)
+        SizedBox(
+          height: 16,
+          child: count > 0
+              ? Text(
+                  '$count',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
+        const SizedBox(height: 3),
+        // The vertical bar with rounded top corners
+        Container(
+          width: 14,
+          height: barHeight,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLegendPill(Color color, String label, bool isDark) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(dot, style: TextStyle(color: color, fontSize: 14)),
-        const SizedBox(width: 4),
+        Container(
+          width: 11,
+          height: 11,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(3),
+          ),
+        ),
+        const SizedBox(width: 6),
         Text(
           label,
           style: TextStyle(
-            fontSize: 10.5,
-            color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B),
           ),
         ),
       ],

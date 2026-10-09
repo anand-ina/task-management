@@ -20,6 +20,7 @@ import 'modules/hourly_log/repository/hourly_log_repository.dart';
 import 'modules/hourly_log/widgets/hourly_log_prompt_overlay.dart';
 import 'modules/settings/bloc/language_cubit.dart';
 import 'shared_widgets/dialogs/no_internet_dialog.dart';
+import 'shared_widgets/radial_menu/draggable_radial_menu_overlay.dart';
 
 import 'core/utils/app_navigator.dart';
 import 'core/utils/preferences_service.dart';
@@ -111,9 +112,14 @@ class _MyAppState extends State<MyApp> {
                   GlobalWidgetsLocalizations.delegate,
                   GlobalCupertinoLocalizations.delegate,
                 ],
+                navigatorObservers: [
+                  ModalCheckObserver.instance,
+                ],
                 builder: (context, child) {
-                  return HourlyLogPromptOverlay(
-                    child: child ?? const SizedBox.shrink(),
+                  return DraggableRadialMenuOverlay(
+                    child: HourlyLogPromptOverlay(
+                      child: child ?? const SizedBox.shrink(),
+                    ),
                   );
                 },
                 onGenerateRoute: (settings) => null,

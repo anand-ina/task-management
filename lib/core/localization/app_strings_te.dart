@@ -323,6 +323,8 @@ class AppStringsTe extends AppStrings {
   @override
   String get newEvent => 'కొత్త ఈవెంట్';
   @override
+  String get raiseRequest => 'అభ్యర్థనను సమర్పించండి';
+  @override
   String get allBranches => 'అన్ని బ్రాంచ్‌లు';
   @override
   String get directorRole => 'డైరెక్టర్';
@@ -2374,5 +2376,21 @@ class AppStringsTe extends AppStrings {
   String get forbiddenErrorTitle => 'చర్య అనుమతించబడలేదు';
   @override
   String get noSubtasksYet => 'ఇంకా ఉప-పనులు ఏవీ జోడించబడలేదు.';
+  @override
+  String get approveAndClose => 'ఆమోదించి మూసివేయండి';
+  @override
+  String get sendBack => 'తిరిగి పంపండి';
+  @override
+  String get btnAccept => 'స్వీకరించండి';
+  @override
+  String get btnDecline => 'తిరస్కరించండి';
+  @override
+  String get btnTentative => 'తాత్కాలిక';
+  @override
+  String get completionSignOff => 'పూర్తయినట్లు సైన్-ఆఫ్';
+  @override
+  String get completionSignOffSubtitle => 'ఈ సమావేశాలు జరిగినట్లు ఎవరో నివేదించారు';
+  @override
+  String get btnReject => 'తిరస్కరించండి';
 }
 

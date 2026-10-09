@@ -34,7 +34,7 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  int _selectedActivityIndex = 0;
+  int? _selectedActivityIndex;
   String _selectedPriorityFilter = 'All';
   final Set<int> _expandedGroupIndices = {3, 4};
 
@@ -436,7 +436,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
               _buildHeaderBadge('⏳ ${s.inProgressBadge(stats.inProgress)}'),
-              _buildHeaderBadge('⚑ ${s.overdueBadge(stats.overdue)}'),
+              _buildHeaderBadge(
+                '⚑ ${s.overdueBadge(stats.overdue)}',
+                onTap: () => TasksDueTodayDialog.show(
+                  context,
+                  scope: 'all',
+                  customTitle: 'Overdue Tasks',
+                  overdue: true,
+                  badgeColor: Colors.red,
+                ),
+              ),
               _buildHeaderBadge('🎯 ${s.completionBadge(stats.completionRate)}'),
             ],
           ),
@@ -503,7 +512,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     });
                     TasksDueTodayDialog.show(
                       context,
-                      scope: 'mine',
+                      scope: 'all',
+                      activeOnly: true,
                       customTitle: '${s.emergencyPriority} tasks',
                       priority: 'emergency',
                       badgeColor: Colors.red,
@@ -522,7 +532,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     });
                     TasksDueTodayDialog.show(
                       context,
-                      scope: 'mine',
+                      scope: 'all',
+                      activeOnly: true,
                       customTitle: '${s.topMostPriority} tasks',
                       priority: 'top_most',
                       badgeColor: Colors.orange,
@@ -541,7 +552,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     });
                     TasksDueTodayDialog.show(
                       context,
-                      scope: 'mine',
+                      scope: 'all',
+                      activeOnly: true,
                       customTitle: '${s.highPriority} tasks',
                       priority: 'high',
                       badgeColor: Colors.amber.shade700,
@@ -560,7 +572,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     });
                     TasksDueTodayDialog.show(
                       context,
-                      scope: 'mine',
+                      scope: 'all',
+                      activeOnly: true,
                       customTitle: '${s.mediumPriority} tasks',
                       priority: 'medium',
                       badgeColor: Colors.blue,
@@ -579,7 +592,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     });
                     TasksDueTodayDialog.show(
                       context,
-                      scope: 'mine',
+                      scope: 'all',
+                      activeOnly: true,
                       customTitle: '${s.lowPriority} tasks',
                       priority: 'low',
                       badgeColor: Colors.grey,
@@ -719,7 +733,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Colors.red,
               onTap: () => TasksDueTodayDialog.show(
                 context,
-                scope: 'mine',
+                scope: 'all',
                 customTitle: 'Overdue Tasks',
                 overdue: true,
                 badgeColor: Colors.red,
@@ -733,7 +747,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Colors.amber,
               onTap: () => TasksDueTodayDialog.show(
                 context,
-                scope: 'mine',
+                scope: 'all',
                 customTitle: s.tasksDueTodayTitle,
                 period: 'day',
                 badgeColor: Colors.green,
@@ -747,7 +761,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Colors.red.shade700,
               onTap: () => TasksDueTodayDialog.show(
                 context,
-                scope: 'mine',
+                scope: 'all',
                 customTitle: 'Emergency + High (open)',
                 priority: 'emergency',
                 badgeColor: Colors.red.shade700,
@@ -1020,15 +1034,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildOverdueByAgeCard(
       BuildContext context, AppStrings s, DashboardOverdueByAge overdueByAge) {
+    final maxCount = [
+      overdueByAge.d1_3,
+      overdueByAge.d4_7,
+      overdueByAge.d8_14,
+      overdueByAge.d15p,
+    ].reduce((a, b) => a > b ? a : b);
+    final denom = maxCount > 0 ? maxCount : 1;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              s.overdueTasksByAgeTitle,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 0.8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  s.overdueTasksByAgeTitle,
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 0.8),
+                ),
+                Text(
+                  s.clickRowToOpen,
+                  style: const TextStyle(fontSize: 10, color: Colors.grey),
+                ),
+              ],
             ),
             const SizedBox(height: 2),
             Text(
@@ -1036,41 +1067,96 @@ class _DashboardScreenState extends State<DashboardScreen> {
               style: const TextStyle(fontSize: 11, color: Colors.grey),
             ),
             const SizedBox(height: 16),
-            _buildAgeRow(s.days1To3, overdueByAge.d1_3, Colors.amber),
+            _buildAgeRow(
+              s.days1To3,
+              overdueByAge.d1_3,
+              (overdueByAge.d1_3 > 0) ? (overdueByAge.d1_3 / denom).clamp(0.05, 1.0) : 0.0,
+              Colors.amber,
+              onTap: () => TasksDueTodayDialog.show(
+                context,
+                scope: 'all',
+                overdueAge: '1_3',
+                customTitle: '${s.overdueTasks} (${s.days1To3})',
+                badgeColor: Colors.amber,
+              ),
+            ),
             const SizedBox(height: 10),
-            _buildAgeRow(s.days4To7, overdueByAge.d4_7, Colors.orange),
+            _buildAgeRow(
+              s.days4To7,
+              overdueByAge.d4_7,
+              (overdueByAge.d4_7 > 0) ? (overdueByAge.d4_7 / denom).clamp(0.05, 1.0) : 0.0,
+              Colors.orange,
+              onTap: () => TasksDueTodayDialog.show(
+                context,
+                scope: 'all',
+                overdueAge: '4_7',
+                customTitle: '${s.overdueTasks} (${s.days4To7})',
+                badgeColor: Colors.orange,
+              ),
+            ),
             const SizedBox(height: 10),
-            _buildAgeRow(s.days8To14, overdueByAge.d8_14, Colors.red.shade400),
+            _buildAgeRow(
+              s.days8To14,
+              overdueByAge.d8_14,
+              (overdueByAge.d8_14 > 0) ? (overdueByAge.d8_14 / denom).clamp(0.05, 1.0) : 0.0,
+              Colors.red.shade400,
+              onTap: () => TasksDueTodayDialog.show(
+                context,
+                scope: 'all',
+                overdueAge: '8_14',
+                customTitle: '${s.overdueTasks} (${s.days8To14})',
+                badgeColor: Colors.red.shade400,
+              ),
+            ),
             const SizedBox(height: 10),
-            _buildAgeRow(s.days15Plus, overdueByAge.d15p, Colors.red.shade700),
+            _buildAgeRow(
+              s.days15Plus,
+              overdueByAge.d15p,
+              (overdueByAge.d15p > 0) ? (overdueByAge.d15p / denom).clamp(0.05, 1.0) : 0.0,
+              Colors.red.shade700,
+              onTap: () => TasksDueTodayDialog.show(
+                context,
+                scope: 'all',
+                overdueAge: '15p',
+                customTitle: '${s.overdueTasks} (${s.days15Plus})',
+                badgeColor: Colors.red.shade700,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildAgeRow(String label, int count, Color color) {
-    return Row(
-      children: [
-        SizedBox(
-          width: 80,
-          child: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+  Widget _buildAgeRow(String label, int count, double progress, Color color, {VoidCallback? onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 80,
+              child: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+            ),
+            Expanded(
+              child: LinearProgressIndicator(
+                value: progress,
+                backgroundColor: Colors.grey.shade200,
+                color: color,
+                minHeight: 8,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              '$count',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color),
+            ),
+          ],
         ),
-        Expanded(
-          child: LinearProgressIndicator(
-            value: count > 0 ? (count / 41).clamp(0.05, 1.0) : 0.0,
-            backgroundColor: Colors.grey.shade200,
-            color: color,
-            minHeight: 8,
-            borderRadius: BorderRadius.circular(4),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Text(
-          '$count',
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color),
-        ),
-      ],
+      ),
     );
   }
 
@@ -1100,28 +1186,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         const SizedBox(height: 14),
 
-        // Recent Activity & Detail Pane
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final isWide = constraints.maxWidth > 800;
-            return isWide
-                ? Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(child: _buildRecentActivityList(context, s, teamData.recentActivity)),
-                      const SizedBox(width: 16),
-                      Expanded(child: _buildRecentActivityDetailCard(context, s, teamData.recentActivity)),
-                    ],
-                  )
-                : Column(
-                    children: [
-                      _buildRecentActivityList(context, s, teamData.recentActivity),
-                      const SizedBox(height: 16),
-                      _buildRecentActivityDetailCard(context, s, teamData.recentActivity),
-                    ],
-                  );
-          },
-        ),
+        // Recent Activity with inline accordion dropdown details
+        _buildRecentActivityList(context, s, teamData.recentActivity),
         const SizedBox(height: 24),
 
         // Team Performance & Team Login Analytics Row
@@ -1152,6 +1218,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildRecentActivityList(
       BuildContext context, AppStrings s, List<RecentActivityItem> activities) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -1186,213 +1254,192 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   final act = activities[index];
                   final isSelected = index == _selectedActivityIndex;
 
-                  return InkWell(
-                    onTap: () {
-                      setState(() {
-                        _selectedActivityIndex = index;
-                      });
-                    },
-                    child: Container(
-                      color: isSelected
-                          ? (Theme.of(context).brightness == Brightness.dark
-                              ? Colors.white12
-                              : Colors.blue.shade50)
-                          : Colors.transparent,
-                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 12,
-                            backgroundColor: _hexToColor(act.avatarColor),
-                            child: Text(
-                              act.initials.isNotEmpty ? act.initials : (act.actor.isNotEmpty ? act.actor[0] : 'U'),
-                              style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                  return Column(
+                    children: [
+                      InkWell(
+                        onTap: () {
+                          setState(() {
+                            _selectedActivityIndex = isSelected ? null : index;
+                          });
+                        },
+                        child: Container(
+                          color: isSelected
+                              ? (isDark ? Colors.white12 : Colors.blue.shade50.withValues(alpha: 0.5))
+                              : Colors.transparent,
+                          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 12,
+                                backgroundColor: _hexToColor(act.avatarColor),
+                                child: Text(
+                                  act.initials.isNotEmpty ? act.initials : (act.actor.isNotEmpty ? act.actor[0] : 'U'),
+                                  style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: RichText(
+                                  text: TextSpan(
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: isDark ? Colors.white : Colors.black87,
+                                    ),
+                                    children: [
+                                      TextSpan(
+                                        text: '${act.actor} ',
+                                        style: const TextStyle(fontWeight: FontWeight.bold),
+                                      ),
+                                      TextSpan(text: act.note),
+                                    ],
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                act.taskNo,
+                                style: const TextStyle(fontSize: 10, color: Colors.grey),
+                              ),
+                              const SizedBox(width: 6),
+                              Icon(
+                                isSelected ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                                size: 18,
+                                color: isSelected ? const Color(0xFF2563EB) : Colors.grey,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      if (isSelected)
+                        Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.only(left: 8, right: 8, bottom: 8, top: 4),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: RichText(
-                              text: TextSpan(
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Theme.of(context).brightness == Brightness.dark
-                                      ? Colors.white
-                                      : Colors.black87,
-                                ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  TextSpan(
-                                    text: '${act.actor} ',
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                  Expanded(
+                                    child: Text(
+                                      '${act.taskNo} · ${act.title}',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                      ),
+                                    ),
                                   ),
-                                  TextSpan(text: act.note),
+                                  const SizedBox(width: 8),
+                                  OutlinedButton.icon(
+                                    onPressed: () {
+                                      TasksDueTodayDialog.show(
+                                        context,
+                                        customTitle: '${act.taskNo} · ${act.title}',
+                                        searchQuery: act.taskNo,
+                                        badgeColor: Colors.blue,
+                                      );
+                                    },
+                                    icon: const Icon(Icons.open_in_new, size: 11),
+                                    label: Text(s.viewTask, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold)),
+                                    style: OutlinedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                      visualDensity: VisualDensity.compact,
+                                    ),
+                                  ),
                                 ],
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 4,
+                                children: [
+                                  Chip(
+                                    label: Text(act.priority, style: TextStyle(fontSize: 9.5, color: Colors.amber.shade800, fontWeight: FontWeight.bold)),
+                                    backgroundColor: Colors.amber.shade50,
+                                    padding: EdgeInsets.zero,
+                                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  Chip(
+                                    label: Text('${act.status} · ${act.progress}%', style: const TextStyle(fontSize: 9.5, color: Color(0xFF0284C7), fontWeight: FontWeight.bold)),
+                                    backgroundColor: Colors.blue.shade50,
+                                    padding: EdgeInsets.zero,
+                                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  Chip(
+                                    label: Text(act.branchCode.isNotEmpty ? act.branchCode : 'SS00', style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold)),
+                                    backgroundColor: isDark ? Colors.white12 : Colors.grey.shade100,
+                                    padding: EdgeInsets.zero,
+                                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                ],
+                              ),
+                              if (act.description.isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                Text(
+                                  act.description,
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    color: isDark ? Colors.white70 : Colors.black87,
+                                  ),
+                                ),
+                              ],
+                              const SizedBox(height: 10),
+                              const Divider(height: 1),
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 18,
+                                runSpacing: 8,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(s.dueLabel, style: const TextStyle(fontSize: 9.5, color: Colors.grey)),
+                                      Text(
+                                        (act.dueDate == null || act.dueDate!.isEmpty) ? '—' : act.dueDate!,
+                                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black87),
+                                      ),
+                                    ],
+                                  ),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(s.completedLabel, style: const TextStyle(fontSize: 9.5, color: Colors.grey)),
+                                      Text(
+                                        (act.completedDate == null || act.completedDate!.isEmpty) ? act.at : act.completedDate!,
+                                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.green),
+                                      ),
+                                    ],
+                                  ),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(s.branchLabel, style: const TextStyle(fontSize: 9.5, color: Colors.grey)),
+                                      Text(
+                                        act.branchName,
+                                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black87),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            act.taskNo,
-                            style: const TextStyle(fontSize: 10, color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    ),
+                        ),
+                    ],
                   );
                 },
               ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRecentActivityDetailCard(
-      BuildContext context, AppStrings s, List<RecentActivityItem> activities) {
-    if (activities.isEmpty || _selectedActivityIndex >= activities.length) {
-      return Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                s.recentActivityDetail,
-                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.8),
-              ),
-              const SizedBox(height: 20),
-              const Center(child: Text('Select an activity to view details', style: TextStyle(color: Colors.grey))),
-            ],
-          ),
-        ),
-      );
-    }
-
-    final act = activities[_selectedActivityIndex];
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  s.recentActivityDetail,
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.8),
-                ),
-                OutlinedButton.icon(
-                  onPressed: () {
-                    TasksDueTodayDialog.show(
-                      context,
-                      customTitle: '${act.taskNo} · ${act.title}',
-                      searchQuery: act.taskNo,
-                      badgeColor: Colors.blue,
-                    );
-                  },
-                  icon: const Icon(Icons.open_in_new, size: 12),
-                  label: Text(s.viewTask, style: const TextStyle(fontSize: 11)),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    visualDensity: VisualDensity.compact,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundColor: _hexToColor(act.avatarColor),
-                  child: Text(
-                    act.initials.isNotEmpty ? act.initials : (act.actor.isNotEmpty ? act.actor[0] : 'U'),
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${act.actor} ${act.note}',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                      ),
-                      Text(
-                        act.at,
-                        style: const TextStyle(fontSize: 10, color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              '${act.taskNo} · ${act.title}',
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 6,
-              children: [
-                Chip(
-                  label: Text(act.priority, style: const TextStyle(fontSize: 10, color: Colors.amber)),
-                  backgroundColor: Colors.amber.shade50,
-                  padding: EdgeInsets.zero,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                Chip(
-                  label: Text('${act.status} · ${act.progress}%', style: const TextStyle(fontSize: 10, color: Colors.blue)),
-                  backgroundColor: Colors.blue.shade50,
-                  padding: EdgeInsets.zero,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                Chip(
-                  label: Text(act.branchCode, style: const TextStyle(fontSize: 10)),
-                  backgroundColor: Colors.grey.shade100,
-                  padding: EdgeInsets.zero,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              act.description.isNotEmpty ? act.description : act.title,
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 20,
-              runSpacing: 10,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(s.dueLabel, style: const TextStyle(fontSize: 10, color: Colors.grey)),
-                    Text((act.dueDate == null || act.dueDate!.isEmpty) ? '—' : act.dueDate!, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                  ],
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(s.completedLabel, style: const TextStyle(fontSize: 10, color: Colors.grey)),
-                    Text((act.completedDate == null || act.completedDate!.isEmpty) ? act.at : act.completedDate!, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.green)),
-                  ],
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(s.branchLabel, style: const TextStyle(fontSize: 10, color: Colors.grey)),
-                    Text(act.branchName, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                  ],
-                ),
-              ],
-            ),
           ],
         ),
       ),

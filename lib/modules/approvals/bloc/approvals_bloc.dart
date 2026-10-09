@@ -18,6 +18,9 @@ class ApprovalsBloc extends Bloc<ApprovalsEvent, ApprovalsState> {
     on<DecideApprovalEvent>(_onDecideApproval);
     on<DecideBudgetEvent>(_onDecideBudget);
     on<CreateIndentEvent>(_onCreateIndent);
+    on<DecideEscalationEvent>(_onDecideEscalation);
+    on<DecideMeetingCompletionEvent>(_onDecideMeetingCompletion);
+    on<RsvpMeetingEvent>(_onRsvpMeeting);
   }
 
   Future<void> _onFetchTaskApprovalsData(
@@ -157,5 +160,29 @@ class ApprovalsBloc extends Bloc<ApprovalsEvent, ApprovalsState> {
       debugPrint('[ApprovalsBloc] _onCreateIndent error: $e');
       rethrow;
     }
+  }
+
+  Future<void> _onDecideEscalation(
+    DecideEscalationEvent event,
+    Emitter<ApprovalsState> emit,
+  ) async {
+    await repository.decideEscalation(event.id, event.decision);
+    add(FetchEscalationsDataEvent());
+  }
+
+  Future<void> _onDecideMeetingCompletion(
+    DecideMeetingCompletionEvent event,
+    Emitter<ApprovalsState> emit,
+  ) async {
+    await repository.decideMeetingCompletion(event.id, event.decision);
+    add(FetchMeetingApprovalsDataEvent());
+  }
+
+  Future<void> _onRsvpMeeting(
+    RsvpMeetingEvent event,
+    Emitter<ApprovalsState> emit,
+  ) async {
+    await repository.rsvpMeeting(event.id, event.response);
+    add(FetchMeetingApprovalsDataEvent());
   }
 }

@@ -53,3 +53,33 @@ class CreateIndentEvent extends ApprovalsEvent {
   List<Object?> get props => [payload];
 }
 
+class DecideEscalationEvent extends ApprovalsEvent {
+  final int id;
+  final String decision; // 'approve' or 'deny'
+
+  const DecideEscalationEvent({required this.id, required this.decision});
+
+  @override
+  List<Object?> get props => [id, decision];
+}
+
+class DecideMeetingCompletionEvent extends ApprovalsEvent {
+  final int id;
+  final String decision; // 'approve' or 'send_back'
+
+  const DecideMeetingCompletionEvent({required this.id, required this.decision});
+
+  @override
+  List<Object?> get props => [id, decision];
+}
+
+class RsvpMeetingEvent extends ApprovalsEvent {
+  final int id;
+  final String response; // 'accepted', 'declined', 'tentative'
+
+  const RsvpMeetingEvent({required this.id, required this.response});
+
+  @override
+  List<Object?> get props => [id, response];
+}
+

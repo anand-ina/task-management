@@ -266,6 +266,8 @@ abstract class AppStrings {
 
   String get newEvent;
 
+  String get raiseRequest;
+
   String get allBranches;
 
   String get directorRole;
@@ -1742,4 +1744,12 @@ abstract class AppStrings {
   String get subtaskCreatedSuccess;
    String get forbiddenErrorTitle;
   String get noSubtasksYet;
+  String get approveAndClose;
+  String get sendBack;
+  String get btnAccept;
+  String get btnDecline;
+  String get btnTentative;
+  String get completionSignOff;
+  String get completionSignOffSubtitle;
+  String get btnReject;
 }

@@ -109,6 +109,7 @@ class _TeamPerformanceScreenState extends State<TeamPerformanceScreen> {
       onTap: () {
         TasksDueTodayDialog.show(
           context,
+          scope: 'all',
           customTitle: 'Team · All assigned',
         );
       },
@@ -180,14 +181,42 @@ class _TeamPerformanceScreenState extends State<TeamPerformanceScreen> {
             final t = tiles[index];
             return InkWell(
               onTap: () {
-                if (index == 2) {
-                  TasksDueTodayDialog.show(context, customTitle: 'Team · Completed', status: 'completed');
+                if (index == 1) {
+                  TasksDueTodayDialog.show(
+                    context,
+                    scope: 'all',
+                    customTitle: 'Team · All assigned',
+                  );
+                } else if (index == 2) {
+                  TasksDueTodayDialog.show(
+                    context,
+                    scope: 'all',
+                    customTitle: 'Team · Completed',
+                    status: 'completed',
+                    badgeColor: Colors.green,
+                  );
                 } else if (index == 3) {
-                  TasksDueTodayDialog.show(context, customTitle: 'Team · In Progress', status: 'in_progress');
+                  TasksDueTodayDialog.show(
+                    context,
+                    scope: 'all',
+                    customTitle: 'Team · In Progress',
+                    status: 'in_progress',
+                    badgeColor: Colors.blue,
+                  );
                 } else if (index == 4) {
-                  TasksDueTodayDialog.show(context, customTitle: 'Team · Overdue', overdue: true);
-                } else {
-                  TasksDueTodayDialog.show(context, customTitle: 'Team · All assigned');
+                  TasksDueTodayDialog.show(
+                    context,
+                    scope: 'all',
+                    customTitle: 'Team · Overdue',
+                    overdue: true,
+                    badgeColor: Colors.red,
+                  );
+                } else if (index == 0) {
+                  TasksDueTodayDialog.show(
+                    context,
+                    scope: 'all',
+                    customTitle: 'Team · All assigned',
+                  );
                 }
               },
               borderRadius: BorderRadius.circular(12),
@@ -350,42 +379,58 @@ class _TeamPerformanceScreenState extends State<TeamPerformanceScreen> {
                     return DataRow(
                       cells: [
                         DataCell(Text('${index + 1}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold))),
-                        DataCell(Row(
-                          children: [
-                            CircleAvatar(
-                              radius: 11,
-                              backgroundColor: _hexToColor(m.avatarColor),
-                              child: Text(
-                                m.initials,
-                                style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  m.name,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: isDark ? Colors.white : const Color(0xFF0F172A),
-                                  ),
-                                ),
-                                Text(
-                                  '${m.designation ?? m.role ?? "Member"} · ${m.department}${m.branchCode != null ? " · ${m.branchCode}" : ""}',
-                                  style: TextStyle(fontSize: 9.5, color: isDark ? Colors.white54 : Colors.grey.shade600),
-                                ),
-                              ],
-                            ),
-                          ],
-                        )),
                         DataCell(
                           InkWell(
                             onTap: () {
                               TasksDueTodayDialog.show(
                                 context,
+                                scope: 'all',
+                                assigneeId: m.id,
+                                status: 'completed',
+                                customTitle: '${m.name} · Completed',
+                                badgeColor: Colors.green,
+                              );
+                            },
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 11,
+                                  backgroundColor: _hexToColor(m.avatarColor),
+                                  child: Text(
+                                    m.initials,
+                                    style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      m.name,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                      ),
+                                    ),
+                                    Text(
+                                      '${m.designation ?? m.role ?? "Member"} · ${m.department}${m.branchCode != null ? " · ${m.branchCode}" : ""}',
+                                      style: TextStyle(fontSize: 9.5, color: isDark ? Colors.white54 : Colors.grey.shade600),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          InkWell(
+                            onTap: () {
+                              TasksDueTodayDialog.show(
+                                context,
+                                scope: 'all',
+                                assigneeId: m.id,
                                 customTitle: '${m.name} · All assigned',
                               );
                             },
@@ -398,36 +443,152 @@ class _TeamPerformanceScreenState extends State<TeamPerformanceScreen> {
                             ),
                           ),
                         ),
-                        DataCell(Text('${m.done}', style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF16A34A)))),
-                        DataCell(Row(
-                          children: [
-                            SizedBox(
-                              width: 50,
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(4),
-                                child: LinearProgressIndicator(
-                                  value: compRate / 100.0,
-                                  minHeight: 6,
-                                  backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-                                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF0F172A)),
+                        DataCell(
+                          InkWell(
+                            onTap: () {
+                              TasksDueTodayDialog.show(
+                                context,
+                                scope: 'all',
+                                assigneeId: m.id,
+                                status: 'completed',
+                                customTitle: '${m.name} · Completed',
+                                badgeColor: Colors.green,
+                              );
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                              child: Text('${m.done}', style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF16A34A))),
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          InkWell(
+                            onTap: () {
+                              TasksDueTodayDialog.show(
+                                context,
+                                scope: 'all',
+                                assigneeId: m.id,
+                                status: 'completed',
+                                customTitle: '${m.name} · Completed',
+                                badgeColor: Colors.green,
+                              );
+                            },
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 50,
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(4),
+                                    child: LinearProgressIndicator(
+                                      value: compRate / 100.0,
+                                      minHeight: 6,
+                                      backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF0F172A)),
+                                    ),
+                                  ),
                                 ),
+                                const SizedBox(width: 6),
+                                Text('$compRate%', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          InkWell(
+                            onTap: () {
+                              TasksDueTodayDialog.show(
+                                context,
+                                scope: 'all',
+                                assigneeId: m.id,
+                                status: 'in_progress',
+                                customTitle: '${m.name} · In Progress',
+                                badgeColor: Colors.blue,
+                              );
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                              child: Text('${m.inProgress}', style: const TextStyle(fontSize: 11.5, color: Color(0xFF0284C7))),
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          InkWell(
+                            onTap: () {
+                              TasksDueTodayDialog.show(
+                                context,
+                                scope: 'all',
+                                assigneeId: m.id,
+                                status: 'to_be_started',
+                                customTitle: '${m.name} · To Start',
+                                badgeColor: Colors.blue,
+                              );
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                              child: Text('${m.toBeStarted}', style: const TextStyle(fontSize: 11.5, color: Color(0xFF0284C7))),
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          InkWell(
+                            onTap: () {
+                              TasksDueTodayDialog.show(
+                                context,
+                                scope: 'all',
+                                assigneeId: m.id,
+                                overdue: true,
+                                customTitle: '${m.name} · Overdue',
+                                badgeColor: Colors.red,
+                              );
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                              child: Text(
+                                '${m.overdue}',
+                                style: TextStyle(fontSize: 11.5, color: m.overdue > 0 ? const Color(0xFFDC2626) : Colors.grey),
                               ),
                             ),
-                            const SizedBox(width: 6),
-                            Text('$compRate%', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                          ],
-                        )),
-                        DataCell(Text('${m.inProgress}', style: const TextStyle(fontSize: 11.5, color: Color(0xFF0284C7)))),
-                        DataCell(Text('${m.toBeStarted}', style: const TextStyle(fontSize: 11.5, color: Color(0xFF0284C7)))),
-                        DataCell(Text(
-                          '${m.overdue}',
-                          style: TextStyle(fontSize: 11.5, color: m.overdue > 0 ? const Color(0xFFDC2626) : Colors.grey),
-                        )),
-                        DataCell(Text('${m.dueToday}', style: const TextStyle(fontSize: 11.5))),
-                        DataCell(Text(
-                          '${m.emergencyHighOpen}',
-                          style: TextStyle(fontSize: 11.5, color: m.emergencyHighOpen > 0 ? const Color(0xFFDC2626) : Colors.grey),
-                        )),
+                          ),
+                        ),
+                        DataCell(
+                          InkWell(
+                            onTap: () {
+                              TasksDueTodayDialog.show(
+                                context,
+                                scope: 'all',
+                                assigneeId: m.id,
+                                dueToday: true,
+                                customTitle: '${m.name} · Due Today',
+                                badgeColor: Colors.amber,
+                              );
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                              child: Text('${m.dueToday}', style: const TextStyle(fontSize: 11.5)),
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          InkWell(
+                            onTap: () {
+                              TasksDueTodayDialog.show(
+                                context,
+                                scope: 'all',
+                                assigneeId: m.id,
+                                priority: 'emergency',
+                                customTitle: '${m.name} · Emergency',
+                                badgeColor: Colors.red,
+                              );
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                              child: Text(
+                                '${m.emergencyHighOpen}',
+                                style: TextStyle(fontSize: 11.5, color: m.emergencyHighOpen > 0 ? const Color(0xFFDC2626) : Colors.grey),
+                              ),
+                            ),
+                          ),
+                        ),
                         DataCell(Text('${m.dropped}', style: const TextStyle(fontSize: 11.5))),
                         DataCell(Text('${m.onTime}%', style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF16A34A)))),
                         DataCell(Text(m.avgDays > 0 ? '${m.avgDays}' : '—', style: const TextStyle(fontSize: 11))),
@@ -526,74 +687,86 @@ class _TeamPerformanceScreenState extends State<TeamPerformanceScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header: #, Avatar, Name, Role/Designation, Branch, Completion Pill
-              Row(
-                children: [
-                  Container(
-                    width: 22,
-                    height: 22,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      '${index + 1}',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white70 : Colors.black87,
+              InkWell(
+                onTap: () {
+                  TasksDueTodayDialog.show(
+                    context,
+                    scope: 'all',
+                    assigneeId: m.id,
+                    status: 'completed',
+                    customTitle: '${m.name} · Completed',
+                    badgeColor: Colors.green,
+                  );
+                },
+                child: Row(
+                  children: [
+                    Container(
+                      width: 22,
+                      height: 22,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        '${index + 1}',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white70 : Colors.black87,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  CircleAvatar(
-                    radius: 16,
-                    backgroundColor: _hexToColor(m.avatarColor),
-                    child: Text(
-                      m.initials,
-                      style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                    const SizedBox(width: 8),
+                    CircleAvatar(
+                      radius: 16,
+                      backgroundColor: _hexToColor(m.avatarColor),
+                      child: Text(
+                        m.initials,
+                        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          m.name,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            m.name,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : const Color(0xFF0F172A),
+                            ),
                           ),
-                        ),
-                        Text(
-                          '${m.designation ?? m.role ?? "Member"} · ${m.department}${m.branchCode != null ? " · ${m.branchCode}" : ""}',
-                          style: TextStyle(fontSize: 10.5, color: isDark ? Colors.white60 : Colors.grey.shade600),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: compRate >= 80
-                          ? (isDark ? const Color(0xFF064E3B) : const Color(0xFFDCFCE7))
-                          : (isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9)),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      '$compRate% ${s.completionHeader}',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: compRate >= 80
-                            ? (isDark ? const Color(0xFF34D399) : const Color(0xFF15803D))
-                            : (isDark ? Colors.white70 : Colors.black87),
+                          Text(
+                            '${m.designation ?? m.role ?? "Member"} · ${m.department}${m.branchCode != null ? " · ${m.branchCode}" : ""}',
+                            style: TextStyle(fontSize: 10.5, color: isDark ? Colors.white60 : Colors.grey.shade600),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                ],
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: compRate >= 80
+                            ? (isDark ? const Color(0xFF064E3B) : const Color(0xFFDCFCE7))
+                            : (isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9)),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '$compRate% ${s.completionHeader}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: compRate >= 80
+                              ? (isDark ? const Color(0xFF34D399) : const Color(0xFF15803D))
+                              : (isDark ? Colors.white70 : Colors.black87),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 10),
 
@@ -620,7 +793,12 @@ class _TeamPerformanceScreenState extends State<TeamPerformanceScreen> {
                     valueColor: const Color(0xFF2563EB),
                     isDark: isDark,
                     onTap: () {
-                      TasksDueTodayDialog.show(context, customTitle: '${m.name} · All assigned');
+                      TasksDueTodayDialog.show(
+                        context,
+                        scope: 'all',
+                        assigneeId: m.id,
+                        customTitle: '${m.name} · All assigned',
+                      );
                     },
                   ),
                   _buildMetricBadge(
@@ -628,36 +806,96 @@ class _TeamPerformanceScreenState extends State<TeamPerformanceScreen> {
                     value: '${m.done}',
                     valueColor: const Color(0xFF16A34A),
                     isDark: isDark,
+                    onTap: () {
+                      TasksDueTodayDialog.show(
+                        context,
+                        scope: 'all',
+                        assigneeId: m.id,
+                        status: 'completed',
+                        customTitle: '${m.name} · Completed',
+                        badgeColor: Colors.green,
+                      );
+                    },
                   ),
                   _buildMetricBadge(
                     label: s.inProgressLabel,
                     value: '${m.inProgress}',
                     valueColor: const Color(0xFF0284C7),
                     isDark: isDark,
+                    onTap: () {
+                      TasksDueTodayDialog.show(
+                        context,
+                        scope: 'all',
+                        assigneeId: m.id,
+                        status: 'in_progress',
+                        customTitle: '${m.name} · In Progress',
+                        badgeColor: Colors.blue,
+                      );
+                    },
                   ),
                   _buildMetricBadge(
                     label: s.toStartLabel,
                     value: '${m.toBeStarted}',
                     valueColor: const Color(0xFF0284C7),
                     isDark: isDark,
+                    onTap: () {
+                      TasksDueTodayDialog.show(
+                        context,
+                        scope: 'all',
+                        assigneeId: m.id,
+                        status: 'to_be_started',
+                        customTitle: '${m.name} · To Start',
+                        badgeColor: Colors.blue,
+                      );
+                    },
                   ),
                   _buildMetricBadge(
                     label: s.overdueHeader,
                     value: '${m.overdue}',
                     valueColor: m.overdue > 0 ? const Color(0xFFDC2626) : Colors.grey,
                     isDark: isDark,
+                    onTap: () {
+                      TasksDueTodayDialog.show(
+                        context,
+                        scope: 'all',
+                        assigneeId: m.id,
+                        overdue: true,
+                        customTitle: '${m.name} · Overdue',
+                        badgeColor: Colors.red,
+                      );
+                    },
                   ),
                   _buildMetricBadge(
                     label: s.dueTodayHeader,
                     value: '${m.dueToday}',
                     valueColor: m.dueToday > 0 ? const Color(0xFFD97706) : Colors.grey,
                     isDark: isDark,
+                    onTap: () {
+                      TasksDueTodayDialog.show(
+                        context,
+                        scope: 'all',
+                        assigneeId: m.id,
+                        dueToday: true,
+                        customTitle: '${m.name} · Due Today',
+                        badgeColor: Colors.amber,
+                      );
+                    },
                   ),
                   _buildMetricBadge(
                     label: s.emgHighHeader,
                     value: '${m.emergencyHighOpen}',
                     valueColor: m.emergencyHighOpen > 0 ? const Color(0xFFDC2626) : Colors.grey,
                     isDark: isDark,
+                    onTap: () {
+                      TasksDueTodayDialog.show(
+                        context,
+                        scope: 'all',
+                        assigneeId: m.id,
+                        priority: 'emergency',
+                        customTitle: '${m.name} · Emergency',
+                        badgeColor: Colors.red,
+                      );
+                    },
                   ),
                   _buildMetricBadge(
                     label: s.droppedHeader,

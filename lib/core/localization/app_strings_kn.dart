@@ -323,6 +323,8 @@ class AppStringsKn extends AppStrings {
   @override
   String get newEvent => 'ಹೊಸ ಈವೆಂಟ್';
   @override
+  String get raiseRequest => 'ವಿನಂತಿಯನ್ನು ಸಲ್ಲಿಸಿ';
+  @override
   String get allBranches => 'ಎಲ್ಲಾ ಶಾಖೆಗಳು';
   @override
   String get directorRole => 'ನಿರ್ದೇಶಕರು';
@@ -2374,5 +2376,21 @@ class AppStringsKn extends AppStrings {
   String get forbiddenErrorTitle => 'ಕ್ರಿಯೆಗೆ ಅನುಮತಿಯಿಲ್ಲ';
   @override
   String get noSubtasksYet => 'ಇನ್ನೂ ಯಾವುದೇ ಉಪ-ಕಾರ್ಯಗಳನ್ನು ಸೇರಿಸಲಾಗಿಲ್ಲ.';
+  @override
+  String get approveAndClose => 'ಅನುಮೋದಿಸಿ ಮತ್ತು ಮುಚ್ಚಿ';
+  @override
+  String get sendBack => 'ಹಿಂತಿರುಗಿಸಿ';
+  @override
+  String get btnAccept => 'ಸ್ವೀಕರಿಸಿ';
+  @override
+  String get btnDecline => 'ತಿರಸ್ಕರಿಸಿ';
+  @override
+  String get btnTentative => 'ಪ್ರಾಯೋಗಿಕ';
+  @override
+  String get completionSignOff => 'ಪೂರ್ಣಗೊಳಿಸುವಿಕೆ ಸೈನ್-ಆಫ್';
+  @override
+  String get completionSignOffSubtitle => 'ಈ ಸಭೆಗಳು ನಡೆದಿವೆ ಎಂದು ಯಾರೋ ವರದಿ ಮಾಡಿದ್ದಾರೆ';
+  @override
+  String get btnReject => 'ತಿರಸ್ಕರಿಸಿ';
 }
 

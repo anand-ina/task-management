@@ -322,7 +322,35 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                               ),
                             ),
                           ),
-
+                          const Spacer(),
+                          if (item.taskId != null && item.taskId! > 0)
+                            InkWell(
+                              onTap: () async {
+                                await TaskDetailDialog.show(
+                                  context,
+                                  taskId: item.taskId!,
+                                  isReadOnly: isReadOnlyUser,
+                                  canCloneTask: true,
+                                  showOnlyCloneAndCancel: true,
+                                );
+                                if (mounted) {
+                                  context.read<ApprovalsBloc>().add(FetchEscalationsDataEvent());
+                                }
+                              },
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'View →',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.linkBlue(context),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                         ],
                       ),
                       const SizedBox(height: 6),
@@ -356,81 +384,82 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                           ),
                         ),
                       ],
-                      const SizedBox(height: 12),
 
-                      // Action Buttons (Resolve · Approve, Reject & View)
-                      Row(
-                        children: [
-                          if (!isAcademicExecutive && item.status.toLowerCase() == 'pending') ...[
-                            InkWell(
-                              onTap: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Escalation resolved and approved.'),
-                                    backgroundColor: AppColors.green,
+                      // Action Buttons (Resolve · Approve, Reject)
+                      if (!isAcademicExecutive && item.status.toLowerCase() == 'pending') ...[
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: InkWell(
+                                onTap: () {
+                                  context.read<ApprovalsBloc>().add(
+                                    DecideEscalationEvent(id: item.id, decision: 'approve'),
+                                  );
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Escalation resolved and approved.'),
+                                      backgroundColor: AppColors.green,
+                                    ),
+                                  );
+                                },
+                                borderRadius: BorderRadius.circular(8),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFDCFCE7),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: const Color(0xFF86EFAC)),
                                   ),
-                                );
-                              },
-                              child: const Text(
-                                'Resolve · Approve',
-                                style: TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.green600,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            InkWell(
-                              onTap: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Escalation request rejected.'),
-                                    backgroundColor: AppColors.red,
-                                  ),
-                                );
-                              },
-                              child: const Text(
-                                'Reject',
-                                style: TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.red600,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 3),
-                          ],
-                          const Spacer(),
-                          if (item.taskId != null && item.taskId! > 0)
-                            InkWell(
-                              onTap: () async {
-                                await TaskDetailDialog.show(
-                                  context,
-                                  taskId: item.taskId!,
-                                  isReadOnly: isReadOnlyUser,
-                                  canCloneTask: true,
-                                  showOnlyCloneAndCancel: true,
-                                );
-                                if (mounted) {
-                                  context.read<ApprovalsBloc>().add(FetchEscalationsDataEvent());
-                                }
-                              },
-                              child: Row(
-                                children: [
-                                  Text(
-                                    'View →',
-                                    style: TextStyle(
-                                      fontSize: 12,
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    AppStrings.of(context).resolveApprove,
+                                    style: const TextStyle(
+                                      fontSize: 13,
                                       fontWeight: FontWeight.bold,
-                                      color: AppColors.linkBlue(context),
+                                      color: Color(0xFF15803D),
                                     ),
                                   ),
-                                ],
+                                ),
                               ),
                             ),
-                        ],
-                      ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: InkWell(
+                                onTap: () {
+                                  context.read<ApprovalsBloc>().add(
+                                    DecideEscalationEvent(id: item.id, decision: 'deny'),
+                                  );
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Escalation request rejected.'),
+                                      backgroundColor: AppColors.red,
+                                    ),
+                                  );
+                                },
+                                borderRadius: BorderRadius.circular(8),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFEE2E2),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: const Color(0xFFFCA5A5)),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    AppStrings.of(context).btnReject,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFFB91C1C),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),

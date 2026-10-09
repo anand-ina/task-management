@@ -14,12 +14,28 @@ class TaskAssigneeModel {
   });
 
   factory TaskAssigneeModel.fromJson(Map<String, dynamic> json) {
+    final activeVal = json['active'];
+    final isActive = activeVal is bool
+        ? activeVal
+        : (activeVal == 1 || activeVal == '1' || activeVal == 'true' || activeVal == null);
+    final nameStr = json['name']?.toString() ?? '';
+    String initStr = json['initials']?.toString() ?? '';
+    if (initStr.isEmpty && nameStr.isNotEmpty) {
+      final parts = nameStr.trim().split(RegExp(r'\s+'));
+      if (parts.length > 1 && parts[0].isNotEmpty && parts[1].isNotEmpty) {
+        initStr = '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+      } else if (nameStr.isNotEmpty) {
+        initStr = nameStr.substring(0, 1).toUpperCase();
+      }
+    }
+    final rawId = json['id'];
+    final int idVal = rawId is num ? rawId.toInt() : (int.tryParse(rawId?.toString() ?? '') ?? 0);
     return TaskAssigneeModel(
-      id: json['id'] as int? ?? 0,
-      name: json['name'] as String? ?? '',
-      initials: json['initials'] as String? ?? '',
-      color: json['color'] as String? ?? '#3866d6',
-      active: json['active'] as bool? ?? true,
+      id: idVal,
+      name: nameStr,
+      initials: initStr,
+      color: json['color']?.toString() ?? json['avatar_color']?.toString() ?? '#3866d6',
+      active: isActive,
     );
   }
 
@@ -48,12 +64,24 @@ class TaskTimelineItem {
   });
 
   factory TaskTimelineItem.fromJson(Map<String, dynamic> json) {
+    String actorName = '';
+    if (json['actor'] is Map) {
+      final aMap = json['actor'] as Map;
+      actorName = aMap['name']?.toString() ??
+          aMap['username']?.toString() ??
+          aMap['user_name']?.toString() ??
+          '';
+    } else if (json['actor'] != null) {
+      actorName = json['actor'].toString();
+    }
+    final rawId = json['id'];
+    final int idVal = rawId is num ? rawId.toInt() : (int.tryParse(rawId?.toString() ?? '') ?? 0);
     return TaskTimelineItem(
-      id: json['id'] as int? ?? 0,
-      kind: json['kind'] as String? ?? '',
-      note: json['note'] as String? ?? '',
-      createdAt: json['created_at'] as String? ?? '',
-      actor: json['actor'] as String? ?? '',
+      id: idVal,
+      kind: json['kind']?.toString() ?? json['action']?.toString() ?? '',
+      note: json['note']?.toString() ?? json['description']?.toString() ?? json['message']?.toString() ?? '',
+      createdAt: json['created_at']?.toString() ?? json['createdAt']?.toString() ?? '',
+      actor: actorName,
     );
   }
 
@@ -138,65 +166,92 @@ class TaskItemModel {
   });
 
   factory TaskItemModel.fromJson(Map<String, dynamic> json) {
+    int safeInt(dynamic value, [int defaultValue = 0]) {
+      if (value == null) return defaultValue;
+      if (value is int) return value;
+      if (value is num) return value.toInt();
+      if (value is String) return int.tryParse(value) ?? defaultValue;
+      return defaultValue;
+    }
+
+    bool safeBool(dynamic value, [bool defaultValue = false]) {
+      if (value == null) return defaultValue;
+      if (value is bool) return value;
+      if (value == 1 || value == '1' || value == 'true') return true;
+      if (value == 0 || value == '0' || value == 'false') return false;
+      return defaultValue;
+    }
+
     int totalSubtasks = 0;
     int doneSubtasks = 0;
     if (json['checklist'] is List) {
       final list = json['checklist'] as List;
       totalSubtasks = list.length;
-      doneSubtasks = list.where((e) => e is Map && (e['is_completed'] == true || e['completed'] == true || e['status'] == 'completed' || e['done'] == true)).length;
+      doneSubtasks = list.where((e) => e is Map && (e['is_completed'] == true || e['completed'] == true || e['status'] == 'completed' || e['done'] == true || e['is_completed'] == 1 || e['completed'] == 1)).length;
     } else if (json['subtasks'] is List) {
       final list = json['subtasks'] as List;
       totalSubtasks = list.length;
-      doneSubtasks = list.where((e) => e is Map && (e['is_completed'] == true || e['completed'] == true || e['status'] == 'completed' || e['done'] == true)).length;
+      doneSubtasks = list.where((e) => e is Map && (e['is_completed'] == true || e['completed'] == true || e['status'] == 'completed' || e['done'] == true || e['is_completed'] == 1 || e['completed'] == 1)).length;
     } else {
-      totalSubtasks = json['subtasks_total'] as int? ?? json['subtask_count'] as int? ?? json['subtasks_count'] as int? ?? 0;
-      doneSubtasks = json['subtasks_completed'] as int? ?? json['subtask_completed_count'] as int? ?? json['subtasks_completed_count'] as int? ?? 0;
+      totalSubtasks = safeInt(json['subtasks_total'] ?? json['subtask_count'] ?? json['subtasks_count']);
+      doneSubtasks = safeInt(json['subtasks_completed'] ?? json['subtask_completed_count'] ?? json['subtasks_completed_count']);
     }
 
     String? ticketNumber = json['ticket_no']?.toString() ??
         (json['ticket'] is Map ? json['ticket']['ticket_no']?.toString() ?? json['ticket']['code']?.toString() : null) ??
         json['ticket_code']?.toString();
-    int? ticketIdentifier = json['ticket_id'] as int? ?? (json['ticket'] is Map ? json['ticket']['id'] as int? : null);
-    if (ticketNumber == null && ticketIdentifier != null) {
+    int? ticketIdentifier;
+    if (json['ticket_id'] != null) {
+      ticketIdentifier = safeInt(json['ticket_id']);
+    } else if (json['ticket'] is Map && json['ticket']['id'] != null) {
+      ticketIdentifier = safeInt(json['ticket']['id']);
+    }
+    if (ticketNumber == null && ticketIdentifier != null && ticketIdentifier > 0) {
       ticketNumber = 'TKT-$ticketIdentifier';
     }
 
     return TaskItemModel(
-      id: json['id'] as int? ?? 0,
-      taskNo: json['task_no'] as String? ?? '',
+      id: safeInt(json['id']),
+      taskNo: json['task_no']?.toString() ?? json['taskNo']?.toString() ?? '',
       legacyTaskNo: json['legacy_task_no']?.toString(),
-      fy: json['fy'] as String? ?? '2025-26',
-      title: json['title'] as String? ?? '',
-      description: json['description'] as String? ?? '',
-      category: json['category'] as String? ?? 'General',
-      priority: json['priority'] as String? ?? 'high',
-      status: json['status'] as String? ?? 'in_progress',
-      progress: json['progress'] as int? ?? 0,
-      location: json['location'] as String?,
-      entryDate: json['entry_date'] as String? ?? '',
-      dueDate: json['due_date'] as String? ?? '',
-      completedDate: json['completed_date'] as String?,
-      remarks: json['remarks'] as String?,
-      isConfidential: json['is_confidential'] as bool? ?? false,
-      blockReason: json['block_reason'] as String?,
-      reviewComment: json['review_comment'] as String?,
-      assignedByText: json['assigned_by_text'] as String? ?? '',
-      assignedByUserId: json['assigned_by_user_id'] as int? ?? 0,
-      assignedByName: json['assigned_by_name'] as String? ?? '',
-      branchId: json['branch_id'] as int? ?? 0,
-      branchCode: json['branch_code'] as String? ?? '',
-      branchName: json['branch_name'] as String? ?? '',
-      assignees: (json['assignees'] as List<dynamic>?)
-              ?.map((e) => TaskAssigneeModel.fromJson(e))
-              .toList() ??
-          [],
+      fy: json['fy']?.toString() ?? '2025-26',
+      title: json['title']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
+      category: json['category']?.toString() ?? 'General',
+      priority: json['priority']?.toString() ?? 'high',
+      status: json['status']?.toString() ?? 'to_be_started',
+      progress: safeInt(json['progress']),
+      location: json['location']?.toString(),
+      entryDate: json['entry_date']?.toString() ?? json['entryDate']?.toString() ?? '',
+      dueDate: json['due_date']?.toString() ?? json['dueDate']?.toString() ?? '',
+      completedDate: json['completed_date']?.toString() ?? json['completedDate']?.toString(),
+      remarks: json['remarks']?.toString(),
+      isConfidential: safeBool(json['is_confidential'] ?? json['isConfidential']),
+      blockReason: json['block_reason']?.toString() ?? json['blockReason']?.toString(),
+      reviewComment: json['review_comment']?.toString() ?? json['reviewComment']?.toString(),
+      assignedByText: json['assigned_by_text']?.toString() ?? json['assignedByText']?.toString() ?? '',
+      assignedByUserId: safeInt(json['assigned_by_user_id'] ?? json['assignedByUserId']),
+      assignedByName: json['assigned_by_name']?.toString() ?? json['assignedByName']?.toString() ?? '',
+      branchId: safeInt(json['branch_id'] ?? json['branchId']),
+      branchCode: json['branch_code']?.toString() ?? json['branchCode']?.toString() ?? '',
+      branchName: json['branch_name']?.toString() ?? json['branchName']?.toString() ?? '',
+      assignees: json['assignees'] is List
+          ? (json['assignees'] as List)
+              .map((e) => e is Map
+                  ? TaskAssigneeModel.fromJson(Map<String, dynamic>.from(e))
+                  : null)
+              .whereType<TaskAssigneeModel>()
+              .toList()
+          : [],
       ticketId: ticketIdentifier,
       ticketNo: ticketNumber,
       subtasksTotal: totalSubtasks,
       subtasksCompleted: doneSubtasks,
-      parentTaskId: json['parent_task_id'] as int?,
-      parentTaskNo: json['parent_task_no']?.toString(),
-      parentTitle: json['parent_title']?.toString(),
+      parentTaskId: json['parent_task_id'] != null
+          ? safeInt(json['parent_task_id'])
+          : (json['parentTaskId'] != null ? safeInt(json['parentTaskId']) : null),
+      parentTaskNo: json['parent_task_no']?.toString() ?? json['parentTaskNo']?.toString(),
+      parentTitle: json['parent_title']?.toString() ?? json['parentTitle']?.toString(),
     );
   }
 
@@ -283,10 +338,27 @@ class TaskDetailModel extends TaskItemModel {
     this.subtasks = const [],
   });
 
-  factory TaskDetailModel.fromJson(Map<String, dynamic> json) {
+  factory TaskDetailModel.fromJson(dynamic rawData) {
+    Map<String, dynamic> json;
+    if (rawData is Map<String, dynamic>) {
+      json = rawData;
+    } else if (rawData is Map) {
+      json = Map<String, dynamic>.from(rawData);
+    } else {
+      json = {};
+    }
+    if (json['data'] is Map) {
+      json = Map<String, dynamic>.from(json['data'] as Map);
+    } else if (json['task'] is Map) {
+      json = Map<String, dynamic>.from(json['task'] as Map);
+    }
+
     final baseTask = TaskItemModel.fromJson(json);
     final String? ticketNumber = baseTask.ticketNo ?? json['ticket_no']?.toString();
-    final int? ticketIdentifier = baseTask.ticketId ?? json['ticket_id'] as int?;
+    final int? ticketIdentifier = baseTask.ticketId ??
+        (json['ticket_id'] is num
+            ? (json['ticket_id'] as num).toInt()
+            : int.tryParse(json['ticket_id']?.toString() ?? ''));
     final String? tType = json['ticket_type']?.toString();
 
     return TaskDetailModel(
@@ -322,20 +394,24 @@ class TaskDetailModel extends TaskItemModel {
       subtasksCompleted: baseTask.subtasksCompleted,
       parentTaskId: baseTask.parentTaskId,
       parentTaskNo: baseTask.parentTaskNo,
-      parentTitle: baseTask.parentTitle,
-      timeline: (json['timeline'] as List<dynamic>?)
-              ?.map((e) => TaskTimelineItem.fromJson(e))
-              .toList() ??
-          [],
-      attachments: json['attachments'] as List<dynamic>? ?? [],
-      checklist: json['checklist'] as List<dynamic>? ?? [],
-      subtasks: (json['subtasks'] as List<dynamic>?)
-              ?.map((e) => e is Map<String, dynamic>
-                  ? TaskItemModel.fromJson(e)
-                  : (e is Map ? TaskItemModel.fromJson(Map<String, dynamic>.from(e)) : null))
+      timeline: json['timeline'] is List
+          ? (json['timeline'] as List)
+              .map((e) => e is Map
+                  ? TaskTimelineItem.fromJson(Map<String, dynamic>.from(e))
+                  : null)
+              .whereType<TaskTimelineItem>()
+              .toList()
+          : [],
+      attachments: json['attachments'] is List ? (json['attachments'] as List) : [],
+      checklist: json['checklist'] is List ? (json['checklist'] as List) : [],
+      subtasks: json['subtasks'] is List
+          ? (json['subtasks'] as List)
+              .map((e) => e is Map
+                  ? TaskItemModel.fromJson(Map<String, dynamic>.from(e))
+                  : null)
               .whereType<TaskItemModel>()
-              .toList() ??
-          [],
+              .toList()
+          : [],
     );
   }
 

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -30,7 +31,7 @@ class TaskDetailDialog extends StatefulWidget {
     required this.taskId,
     this.initialTask,
     this.isReadOnly = false,
-    this.canCloneTask = false,
+    this.canCloneTask = true,
     this.showOnlyCloneAndCancel = false,
   });
 
@@ -39,7 +40,7 @@ class TaskDetailDialog extends StatefulWidget {
     required int taskId,
     TaskItemModel? initialTask,
     bool isReadOnly = false,
-    bool canCloneTask = false,
+    bool canCloneTask = true,
     bool showOnlyCloneAndCancel = false,
   }) {
     return showDialog(
@@ -82,17 +83,15 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
 
   Future<void> _fetchDetail() async {
     try {
-      final results = await Future.wait([
-        _repository.getTaskDetail(widget.taskId),
-        _repository.getAssigneesLookup(),
-      ]);
+      final detail = await _repository.getTaskDetail(widget.taskId);
       if (mounted) {
         setState(() {
-          _detail = results[0] as TaskDetailModel;
+          _detail = detail;
           _isLoading = false;
         });
       }
-    } catch (_) {
+    } catch (e, stack) {
+      debugPrint('TaskDetailDialog error fetching task detail: $e\n$stack');
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -102,10 +101,10 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
   }
 
   String _formatDateStr(String? dateStr) {
-    if (dateStr == null || dateStr.isEmpty) return '—';
+    if (dateStr == null || dateStr.trim().isEmpty || dateStr == '—') return '—';
     try {
       final dt = DateTime.parse(dateStr).toLocal();
-      return DateFormat('d MMM').format(dt);
+      return DateFormat('d MMM yyyy').format(dt);
     } catch (_) {
       return dateStr;
     }
@@ -115,12 +114,17 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
     if (hex == null || hex.isEmpty) return const Color(0xFF8B5CF6);
     final cleanHex = hex.replaceFirst('#', '').replaceAll('0x', '');
     if (cleanHex.length == 6) {
-      return Color(int.parse('FF$cleanHex', radix: 16));
+      try {
+        return Color(int.parse('FF$cleanHex', radix: 16));
+      } catch (_) {
+        return const Color(0xFF8B5CF6);
+      }
     }
     return const Color(0xFF8B5CF6);
   }
 
   String _formatStatusLabel(String status) {
+    if (status.isEmpty) return '—';
     switch (status.toLowerCase()) {
       case 'to_be_started':
         return 'To be Started';
@@ -136,8 +140,10 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
         return 'Scrapped';
       case 'paused':
         return 'Paused';
+      case 'overdue':
+        return 'Overdue';
       default:
-        return status;
+        return status.replaceAll('_', ' ').split(' ').map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '').join(' ');
     }
   }
 
@@ -157,6 +163,8 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
         return Colors.grey;
       case 'paused':
         return Colors.orange;
+      case 'overdue':
+        return Colors.red.shade700;
       default:
         return Colors.blueGrey;
     }
@@ -192,9 +200,9 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
     final parentTaskNo = _detail?.parentTaskNo ?? widget.initialTask?.parentTaskNo;
     final parentTaskId = _detail?.parentTaskId ?? widget.initialTask?.parentTaskId;
     final bool isSubtask = (_detail?.isSubtask ?? widget.initialTask?.isSubtask ?? false) ||
-        (parentTaskId != null) ||
-        (parentTaskNo != null && parentTaskNo.isNotEmpty) ||
-        taskNo.contains(RegExp(r'/[\d-]+-\d+$'));
+        (parentTaskId != null && parentTaskId > 0) ||
+        (parentTaskNo != null && parentTaskNo.trim().isNotEmpty) ||
+        RegExp(r'/\d+-\d+-\d+$').hasMatch(taskNo);
 
     int? ticketId = _detail?.ticketId ?? widget.initialTask?.ticketId;
     String? ticketNo = _detail?.ticketNo ?? widget.initialTask?.ticketNo;
@@ -214,9 +222,30 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
     final progress = _detail?.progress ?? widget.initialTask?.progress ?? 0;
     final branchName = _detail?.branchName ?? widget.initialTask?.branchName ?? 'Head Office';
     final assignedBy = _detail?.assignedByName ?? widget.initialTask?.assignedByName ?? 'Test_Manager';
+    final rawDueDate = _detail?.dueDate ?? widget.initialTask?.dueDate;
     final entryDate = _formatDateStr(_detail?.entryDate ?? widget.initialTask?.entryDate);
-    final dueDate = _formatDateStr(_detail?.dueDate ?? widget.initialTask?.dueDate);
+    final dueDate = _formatDateStr(rawDueDate);
     final completedDate = _formatDateStr(_detail?.completedDate ?? widget.initialTask?.completedDate);
+
+    bool isDateExpired = false;
+    if (statusLower == 'overdue') {
+      isDateExpired = true;
+    } else if (rawDueDate != null && rawDueDate.trim().isNotEmpty) {
+      try {
+        final parsedDueDate = DateTime.parse(rawDueDate).toLocal();
+        final now = DateTime.now();
+        final endOfDueDay = DateTime(
+          parsedDueDate.year,
+          parsedDueDate.month,
+          parsedDueDate.day,
+          23,
+          59,
+          59,
+        );
+        isDateExpired = now.isAfter(endOfDueDay);
+      } catch (_) {}
+    }
+
     final category = _detail?.category ?? widget.initialTask?.category ?? 'General';
     final assignees = _detail?.assignees ?? widget.initialTask?.assignees ?? [];
     final reviewNote = _detail?.reviewComment ?? widget.initialTask?.reviewComment;
@@ -230,6 +259,90 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
       priorityColor = Colors.orange;
     } else if (priority.toLowerCase().contains('medium')) {
       priorityColor = Colors.blue;
+    }
+
+    if (_isLoading && _detail == null && widget.initialTask == null) {
+      return Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 360),
+          padding: const EdgeInsets.all(28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(
+                width: 32,
+                height: 32,
+                child: CircularProgressIndicator(strokeWidth: 3),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Loading task details...',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: isDark ? Colors.white70 : const Color(0xFF475569),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_detail == null && widget.initialTask == null) {
+      return Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 400),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline_rounded, color: Colors.red, size: 40),
+              const SizedBox(height: 12),
+              const Text(
+                'Unable to load task details',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'There was a problem fetching the task details. Please check your connection and try again.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12, color: isDark ? Colors.white70 : Colors.black54),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(_hasReviewed),
+                    child: Text(s.closeButton),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _isLoading = true;
+                      });
+                      _fetchDetail();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF8B1D2C),
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     return Dialog(
@@ -453,19 +566,19 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                   children: [
                     Row(
                       children: [
-                        _buildMetaGridItem('Priority', priority[0].toUpperCase() + priority.substring(1), isDark, valueColor: priorityColor),
+                        _buildMetaGridItem('Priority', priority.isNotEmpty ? (priority[0].toUpperCase() + priority.substring(1)) : '—', isDark, valueColor: priorityColor),
                         _buildMetaGridItem('Status', '${_formatStatusLabel(status)}${progress > 0 ? " · $progress%" : ""}', isDark, valueColor: Colors.blue),
-                        _buildMetaGridItem('Branch', branchName, isDark),
-                        _buildMetaGridItem('Category', category, isDark),
+                        _buildMetaGridItem('Branch', branchName.isNotEmpty ? branchName : '—', isDark),
+                        _buildMetaGridItem('Category', category.isNotEmpty ? category : '—', isDark),
                       ],
                     ),
                     const SizedBox(height: 10),
                     Row(
                       children: [
-                        _buildMetaGridItem('Assigned by', assignedBy, isDark),
-                        _buildMetaGridItem('Entry date', entryDate.isNotEmpty ? entryDate : '24 Aug 2026', isDark),
-                        _buildMetaGridItem('Due date', dueDate.isNotEmpty ? dueDate : '31 Aug 2026', isDark, valueColor: Colors.amber),
-                        _buildMetaGridItem('Completed', completedDate.isNotEmpty && completedDate != '—' ? completedDate : (status.toLowerCase() == 'completed' ? '24 Aug 2026' : '—'), isDark, valueColor: Colors.green),
+                        _buildMetaGridItem('Assigned by', assignedBy.isNotEmpty ? assignedBy : '—', isDark),
+                        _buildMetaGridItem('Entry date', entryDate, isDark),
+                        _buildMetaGridItem('Due date', dueDate, isDark, valueColor: Colors.amber),
+                        _buildMetaGridItem('Completed', completedDate.isNotEmpty && completedDate != '—' ? completedDate : (statusLower == 'completed' ? entryDate : '—'), isDark, valueColor: Colors.green),
                       ],
                     ),
                   ],
@@ -490,88 +603,84 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
               // 5. Assignees Section with Reassign Button
               const Text('Assignees', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
               const SizedBox(height: 6),
-              Row(
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 4,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      ...assignees.take(2).map((a) {
-                        final badgeColor = _hexToColor(a.color);
-                        return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: badgeColor.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              CircleAvatar(
-                                radius: 8,
-                                backgroundColor: badgeColor,
-                                child: Text(
-                                  a.initials.isNotEmpty ? a.initials : 'U',
-                                  style: const TextStyle(fontSize: 8, color: Colors.white, fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                a.name,
-                                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: badgeColor),
-                              ),
-                            ],
-                          ),
-                        );
-                      }),
-                      if (assignees.length > 2)
-                        Tooltip(
-                          message: assignees.skip(2).map((e) => e.name).join(', '),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: isDark ? Colors.white12 : Colors.grey.shade200,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
+                  ...assignees.take(2).map((a) {
+                    final badgeColor = _hexToColor(a.color);
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: badgeColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircleAvatar(
+                            radius: 8,
+                            backgroundColor: badgeColor,
                             child: Text(
-                              '+${assignees.length - 2}',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: isDark ? Colors.white70 : Colors.black87,
-                              ),
+                              a.initials.isNotEmpty ? a.initials : (a.name.isNotEmpty ? a.name[0].toUpperCase() : 'U'),
+                              style: const TextStyle(fontSize: 8, color: Colors.white, fontWeight: FontWeight.bold),
                             ),
                           ),
-                        ),
-                      if (!widget.isReadOnly && !isAcademicExecutive && !(isDirector && isDoneOrCompleted) && !widget.showOnlyCloneAndCancel)
-                        ElevatedButton.icon(
-                          onPressed: () async {
-                            final result = await ReassignTaskDialog.show(
-                              context,
-                              taskId: widget.taskId,
-                              currentAssignees: assignees,
-                            );
-                            if (result == true) {
-                              _fetchDetail();
-                            }
-                          },
-                          icon: const Icon(Icons.sync, size: 13, color: Colors.white),
-                          label: Text(
-                            s.reassignButton,
-                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
+                          const SizedBox(width: 4),
+                          Text(
+                            a.name,
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: badgeColor),
                           ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF8B1D2C),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            visualDensity: VisualDensity.compact,
-                            elevation: 0,
+                        ],
+                      ),
+                    );
+                  }),
+                  if (assignees.length > 2)
+                    Tooltip(
+                      message: assignees.skip(2).map((e) => e.name).join(', '),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.white12 : Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '+${assignees.length - 2}',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white70 : Colors.black87,
                           ),
                         ),
-                    ],
-                  ),
+                      ),
+                    ),
+                  if (!widget.isReadOnly && !isAcademicExecutive && !(isDirector && isDoneOrCompleted) && !widget.showOnlyCloneAndCancel)
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        final result = await ReassignTaskDialog.show(
+                          context,
+                          taskId: widget.taskId,
+                          currentAssignees: assignees,
+                        );
+                        if (result == true) {
+                          _fetchDetail();
+                        }
+                      },
+                      icon: const Icon(Icons.sync, size: 13, color: Colors.white),
+                      label: Text(
+                        s.reassignButton,
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF8B1D2C),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        visualDensity: VisualDensity.compact,
+                        elevation: 0,
+                      ),
+                    ),
                 ],
               ),
               const SizedBox(height: 16),
@@ -608,7 +717,7 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                         ],
                       ],
                     ),
-                    if (!widget.isReadOnly && !widget.showOnlyCloneAndCancel)
+                    if (!widget.isReadOnly && !widget.showOnlyCloneAndCancel && !isDateExpired)
                       ElevatedButton.icon(
                         onPressed: () async {
                           final taskDetail = _detail ??
@@ -686,7 +795,7 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                       ),
                       child: InkWell(
                         onTap: () async {
-                          await TaskDetailDialog.show(context, taskId: st.id);
+                          await TaskDetailDialog.show(context, taskId: st.id, initialTask: st);
                           _fetchDetail();
                         },
                         child: Column(
@@ -746,7 +855,11 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                                     radius: 9,
                                     backgroundColor: _hexToColor(st.assignees.first.color),
                                     child: Text(
-                                      st.assignees.first.initials,
+                                      st.assignees.first.initials.isNotEmpty
+                                          ? st.assignees.first.initials
+                                          : (st.assignees.first.name.isNotEmpty
+                                              ? st.assignees.first.name[0].toUpperCase()
+                                              : 'U'),
                                       style: const TextStyle(fontSize: 8, color: Colors.white, fontWeight: FontWeight.bold),
                                     ),
                                   ),
@@ -783,9 +896,18 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                   spacing: 8,
                   runSpacing: 6,
                   children: attachments.map((att) {
-                    final filename = att['filename']?.toString() ?? 'File';
-                    final contextTag = att['context']?.toString() ?? 'creation';
-                    final fileUrl = att['url']?.toString() ?? '';
+                    String filename = 'File';
+                    String contextTag = 'attachment';
+                    String fileUrl = '';
+                    if (att is Map) {
+                      filename = att['filename']?.toString() ?? att['name']?.toString() ?? 'File';
+                      contextTag = att['context']?.toString() ?? 'attachment';
+                      fileUrl = att['url']?.toString() ?? att['path']?.toString() ?? '';
+                    } else if (att is String) {
+                      fileUrl = att;
+                      filename = att.split('/').isNotEmpty ? att.split('/').last : 'File';
+                      if (filename.isEmpty) filename = 'File';
+                    }
 
                     return InkWell(
                       onTap: () {
@@ -808,9 +930,13 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                           children: [
                             const Icon(Icons.attach_file_rounded, size: 13, color: Colors.blue),
                             const SizedBox(width: 4),
-                            Text(
-                              filename,
-                              style: const TextStyle(fontSize: 11, color: Colors.blue, fontWeight: FontWeight.w600),
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 160),
+                              child: Text(
+                                filename,
+                                style: const TextStyle(fontSize: 11, color: Colors.blue, fontWeight: FontWeight.w600),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                             const SizedBox(width: 6),
                             Container(
@@ -857,7 +983,7 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
               const Text('Timeline', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
               const SizedBox(height: 8),
 
-              if (_isLoading)
+              if (_isLoading && timeline.isEmpty)
                 const Center(child: Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator()))
               else if (timeline.isNotEmpty)
                 Column(
@@ -866,31 +992,36 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                       padding: const EdgeInsets.only(bottom: 6),
                       child: Row(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: isDark ? Colors.white12 : const Color(0xFFF1F5F9),
-                              borderRadius: BorderRadius.circular(4),
+                          if (item.kind.isNotEmpty) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: isDark ? Colors.white12 : const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                item.kind,
+                                style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Colors.grey),
+                              ),
                             ),
-                            child: Text(
-                              item.kind,
-                              style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: Colors.grey),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
+                            const SizedBox(width: 8),
+                          ],
                           Expanded(
                             child: Text(
-                              item.note,
+                              item.note.isNotEmpty ? item.note : '—',
                               style: TextStyle(
                                 fontSize: 11,
                                 color: isDark ? Colors.white70 : const Color(0xFF334155),
                               ),
                             ),
                           ),
-                          Text(
-                            item.actor,
-                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey),
-                          ),
+                          if (item.actor.isNotEmpty) ...[
+                            const SizedBox(width: 8),
+                            Text(
+                              item.actor,
+                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey),
+                            ),
+                          ],
                         ],
                       ),
                     );
@@ -1047,7 +1178,7 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         side: BorderSide(color: isDark ? Colors.white24 : Colors.black26),
                       ),
-                      child: Text(s.cancelButton, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      child: Text(s.closeButton, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                     ),
                   ],
                 ),
@@ -1059,25 +1190,23 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    if (widget.canCloneTask) ...[
-                      OutlinedButton.icon(
-                        onPressed: () {
-                          CloneTaskDialog.show(
-                            context,
-                            sourceTask: _detail,
-                            sourceItem: widget.initialTask,
-                          );
-                        },
-                        icon: const Icon(Icons.content_copy_outlined, size: 14),
-                        label: Text(s.cloneTaskTitle, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          side: BorderSide(color: isDark ? Colors.white24 : Colors.black26),
-                        ),
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        CloneTaskDialog.show(
+                          context,
+                          sourceTask: _detail,
+                          sourceItem: widget.initialTask,
+                        );
+                      },
+                      icon: const Icon(Icons.content_copy_outlined, size: 14),
+                      label: Text(s.cloneTaskTitle, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        side: BorderSide(color: isDark ? Colors.white24 : Colors.black26),
                       ),
-                      const SizedBox(width: 8),
-                    ],
+                    ),
+                    const SizedBox(width: 8),
                     OutlinedButton(
                       onPressed: () => Navigator.of(context).pop(_hasReviewed),
                       style: OutlinedButton.styleFrom(
@@ -1090,13 +1219,29 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                   ],
                 ),
               ] else if (isDirector && isDone) ...[
-
                 const SizedBox(height: 20),
                 const Divider(),
                 const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        CloneTaskDialog.show(
+                          context,
+                          sourceTask: _detail,
+                          sourceItem: widget.initialTask,
+                        );
+                      },
+                      icon: const Icon(Icons.content_copy_outlined, size: 14),
+                      label: Text(s.cloneTaskTitle, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        side: BorderSide(color: isDark ? Colors.white24 : Colors.black26),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
                     ElevatedButton(
                       onPressed: () async {
                         final updated = await ReviewTaskDialog.show(
@@ -1130,25 +1275,23 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    if (widget.canCloneTask) ...[
-                      OutlinedButton.icon(
-                        onPressed: () {
-                          CloneTaskDialog.show(
-                            context,
-                            sourceTask: _detail,
-                            sourceItem: widget.initialTask,
-                          );
-                        },
-                        icon: const Icon(Icons.content_copy_outlined, size: 14),
-                        label: Text(s.cloneTaskTitle, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          side: BorderSide(color: isDark ? Colors.white24 : Colors.black26),
-                        ),
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        CloneTaskDialog.show(
+                          context,
+                          sourceTask: _detail,
+                          sourceItem: widget.initialTask,
+                        );
+                      },
+                      icon: const Icon(Icons.content_copy_outlined, size: 14),
+                      label: Text(s.cloneTaskTitle, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        side: BorderSide(color: isDark ? Colors.white24 : Colors.black26),
                       ),
-                      const SizedBox(width: 8),
-                    ],
+                    ),
+                    const SizedBox(width: 8),
                     OutlinedButton(
                       onPressed: () => Navigator.of(context).pop(_hasReviewed),
                       style: OutlinedButton.styleFrom(
@@ -1349,6 +1492,8 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
           Text(
             label,
             style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 2),
           Text(

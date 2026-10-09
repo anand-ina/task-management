@@ -28,7 +28,11 @@ class AssigneeModel {
       initials: json['initials']?.toString() ?? '',
       avatarColor: json['avatar_color']?.toString() ?? '#8B5CF6',
       department: json['department']?.toString(),
-      isTaskCreator: json['is_task_creator'] as bool? ?? false,
+      isTaskCreator: json['is_task_creator'] is bool
+          ? json['is_task_creator'] as bool
+          : (json['is_task_creator'] == 1 ||
+              json['is_task_creator'] == '1' ||
+              json['is_task_creator'] == 'true'),
     );
   }
 

@@ -14,6 +14,9 @@ class TasksDueTodayDialog extends StatefulWidget {
   final String? overdueAge;
   final String? status;
   final String? searchQuery;
+  final bool? activeOnly;
+  final int? assigneeId;
+  final bool? dueToday;
   final Color? badgeColor;
   final String scope;
 
@@ -26,6 +29,9 @@ class TasksDueTodayDialog extends StatefulWidget {
     this.overdueAge,
     this.status,
     this.searchQuery,
+    this.activeOnly,
+    this.assigneeId,
+    this.dueToday,
     this.badgeColor,
     this.scope = 'mine',
   });
@@ -39,6 +45,9 @@ class TasksDueTodayDialog extends StatefulWidget {
     String? overdueAge,
     String? status,
     String? searchQuery,
+    bool? activeOnly,
+    int? assigneeId,
+    bool? dueToday,
     Color? badgeColor,
     String scope = 'mine',
   }) {
@@ -53,6 +62,9 @@ class TasksDueTodayDialog extends StatefulWidget {
         overdueAge: overdueAge,
         status: status,
         searchQuery: searchQuery,
+        activeOnly: activeOnly,
+        assigneeId: assigneeId,
+        dueToday: dueToday,
         badgeColor: badgeColor,
         scope: scope,
       ),
@@ -99,16 +111,19 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
 
   Future<void> _loadInitialData() async {
     try {
+      final periodParam = widget.dueToday == true ? 'day' : widget.period;
       final results = await Future.wait([
         _repository.getBranches(),
         _repository.getTasks(
           scope: widget.scope,
-          period: widget.period,
+          period: periodParam,
           priority: widget.priority,
           overdue: widget.overdue,
           overdueAge: widget.overdueAge,
           status: widget.status,
           search: widget.searchQuery,
+          activeOnly: widget.activeOnly,
+          assigneeId: widget.assigneeId,
           limit: 50,
           offset: 0,
         ),
@@ -141,14 +156,17 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
     });
 
     try {
+      final periodParam = widget.dueToday == true ? 'day' : widget.period;
       final res = await _repository.getTasks(
         scope: widget.scope,
-        period: widget.period,
+        period: periodParam,
         priority: widget.priority,
         overdue: widget.overdue,
         overdueAge: widget.overdueAge,
         status: widget.status,
         search: widget.searchQuery,
+        activeOnly: widget.activeOnly,
+        assigneeId: widget.assigneeId,
         limit: 50,
         offset: _items.length,
       );
@@ -187,7 +205,12 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
 
     final dialogTitle = widget.customTitle ?? s.tasksDueTodayTitle;
     final totalToShow = _totalCount > 0 ? _totalCount : (_items.isNotEmpty ? _items.length : 0);
-    final colorBadge = widget.badgeColor ?? (widget.overdue == true || (widget.priority?.contains('emergency') == true) ? Colors.red : Colors.green);
+    final colorBadge = widget.badgeColor ??
+        (widget.overdue == true ||
+                widget.overdueAge != null ||
+                (widget.priority?.contains('emergency') == true)
+            ? Colors.red
+            : Colors.green);
 
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
@@ -422,6 +445,7 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
                             taskId: item.id,
                             initialTask: item,
                             isReadOnly: true,
+                            showOnlyCloneAndCancel: true,
                           );
                         },
                         borderRadius: BorderRadius.circular(12),
@@ -496,7 +520,11 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
                                         ),
                                         const SizedBox(width: 2),
                                         Text(
-                                          isCompleted ? 'Completed' : 'To be Started',
+                                          isCompleted
+                                              ? 'Completed'
+                                              : (item.status.isNotEmpty
+                                                  ? item.status.replaceAll('_', ' ').split(' ').map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '').join(' ')
+                                                  : 'To be Started'),
                                           style: TextStyle(
                                             fontSize: 7,
                                             fontWeight: FontWeight.bold,

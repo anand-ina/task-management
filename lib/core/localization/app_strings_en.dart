@@ -323,6 +323,8 @@ class AppStringsEn extends AppStrings {
   @override
   String get newEvent => 'New Event';
   @override
+  String get raiseRequest => 'Raise Request';
+  @override
   String get allBranches => 'All Branches';
   @override
   String get directorRole => 'Director';
@@ -2374,5 +2376,21 @@ class AppStringsEn extends AppStrings {
   String get forbiddenErrorTitle => 'Action Not Allowed';
   @override
   String get noSubtasksYet => 'No sub-tasks added yet.';
+  @override
+  String get approveAndClose => 'Approve & close';
+  @override
+  String get sendBack => 'Send back';
+  @override
+  String get btnAccept => 'Accept';
+  @override
+  String get btnDecline => 'Decline';
+  @override
+  String get btnTentative => 'Tentative';
+  @override
+  String get completionSignOff => 'Completion sign-off';
+  @override
+  String get completionSignOffSubtitle => 'someone reported these meetings took place';
+  @override
+  String get btnReject => 'Reject';
 }
 

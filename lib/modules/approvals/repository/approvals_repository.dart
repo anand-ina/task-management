@@ -254,4 +254,86 @@ class ApprovalsRepository {
       return false;
     }
   }
+
+  Future<bool> decideEscalation(int id, String decision) async {
+    final url = '${ApiConstants.baseUrl}/escalations/$id/decide';
+    final payload = {'decision': decision};
+    _logServiceCall(
+      serviceMethod: 'decideEscalation',
+      url: url,
+      payload: payload,
+    );
+    try {
+      final response = await _dioClient.dio.post(url, data: payload);
+      _logServiceCall(
+        serviceMethod: 'decideEscalation',
+        url: url,
+        response: response.data,
+      );
+      return true;
+    } catch (e) {
+      debugPrint('[ApprovalsRepository] decideEscalation error: $e');
+      return false;
+    }
+  }
+
+  Future<bool> decideMeetingCompletion(int id, String decision) async {
+    final url = '${ApiConstants.baseUrl}/meetings/$id/complete/decide';
+    final payload = {'decision': decision};
+    _logServiceCall(
+      serviceMethod: 'decideMeetingCompletion',
+      url: url,
+      payload: payload,
+    );
+    try {
+      final response = await _dioClient.dio.post(url, data: payload);
+      _logServiceCall(
+        serviceMethod: 'decideMeetingCompletion',
+        url: url,
+        response: response.data,
+      );
+      return true;
+    } catch (e) {
+      debugPrint('[ApprovalsRepository] decideMeetingCompletion error: $e, trying fallback');
+      try {
+        final fallbackUrl = '${ApiConstants.baseUrl}/meetings/completion-requests/$id/decide';
+        final response = await _dioClient.dio.post(fallbackUrl, data: payload);
+        _logServiceCall(
+          serviceMethod: 'decideMeetingCompletionFallback',
+          url: fallbackUrl,
+          response: response.data,
+        );
+        return true;
+      } catch (_) {
+        try {
+          final fallbackUrl2 = '${ApiConstants.baseUrl}/meetings/$id/complete';
+          final response = await _dioClient.dio.post(fallbackUrl2, data: payload);
+          return true;
+        } catch (_) {}
+      }
+      return false;
+    }
+  }
+
+  Future<bool> rsvpMeeting(int id, String responseValue) async {
+    final url = '${ApiConstants.baseUrl}/meetings/$id/rsvp';
+    final payload = {'response': responseValue};
+    _logServiceCall(
+      serviceMethod: 'rsvpMeeting',
+      url: url,
+      payload: payload,
+    );
+    try {
+      final response = await _dioClient.dio.post(url, data: payload);
+      _logServiceCall(
+        serviceMethod: 'rsvpMeeting',
+        url: url,
+        response: response.data,
+      );
+      return true;
+    } catch (e) {
+      debugPrint('[ApprovalsRepository] rsvpMeeting error: $e');
+      return false;
+    }
+  }
 }

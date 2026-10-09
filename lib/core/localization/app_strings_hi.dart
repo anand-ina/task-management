@@ -323,6 +323,8 @@ class AppStringsHi extends AppStrings {
   @override
   String get newEvent => 'नया कार्यक्रम';
   @override
+  String get raiseRequest => 'अनुरोध दर्ज करें';
+  @override
   String get allBranches => 'सभी शाखाएं';
   @override
   String get directorRole => 'निदेशक';
@@ -2374,5 +2376,21 @@ class AppStringsHi extends AppStrings {
   String get forbiddenErrorTitle => 'कार्रवाई की अनुमति नहीं है';
   @override
   String get noSubtasksYet => 'अभी तक कोई उप-कार्य नहीं जोड़ा गया।';
+  @override
+  String get approveAndClose => 'स्वीकृत करें और बंद करें';
+  @override
+  String get sendBack => 'वापस भेजें';
+  @override
+  String get btnAccept => 'स्वीकार करें';
+  @override
+  String get btnDecline => 'अस्वीकार करें';
+  @override
+  String get btnTentative => 'अनंतिम';
+  @override
+  String get completionSignOff => 'पूर्णता हस्ताक्षर';
+  @override
+  String get completionSignOffSubtitle => 'किसी ने बताया कि ये बैठकें हुईं';
+  @override
+  String get btnReject => 'अस्वीकार करें';
 }
 

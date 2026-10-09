@@ -41,6 +41,7 @@ class MeetingApprovalModel {
   final bool? isOneOnOne;
   final String? kind;
   final bool? isOrganizer;
+  final bool? isPast;
   final String? completionStatus;
   final String? completionNote;
   final String? completionDecisionNote;
@@ -65,6 +66,7 @@ class MeetingApprovalModel {
     this.isOneOnOne,
     this.kind,
     this.isOrganizer,
+    this.isPast,
     this.completionStatus,
     this.completionNote,
     this.completionDecisionNote,
@@ -111,6 +113,7 @@ class MeetingApprovalModel {
       isOneOnOne: parseBool(json['is_one_on_one']),
       kind: parseString(json['kind']),
       isOrganizer: parseBool(json['is_organizer']),
+      isPast: parseBool(json['is_past']),
       completionStatus: parseString(json['completion_status']),
       completionNote: parseString(json['completion_note']),
       completionDecisionNote: parseString(json['completion_decision_note']),
@@ -142,6 +145,7 @@ class MeetingApprovalModel {
       'is_one_on_one': isOneOnOne,
       'kind': kind,
       'is_organizer': isOrganizer,
+      'is_past': isPast,
       'completion_status': completionStatus,
       'completion_note': completionNote,
       'completion_decision_note': completionDecisionNote,
