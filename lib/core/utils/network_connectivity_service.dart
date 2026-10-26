@@ -56,7 +56,7 @@ class NetworkConnectivityService {
 
       try {
         final socket = await Socket.connect(
-          'dev-task-api.srivyn.in',
+          'div-task-api.srivyn.in',
           443,
           timeout: const Duration(milliseconds: 1000),
         );

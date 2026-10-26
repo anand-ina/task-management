@@ -66,8 +66,35 @@ class DashboardStats {
   }
 }
 
+class DashboardOrgApprovalBranch {
+  final int branchId;
+  final String branchName;
+  final String branchCode;
+  final int count;
+
+  DashboardOrgApprovalBranch({
+    required this.branchId,
+    required this.branchName,
+    required this.branchCode,
+    required this.count,
+  });
+
+  factory DashboardOrgApprovalBranch.fromJson(Map<String, dynamic> json) {
+    return DashboardOrgApprovalBranch(
+      branchId: json['branch_id'] as int? ?? 0,
+      branchName: json['branch_name'] as String? ?? '',
+      branchCode: json['branch_code'] as String? ?? '',
+      count: json['count'] as int? ?? 0,
+    );
+  }
+}
+
 class DashboardActionCenter {
   final int approvals;
+  final int approvalsForYou;
+  final int orgApprovals;
+  final List<DashboardOrgApprovalBranch> orgApprovalsByBranch;
+  final bool isDirector;
   final int reviews;
   final int overdue;
   final int dueToday;
@@ -75,6 +102,10 @@ class DashboardActionCenter {
 
   DashboardActionCenter({
     required this.approvals,
+    this.approvalsForYou = 0,
+    this.orgApprovals = 0,
+    this.orgApprovalsByBranch = const [],
+    this.isDirector = false,
     required this.reviews,
     required this.overdue,
     required this.dueToday,
@@ -82,12 +113,47 @@ class DashboardActionCenter {
   });
 
   factory DashboardActionCenter.fromJson(Map<String, dynamic> json) {
+    final branches = (json['orgApprovalsByBranch'] as List<dynamic>?)
+            ?.map((e) => DashboardOrgApprovalBranch.fromJson(e as Map<String, dynamic>))
+            .toList() ??
+        [];
+
     return DashboardActionCenter(
       approvals: json['approvals'] as int? ?? 0,
+      approvalsForYou: json['approvalsForYou'] as int? ?? 0,
+      orgApprovals: json['orgApprovals'] as int? ?? 0,
+      orgApprovalsByBranch: branches,
+      isDirector: json['isDirector'] as bool? ?? false,
       reviews: json['reviews'] as int? ?? 0,
       overdue: json['overdue'] as int? ?? 0,
       dueToday: json['due_today'] as int? ?? 0,
       emergencyHigh: json['emergency_high'] as int? ?? 0,
+    );
+  }
+}
+
+class DashboardMyPriority {
+  final int emergency;
+  final int topMost;
+  final int high;
+  final int medium;
+  final int low;
+
+  DashboardMyPriority({
+    required this.emergency,
+    required this.topMost,
+    required this.high,
+    required this.medium,
+    required this.low,
+  });
+
+  factory DashboardMyPriority.fromJson(Map<String, dynamic> json) {
+    return DashboardMyPriority(
+      emergency: json['emergency'] as int? ?? 0,
+      topMost: json['top_most'] as int? ?? 0,
+      high: json['high'] as int? ?? 0,
+      medium: json['medium'] as int? ?? 0,
+      low: json['low'] as int? ?? 0,
     );
   }
 }
@@ -239,6 +305,7 @@ class DashboardTimelineItem {
 
 class DashboardData {
   final DashboardStats stats;
+  final DashboardMyPriority myPriority;
   final DashboardPerformance performance;
   final DashboardActionCenter actionCenter;
   final DashboardByDeadline byDeadline;
@@ -248,6 +315,7 @@ class DashboardData {
 
   DashboardData({
     required this.stats,
+    required this.myPriority,
     required this.performance,
     required this.actionCenter,
     required this.byDeadline,
@@ -267,8 +335,13 @@ class DashboardData {
             .toList() ??
         [];
 
+    final myPriorityMap = root['myPriority'] is Map<String, dynamic>
+        ? root['myPriority'] as Map<String, dynamic>
+        : (root['stats'] is Map<String, dynamic> ? root['stats'] as Map<String, dynamic> : root);
+
     return DashboardData(
       stats: DashboardStats.fromJson(root['stats'] is Map<String, dynamic> ? root['stats'] : root),
+      myPriority: DashboardMyPriority.fromJson(myPriorityMap),
       performance: DashboardPerformance.fromJson(root['performance'] is Map<String, dynamic> ? root['performance'] : {}),
       actionCenter: DashboardActionCenter.fromJson(root['actionCenter'] is Map<String, dynamic> ? root['actionCenter'] : {}),
       byDeadline: DashboardByDeadline.fromJson(root['byDeadline'] is Map<String, dynamic> ? root['byDeadline'] : {}),

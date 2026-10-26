@@ -6,6 +6,7 @@ import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../../shared_widgets/animations/app_animations.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/bloc/auth_state.dart';
 import '../bloc/reports_bloc.dart';
@@ -97,7 +98,7 @@ class _ReportsDashboardScreenState extends State<ReportsDashboardScreen> {
                       if (state is ReportsLoadingState)
                         const Padding(
                           padding: EdgeInsets.all(60),
-                          child: Center(child: CircularProgressIndicator()),
+                          child: Center(child: AnimatedCircleProgressIndicator(size: 44)),
                         )
                       else if (state is ReportsErrorState)
                         Center(

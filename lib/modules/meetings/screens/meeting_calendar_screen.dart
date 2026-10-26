@@ -7,6 +7,7 @@ import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../dashboard/screens/dashboard_screen.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../../shared_widgets/animations/app_animations.dart';
 import '../bloc/meetings_bloc.dart';
 import '../bloc/meetings_event.dart';
 import '../bloc/meetings_state.dart';
@@ -195,7 +196,7 @@ class _MeetingCalendarScreenState extends State<MeetingCalendarScreen> {
                             if (state is MeetingsLoadingState)
                               const Padding(
                                 padding: EdgeInsets.all(60),
-                                child: Center(child: CircularProgressIndicator()),
+                                child: Center(child: AnimatedCircleProgressIndicator(size: 44)),
                               )
                             else if (state is MeetingsErrorState)
                               Center(

@@ -346,6 +346,42 @@ class AppStringsKn extends AppStrings {
   @override
   String toReviewBadge(int count) => '$count ಪರಿಶೀಲನೆಗೆ';
   @override
+  String approvalsFromOrganisationBadge(int count) => '$count ಸಂಸ್ಥೆಯ ಅನುಮೋದನೆಗಳು';
+  @override
+  String get approvalsFromOrganisationTitle => 'ಸಂಸ್ಥೆಯ ಅನುಮೋದನೆಗಳು';
+  @override
+  String get approvalsFromOrganisationSubtitle => 'ಎಲ್ಲಾ ಕ್ಯಾಂಪಸ್‌ಗಳು ಮತ್ತು ಶಾಖೆಗಳಲ್ಲಿ ಬಾಕಿ ಉಳಿದಿರುವ ಕಾರ್ಯ ಮುಕ್ತಾಯ ವಿನಂತಿಗಳು';
+  @override
+  String get filterByBranch => 'ಶಾಖೆಯ ಪ್ರಕಾರ ಫಿಲ್ಟರ್ ಮಾಡಿ';
+  @override
+  String allBranchesCount(int count) => 'ಎಲ್ಲಾ ಶಾಖೆಗಳು $count';
+  @override
+  String get searchByTaskIdTitleRequester => 'ಕಾರ್ಯ ಐಡಿ, ಶೀರ್ಷಿಕೆ, ವಿನಂತಿದಾರ ಅಥವಾ ನಿಯೋಜಿತ ಅನುಮೋದಕರ ಮೂಲಕ ಹುಡುಕಿ...';
+  @override
+  String showingRequestsCount(int filtered, int total) => '$total ರಲ್ಲಿ $filtered ವಿನಂತಿಗಳನ್ನು ತೋರಿಸಲಾಗುತ್ತಿದೆ';
+  @override
+  String get clickAnyTaskRowToView => 'ವಿವರಗಳು, ಟೈಮ್‌ಲೈನ್ ಮತ್ತು ನಿಯೋಜಿತರನ್ನು ವೀಕ್ಷಿಸಲು ಯಾವುದೇ ಸಾಲಿನ ಮೇಲೆ ಕ್ಲಿಕ್ ಮಾಡಿ.';
+  @override
+  String get noApprovalsFound => 'ಯಾವುದೇ ಸಂಸ್ಥೆಯ ಅನುಮೋದನೆಗಳು ಕಂಡುಬಂದಿಲ್ಲ';
+  @override
+  String get designatedApproverHeader => 'ನಿಯೋಜಿತ ಅನುಮೋದಕ';
+  @override
+  String get requestedOnHeader => 'ವಿನಂತಿಸಿದ ದಿನಾಂಕ';
+  @override
+  String get requestedByHeader => 'ವಿನಂತಿಸಿದವರು';
+  @override
+  String get taskIdHeader => 'ಕಾರ್ಯ ಐಡಿ';
+  @override
+  String get taskTitleHeader => 'ಕಾರ್ಯ ಶೀರ್ಷಿಕೆ';
+  @override
+  String get branchHeader => 'ಶಾಖೆ';
+  @override
+  String get actionHeader => 'ಕ್ರಿಯೆ';
+  @override
+  String get viewAction => 'ವೀಕ್ಷಿಸಿ →';
+  @override
+  String get myPriorityTitle => 'ನನ್ನ ಆದ್ಯತೆ';
+  @override
   String toStartBadge(int count) => '$count ಪ್ರಾರಂಭಿಸಲು';
   @override
   String inProgressBadge(int count) => '$count ಪ್ರಗತಿಯಲ್ಲಿದೆ';
@@ -559,12 +595,10 @@ class AppStringsKn extends AppStrings {
   String get entryDateLabel => 'ನಮೂದು ದಿನಾಂಕ';
   @override
   String get branchLegendLabel => 'ಶಾಖೆಯ ವಿವರಣೆ';
-  @override
-  String get taskIdHeader => 'ಕಾರ್ಯ ಐಡಿ';
+
   @override
   String get descriptionHeader => 'ವಿವರಣೆ';
-  @override
-  String get branchHeader => 'ಶಾಖೆ';
+
   @override
   String get priorityHeader => 'ಆದ್ಯತೆ';
   @override
@@ -2392,5 +2426,148 @@ class AppStringsKn extends AppStrings {
   String get completionSignOffSubtitle => 'ಈ ಸಭೆಗಳು ನಡೆದಿವೆ ಎಂದು ಯಾರೋ ವರದಿ ಮಾಡಿದ್ದಾರೆ';
   @override
   String get btnReject => 'ತಿರಸ್ಕರಿಸಿ';
+
+  @override
+  String get tasksAssignedToMeByPriorityTitle => 'ಆದ್ಯತೆಯ ಪ್ರಕಾರ ನನಗೆ ನಿಯೋಜಿಸಲಾದ ಕಾರ್ಯಗಳು';
+  @override
+  String get openTasksAssignedToYouSubtitle => 'ನಿಮಗೆ ನಿಯೋಜಿಸಲಾದ ತೆರೆದ ಕಾರ್ಯಗಳು';
+
+  @override
+  String get exportReport => 'ವರದಿ ರಫ್ತು ಮಾಡಿ';
+
+  @override
+  String get createNewTaskTitle => '+ ಹೊಸ ಕಾರ್ಯವನ್ನು ರಚಿಸಿ';
+
+  @override
+  String get taskTitlePlaceholder => 'ಉದಾ., ಪ್ರವೇಶ ಡೇಟಾ ಶೀಟ್ ಸಿದ್ಧಪಡಿಸಿ';
+  @override
+  String get taskDescriptionPlaceholder => 'ಕಾರ್ಯವನ್ನು ವಿವರವಾಗಿ ವಿವರಿಸಿ...';
+  @override
+  String get anyAdditionalRemarksPlaceholder => 'ಯಾವುದೇ ಹೆಚ್ಚುವರಿ ಟಿಪ್ಪಣಿಗಳು (ಐಚ್ಛಿಕ)...';
+
+  @override
+  String get savedDraftsTitle => 'ಉಳಿಸಲಾದ ಡ್ರಾಫ್ಟ್‌ಗಳು';
+  @override
+  String get loadDraftOption => 'ಡ್ರಾಫ್ಟ್ ಲೋಡ್ ಮಾಡಿ';
+  @override
+  String get noDraftsAvailable => 'ಉಳಿಸಲಾದ ಯಾವುದೇ ಡ್ರಾಫ್ಟ್‌ಗಳು ಲಭ್ಯವಿಲ್ಲ';
+
+  // Draft Tasks Module
+  @override
+  String get draftsNavLabel => 'ಡ್ರಾಫ್ಟ್‌ಗಳು';
+  @override
+  String get draftTasksTitle => 'ಡ್ರಾಫ್ಟ್ ಕಾರ್ಯಗಳು';
+  @override
+  String draftsCountBadge(int count) => count == 1 ? '1 ಡ್ರಾಫ್ಟ್' : '$count ಡ್ರಾಫ್ಟ್‌ಗಳು';
+  @override
+  String get draftsSubtitle => 'ರಚಿಸುವ ಮೊದಲು ಉಳಿಸಲಾದ ಪ್ರಗತಿಯಲ್ಲಿರುವ ಕಾರ್ಯಗಳು. ನೀವು ಕಾರ್ಯವನ್ನು ಅಂತಿಮಗೊಳಿಸಿ ಉಳಿಸುವವರೆಗೆ ಯಾವುದೇ ಟಾಸ್ಕ್ ಐಡಿ ಬಳಕೆಯಾಗುವುದಿಲ್ಲ.';
+  @override
+  String get autoDraftProtectionTitle => 'ಸ್ವಯಂ-ಡ್ರಾಫ್ಟ್ ರಕ್ಷಣೆ:';
+  @override
+  String get autoDraftProtectionSubtitle => 'ನೀವು ಕಾರ್ಯವನ್ನು ರಚಿಸಲು ಪ್ರಾರಂಭಿಸಿದಾಗ ಮತ್ತು ವಿಂಡೋವನ್ನು ಮುಚ್ಚಿದಾಗಲೆಲ್ಲಾ, ಟಾಸ್ಕ್ ಐಡಿ ಅನುಕ್ರಮವನ್ನು ಬಳಸದೆ ನಿಮ್ಮ ಇನ್‌ಪುಟ್‌ಗಳನ್ನು ಇಲ್ಲಿ ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಸಂರಕ್ಷಿಸಲಾಗುತ್ತದೆ.';
+  @override
+  String get searchDraftsPlaceholder => 'ಶೀರ್ಷಿಕೆ, ವಿವರಣೆ ಅಥವಾ ನಿಯೋಜಿತರ ಮೂಲಕ ಡ್ರಾಫ್ಟ್‌ಗಳನ್ನು ಹುಡುಕಿ...';
+  @override
+  String get draftNoTaskIdAssigned => 'ಡ್ರಾಫ್ಟ್ - ಯಾವುದೇ ಟಾಸ್ಕ್ ಐಡಿ ನಿಗದಿಪಡಿಸಲಾಗಿಲ್ಲ';
+  @override
+  String get targetPrefix => 'ಗುರಿ: ';
+  @override
+  String get noAssigneesChosen => 'ಯಾವುದೇ ನಿಯೋಜಿತರನ್ನು ಆಯ್ಕೆ ಮಾಡಿಲ್ಲ';
+  @override
+  String get savedPrefix => 'ಉಳಿಸಲಾಗಿದೆ ';
+  @override
+  String get discardDraftButton => 'ತಿರಸ್ಕರಿಸಿ';
+  @override
+  String get discardDraftConfirmTitle => 'ಡ್ರಾಫ್ಟ್ ತಿರಸ್ಕರಿಸುವುದೇ?';
+  @override
+  String get discardDraftConfirmMessage => 'ನೀವು ಖಚಿತವಾಗಿ ಈ ಡ್ರಾಫ್ಟ್ ಅನ್ನು ತಿರಸ್ಕರಿಸಲು ಬಯಸುವಿರಾ? ಈ ಕ್ರಿಯೆಯನ್ನು ರದ್ದುಗೊಳಿಸಲಾಗುವುದಿಲ್ಲ.';
+  @override
+  String get resumeAndCreateTaskButton => 'ಮುಂದುವರಿಸಿ ಮತ್ತು ಕಾರ್ಯವನ್ನು ರಚಿಸಿ';
+  @override
+  String savedDraftsBannerTitle(int count) => '$count ಉಳಿಸಲಾದ ಡ್ರಾಫ್ಟ್';
+
+  @override
+  String get confirmedWhenYouSaveSubtext => 'ನೀವು ಉಳಿಸಿದಾಗ ದೃಢೀಕರಿಸಲಾಗುತ್ತದೆ — ಶಾಖೆಯ ಅನುಕ್ರಮವನ್ನು ಅನುಸರಿಸುತ್ತದೆ.';
+  @override
+  String get assignedByMeSubtext => 'ನೀವು ಈ ಕಾರ್ಯವನ್ನು ನಿಯೋಜಿಸುತ್ತಿದ್ದೀರಿ. ಬೇರೆಯವರ ಅಧಿಕಾರದ ಅಡಿಯಲ್ಲಿ ನಿಯೋಜಿಸಲು "ಪರವಾಗಿ ನಿಯೋಜಿಸುವುದು" ಬಳಸಿ.';
+
+  @override
+  String get selectUserOptional => 'ಬಳಕೆದಾರರನ್ನು ಆಯ್ಕೆಮಾಡಿ (ಐಚ್ಛಿಕ)...';
+  @override
+  String get sortAscendingLabel => 'ಆರೋಹಣ';
+  @override
+  String get sortDescendingLabel => 'ಅವರೋಹಣ';
+
+  // Hybrid Location & RSVP
+  @override
+  String get hybridLocationLabel => 'ಹೈಬ್ರಿಡ್';
+  @override
+  String get rsvpPrefix => 'RSVP:  ';
+  @override
+  String get rsvpYes => '✓ ಹೌದು';
+  @override
+  String get rsvpNo => '✕ ಇಲ್ಲ';
+  @override
+  String get rsvpMaybe => '? ಬಹುಶಃ';
+  @override
+  String get markAttendedButton => 'ಹಾಜರಾತಿ ಗುರುತಿಸಿ';
+
+  // Minutes of Meeting (MOM)
+  @override
+  String get fileMomButton => 'MOM ಸಲ್ಲಿಸಿ';
+  @override
+  String get editMomButton => 'MOM ಸಂಪಾದಿಸಿ';
+  @override
+  String get viewPrintMomButton => 'MOM ವೀಕ್ಷಿಸಿ / ಮುದ್ರಿಸಿ';
+  @override
+  String get minutesOfMeetingTitle => 'ಸಭೆಯ ನಡಾವಳಿಗಳು (MOM)';
+  @override
+  String get attendeesPresentLabel => 'ಹಾಜರಿದ್ದವರು (ಯಾರು ಹಾಜರಿದ್ದರು)';
+  @override
+  String get agendaMomLabel => 'ಕಾರ್ಯಸೂಚಿ';
+  @override
+  String get discussionPointsLabel => 'ಚರ್ಚೆಯ ಅಂಶಗಳು';
+  @override
+  String get decisionsTakenLabel => 'ತೆಗೆದುಕೊಂಡ ನಿರ್ಧಾರಗಳು';
+  @override
+  String get saveMomButton => 'MOM ಉಳಿಸಿ';
+  @override
+  String get venueLabel => 'ಸ್ಥಳ';
+  @override
+  String get nextMeetingDateLabel => 'ಮುಂದಿನ ಸಭೆಯ ದಿನಾಂಕ';
+  @override
+  String get actionItemsLabel => 'ಕ್ರಮ ಕೈಗೊಳ್ಳಬೇಕಾದ ಅಂಶಗಳು';
+  @override
+  String get addActionItemButton => '+ ಕ್ರಮದ ಅಂಶವನ್ನು ಸೇರಿಸಿ';
+  @override
+  String get actionItemCol => 'ಕ್ರಮ';
+  @override
+  String get ownerCol => 'ಜವಾಬ್ದಾರಿಯುತರು';
+  @override
+  String get dueCol => 'ಅಂತಿಮ ದಿನಾಂಕ';
+  @override
+  String get printSavePdfButton => 'ಮುದ್ರಿಸಿ / PDF ಆಗಿ ಉಳಿಸಿ';
+  @override
+  String get meetingDetailsHeader => 'ಸಭೆಯ ವಿವರಗಳು';
+  @override
+  String get titleLabel => 'ಶೀರ್ಷಿಕೆ';
+  @override
+  String get dateAndTimeLabel => 'ದಿನಾಂಕ ಮತ್ತು ಸಮಯ';
+  @override
+  String get organizerLabel => 'ಆಯೋಜಕರು';
+  @override
+  String get recordedByLabel => 'ದಾಖಲಿಸಿದವರು';
+  @override
+  String get attendanceHeader => 'ಹಾಜರಾತಿ';
+  @override
+  String get presentLabel => 'ಹಾಜರು';
+  @override
+  String get absentLabel => 'ಗೈರುಹಾಜರು';
+  @override
+  String get forOfficeUseOnly => 'ಕಚೇರಿ ಬಳಕೆಗೆ ಮಾತ್ರ';
+  @override
+  String get chairpersonLabel => 'ಅಧ್ಯಕ್ಷರು';
+  @override
+  String get momSavedSuccess => 'ಸಭೆಯ ನಡಾವಳಿಗಳು (MOM) ಯಶಸ್ವಿಯಾಗಿ ಉಳಿಸಲಾಗಿದೆ!';
 }
 

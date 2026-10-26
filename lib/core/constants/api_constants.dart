@@ -1,5 +1,7 @@
 class ApiConstants {
   static const String baseUrl = 'https://dev-task-api.srivyn.in/api';
+  // static const String baseUrl = 'https://sit-task-api.srivyn.in/api';
+
 
   // Auth Endpoints
   static const String login = '$baseUrl/auth/login';
@@ -26,6 +28,7 @@ class ApiConstants {
   static const String oneOnOnePending = '$baseUrl/meetings/one-on-one/pending';
   static const String meetings = '$baseUrl/meetings';
   static String meetingRespond(dynamic id) => '$baseUrl/meetings/$id/respond';
+  static String meetingMom(dynamic id) => '$baseUrl/meetings/$id/mom';
   static const String meetingsAvailability = '$baseUrl/meetings/availability';
   static const String googleCalendarAuth = '$baseUrl/auth/google-calendar';
   static const String googleCalendarCallback = '$baseUrl/auth/google-calendar/callback';
@@ -40,6 +43,7 @@ class ApiConstants {
 
   // Approvals & Escalations Endpoints
   static const String approvals = '$baseUrl/approvals';
+  static const String approvalsOrganisation = '$baseUrl/approvals/organisation';
   static const String approvalsInitiated = '$baseUrl/approvals/initiated';
   static const String escalationsToReview = '$baseUrl/escalations/to-review';
   static const String escalations = '$baseUrl/escalations';

@@ -19,6 +19,7 @@ import '../models/recent_activity_model.dart';
 import '../models/login_group_model.dart';
 import '../../reports/screens/status_reports_screen.dart';
 import '../../approvals/screens/task_approvals_screen.dart';
+import '../../../shared_widgets/dialogs/organisation_approvals_dialog.dart';
 import '../../tasks/screens/all_tasks_screen.dart';
 import '../../performance/screens/team_performance_screen.dart';
 import '../../announcements/bloc/announcements_bloc.dart';
@@ -81,9 +82,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     String userName = 'User';
     String roleName = '';
     String branchName = 'HEAD OFFICE';
+    int? currentUserId;
 
     bool isExecutive = false;
+    bool isTeamLead = false;
     if (authState is AuthenticatedState) {
+      currentUserId = authState.userProfile.id;
       final user = authState.userProfile;
       userName = user.name.isNotEmpty ? user.name : (user.email.split('@').first);
       roleName = user.roleLabel.isNotEmpty ? user.roleLabel.toUpperCase() : user.role.toUpperCase();
@@ -106,6 +110,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           role.contains('ae') ||
           roleLabel.contains('ae')) {
         isExecutive = true;
+      }
+      if (role.contains('team_lead') ||
+          role.contains('team lead') ||
+          role.contains('lead') ||
+          roleLabel.contains('team lead') ||
+          roleLabel.contains('team_lead') ||
+          roleLabel.contains('lead')) {
+        isTeamLead = true;
       }
     }
 
@@ -168,6 +180,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
             if (state is DashboardLoadedState) {
               final stats = state.dashboardData.stats;
+              final myPriority = state.dashboardData.myPriority;
               final actionCenter = state.dashboardData.actionCenter;
               final overdueByAge = state.dashboardData.overdueByAge;
               final myLogin = state.dashboardData.myLogin;
@@ -221,6 +234,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           currentDateStr: currentDateStr,
                           stats: stats,
                           actionCenter: actionCenter,
+                          isTeamLead: isTeamLead,
                         ),
                       ),
                       const SizedBox(height: 10),
@@ -234,17 +248,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         const SizedBox(height: 10),
                       ],
 
-                      // Tasks by Priority Section
-                      Text(
-                        s.tasksByPriority,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
-                        ),
+                      // Tasks Assigned to Me by Priority Section
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            s.tasksAssignedToMeByPriorityTitle,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : const Color(0xFF0F172A),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            s.openTasksAssignedToYouSubtitle,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDark ? Colors.white60 : const Color(0xFF94A3B8),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 12),
-                      _buildPriorityGrid(context, s, stats, teamData.recentActivity),
+                      _buildPriorityGrid(context, s, stats, myPriority, currentUserId, teamData.recentActivity),
 
                       // Action Center & Scheduled Meetings Row
                       StaggeredSlideFade(
@@ -336,6 +363,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required String currentDateStr,
     required DashboardStats stats,
     required DashboardActionCenter actionCenter,
+    bool isTeamLead = false,
   }) {
     final nowTimeStr = DateFormat('HH:mm:ss').format(DateTime.now());
 
@@ -422,18 +450,63 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
         const SizedBox(height: 10),
-        Text(
-          'Namaste, $userName 🙏',
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 26,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          s.dashboardSubtitle,
-          style: const TextStyle(color: Colors.white70, fontSize: 13),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Namaste, $userName 🙏',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    s.dashboardSubtitle,
+                    style: const TextStyle(color: Colors.white70, fontSize: 13),
+                  ),
+                ],
+              ),
+            ),
+            if (stats.completionRate >= 0 && !isTeamLead) ...[
+              const SizedBox(width: 12),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AnimatedCircleProgressIndicator(
+                    progress: stats.completionRate,
+                    size: 46,
+                    strokeWidth: 4.0,
+                    gradientColors: const [
+                      Color(0xFF38BDF8),
+                      Color(0xFF34D399),
+                    ],
+                    showPercentage: true,
+                    percentageStyle: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10.5,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    s.completionRateStat,
+                    style: const TextStyle(
+                      fontSize: 9,
+                      color: Colors.white70,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
         ),
         const SizedBox(height: 18),
 
@@ -442,14 +515,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
           spacing: 8,
           runSpacing: 8,
           children: [
-            _buildHeaderBadge(
-              '✅ ${s.approvalsBadge(actionCenter.approvals)}',
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const TaskApprovalsScreen()),
+            if (!isTeamLead)
+              _buildHeaderBadge(
+                '✅ ${s.approvalsBadge(actionCenter.approvals)}',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const TaskApprovalsScreen()),
+                ),
               ),
-            ),
-            _buildHeaderBadge('📋 ${s.toReviewBadge(actionCenter.reviews)}'),
+            if (!isTeamLead)
+              _buildHeaderBadge(
+                '🏢 ${s.approvalsFromOrganisationBadge(actionCenter.orgApprovals)}',
+                onTap: () => OrganisationApprovalsDialog.show(context),
+              ),
             _buildHeaderBadge(
               '☀️ ${s.toStartBadge(stats.toBeStarted)}',
               onTap: () => Navigator.push(
@@ -470,7 +548,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 badgeColor: Colors.red,
               ),
             ),
-            _buildHeaderBadge('🎯 ${s.completionBadge(stats.completionRate)}'),
+            if (!isTeamLead)
+              _buildHeaderBadge('🎯 ${s.completionBadge(stats.completionRate)}'),
           ],
         ),
       ],
@@ -515,7 +594,14 @@ Widget _buildHeaderBadge(String label, {VoidCallback? onTap, bool isPulsing = fa
   return result;
 }
 
-  Widget _buildPriorityGrid(BuildContext context, AppStrings s, DashboardStats stats, List<RecentActivityItem> activities) {
+  Widget _buildPriorityGrid(
+    BuildContext context,
+    AppStrings s,
+    DashboardStats stats,
+    DashboardMyPriority myPriority,
+    int? currentUserId,
+    List<RecentActivityItem> activities,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -534,7 +620,7 @@ Widget _buildHeaderBadge(String label, {VoidCallback? onTap, bool isPulsing = fa
                   delay: Duration.zero,
                   child: _buildCardWithTopBorder(
                     '★★★★★',
-                    '${stats.emergency}',
+                    '${myPriority.emergency}',
                     s.emergencyPriority,
                     borderColor: Colors.red,
                     isSelected: _selectedPriorityFilter == s.emergencyPriority,
@@ -546,6 +632,7 @@ Widget _buildHeaderBadge(String label, {VoidCallback? onTap, bool isPulsing = fa
                         context,
                         scope: 'all',
                         activeOnly: true,
+                        assigneeId: currentUserId,
                         customTitle: '${s.emergencyPriority} tasks',
                         priority: 'emergency',
                         badgeColor: Colors.red,
@@ -557,7 +644,7 @@ Widget _buildHeaderBadge(String label, {VoidCallback? onTap, bool isPulsing = fa
                   delay: const Duration(milliseconds: 40),
                   child: _buildCardWithTopBorder(
                     '★★★★',
-                    '${stats.topMost}',
+                    '${myPriority.topMost}',
                     s.topMostPriority,
                     borderColor: Colors.orange,
                     isSelected: _selectedPriorityFilter == s.topMostPriority,
@@ -569,6 +656,7 @@ Widget _buildHeaderBadge(String label, {VoidCallback? onTap, bool isPulsing = fa
                         context,
                         scope: 'all',
                         activeOnly: true,
+                        assigneeId: currentUserId,
                         customTitle: '${s.topMostPriority} tasks',
                         priority: 'top_most',
                         badgeColor: Colors.orange,
@@ -580,7 +668,7 @@ Widget _buildHeaderBadge(String label, {VoidCallback? onTap, bool isPulsing = fa
                   delay: const Duration(milliseconds: 80),
                   child: _buildCardWithTopBorder(
                     '★★★',
-                    '${stats.high}',
+                    '${myPriority.high}',
                     s.highPriority,
                     borderColor: Colors.amber.shade700,
                     isSelected: _selectedPriorityFilter == s.highPriority,
@@ -592,6 +680,7 @@ Widget _buildHeaderBadge(String label, {VoidCallback? onTap, bool isPulsing = fa
                         context,
                         scope: 'all',
                         activeOnly: true,
+                        assigneeId: currentUserId,
                         customTitle: '${s.highPriority} tasks',
                         priority: 'high',
                         badgeColor: Colors.amber.shade700,
@@ -603,7 +692,7 @@ Widget _buildHeaderBadge(String label, {VoidCallback? onTap, bool isPulsing = fa
                   delay: const Duration(milliseconds: 120),
                   child: _buildCardWithTopBorder(
                     '★★',
-                    '${stats.medium}',
+                    '${myPriority.medium}',
                     s.mediumPriority,
                     borderColor: Colors.blue,
                     isSelected: _selectedPriorityFilter == s.mediumPriority,
@@ -615,6 +704,7 @@ Widget _buildHeaderBadge(String label, {VoidCallback? onTap, bool isPulsing = fa
                         context,
                         scope: 'all',
                         activeOnly: true,
+                        assigneeId: currentUserId,
                         customTitle: '${s.mediumPriority} tasks',
                         priority: 'medium',
                         badgeColor: Colors.blue,
@@ -626,7 +716,7 @@ Widget _buildHeaderBadge(String label, {VoidCallback? onTap, bool isPulsing = fa
                   delay: const Duration(milliseconds: 160),
                   child: _buildCardWithTopBorder(
                     '★',
-                    '${stats.low}',
+                    '${myPriority.low}',
                     s.lowPriority,
                     borderColor: Colors.grey,
                     isSelected: _selectedPriorityFilter == s.lowPriority,
@@ -638,6 +728,7 @@ Widget _buildHeaderBadge(String label, {VoidCallback? onTap, bool isPulsing = fa
                         context,
                         scope: 'all',
                         activeOnly: true,
+                        assigneeId: currentUserId,
                         customTitle: '${s.lowPriority} tasks',
                         priority: 'low',
                         badgeColor: Colors.grey,

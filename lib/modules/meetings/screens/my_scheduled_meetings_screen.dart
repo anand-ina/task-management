@@ -21,8 +21,10 @@ import '../models/google_calendar_status_model.dart';
 import '../models/meeting_model.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/bloc/auth_state.dart';
-import '../../reports/screens/status_reports_screen.dart';
 import 'google_calendar_auth_webview_screen.dart';
+import 'view_print_mom_screen.dart';
+import '../dialogs/minutes_of_meeting_dialog.dart';
+import '../../reports/screens/status_reports_screen.dart';
 import '../../../shared_widgets/animations/app_animations.dart';
 
 class MyScheduledMeetingsScreen extends StatefulWidget {
@@ -37,6 +39,7 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
   int _selectedTabIndex = 0; // 0: All, 1: Initiated by Me, 2: Received by Me
   final DioClient _dioClient = DioClient();
   final Set<dynamic> _attendedMeetingIds = {};
+  final Set<int> _meetingsWithMom = {};
   bool _isAwaitingGoogleAuthReturn = false;
 
   late final MeetingsBloc _meetingsBloc;
@@ -160,6 +163,17 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
       if (mounted) {
         _showErrorToast(context, e);
       }
+    }
+  }
+
+  Future<void> _openMomDialog(MeetingItemModel item) async {
+    final saved = await MinutesOfMeetingDialog.show(context, item);
+    if (saved == true) {
+      setState(() {
+        _meetingsWithMom.add(item.id);
+        if (item.rawId is int) _meetingsWithMom.add(item.rawId as int);
+      });
+      _meetingsBloc.add(FetchMyScheduledMeetingsEvent());
     }
   }
 
@@ -1047,7 +1061,9 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
                       if (state is MeetingsLoadingState)
                         const Padding(
                           padding: EdgeInsets.all(48),
-                          child: Center(child: CircularProgressIndicator()),
+                          child: Center(
+                            child: AnimatedCircleProgressIndicator(size: 44),
+                          ),
                         )
                       else if (state is MeetingsErrorState)
                         Center(
@@ -1686,7 +1702,11 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
 
     final showMeetingHappened = isPastMeeting && !isCancelled && !isCompleted && !isPendingCompletion;
     final isAttended = item.myAttended == true || _attendedMeetingIds.contains(item.id) || (item.rawId != null && _attendedMeetingIds.contains(item.rawId));
-    final showRsvp = !isCancelled && !isCompleted && !item.isOrganizer && isMyResponsePending;
+    final showRsvp = !isCancelled && isMyResponsePending;
+    final hasMom = item.hasMom == true ||
+        item.mom != null ||
+        _meetingsWithMom.contains(item.id) ||
+        (item.rawId != null && _meetingsWithMom.contains(item.rawId));
     final canCancel = !isCancelled && !isCompleted;
 
     Color accentColor;
@@ -2040,9 +2060,10 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
                         Row(
                           children: [
                             Text(
-                              'RSVP:  ',
+                              s.rsvpPrefix,
                               style: TextStyle(
                                 fontSize: 11,
+                                fontWeight: FontWeight.w600,
                                 color: isDark ? Colors.white60 : Colors.grey.shade600,
                               ),
                             ),
@@ -2055,9 +2076,9 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
                                   color: const Color(0xFFDCFCE7),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
-                                child: const Text(
-                                  '✓ Yes',
-                                  style: TextStyle(
+                                child: Text(
+                                  s.rsvpYes,
+                                  style: const TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.bold,
                                     color: Color(0xFF16A34A),
@@ -2075,9 +2096,9 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
                                   color: const Color(0xFFFEE2E2),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
-                                child: const Text(
-                                  '✕ No',
-                                  style: TextStyle(
+                                child: Text(
+                                  s.rsvpNo,
+                                  style: const TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.bold,
                                     color: Color(0xFFDC2626),
@@ -2095,9 +2116,9 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
                                   color: const Color(0xFFFEF3C7),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
-                                child: const Text(
-                                  '? Maybe',
-                                  style: TextStyle(
+                                child: Text(
+                                  s.rsvpMaybe,
+                                  style: const TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.bold,
                                     color: Color(0xFFD97706),
@@ -2187,18 +2208,18 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
                                 ],
                               ),
                             ),
-                          if (isInvitee && !isAttended && !isCancelled && !isCompleted)
+                          if (!isAttended && !isCancelled)
                             ScaleTap(
                               onTap: () => _markAttended(item),
                               scaleDown: 0.94,
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
-                                children: const [
-                                  Icon(Icons.people_alt_outlined, size: 14, color: Color(0xFF2563EB)),
-                                  SizedBox(width: 4),
+                                children: [
+                                  const Text('🎥', style: TextStyle(fontSize: 13)),
+                                  const SizedBox(width: 4),
                                   Text(
-                                    'Mark attended',
-                                    style: TextStyle(
+                                    s.markAttendedButton,
+                                    style: const TextStyle(
                                       fontSize: 11.5,
                                       fontWeight: FontWeight.bold,
                                       color: Color(0xFF2563EB),
@@ -2207,6 +2228,87 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
                                 ],
                               ),
                             ),
+
+                          // Minutes of Meeting (MOM) Buttons
+                          if (hasMom) ...[
+                            // 📝 Edit MOM
+                            ScaleTap(
+                              onTap: () => _openMomDialog(item),
+                              scaleDown: 0.94,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: const Color(0xFF2563EB), width: 1.2),
+                                  color: isDark ? const Color(0xFF1E293B) : const Color(0xFFEFF6FF),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Text('📝', style: TextStyle(fontSize: 12)),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      s.editMomButton,
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF2563EB),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            // 🖨️ View / Print MOM
+                            ScaleTap(
+                              onTap: () => ViewPrintMomScreen.show(context, item),
+                              scaleDown: 0.94,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text('🖨️', style: TextStyle(fontSize: 12)),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    s.viewPrintMomButton,
+                                    style: const TextStyle(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF4338CA),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ] else if (!isCancelled) ...[
+                            // 📝 File MOM
+                            ScaleTap(
+                              onTap: () => _openMomDialog(item),
+                              scaleDown: 0.94,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: const Color(0xFF2563EB), width: 1.2),
+                                  color: isDark ? const Color(0xFF1E293B) : const Color(0xFFEFF6FF),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Text('📝', style: TextStyle(fontSize: 12)),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      s.fileMomButton,
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF2563EB),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                           if (isInvitee && !isCancelled && !isCompleted)
                             ScaleTap(
                               onTap: () => _showRescheduleDialog(item),
@@ -2258,18 +2360,7 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
                                 ),
                               ),
                             ),
-                          ScaleTap(
-                            onTap: () => _showMeetingReminder(context, item),
-                            scaleDown: 0.94,
-                            child: Text(
-                              s.reminderButton,
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.bold,
-                                color: isDark ? Colors.white70 : const Color(0xFF0F172A),
-                              ),
-                            ),
-                          ),
+
                         ],
                       ),
                     ],

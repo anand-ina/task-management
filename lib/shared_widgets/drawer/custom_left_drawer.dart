@@ -45,6 +45,7 @@ import '../../modules/sutra/screens/sutra_ai_screen.dart';
 import '../../modules/tasks/screens/all_tasks_screen.dart';
 import '../../modules/tasks/screens/my_tasks_screen.dart';
 import '../../modules/tasks/screens/recurring_tasks_screen.dart';
+import '../../modules/tasks/screens/draft_tasks_screen.dart';
 import '../../modules/todos/screens/today_screen.dart';
 import '../../modules/todos/screens/todo_history_screen.dart';
 import '../../modules/hourly_log/screens/hourly_log_screen.dart';
@@ -215,6 +216,13 @@ class CustomLeftDrawer extends StatelessWidget {
                         isSelected: currentRoute == '/dashboard',
                         onTap: () => _navigate(context, '/dashboard'),
                       ),
+                      _buildNavItem(
+                        context,
+                        icon: Icons.account_balance_outlined,
+                        title: s.organizationOverview,
+                        isSelected: currentRoute == '/org-overview',
+                        onTap: () => _navigate(context, '/org-overview'),
+                      ),
                       if (!isAcademicExecutive)
                         _buildNavItem(
                           context,
@@ -237,6 +245,13 @@ class CustomLeftDrawer extends StatelessWidget {
                         title: s.myTasks,
                         isSelected: currentRoute == '/my-tasks',
                         onTap: () => _navigate(context, '/my-tasks'),
+                      ),
+                      _buildNavItem(
+                        context,
+                        icon: Icons.edit_note_rounded,
+                        title: s.draftsNavLabel,
+                        isSelected: currentRoute == '/drafts',
+                        onTap: () => _navigate(context, '/drafts'),
                       ),
                     ],
                   ),
@@ -665,6 +680,21 @@ class CustomLeftDrawer extends StatelessWidget {
       }
       navigator.push(
         MaterialPageRoute(builder: (context) => const RecurringTasksScreen()),
+      );
+      return;
+    }
+
+    if (route == '/drafts') {
+      if (currentRoute == '/drafts') {
+        if (isDrawerOpen) navigator.pop();
+        return;
+      }
+      if (isDrawerOpen) navigator.pop();
+      if (navigator.canPop()) {
+        navigator.popUntil((r) => r.isFirst);
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (context) => const DraftTasksScreen()),
       );
       return;
     }

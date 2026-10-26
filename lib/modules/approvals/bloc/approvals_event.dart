@@ -9,6 +9,8 @@ abstract class ApprovalsEvent extends Equatable {
 
 class FetchTaskApprovalsDataEvent extends ApprovalsEvent {}
 
+class FetchOrganisationApprovalsEvent extends ApprovalsEvent {}
+
 class FetchEscalationsDataEvent extends ApprovalsEvent {}
 
 class FetchMeetingApprovalsDataEvent extends ApprovalsEvent {}

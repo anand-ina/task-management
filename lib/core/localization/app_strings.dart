@@ -289,6 +289,42 @@ abstract class AppStrings {
 
   String toReviewBadge(int count);
 
+  String approvalsFromOrganisationBadge(int count);
+
+  String get approvalsFromOrganisationTitle;
+
+  String get approvalsFromOrganisationSubtitle;
+
+  String get filterByBranch;
+
+  String allBranchesCount(int count);
+
+  String get searchByTaskIdTitleRequester;
+
+  String showingRequestsCount(int filtered, int total);
+
+  String get clickAnyTaskRowToView;
+
+  String get noApprovalsFound;
+
+  String get designatedApproverHeader;
+
+  String get requestedOnHeader;
+
+  String get requestedByHeader;
+
+  String get taskIdHeader;
+
+  String get taskTitleHeader;
+
+  String get branchHeader;
+
+  String get actionHeader;
+
+  String get viewAction;
+
+  String get myPriorityTitle;
+
   String toStartBadge(int count);
 
   String inProgressBadge(int count);
@@ -501,11 +537,10 @@ abstract class AppStrings {
 
   String get branchLegendLabel;
 
-  String get taskIdHeader;
+
 
   String get descriptionHeader;
 
-  String get branchHeader;
 
   String get priorityHeader;
 
@@ -1752,4 +1787,85 @@ abstract class AppStrings {
   String get completionSignOff;
   String get completionSignOffSubtitle;
   String get btnReject;
+
+  // Tasks Assigned to Me by Priority
+  String get tasksAssignedToMeByPriorityTitle;
+  String get openTasksAssignedToYouSubtitle;
+
+  // Export report
+  String get exportReport;
+
+  // Create Task Hints & Placeholders
+  String get createNewTaskTitle;
+  String get taskTitlePlaceholder;
+  String get taskDescriptionPlaceholder;
+  String get anyAdditionalRemarksPlaceholder;
+
+  // Drafts
+  String get savedDraftsTitle;
+  String get loadDraftOption;
+  String get noDraftsAvailable;
+
+  // Draft Tasks Module
+  String get draftsNavLabel;
+  String get draftTasksTitle;
+  String draftsCountBadge(int count);
+  String get draftsSubtitle;
+  String get autoDraftProtectionTitle;
+  String get autoDraftProtectionSubtitle;
+  String get searchDraftsPlaceholder;
+  String get draftNoTaskIdAssigned;
+  String get targetPrefix;
+  String get noAssigneesChosen;
+  String get savedPrefix;
+  String get discardDraftButton;
+  String get discardDraftConfirmTitle;
+  String get discardDraftConfirmMessage;
+  String get resumeAndCreateTaskButton;
+  String savedDraftsBannerTitle(int count);
+
+  String get confirmedWhenYouSaveSubtext;
+
+  String get selectUserOptional;
+  String get sortAscendingLabel;
+  String get sortDescendingLabel;
+
+  // Hybrid Location & RSVP
+  String get hybridLocationLabel;
+  String get rsvpPrefix;
+  String get rsvpYes;
+  String get rsvpNo;
+  String get rsvpMaybe;
+  String get markAttendedButton;
+
+  // Minutes of Meeting (MOM)
+  String get fileMomButton;
+  String get editMomButton;
+  String get viewPrintMomButton;
+  String get minutesOfMeetingTitle;
+  String get attendeesPresentLabel;
+  String get agendaMomLabel;
+  String get discussionPointsLabel;
+  String get decisionsTakenLabel;
+  String get saveMomButton;
+  String get venueLabel;
+  String get nextMeetingDateLabel;
+  String get actionItemsLabel;
+  String get addActionItemButton;
+  String get actionItemCol;
+  String get ownerCol;
+  String get dueCol;
+  String get printSavePdfButton;
+  String get meetingDetailsHeader;
+  String get titleLabel;
+  String get dateAndTimeLabel;
+  String get organizerLabel;
+  String get recordedByLabel;
+  String get attendanceHeader;
+  String get presentLabel;
+  String get absentLabel;
+  String get forOfficeUseOnly;
+  String get chairpersonLabel;
+  String get momSavedSuccess;
 }
+

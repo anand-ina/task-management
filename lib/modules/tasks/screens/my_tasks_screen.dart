@@ -280,7 +280,7 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
             builder: (context, state) {
               if (state is AllTasksLoadingState) {
                 return const Center(
-                  child: CircularProgressIndicator(),
+                  child: AnimatedCircleProgressIndicator(size: 44),
                 );
               }
 
@@ -426,12 +426,9 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
                             const Padding(
                               padding: EdgeInsets.symmetric(vertical: 20),
                               child: Center(
-                                child: SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
+                                child: AnimatedCircleProgressIndicator(
+                                  size: 24,
+                                  strokeWidth: 2.5,
                                 ),
                               ),
                             ),
@@ -1555,14 +1552,23 @@ class _MyTasksScreenState extends State<MyTasksScreen> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Container(
-                              width: 5,
-                              height: 5,
-                              decoration: BoxDecoration(
+                            if (item.progress > 0)
+                              AnimatedCircleProgressIndicator(
+                                progress: item.progress,
+                                size: 12,
+                                strokeWidth: 2.0,
                                 color: statusColor,
-                                shape: BoxShape.circle,
+                                showGlow: false,
+                              )
+                            else
+                              Container(
+                                width: 5,
+                                height: 5,
+                                decoration: BoxDecoration(
+                                  color: statusColor,
+                                  shape: BoxShape.circle,
+                                ),
                               ),
-                            ),
                             const SizedBox(width: 4),
                             Text(
                               item.progress > 0

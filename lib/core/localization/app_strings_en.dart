@@ -346,6 +346,42 @@ class AppStringsEn extends AppStrings {
   @override
   String toReviewBadge(int count) => '$count to review';
   @override
+  String approvalsFromOrganisationBadge(int count) => '$count approvals from organisation';
+  @override
+  String get approvalsFromOrganisationTitle => 'Approvals from Organisation';
+  @override
+  String get approvalsFromOrganisationSubtitle => 'Pending task closure requests across all campuses & branches';
+  @override
+  String get filterByBranch => 'FILTER BY BRANCH';
+  @override
+  String allBranchesCount(int count) => 'All Branches $count';
+  @override
+  String get searchByTaskIdTitleRequester => 'Search by task ID, title, requester, or designated approver...';
+  @override
+  String showingRequestsCount(int filtered, int total) => 'Showing $filtered of $total requests';
+  @override
+  String get clickAnyTaskRowToView => 'Click any task row to view details, timeline, and assignees.';
+  @override
+  String get noApprovalsFound => 'No organisation approvals found';
+  @override
+  String get designatedApproverHeader => 'DESIGNATED APPROVER';
+  @override
+  String get requestedOnHeader => 'REQUESTED ON';
+  @override
+  String get requestedByHeader => 'REQUESTED BY';
+  @override
+  String get taskIdHeader => 'TASK ID';
+  @override
+  String get taskTitleHeader => 'TASK TITLE';
+  @override
+  String get branchHeader => 'BRANCH';
+  @override
+  String get actionHeader => 'ACTION';
+  @override
+  String get viewAction => 'View →';
+  @override
+  String get myPriorityTitle => 'My Priority';
+  @override
   String toStartBadge(int count) => '$count to start';
   @override
   String inProgressBadge(int count) => '$count in progress';
@@ -560,12 +596,10 @@ class AppStringsEn extends AppStrings {
   String get entryDateLabel => 'Entry date';
   @override
   String get branchLegendLabel => 'BRANCH LEGEND';
-  @override
-  String get taskIdHeader => 'TASK ID';
+
   @override
   String get descriptionHeader => 'DESCRIPTION';
-  @override
-  String get branchHeader => 'BRANCH';
+
   @override
   String get priorityHeader => 'PRIORITY';
   @override
@@ -2392,5 +2426,147 @@ class AppStringsEn extends AppStrings {
   String get completionSignOffSubtitle => 'someone reported these meetings took place';
   @override
   String get btnReject => 'Reject';
+
+  @override
+  String get tasksAssignedToMeByPriorityTitle => 'Tasks Assigned to Me by Priority';
+  @override
+  String get openTasksAssignedToYouSubtitle => 'open tasks assigned to you';
+
+  @override
+  String get exportReport => 'Export Report';
+
+  @override
+  String get createNewTaskTitle => '+ Create New Task';
+
+  @override
+  String get taskTitlePlaceholder => 'e.g., Prepare admissions data sheet';
+  @override
+  String get taskDescriptionPlaceholder => 'Describe the task in detail...';
+  @override
+  String get anyAdditionalRemarksPlaceholder => 'Any additional remarks (optional)...';
+
+  @override
+  String get savedDraftsTitle => 'Saved Drafts';
+  @override
+  String get loadDraftOption => 'Load Draft';
+  @override
+  String get noDraftsAvailable => 'No saved drafts available';
+
+  // Draft Tasks Module
+  @override
+  String get draftsNavLabel => 'Drafts';
+  @override
+  String get draftTasksTitle => 'Draft Tasks';
+  @override
+  String draftsCountBadge(int count) => count == 1 ? '1 Draft' : '$count Drafts';
+  @override
+  String get draftsSubtitle => 'Work-in-progress tasks saved before creation. No Task ID is consumed until you finalize and save the task.';
+  @override
+  String get autoDraftProtectionTitle => 'Auto-Draft Protection:';
+  @override
+  String get autoDraftProtectionSubtitle => 'Whenever you start creating or assigning a task and close the window, your inputs are automatically preserved here without consuming a Task ID sequence. Once you complete the final step, a meaningful official Task ID is assigned with proper workflow tracking.';
+  @override
+  String get searchDraftsPlaceholder => 'Search drafts by title, description or assignee...';
+  @override
+  String get draftNoTaskIdAssigned => 'Draft - No Task ID Assigned';
+  @override
+  String get targetPrefix => 'Target: ';
+  @override
+  String get noAssigneesChosen => 'No assignees chosen';
+  @override
+  String get savedPrefix => 'Saved ';
+  @override
+  String get discardDraftButton => 'Discard';
+  @override
+  String get discardDraftConfirmTitle => 'Discard Draft?';
+  @override
+  String get discardDraftConfirmMessage => 'Are you sure you want to discard this draft? This action cannot be undone.';
+  @override
+  String get resumeAndCreateTaskButton => 'Resume & Create Task';
+  @override
+  String savedDraftsBannerTitle(int count) => '$count saved draft';
+
+  @override
+  String get confirmedWhenYouSaveSubtext => 'Confirmed when you save — will follow the branch sequence.';
+  @override
+  String get assignedByMeSubtext => 'You\'re assigning this task. To raise it under someone else\'s authority, use "Assigning on Behalf of".';
+  @override
+  String get selectUserOptional => 'Select user (optional)...';
+  @override
+  String get sortAscendingLabel => 'Asc';
+  @override
+  String get sortDescendingLabel => 'Desc';
+
+  // Hybrid Location & RSVP
+  @override
+  String get hybridLocationLabel => 'Hybrid';
+  @override
+  String get rsvpPrefix => 'RSVP:  ';
+  @override
+  String get rsvpYes => '✓ Yes';
+  @override
+  String get rsvpNo => '✕ No';
+  @override
+  String get rsvpMaybe => '? Maybe';
+  @override
+  String get markAttendedButton => 'Mark attended';
+
+  // Minutes of Meeting (MOM)
+  @override
+  String get fileMomButton => 'File MOM';
+  @override
+  String get editMomButton => 'Edit MOM';
+  @override
+  String get viewPrintMomButton => 'View / Print MOM';
+  @override
+  String get minutesOfMeetingTitle => 'Minutes of Meeting';
+  @override
+  String get attendeesPresentLabel => 'Attendees (who was present)';
+  @override
+  String get agendaMomLabel => 'Agenda';
+  @override
+  String get discussionPointsLabel => 'Discussion points';
+  @override
+  String get decisionsTakenLabel => 'Decisions taken';
+  @override
+  String get saveMomButton => 'Save MOM';
+  @override
+  String get venueLabel => 'Venue';
+  @override
+  String get nextMeetingDateLabel => 'Next meeting date';
+  @override
+  String get actionItemsLabel => 'Action Items';
+  @override
+  String get addActionItemButton => '+ Add Action Item';
+  @override
+  String get actionItemCol => 'ACTION';
+  @override
+  String get ownerCol => 'OWNER';
+  @override
+  String get dueCol => 'DUE';
+  @override
+  String get printSavePdfButton => 'Print / Save as PDF';
+  @override
+  String get meetingDetailsHeader => 'MEETING DETAILS';
+  @override
+  String get titleLabel => 'TITLE';
+  @override
+  String get dateAndTimeLabel => 'DATE & TIME';
+  @override
+  String get organizerLabel => 'ORGANIZER';
+  @override
+  String get recordedByLabel => 'RECORDED BY';
+  @override
+  String get attendanceHeader => 'ATTENDANCE';
+  @override
+  String get presentLabel => 'PRESENT';
+  @override
+  String get absentLabel => 'ABSENT';
+  @override
+  String get forOfficeUseOnly => 'FOR OFFICE USE ONLY';
+  @override
+  String get chairpersonLabel => 'Chairperson';
+  @override
+  String get momSavedSuccess => 'Minutes of Meeting saved successfully!';
 }
 

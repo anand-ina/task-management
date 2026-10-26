@@ -714,7 +714,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
           return const Center(
             child: Padding(
               padding: EdgeInsets.all(40),
-              child: CircularProgressIndicator(),
+              child: AnimatedCircleProgressIndicator(size: 44),
             ),
           );
         }

@@ -11,6 +11,7 @@ import '../bloc/performance_bloc.dart';
 import '../bloc/performance_event.dart';
 import '../bloc/performance_state.dart';
 import '../models/team_performance_model.dart';
+import '../services/team_performance_export_service.dart';
 
 class TeamPerformanceScreen extends StatefulWidget {
   const TeamPerformanceScreen({super.key});
@@ -132,11 +133,77 @@ class _TeamPerformanceScreenState extends State<TeamPerformanceScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  s.teamPerformanceTitle,
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                Expanded(
+                  child: Text(
+                    s.teamPerformanceTitle,
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
                 ),
-                const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.white70),
+                PopupMenuButton<String>(
+                  tooltip: s.exportReport,
+                  onSelected: (value) {
+                    if (value == 'pdf') {
+                      TeamPerformanceExportService.exportPdf(context, data, s);
+                    } else if (value == 'excel') {
+                      TeamPerformanceExportService.exportExcel(context, data, s);
+                    } else if (value == 'csv') {
+                      TeamPerformanceExportService.exportCsv(context, data, s);
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'csv',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.text_snippet_outlined, size: 18, color: Colors.blue),
+                          const SizedBox(width: 8),
+                          Text(s.exportCsv),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'excel',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.table_chart_outlined, size: 18, color: Colors.green),
+                          const SizedBox(width: 8),
+                          Text(s.exportExcel),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'pdf',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.picture_as_pdf_outlined, size: 18, color: Colors.red),
+                          const SizedBox(width: 8),
+                          Text(s.exportPdf),
+                        ],
+                      ),
+                    ),
+                  ],
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.white30),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.file_download_outlined, size: 15, color: Colors.white),
+                        const SizedBox(width: 5),
+                        Text(
+                          s.exportReport,
+                          style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                        const SizedBox(width: 2),
+                        const Icon(Icons.arrow_drop_down, size: 16, color: Colors.white),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 4),
@@ -179,6 +246,46 @@ class _TeamPerformanceScreenState extends State<TeamPerformanceScreen> {
           itemCount: tiles.length,
           itemBuilder: (context, index) {
             final t = tiles[index];
+            final isTeamSize = index == 0;
+
+            final cardContent = Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    t['val'] as String,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : (t['color'] as Color),
+                    ),
+                  ),
+                  Text(
+                    t['title'] as String,
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black87),
+                  ),
+                  Text(
+                    t['sub'] as String,
+                    style: TextStyle(fontSize: 9.5, color: isDark ? Colors.white54 : Colors.grey.shade500),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            );
+
+            // Team size section is strictly unclickable as requested
+            if (isTeamSize) {
+              return cardContent;
+            }
+
             return InkWell(
               onTap: () {
                 if (index == 1) {
@@ -211,47 +318,10 @@ class _TeamPerformanceScreenState extends State<TeamPerformanceScreen> {
                     overdue: true,
                     badgeColor: Colors.red,
                   );
-                } else if (index == 0) {
-                  TasksDueTodayDialog.show(
-                    context,
-                    scope: 'all',
-                    customTitle: 'Team · All assigned',
-                  );
                 }
               },
               borderRadius: BorderRadius.circular(12),
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      t['val'] as String,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : (t['color'] as Color),
-                      ),
-                    ),
-                    Text(
-                      t['title'] as String,
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black87),
-                    ),
-                    Text(
-                      t['sub'] as String,
-                      style: TextStyle(fontSize: 9.5, color: isDark ? Colors.white54 : Colors.grey.shade500),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
+              child: cardContent,
             );
           },
         );

@@ -12,9 +12,11 @@ class BranchModel {
   });
 
   factory BranchModel.fromJson(Map<String, dynamic> json) {
-    final idVal = json['id'] as int? ?? 0;
-    final codeVal = json['code'] as String? ?? '';
-    final nameVal = json['name'] as String? ?? '';
+    final idVal = json['id'] is int
+        ? json['id'] as int
+        : (int.tryParse(json['id']?.toString() ?? '0') ?? 0);
+    final codeVal = json['code']?.toString() ?? json['branch_code']?.toString() ?? '';
+    final nameVal = json['name']?.toString() ?? json['branch_name']?.toString() ?? '';
     return BranchModel(
       id: idVal,
       code: codeVal,

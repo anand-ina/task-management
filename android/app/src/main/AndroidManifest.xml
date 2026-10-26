@@ -54,10 +54,10 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
                     android:scheme="https"
-                    android:host="dev-task-api.srivyn.in" />
+                    android:host="div-task-api.srivyn.in" />
                 <data
                     android:scheme="http"
-                    android:host="dev-task-api.srivyn.in" />
+                    android:host="div-task-api.srivyn.in" />
             </intent-filter>
             <meta-data
                 android:name="flutterDeepLinkingEnabled"

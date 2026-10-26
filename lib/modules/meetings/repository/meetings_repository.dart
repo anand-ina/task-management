@@ -5,6 +5,7 @@ import '../../dashboard/models/branch_model.dart';
 import '../models/availability_model.dart';
 import '../models/google_calendar_status_model.dart';
 import '../models/meeting_model.dart';
+import '../models/minutes_of_meeting_model.dart';
 import '../models/one_on_one_pending_model.dart';
 
 class ScheduleLookupsData {
@@ -162,4 +163,49 @@ class MeetingsRepository {
       rethrow;
     }
   }
+
+  Future<MinutesOfMeetingModel?> getMeetingMom(dynamic meetingId) async {
+    final url = ApiConstants.meetingMom(meetingId);
+    try {
+      debugPrint('---------------- [MeetingsService: getMeetingMom] ----------------');
+      debugPrint('Service URL: $url');
+      debugPrint('Service Method: GET');
+      final response = await _dioClient.dio.get(url);
+      debugPrint('Service Status Code: ${response.statusCode}');
+      debugPrint('Service Response: ${response.data}');
+      debugPrint('------------------------------------------------------------------');
+      if (response.data is Map<String, dynamic>) {
+        return MinutesOfMeetingModel.fromJson(response.data as Map<String, dynamic>);
+      }
+    } catch (e) {
+      debugPrint('[MeetingsRepository] getMeetingMom error: $e');
+      rethrow;
+    }
+    return null;
+  }
+
+  Future<Map<String, dynamic>?> saveMeetingMom(
+    dynamic meetingId,
+    Map<String, dynamic> payload,
+  ) async {
+    final url = ApiConstants.meetingMom(meetingId);
+    try {
+      debugPrint('---------------- [MeetingsService: saveMeetingMom] ----------------');
+      debugPrint('Service URL: $url');
+      debugPrint('Service Method: POST');
+      debugPrint('Service Payload: $payload');
+      final response = await _dioClient.dio.post(url, data: payload);
+      debugPrint('Service Status Code: ${response.statusCode}');
+      debugPrint('Service Response: ${response.data}');
+      debugPrint('-------------------------------------------------------------------');
+      if (response.data is Map<String, dynamic>) {
+        return response.data as Map<String, dynamic>;
+      }
+      return {'ok': true};
+    } catch (e) {
+      debugPrint('[MeetingsRepository] saveMeetingMom error: $e');
+      rethrow;
+    }
+  }
 }
+

@@ -386,7 +386,7 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          title.isNotEmpty ? title : taskNo,
+                          (taskNo.isNotEmpty && title.isNotEmpty) ? '$taskNo · $title' : (title.isNotEmpty ? title : taskNo),
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -976,7 +976,7 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                           return ScaleTap(
                             onTap: () {
                               if (fileUrl.isNotEmpty) {
-                                final fullUrl = fileUrl.startsWith('http') ? fileUrl : 'https://dev-task-api.srivyn.in$fileUrl';
+                                final fullUrl = fileUrl.startsWith('http') ? fileUrl : 'https://div-task-api.srivyn.in$fileUrl';
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(content: Text('Opening attachment: $fullUrl')),
                                 );
@@ -1064,7 +1064,7 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                     const SizedBox(height: 8),
 
                     if (_isLoading && timeline.isEmpty)
-                      const Center(child: Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator()))
+                      const Center(child: Padding(padding: EdgeInsets.all(12), child: AnimatedCircleProgressIndicator(size: 28)))
                     else if (timeline.isNotEmpty)
                       Column(
                         children: timeline.map((item) {
@@ -1498,7 +1498,10 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                                         branchName: branchName,
                                         assignees: assignees,
                                       );
-                                  await MoveTaskDialog.show(context, task: taskItem);
+                                  final moved = await MoveTaskDialog.show(context, task: taskItem);
+                                  if (moved == true && mounted) {
+                                    _fetchDetail();
+                                  }
                                 },
                                 icon: const Icon(Icons.trending_up_rounded, size: 14, color: Colors.blue),
                                 label: const Text('📈 Update / Move', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),

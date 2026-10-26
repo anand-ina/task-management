@@ -4,6 +4,7 @@ import '../models/escalation_model.dart';
 import '../models/meeting_approval_model.dart';
 import '../models/budget_approval_model.dart';
 import '../models/indent_model.dart';
+import '../models/organisation_approval_model.dart';
 
 abstract class ApprovalsState extends Equatable {
   const ApprovalsState();
@@ -28,6 +29,7 @@ class ApprovalsLoadedState extends ApprovalsState {
   final List<IndentItemModel> indentsInbox;
   final List<IndentItemModel> indentsAll;
   final IndentItemModel? selectedIndentDetail;
+  final List<OrganisationApprovalModel> organisationApprovals;
 
   const ApprovalsLoadedState({
     this.taskApprovalsReceived = const [],
@@ -41,6 +43,7 @@ class ApprovalsLoadedState extends ApprovalsState {
     this.indentsInbox = const [],
     this.indentsAll = const [],
     this.selectedIndentDetail,
+    this.organisationApprovals = const [],
   });
 
   ApprovalsLoadedState copyWith({
@@ -55,6 +58,7 @@ class ApprovalsLoadedState extends ApprovalsState {
     List<IndentItemModel>? indentsInbox,
     List<IndentItemModel>? indentsAll,
     IndentItemModel? selectedIndentDetail,
+    List<OrganisationApprovalModel>? organisationApprovals,
   }) {
     return ApprovalsLoadedState(
       taskApprovalsReceived: taskApprovalsReceived ?? this.taskApprovalsReceived,
@@ -68,6 +72,7 @@ class ApprovalsLoadedState extends ApprovalsState {
       indentsInbox: indentsInbox ?? this.indentsInbox,
       indentsAll: indentsAll ?? this.indentsAll,
       selectedIndentDetail: selectedIndentDetail ?? this.selectedIndentDetail,
+      organisationApprovals: organisationApprovals ?? this.organisationApprovals,
     );
   }
 
@@ -84,6 +89,7 @@ class ApprovalsLoadedState extends ApprovalsState {
         indentsInbox,
         indentsAll,
         selectedIndentDetail,
+        organisationApprovals,
       ];
 }
 

@@ -492,11 +492,13 @@ class _HourlyLogPromptOverlayState extends State<HourlyLogPromptOverlay> {
                                     onPressed: _isLogging ? null : _submitQuickLog,
                                     child: _isLogging
                                         ? const SizedBox(
-                                            width: 14,
-                                            height: 14,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
+                                            width: 16,
+                                            height: 16,
+                                            child: AnimatedCircleProgressIndicator(
+                                              size: 16,
+                                              strokeWidth: 2.2,
                                               color: AppColors.white,
+                                              showGlow: false,
                                             ),
                                           )
                                         : Text(

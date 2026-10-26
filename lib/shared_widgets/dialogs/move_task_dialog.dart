@@ -68,10 +68,57 @@ class _MoveTaskDialogState extends State<MoveTaskDialog> {
     'low': 'Low',
   };
 
+  bool get _canShowCompletedStatus {
+    final creatorName = widget.task.assignedByName.trim().toLowerCase();
+    final creatorText = widget.task.assignedByText.trim().toLowerCase();
+    final creatorId = widget.task.assignedByUserId;
+
+    String clean(String s) => s.toLowerCase().replaceAll(RegExp(r'[\s_]+'), ' ').trim();
+    final cName = clean(creatorName);
+    final cText = clean(creatorText);
+
+    if (cName.isEmpty && cText.isEmpty && creatorId <= 0) {
+      return false;
+    }
+
+    for (final a in widget.task.assignees) {
+      final aName = clean(a.name);
+      final aId = a.id;
+
+      if (creatorId > 0 && aId > 0 && creatorId == aId) {
+        return true;
+      }
+
+      if (aName.isNotEmpty) {
+        if (cName.isNotEmpty && (aName == cName || aName.contains(cName) || cName.contains(aName))) {
+          return true;
+        }
+        if (cText.isNotEmpty && (aName == cText || aName.contains(cText) || cText.contains(aName))) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  Map<String, String> get _availableStatuses {
+    final map = Map<String, String>.from(_statusDisplayMap);
+    if (!_canShowCompletedStatus) {
+      map.remove('completed');
+    }
+    return map;
+  }
+
   @override
   void initState() {
     super.initState();
-    _selectedStatus = widget.initialStatus ?? (widget.task.status.isNotEmpty ? widget.task.status : 'to_be_started');
+    final initial = widget.initialStatus ?? (widget.task.status.isNotEmpty ? widget.task.status : 'to_be_started');
+    if (initial.toLowerCase() == 'completed' && !_canShowCompletedStatus) {
+      _selectedStatus = 'done';
+    } else {
+      _selectedStatus = initial;
+    }
     _selectedPriority = widget.task.priority.isNotEmpty ? widget.task.priority.toLowerCase() : 'high';
     _progressValue = widget.task.progress.toDouble();
     if (widget.task.blockReason != null && widget.task.blockReason!.isNotEmpty) {
@@ -145,11 +192,15 @@ class _MoveTaskDialogState extends State<MoveTaskDialog> {
     setState(() => _isSaving = true);
 
     try {
+      final statusToSubmit = (_selectedStatus == 'completed' && !_canShowCompletedStatus)
+          ? 'done'
+          : _selectedStatus;
+
       final payload = {
-        'status': _selectedStatus,
+        'status': statusToSubmit,
         'priority': _selectedPriority,
         'progress': _progressValue.round(),
-        'blockReason': _selectedStatus == 'blocked' ? _blockReasonController.text.trim() : '',
+        'blockReason': statusToSubmit == 'blocked' ? _blockReasonController.text.trim() : '',
         'comment': _commentController.text.trim(),
         'mentionIds': [],
         'attachments': _uploadedAttachments,
@@ -259,7 +310,9 @@ class _MoveTaskDialogState extends State<MoveTaskDialog> {
                     const Text('New Status', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey)),
                     const SizedBox(height: 4),
                     DropdownButtonFormField<String>(
-                      initialValue: _selectedStatus,
+                      value: _availableStatuses.containsKey(_selectedStatus)
+                          ? _selectedStatus
+                          : _availableStatuses.keys.first,
                       isDense: true,
                       isExpanded: true,
                       decoration: InputDecoration(
@@ -269,7 +322,7 @@ class _MoveTaskDialogState extends State<MoveTaskDialog> {
                         fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
                       ),
-                      items: _statusDisplayMap.entries.map((e) {
+                      items: _availableStatuses.entries.map((e) {
                         return DropdownMenuItem<String>(
                           value: e.key,
                           child: Text(e.value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),

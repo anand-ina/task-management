@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../core/constants/app_colors.dart';
 import '../../../core/constants/api_constants.dart';
+import '../../../core/localization/app_strings.dart';
 import '../../../core/network/dio_client.dart';
 import '../dropdowns/searchable_filter_dropdown.dart';
 
@@ -34,7 +35,7 @@ class _ScheduleMeetingDialogState extends State<ScheduleMeetingDialog> {
   bool _syncToGoogle = true;
   bool _createGoogleMeet = true;
   String _selectedDuration = '30 min';
-  String _selectedLocation = 'Online · Google Meet';
+  String _selectedLocation = 'In person';
 
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _agendaController = TextEditingController();
@@ -155,7 +156,11 @@ class _ScheduleMeetingDialogState extends State<ScheduleMeetingDialog> {
         'endsAt': endsAtStr,
         'branchId': _selectedBranchId ?? 1,
         'agenda': _agendaController.text.trim(),
-        'location': _createGoogleMeet ? 'Online · Google Meet' : _selectedLocation,
+        'location': _selectedLocation == 'In person'
+            ? 'In person'
+            : (_selectedLocation == 'Hybrid'
+                ? (_createGoogleMeet ? 'Hybrid · Google Meet' : 'Hybrid')
+                : (_createGoogleMeet ? 'Online · Google Meet' : 'Online')),
         'isOneOnOne': _isMandatory1on1,
         'syncToGoogle': _syncToGoogle,
         'createGoogleMeet': _createGoogleMeet,
@@ -188,6 +193,7 @@ class _ScheduleMeetingDialogState extends State<ScheduleMeetingDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final s = AppStrings.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Dialog(
@@ -660,8 +666,8 @@ class _ScheduleMeetingDialogState extends State<ScheduleMeetingDialog> {
                       ),
                       const SizedBox(height: 12),
 
-                      // Location Toggle (In person vs Online)
-                      const Text('Location', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                      // Location Toggle (In person vs Online vs Hybrid)
+                      Text(s.venueLabel, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 6),
                       Row(
                         children: [
@@ -685,6 +691,17 @@ class _ScheduleMeetingDialogState extends State<ScheduleMeetingDialog> {
                               color: _selectedLocation == 'Online' ? Colors.white : (isDark ? Colors.white : Colors.black87),
                             ),
                             onSelected: (val) => setState(() => _selectedLocation = 'Online'),
+                          ),
+                          const SizedBox(width: 8),
+                          ChoiceChip(
+                            visualDensity: VisualDensity.compact,
+                            label: Text(s.hybridLocationLabel, style: const TextStyle(fontSize: 11)),
+                            selected: _selectedLocation == 'Hybrid',
+                            selectedColor: const Color(0xFF0F172A),
+                            labelStyle: TextStyle(
+                              color: _selectedLocation == 'Hybrid' ? Colors.white : (isDark ? Colors.white : Colors.black87),
+                            ),
+                            onSelected: (val) => setState(() => _selectedLocation = 'Hybrid'),
                           ),
                         ],
                       ),

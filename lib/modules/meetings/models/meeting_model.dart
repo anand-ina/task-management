@@ -57,6 +57,8 @@ class MeetingItemModel {
   final String? googleSyncStatus;
   final String? googleSyncError;
   final bool? isPast;
+  final bool? hasMom;
+  final Map<String, dynamic>? mom;
   final List<InviteeItemModel> invitees;
 
   MeetingItemModel({
@@ -72,6 +74,8 @@ class MeetingItemModel {
     this.kind,
     required this.isOrganizer,
     this.isPast,
+    this.hasMom,
+    this.mom,
     this.completionStatus,
     this.completionNote,
     this.completionDecisionNote,
@@ -166,6 +170,10 @@ class MeetingItemModel {
       kind: json['kind']?.toString(),
       isOrganizer: json['is_organizer'] == true || json['is_initiated_by_me'] == true,
       isPast: json['is_past'] is bool ? json['is_past'] as bool : null,
+      hasMom: json['has_mom'] == true ||
+          json['hasMom'] == true ||
+          (json['mom'] != null && json['mom'] is Map && (json['mom'] as Map).isNotEmpty),
+      mom: json['mom'] is Map<String, dynamic> ? json['mom'] as Map<String, dynamic> : null,
       completionStatus: json['completion_status']?.toString(),
       completionNote: json['completion_note']?.toString(),
       completionDecisionNote: json['completion_decision_note']?.toString(),

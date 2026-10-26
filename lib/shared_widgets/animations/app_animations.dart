@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 
@@ -447,3 +448,322 @@ class AnimatedCountText extends StatelessWidget {
   }
 }
 
+/// Attractive, animated circular progress indicator for loaders, charts, and progress metrics.
+/// Replaces the default plain Flutter CircularProgressIndicator with rich gradient arcs,
+/// rounded caps, smooth continuous rotation or animated sweep fill, and optional center text/icon.
+class AnimatedCircleProgressIndicator extends StatefulWidget {
+  final double? value; // 0.0 to 1.0 (if null, behaves as indeterminate spinner)
+  final int? progress; // 0 to 100 (convenience for percentages)
+  final double size;
+  final double? strokeWidth;
+  final Color? color;
+  final List<Color>? gradientColors;
+  final Color? trackColor;
+  final Color? backgroundColor;
+  final Animation<Color?>? valueColor;
+  final bool showPercentage;
+  final TextStyle? percentageStyle;
+  final Widget? centerChild;
+  final bool showGlow;
+
+  const AnimatedCircleProgressIndicator({
+    super.key,
+    this.value,
+    this.progress,
+    this.size = 36.0,
+    this.strokeWidth,
+    this.color,
+    this.gradientColors,
+    this.trackColor,
+    this.backgroundColor,
+    this.valueColor,
+    this.showPercentage = false,
+    this.percentageStyle,
+    this.centerChild,
+    this.showGlow = true,
+  });
+
+  @override
+  State<AnimatedCircleProgressIndicator> createState() =>
+      _AnimatedCircleProgressIndicatorState();
+}
+
+class _AnimatedCircleProgressIndicatorState
+    extends State<AnimatedCircleProgressIndicator>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _rotationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _rotationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1300),
+    );
+    if (_isIndeterminate) {
+      _rotationController.repeat();
+    }
+  }
+
+  bool get _isIndeterminate => widget.value == null && widget.progress == null;
+
+  @override
+  void didUpdateWidget(AnimatedCircleProgressIndicator oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_isIndeterminate && !_rotationController.isAnimating) {
+      _rotationController.repeat();
+    } else if (!_isIndeterminate && _rotationController.isAnimating) {
+      _rotationController.stop();
+    }
+  }
+
+  @override
+  void dispose() {
+    _rotationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryTheme = Theme.of(context).colorScheme.primary;
+
+    final resolvedColor = widget.valueColor?.value ?? widget.color;
+    final colors = widget.gradientColors ??
+        (resolvedColor != null
+            ? [resolvedColor, resolvedColor]
+            : [
+                primaryTheme,
+                const Color(0xFF06B6D4), // Cyan accent glow
+              ]);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        double effectiveSize = widget.size;
+        if (constraints.hasBoundedWidth && constraints.maxWidth < effectiveSize) {
+          effectiveSize = constraints.maxWidth;
+        }
+        if (constraints.hasBoundedHeight && constraints.maxHeight < effectiveSize) {
+          effectiveSize = math.min(effectiveSize, constraints.maxHeight);
+        }
+
+        final effectiveStrokeWidth = widget.strokeWidth ??
+            (effectiveSize < 20
+                ? 2.0
+                : (effectiveSize < 28
+                    ? 2.4
+                    : (effectiveSize < 38
+                        ? 3.2
+                        : (effectiveSize < 48 ? 3.6 : 4.4))));
+
+        if (_isIndeterminate) {
+          return SizedBox(
+            width: effectiveSize,
+            height: effectiveSize,
+            child: AnimatedBuilder(
+              animation: _rotationController,
+              builder: (context, _) {
+                return CustomPaint(
+                  size: Size(effectiveSize, effectiveSize),
+                  painter: _IndeterminateCirclePainter(
+                    animationValue: _rotationController.value,
+                    strokeWidth: effectiveStrokeWidth,
+                    gradientColors: colors,
+                    showGlow: widget.showGlow && effectiveSize >= 24,
+                    trackColor: widget.backgroundColor ?? widget.trackColor,
+                  ),
+                );
+              },
+            ),
+          );
+        }
+
+        // Determinate mode (with percentage or value)
+        final targetRatio = widget.progress != null
+            ? (widget.progress!.clamp(0, 100) / 100.0)
+            : (widget.value ?? 0.0).clamp(0.0, 1.0);
+
+        return TweenAnimationBuilder<double>(
+          tween: Tween<double>(begin: 0.0, end: targetRatio),
+          duration: const Duration(milliseconds: 800),
+          curve: Curves.easeOutCubic,
+          builder: (context, animatedVal, _) {
+            return CustomPaint(
+              size: Size(effectiveSize, effectiveSize),
+              painter: _DeterminateCirclePainter(
+                progress: animatedVal,
+                strokeWidth: effectiveStrokeWidth,
+                gradientColors: colors,
+                trackColor: widget.backgroundColor ??
+                    widget.trackColor ??
+                    (isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+                showGlow: widget.showGlow && effectiveSize >= 24,
+              ),
+              child: SizedBox(
+                width: effectiveSize,
+                height: effectiveSize,
+                child: Center(
+                  child: widget.centerChild ??
+                      (widget.showPercentage
+                          ? Text(
+                              '${(animatedVal * 100).toInt()}%',
+                              style: widget.percentageStyle ??
+                                  TextStyle(
+                                    fontSize: effectiveSize * 0.26,
+                                    fontWeight: FontWeight.bold,
+                                    color: colors.first,
+                                  ),
+                            )
+                          : const SizedBox.shrink()),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _IndeterminateCirclePainter extends CustomPainter {
+  final double animationValue; // 0.0 to 1.0
+  final double strokeWidth;
+  final List<Color> gradientColors;
+  final bool showGlow;
+  final Color? trackColor;
+
+  _IndeterminateCirclePainter({
+    required this.animationValue,
+    required this.strokeWidth,
+    required this.gradientColors,
+    required this.showGlow,
+    this.trackColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (math.min(size.width, size.height) - strokeWidth) / 2;
+    if (radius <= 0) return;
+
+    // Track ring background
+    final trackPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth * 0.75
+      ..color = trackColor ?? gradientColors.first.withValues(alpha: 0.12);
+    canvas.drawCircle(center, radius, trackPaint);
+
+    final rect = Rect.fromCircle(center: center, radius: radius);
+    final rotation = animationValue * 2 * math.pi;
+
+    // Fluid oscillating sweep between 0.4*pi (72 deg) and 1.45*pi (261 deg)
+    final sweepProgress = (math.sin(animationValue * 2 * math.pi) + 1.0) / 2.0;
+    final sweepAngle = math.max(0.40 * math.pi, sweepProgress * 1.45 * math.pi);
+
+    // Subtle glow if enabled
+    if (showGlow && size.width >= 24) {
+      final glowPaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeWidth = strokeWidth * 1.5
+        ..color = gradientColors.first.withValues(alpha: 0.28)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3.5);
+      canvas.drawArc(rect, rotation, sweepAngle, false, glowPaint);
+    }
+
+    // Sweep gradient shader
+    final shader = SweepGradient(
+      startAngle: 0.0,
+      endAngle: sweepAngle,
+      colors: [
+        gradientColors.last.withValues(alpha: 0.10),
+        gradientColors.first,
+      ],
+      transform: GradientRotation(rotation),
+    ).createShader(rect);
+
+    final arcPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = strokeWidth
+      ..shader = shader;
+
+    canvas.drawArc(rect, rotation, sweepAngle, false, arcPaint);
+  }
+
+  @override
+  bool shouldRepaint(_IndeterminateCirclePainter oldDelegate) =>
+      oldDelegate.animationValue != animationValue;
+}
+
+class _DeterminateCirclePainter extends CustomPainter {
+  final double progress; // 0.0 to 1.0
+  final double strokeWidth;
+  final List<Color> gradientColors;
+  final Color trackColor;
+  final bool showGlow;
+
+  _DeterminateCirclePainter({
+    required this.progress,
+    required this.strokeWidth,
+    required this.gradientColors,
+    required this.trackColor,
+    required this.showGlow,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (math.min(size.width, size.height) - strokeWidth) / 2;
+    if (radius <= 0) return;
+
+    final rect = Rect.fromCircle(center: center, radius: radius);
+
+    // Track
+    final trackPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..color = trackColor;
+    canvas.drawCircle(center, radius, trackPaint);
+
+    if (progress <= 0) return;
+
+    const startAngle = -math.pi / 2;
+    final sweepAngle = 2 * math.pi * progress.clamp(0.0, 1.0);
+
+    // Glow under arc
+    if (showGlow && size.width >= 24) {
+      final glowPaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeWidth = strokeWidth * 1.5
+        ..color = gradientColors.first.withValues(alpha: 0.28)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3.0);
+      canvas.drawArc(rect, startAngle, sweepAngle, false, glowPaint);
+    }
+
+    final shader = SweepGradient(
+      startAngle: 0.0,
+      endAngle: sweepAngle,
+      colors: gradientColors.length > 1
+          ? gradientColors
+          : [gradientColors.first, gradientColors.first],
+      transform: const GradientRotation(startAngle),
+    ).createShader(rect);
+
+    final arcPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = strokeWidth
+      ..shader = shader;
+
+    canvas.drawArc(rect, startAngle, sweepAngle, false, arcPaint);
+  }
+
+  @override
+  bool shouldRepaint(_DeterminateCirclePainter oldDelegate) =>
+      oldDelegate.progress != progress;
+}
+
+/// Convenience alias for AnimatedCircleProgressIndicator
+typedef AnimatedCircularProgressIndicator = AnimatedCircleProgressIndicator;

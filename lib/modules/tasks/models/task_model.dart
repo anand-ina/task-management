@@ -229,9 +229,27 @@ class TaskItemModel {
       isConfidential: safeBool(json['is_confidential'] ?? json['isConfidential']),
       blockReason: json['block_reason']?.toString() ?? json['blockReason']?.toString(),
       reviewComment: json['review_comment']?.toString() ?? json['reviewComment']?.toString(),
-      assignedByText: json['assigned_by_text']?.toString() ?? json['assignedByText']?.toString() ?? '',
-      assignedByUserId: safeInt(json['assigned_by_user_id'] ?? json['assignedByUserId']),
-      assignedByName: json['assigned_by_name']?.toString() ?? json['assignedByName']?.toString() ?? '',
+      assignedByText: json['assigned_by_text']?.toString() ??
+          json['assignedByText']?.toString() ??
+          (json['assigned_by'] is Map
+              ? json['assigned_by']['name']?.toString()
+              : json['assigned_by']?.toString()) ??
+          json['created_by_name']?.toString() ??
+          json['createdByName']?.toString() ??
+          '',
+      assignedByUserId: safeInt(json['assigned_by_user_id'] ??
+          json['assignedByUserId'] ??
+          (json['assigned_by'] is Map ? json['assigned_by']['id'] : null) ??
+          json['created_by_id'] ??
+          json['creator_id']),
+      assignedByName: json['assigned_by_name']?.toString() ??
+          json['assignedByName']?.toString() ??
+          (json['assigned_by'] is Map
+              ? json['assigned_by']['name']?.toString()
+              : json['assigned_by']?.toString()) ??
+          json['created_by_name']?.toString() ??
+          json['createdByName']?.toString() ??
+          '',
       branchId: safeInt(json['branch_id'] ?? json['branchId']),
       branchCode: json['branch_code']?.toString() ?? json['branchCode']?.toString() ?? '',
       branchName: json['branch_name']?.toString() ?? json['branchName']?.toString() ?? '',
@@ -242,7 +260,9 @@ class TaskItemModel {
                   : null)
               .whereType<TaskAssigneeModel>()
               .toList()
-          : [],
+          : (json['assignee'] is Map
+              ? [TaskAssigneeModel.fromJson(Map<String, dynamic>.from(json['assignee']))]
+              : []),
       ticketId: ticketIdentifier,
       ticketNo: ticketNumber,
       subtasksTotal: totalSubtasks,

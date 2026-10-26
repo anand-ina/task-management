@@ -116,6 +116,17 @@ class _AnnouncementTickerBarState extends State<AnnouncementTickerBar> {
                 color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
               ),
             ),
+            if (item.createdByName != null && item.createdByName!.trim().isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                '(${item.createdByName!.trim()})',
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w500,
+                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                ),
+              ),
+            ],
           ],
         ),
         actions: [
@@ -279,6 +290,17 @@ class _AnnouncementTickerBarState extends State<AnnouncementTickerBar> {
                                     color: bodyTextColor,
                                     fontSize: 12,
                                     fontWeight: FontWeight.normal,
+                                  ),
+                                ),
+                              ],
+                              if (announcement.createdByName != null &&
+                                  announcement.createdByName!.trim().isNotEmpty) ...[
+                                Text(
+                                  ' (${announcement.createdByName!.trim()})',
+                                  style: TextStyle(
+                                    color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ],

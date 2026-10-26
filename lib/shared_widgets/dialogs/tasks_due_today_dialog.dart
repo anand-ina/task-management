@@ -6,6 +6,7 @@ import '../../../modules/tasks/models/task_model.dart';
 import '../../../modules/tasks/repository/task_repository.dart';
 import 'task_detail_dialog.dart';
 import '../animations/app_animations.dart';
+import '../export_service.dart';
 
 class TasksDueTodayDialog extends StatefulWidget {
   final String? customTitle;
@@ -84,6 +85,9 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
   bool _isLoadingMore = false;
   bool _hasMore = true;
 
+  String _sortField = 'entry';
+  String _sortDir = 'desc';
+
   List<BranchModel> _branches = [];
   List<TaskItemModel> _items = [];
   int _totalCount = 0;
@@ -110,6 +114,52 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
     }
   }
 
+  void _sortLocalItems() {
+    _items.sort((a, b) {
+      int cmp = 0;
+      switch (_sortField) {
+        case 'due_date':
+          cmp = (a.dueDate ?? '').compareTo(b.dueDate ?? '');
+          break;
+        case 'priority':
+          cmp = (a.priority ?? '').compareTo(b.priority ?? '');
+          break;
+        case 'status':
+          cmp = (a.status ?? '').compareTo(b.status ?? '');
+          break;
+        case 'task_no':
+          cmp = (a.taskNo ?? '').compareTo(b.taskNo ?? '');
+          break;
+        case 'branch':
+          cmp = (a.branchName ?? '').compareTo(b.branchName ?? '');
+          break;
+        case 'entry':
+        default:
+          cmp = (a.entryDate ?? '').compareTo(b.entryDate ?? '');
+          break;
+      }
+      return _sortDir == 'desc' ? -cmp : cmp;
+    });
+  }
+
+  String _getSortFieldLabel(AppStrings s) {
+    switch (_sortField) {
+      case 'due_date':
+        return s.dueDateLabel;
+      case 'priority':
+        return s.priorityLabel;
+      case 'status':
+        return s.statusLabel;
+      case 'task_no':
+        return s.taskIdLabel;
+      case 'branch':
+        return s.branchLabel;
+      case 'entry':
+      default:
+        return s.entryDateLabel;
+    }
+  }
+
   Future<void> _loadInitialData() async {
     try {
       final periodParam = widget.dueToday == true ? 'day' : widget.period;
@@ -125,6 +175,8 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
           search: widget.searchQuery,
           activeOnly: widget.activeOnly,
           assigneeId: widget.assigneeId,
+          sort: _sortField,
+          dir: _sortDir,
           limit: 50,
           offset: 0,
         ),
@@ -137,6 +189,7 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
         setState(() {
           _branches = branches;
           _items = List.from(tasksRes.items);
+          _sortLocalItems();
           _totalCount = tasksRes.total;
           _hasMore = _items.length < _totalCount;
           _isLoading = false;
@@ -168,6 +221,8 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
         search: widget.searchQuery,
         activeOnly: widget.activeOnly,
         assigneeId: widget.assigneeId,
+        sort: _sortField,
+        dir: _sortDir,
         limit: 50,
         offset: _items.length,
       );
@@ -175,6 +230,7 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
       if (mounted) {
         setState(() {
           _items.addAll(res.items);
+          _sortLocalItems();
           _totalCount = res.total > 0 ? res.total : _totalCount;
           _hasMore = _items.length < _totalCount;
           _isLoadingMore = false;
@@ -288,7 +344,7 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
               ),
               const SizedBox(height: 16),
 
-              // Controls Row (Showing count & Sort Controls)
+              // Controls Row (Showing count, Sort Controls & Export)
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -297,45 +353,166 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
                     style: const TextStyle(fontSize: 9, color: Colors.grey),
                   ),
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text(
-                        'Sort by',
-                        style: TextStyle(fontSize: 11, color: Colors.grey),
+                      // Sort by label
+                      Text(
+                        s.sortByLabel,
+                        style: const TextStyle(fontSize: 11, color: Colors.grey),
                       ),
                       const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: isDark ? Colors.white24 : Colors.black12),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Row(
-                          children: const [
-                            Text(
-                              'Entry date',
-                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
-                            ),
-                            SizedBox(width: 4),
-                            Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: Colors.grey),
-                          ],
+
+                      // Sort Field Dropdown
+                      PopupMenuButton<String>(
+                        tooltip: s.sortByLabel,
+                        onSelected: (val) {
+                          setState(() {
+                            _sortField = val;
+                            _isLoading = true;
+                          });
+                          _loadInitialData();
+                        },
+                        itemBuilder: (context) => [
+                          PopupMenuItem(
+                            value: 'entry',
+                            child: Text(s.entryDateLabel, style: const TextStyle(fontSize: 12)),
+                          ),
+                          PopupMenuItem(
+                            value: 'due_date',
+                            child: Text(s.dueDateLabel, style: const TextStyle(fontSize: 12)),
+                          ),
+                          PopupMenuItem(
+                            value: 'priority',
+                            child: Text(s.priorityLabel, style: const TextStyle(fontSize: 12)),
+                          ),
+                          PopupMenuItem(
+                            value: 'status',
+                            child: Text(s.statusLabel, style: const TextStyle(fontSize: 12)),
+                          ),
+                          PopupMenuItem(
+                            value: 'task_no',
+                            child: Text(s.taskIdLabel, style: const TextStyle(fontSize: 12)),
+                          ),
+                          PopupMenuItem(
+                            value: 'branch',
+                            child: Text(s.branchLabel, style: const TextStyle(fontSize: 12)),
+                          ),
+                        ],
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: isDark ? Colors.white24 : Colors.black12),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                _getSortFieldLabel(s),
+                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: Colors.grey),
+                            ],
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: isDark ? Colors.white24 : Colors.black12),
-                          borderRadius: BorderRadius.circular(6),
+                      const SizedBox(width: 6),
+
+                      // Asc / Desc Button
+                      InkWell(
+                        onTap: () {
+                          setState(() {
+                            _sortDir = _sortDir == 'desc' ? 'asc' : 'desc';
+                            _isLoading = true;
+                          });
+                          _loadInitialData();
+                        },
+                        borderRadius: BorderRadius.circular(6),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: isDark ? Colors.white24 : Colors.black12),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _sortDir == 'desc' ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
+                                size: 12,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _sortDir == 'desc' ? s.sortDescendingLabel : s.sortAscendingLabel,
+                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
                         ),
-                        child: Row(
-                          children: const [
-                            Icon(Icons.arrow_downward_rounded, size: 12, color: Colors.black87),
-                            SizedBox(width: 4),
-                            Text(
-                              'Desc',
-                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(width: 6),
+
+                      // Export Dropdown
+                      PopupMenuButton<String>(
+                        tooltip: s.exportReport,
+                        onSelected: (val) {
+                          if (val == 'csv') {
+                            ExportService.exportCsv(context, _items, dialogTitle);
+                          } else if (val == 'excel') {
+                            ExportService.exportExcel(context, _items, dialogTitle);
+                          } else if (val == 'pdf') {
+                            ExportService.exportPdf(context, _items, dialogTitle);
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          PopupMenuItem(
+                            value: 'csv',
+                            child: Row(
+                              children: [
+                                const Icon(Icons.table_chart_outlined, size: 16, color: Colors.teal),
+                                const SizedBox(width: 8),
+                                Text(s.exportCsv, style: const TextStyle(fontSize: 12)),
+                              ],
                             ),
-                          ],
+                          ),
+                          PopupMenuItem(
+                            value: 'excel',
+                            child: Row(
+                              children: [
+                                const Icon(Icons.grid_on_outlined, size: 16, color: Colors.green),
+                                const SizedBox(width: 8),
+                                Text(s.exportExcel, style: const TextStyle(fontSize: 12)),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'pdf',
+                            child: Row(
+                              children: [
+                                const Icon(Icons.picture_as_pdf_outlined, size: 16, color: Colors.red),
+                                const SizedBox(width: 8),
+                                Text(s.exportPdf, style: const TextStyle(fontSize: 12)),
+                              ],
+                            ),
+                          ),
+                        ],
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: isDark ? Colors.white24 : Colors.black12),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.trending_up_rounded, size: 13),
+                              const SizedBox(width: 4),
+                              Text(s.exportButton, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                              const Icon(Icons.arrow_drop_down, size: 14),
+                            ],
+                          ),
                         ),
                       ),
                     ],

@@ -8,6 +8,7 @@ import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../../shared_widgets/animations/app_animations.dart';
 import '../../../shared_widgets/dropdowns/searchable_filter_dropdown.dart';
 import '../bloc/audit_bloc.dart';
 import '../bloc/audit_event.dart';
@@ -272,7 +273,7 @@ class _AuditsScreenState extends State<AuditsScreen> {
                         const Padding(
                           padding: EdgeInsets.all(60),
                           child: Center(
-                            child: CircularProgressIndicator(),
+                            child: AnimatedCircleProgressIndicator(size: 44),
                           ),
                         )
                       else if (state is AuditErrorState)
@@ -541,7 +542,7 @@ class _AuditsScreenState extends State<AuditsScreen> {
                   ? SizedBox(
                       height: 16,
                       width: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.white),
+                      child: AnimatedCircleProgressIndicator(size: 16, strokeWidth: 2, color: AppColors.white),
                     )
                   : Text(s.scheduleAuditButton, style: const TextStyle(fontWeight: FontWeight.bold)),
             ),
@@ -987,7 +988,7 @@ class _AuditsScreenState extends State<AuditsScreen> {
                     ? SizedBox(
                         height: 14,
                         width: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.white),
+                        child: AnimatedCircleProgressIndicator(size: 14, strokeWidth: 2, color: AppColors.white),
                       )
                     : const Icon(Icons.check_circle_outline_rounded, size: 16),
                 label: Text(s.closeAudit, style: const TextStyle(fontWeight: FontWeight.bold)),

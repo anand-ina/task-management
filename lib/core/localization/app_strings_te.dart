@@ -346,6 +346,42 @@ class AppStringsTe extends AppStrings {
   @override
   String toReviewBadge(int count) => '$count సమీక్షకు';
   @override
+  String approvalsFromOrganisationBadge(int count) => '$count సంస్థ ఆమోదాలు';
+  @override
+  String get approvalsFromOrganisationTitle => 'సంస్థ ఆమోదాలు';
+  @override
+  String get approvalsFromOrganisationSubtitle => 'అన్ని క్యాంపస్‌లు మరియు శాఖలలో పెండింగ్‌లో ఉన్న టాస్క్ ముగింపు అభ్యర్థనలు';
+  @override
+  String get filterByBranch => 'శాఖ ద్వారా ఫిల్టర్ చేయండి';
+  @override
+  String allBranchesCount(int count) => 'అన్ని శాఖలు $count';
+  @override
+  String get searchByTaskIdTitleRequester => 'టాస్క్ ఐడి, శీర్షిక, అభ్యర్థించిన వారు లేదా కేటాయించిన ఆమోదకర్త ద్వారా శోధించండి...';
+  @override
+  String showingRequestsCount(int filtered, int total) => '$total లో $filtered అభ్యర్థనలు చూపబడుతున్నాయి';
+  @override
+  String get clickAnyTaskRowToView => 'వివరాలు, కాలక్రమం మరియు కేటాయించబడిన వారిని చూడటానికి ఏదైనా వరుసపై క్లిక్ చేయండి.';
+  @override
+  String get noApprovalsFound => 'సంస్థ ఆమోదాలు ఏవీ కనుగొనబడలేదు';
+  @override
+  String get designatedApproverHeader => 'కేటాయించిన ఆమోదకర్త';
+  @override
+  String get requestedOnHeader => 'అభ్యర్థించిన తేదీ';
+  @override
+  String get requestedByHeader => 'అభ్యర్థించిన వారు';
+  @override
+  String get taskIdHeader => 'టాస్క్ ఐడి';
+  @override
+  String get taskTitleHeader => 'టాస్క్ శీర్షిక';
+  @override
+  String get branchHeader => 'శాఖ';
+  @override
+  String get actionHeader => 'చర్య';
+  @override
+  String get viewAction => 'చూడండి →';
+  @override
+  String get myPriorityTitle => 'నా ప్రాధాన్యత';
+  @override
   String toStartBadge(int count) => '$count ప్రారంభించవలసినవి';
   @override
   String inProgressBadge(int count) => '$count పురోగతిలో';
@@ -559,12 +595,10 @@ class AppStringsTe extends AppStrings {
   String get entryDateLabel => 'ఎంట్రీ తేదీ';
   @override
   String get branchLegendLabel => 'బ్రాంచ్ లెజెండ్';
-  @override
-  String get taskIdHeader => 'టాస్క్ ఐడి';
+
   @override
   String get descriptionHeader => 'వివరణ';
-  @override
-  String get branchHeader => 'బ్రాంచ్';
+
   @override
   String get priorityHeader => 'ప్రాధాన్యత';
   @override
@@ -2392,5 +2426,148 @@ class AppStringsTe extends AppStrings {
   String get completionSignOffSubtitle => 'ఈ సమావేశాలు జరిగినట్లు ఎవరో నివేదించారు';
   @override
   String get btnReject => 'తిరస్కరించండి';
+
+  @override
+  String get tasksAssignedToMeByPriorityTitle => 'ప్రాధాన్యత ప్రకారం నాకు కేటాయించిన పనులు';
+  @override
+  String get openTasksAssignedToYouSubtitle => 'మీకు కేటాయించిన ఓపెన్ టాస్క్‌లు';
+
+  @override
+  String get exportReport => 'నివేదికను ఎగుమతి చేయండి';
+
+  @override
+  String get createNewTaskTitle => '+ కొత్త టాస్క్ సృష్టించండి';
+
+  @override
+  String get taskTitlePlaceholder => 'ఉదా., అడ్మిషన్ల డేటా షీట్‌ను సిద్ధం చేయండి';
+  @override
+  String get taskDescriptionPlaceholder => 'టాస్క్ వివరాలను వివరించండి...';
+  @override
+  String get anyAdditionalRemarksPlaceholder => 'ఏవైనా అదనపు వ్యాఖ్యలు (ఐచ్ఛికం)...';
+
+  @override
+  String get savedDraftsTitle => 'సేవ్ చేసిన డ్రాఫ్ట్‌లు';
+  @override
+  String get loadDraftOption => 'డ్రాఫ్ట్ లోడ్ చేయండి';
+  @override
+  String get noDraftsAvailable => 'సేవ్ చేసిన డ్రాఫ్ట్‌లు ఏవీ అందుబాటులో లేవు';
+
+  // Draft Tasks Module
+  @override
+  String get draftsNavLabel => 'డ్రాఫ్ట్‌లు';
+  @override
+  String get draftTasksTitle => 'డ్రాఫ్ట్ టాస్క్‌లు';
+  @override
+  String draftsCountBadge(int count) => count == 1 ? '1 డ్రాఫ్ట్' : '$count డ్రాఫ్ట్‌లు';
+  @override
+  String get draftsSubtitle => 'సృష్టించడానికి ముందు సేవ్ చేయబడిన పనిలో ఉన్న టాస్క్‌లు. మీరు టాస్క్‌ను ఖరారు చేసి సేవ్ చేసే వరకు టాస్క్ ID వినియోగించబడదు.';
+  @override
+  String get autoDraftProtectionTitle => 'ఆటో-డ్రాఫ్ట్ రక్షణ:';
+  @override
+  String get autoDraftProtectionSubtitle => 'మీరు టాస్క్ సృష్టించడం ప్రారంభించి విండోను మూసివేసినప్పుడల్లా, టాస్క్ ID క్రమాన్ని వినియోగించకుండా మీ ఇన్‌పుట్‌లు ఇక్కడ స్వయంచాలకంగా భద్రపరచబడతాయి.';
+  @override
+  String get searchDraftsPlaceholder => 'శీర్షిక, వివరణ లేదా కేటాయించిన వారి ద్వారా డ్రాఫ్ట్‌లను శోధించండి...';
+  @override
+  String get draftNoTaskIdAssigned => 'డ్రాఫ్ట్ - టాస్క్ ID కేటాయించబడలేదు';
+  @override
+  String get targetPrefix => 'లక్ష్యం: ';
+  @override
+  String get noAssigneesChosen => 'ఎవరూ ఎంపిక చేయబడలేదు';
+  @override
+  String get savedPrefix => 'సేవ్ చేయబడింది ';
+  @override
+  String get discardDraftButton => 'రద్దు చేయి';
+  @override
+  String get discardDraftConfirmTitle => 'డ్రాఫ్ట్‌ను రద్దు చేయాలా?';
+  @override
+  String get discardDraftConfirmMessage => 'మీరు ఖచ్చితంగా ఈ డ్రాఫ్ట్‌ను రద్దు చేయాలనుకుంటున్నారా? ఈ చర్యను రద్దు చేయలేరు.';
+  @override
+  String get resumeAndCreateTaskButton => 'కొనసాగించండి & టాస్క్ సృష్టించండి';
+  @override
+  String savedDraftsBannerTitle(int count) => '$count సేవ్ చేసిన డ్రాఫ్ట్';
+
+  @override
+  String get confirmedWhenYouSaveSubtext => 'మీరు సేవ్ చేసినప్పుడు ధృవీకరించబడుతుంది — బ్రాంచ్ క్రమాన్ని అనుసరిస్తుంది.';
+  @override
+  String get assignedByMeSubtext => 'మీరు ఈ పనిని కేటాయిస్తున్నారు. వేరొకరి అధికారం కింద కేటాయించడానికి "తరపున కేటాయించడం" ఉపయోగించండి.';
+
+  @override
+  String get selectUserOptional => 'వినియోగదారుని ఎంచుకోండి (ఐచ్ఛికం)...';
+  @override
+  String get sortAscendingLabel => 'ఆరోహణ';
+  @override
+  String get sortDescendingLabel => 'అవరోహణ';
+
+  // Hybrid Location & RSVP
+  @override
+  String get hybridLocationLabel => 'హైబ్రిడ్';
+  @override
+  String get rsvpPrefix => 'RSVP:  ';
+  @override
+  String get rsvpYes => '✓ అవును';
+  @override
+  String get rsvpNo => '✕ కాదు';
+  @override
+  String get rsvpMaybe => '? బహుశా';
+  @override
+  String get markAttendedButton => 'హాజరును నమోదు చేయండి';
+
+  // Minutes of Meeting (MOM)
+  @override
+  String get fileMomButton => 'MOM ఫైల్ చేయండి';
+  @override
+  String get editMomButton => 'MOM సవరించండి';
+  @override
+  String get viewPrintMomButton => 'MOM చూడండి / ప్రింట్ చేయండి';
+  @override
+  String get minutesOfMeetingTitle => 'సమావేశ వివరాలు (MOM)';
+  @override
+  String get attendeesPresentLabel => 'హాజరైనవారు (ఎవరు హాజరయ్యారు)';
+  @override
+  String get agendaMomLabel => 'ఎజెండా';
+  @override
+  String get discussionPointsLabel => 'చర్చా అంశాలు';
+  @override
+  String get decisionsTakenLabel => 'తీసుకున్న నిర్ణయాలు';
+  @override
+  String get saveMomButton => 'MOM సేవ్ చేయండి';
+  @override
+  String get venueLabel => 'వేదిక';
+  @override
+  String get nextMeetingDateLabel => 'తదుపరి సమావేశ తేదీ';
+  @override
+  String get actionItemsLabel => 'చర్య అంశాలు';
+  @override
+  String get addActionItemButton => '+ చర్య అంశాన్ని జోడించండి';
+  @override
+  String get actionItemCol => 'చర్య';
+  @override
+  String get ownerCol => 'బాధ్యుడు';
+  @override
+  String get dueCol => 'గడువు తేదీ';
+  @override
+  String get printSavePdfButton => 'ప్రింట్ / PDF గా సేవ్ చేయండి';
+  @override
+  String get meetingDetailsHeader => 'సమావేశ వివరాలు';
+  @override
+  String get titleLabel => 'శీర్షిక';
+  @override
+  String get dateAndTimeLabel => 'తేదీ & సమయం';
+  @override
+  String get organizerLabel => 'నిర్వాహకుడు';
+  @override
+  String get recordedByLabel => 'నమోదు చేసినవారు';
+  @override
+  String get attendanceHeader => 'హాజరు';
+  @override
+  String get presentLabel => 'హాజరైనవారు';
+  @override
+  String get absentLabel => 'హాజరుకానివారు';
+  @override
+  String get forOfficeUseOnly => 'కార్యాలయ ఉపయోగం కోసం మాత్రమే';
+  @override
+  String get chairpersonLabel => 'చైర్‌పర్సన్';
+  @override
+  String get momSavedSuccess => 'సమావేశ వివరాలు (MOM) విజయవంతంగా సేవ్ చేయబడ్డాయి!';
 }
 

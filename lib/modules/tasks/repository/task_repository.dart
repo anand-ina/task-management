@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../../../core/constants/api_constants.dart';
@@ -6,6 +8,7 @@ import '../../dashboard/models/branch_model.dart';
 import '../models/clone_task_models.dart' hide BranchModel;
 import '../models/subtask_models.dart';
 import '../models/task_model.dart';
+import '../models/task_draft_model.dart';
 
 class TaskRepository {
   final DioClient _dioClient = DioClient();
@@ -304,6 +307,161 @@ class TaskRepository {
       return response.data as Map<String, dynamic>;
     }
     return {};
+  }
+
+  Future<Map<String, dynamic>> createTask(Map<String, dynamic> payload) async {
+    const url = ApiConstants.tasks;
+    debugPrint('==================== API REQUEST ====================');
+    debugPrint('URL: [POST] $url');
+    debugPrint('Payload: $payload');
+    debugPrint('=====================================================');
+
+    final response = await _dioClient.dio.post(
+      url,
+      data: payload,
+    );
+
+    debugPrint('==================== API RESPONSE ====================');
+    debugPrint('URL: [POST] $url');
+    debugPrint('Status Code: ${response.statusCode}');
+    debugPrint('Response Data: ${response.data}');
+    debugPrint('======================================================');
+
+    if (response.data is Map<String, dynamic>) {
+      return response.data as Map<String, dynamic>;
+    }
+    return {};
+  }
+
+  Future<int?> saveTaskDraft(Map<String, dynamic> draftData) async {
+    const url = ApiConstants.drafts;
+    final payload = {
+      if (draftData['id'] != null) 'id': draftData['id'],
+      'kind': 'task',
+      'label': draftData['label'] ?? draftData['title'] ?? 'Untitled Draft',
+      'payload': draftData['payload'] ?? draftData,
+    };
+
+    debugPrint('==================== API REQUEST ====================');
+    debugPrint('URL: [POST] $url');
+    debugPrint('Payload: $payload');
+    debugPrint('=====================================================');
+
+    final response = await _dioClient.dio.post(
+      url,
+      data: payload,
+    );
+
+    debugPrint('==================== API RESPONSE ====================');
+    debugPrint('URL: [POST] $url');
+    debugPrint('Status Code: ${response.statusCode}');
+    debugPrint('Response Data: ${response.data}');
+    debugPrint('======================================================');
+
+    if (response.data is Map && response.data['id'] != null) {
+      return response.data['id'] is int
+          ? response.data['id'] as int
+          : int.tryParse(response.data['id'].toString());
+    }
+    return null;
+  }
+
+  Future<List<TaskDraftModel>> getTaskDrafts() async {
+    final url = '${ApiConstants.drafts}?kind=task';
+    debugPrint('==================== API REQUEST ====================');
+    debugPrint('URL: [GET] $url');
+    debugPrint('=====================================================');
+
+    final response = await _dioClient.dio.get(
+      ApiConstants.drafts,
+      queryParameters: {'kind': 'task'},
+    );
+
+    debugPrint('==================== API RESPONSE ====================');
+    debugPrint('URL: [GET] $url');
+    debugPrint('Status Code: ${response.statusCode}');
+    debugPrint('Response Data: ${response.data}');
+    debugPrint('======================================================');
+
+    dynamic rawData = response.data;
+    if (rawData is String) {
+      try {
+        rawData = jsonDecode(rawData);
+      } catch (_) {}
+    }
+
+    List<dynamic> list = [];
+    if (rawData is List) {
+      list = rawData;
+    } else if (rawData is Map && rawData['data'] is List) {
+      list = rawData['data'] as List;
+    } else if (rawData is Map && rawData['drafts'] is List) {
+      list = rawData['drafts'] as List;
+    }
+
+    final List<TaskDraftModel> results = [];
+    for (final item in list) {
+      try {
+        if (item is Map) {
+          results.add(TaskDraftModel.fromJson(Map<String, dynamic>.from(item)));
+        }
+      } catch (e) {
+        debugPrint('[TaskRepository] Error parsing individual draft: $e');
+      }
+    }
+    return results;
+  }
+
+  Future<bool> deleteTaskDraft(int draftId) async {
+    final url = ApiConstants.draftDetail(draftId);
+    debugPrint('==================== API REQUEST ====================');
+    debugPrint('URL: [DELETE] $url');
+    debugPrint('=====================================================');
+
+    final response = await _dioClient.dio.delete(url);
+
+    debugPrint('==================== API RESPONSE ====================');
+    debugPrint('URL: [DELETE] $url');
+    debugPrint('Status Code: ${response.statusCode}');
+    debugPrint('Response Data: ${response.data}');
+    debugPrint('======================================================');
+
+    return response.statusCode == 200 || response.statusCode == 204;
+  }
+
+  Future<String?> getNextTaskId({int? branchId}) async {
+    final Map<String, dynamic> queryParams = {};
+    if (branchId != null) {
+      queryParams['branchId'] = branchId;
+    }
+    final uri = Uri.parse(ApiConstants.tasksNextId).replace(
+      queryParameters: queryParams.isEmpty ? null : queryParams.map((k, v) => MapEntry(k, v.toString())),
+    );
+
+    debugPrint('==================== API REQUEST ====================');
+    debugPrint('URL: [GET] $uri');
+    debugPrint('Query Parameters / Payload: $queryParams');
+    debugPrint('=====================================================');
+
+    try {
+      final response = await _dioClient.dio.get(
+        ApiConstants.tasksNextId,
+        queryParameters: queryParams.isEmpty ? null : queryParams,
+      );
+
+      debugPrint('==================== API RESPONSE ====================');
+      debugPrint('URL: [GET] $uri');
+      debugPrint('Status Code: ${response.statusCode}');
+      debugPrint('Response Data: ${response.data}');
+      debugPrint('======================================================');
+
+      if (response.data is Map && response.data['taskNo'] != null) {
+        return response.data['taskNo'].toString();
+      }
+    } catch (e) {
+      debugPrint('[TaskRepository] getNextTaskId error: $e');
+    }
+    return null;
   }
 }
 

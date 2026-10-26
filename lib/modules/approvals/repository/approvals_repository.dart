@@ -6,6 +6,7 @@ import '../models/escalation_model.dart';
 import '../models/meeting_approval_model.dart';
 import '../models/budget_approval_model.dart';
 import '../models/indent_model.dart';
+import '../models/organisation_approval_model.dart';
 
 class ApprovalsRepository {
   final DioClient _dioClient = DioClient();
@@ -30,6 +31,29 @@ class ApprovalsRepository {
       return rawList.map((e) => TaskApprovalModel.fromJson(e is Map<String, dynamic> ? e : {})).toList();
     } catch (e) {
       debugPrint('[ApprovalsRepository] getApprovals error: $e');
+    }
+    return [];
+  }
+
+  Future<List<OrganisationApprovalModel>> getOrganisationApprovals() async {
+    final url = ApiConstants.approvalsOrganisation;
+    _logServiceCall(
+      serviceMethod: 'getOrganisationApprovals',
+      url: url,
+    );
+    try {
+      final response = await _dioClient.dio.get(url);
+      _logServiceCall(
+        serviceMethod: 'getOrganisationApprovals',
+        url: url,
+        response: response.data,
+      );
+      final rawList = _extractList(response.data);
+      return rawList
+          .map((e) => OrganisationApprovalModel.fromJson(e is Map<String, dynamic> ? e : {}))
+          .toList();
+    } catch (e) {
+      debugPrint('[ApprovalsRepository] getOrganisationApprovals error: $e');
     }
     return [];
   }

@@ -11,6 +11,7 @@ class ApprovalsBloc extends Bloc<ApprovalsEvent, ApprovalsState> {
       : repository = repository ?? ApprovalsRepository(),
         super(ApprovalsInitialState()) {
     on<FetchTaskApprovalsDataEvent>(_onFetchTaskApprovalsData);
+    on<FetchOrganisationApprovalsEvent>(_onFetchOrganisationApprovals);
     on<FetchEscalationsDataEvent>(_onFetchEscalationsData);
     on<FetchMeetingApprovalsDataEvent>(_onFetchMeetingApprovalsData);
     on<FetchBudgetApprovalsDataEvent>(_onFetchBudgetApprovalsData);
@@ -184,5 +185,22 @@ class ApprovalsBloc extends Bloc<ApprovalsEvent, ApprovalsState> {
   ) async {
     await repository.rsvpMeeting(event.id, event.response);
     add(FetchMeetingApprovalsDataEvent());
+  }
+
+  Future<void> _onFetchOrganisationApprovals(
+    FetchOrganisationApprovalsEvent event,
+    Emitter<ApprovalsState> emit,
+  ) async {
+    emit(ApprovalsLoadingState());
+    try {
+      final list = await repository.getOrganisationApprovals();
+      if (state is ApprovalsLoadedState) {
+        emit((state as ApprovalsLoadedState).copyWith(organisationApprovals: list));
+      } else {
+        emit(ApprovalsLoadedState(organisationApprovals: list));
+      }
+    } catch (e) {
+      emit(ApprovalsErrorState(e.toString()));
+    }
   }
 }

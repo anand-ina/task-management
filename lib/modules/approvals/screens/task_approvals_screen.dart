@@ -8,6 +8,7 @@ import '../../../shared_widgets/dialogs/request_task_closure_dialog.dart';
 import '../../../shared_widgets/dialogs/task_detail_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
 import '../../../shared_widgets/announcement_banner_wrapper.dart';
+import '../../../shared_widgets/animations/app_animations.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/bloc/auth_state.dart';
 import '../bloc/approvals_bloc.dart';
@@ -175,7 +176,7 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
                     return const Center(
                       child: Padding(
                         padding: EdgeInsets.symmetric(vertical: 40),
-                        child: CircularProgressIndicator(),
+                        child: AnimatedCircleProgressIndicator(size: 44),
                       ),
                     );
                   }

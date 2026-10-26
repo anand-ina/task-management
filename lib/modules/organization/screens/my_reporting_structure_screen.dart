@@ -7,6 +7,7 @@ import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../../shared_widgets/animations/app_animations.dart';
 import '../bloc/my_reporting_bloc.dart';
 import '../bloc/my_reporting_event.dart';
 import '../bloc/my_reporting_state.dart';
@@ -75,10 +76,10 @@ class _MyReportingBody extends StatelessWidget {
                 const SizedBox(height: 24),
 
                 if (state is MyReportingLoadingState)
-                  Padding(
-                    padding: const EdgeInsets.all(60),
-                    child: const Center(
-                      child: CircularProgressIndicator(),
+                  const Padding(
+                    padding: EdgeInsets.all(60),
+                    child: Center(
+                      child: AnimatedCircleProgressIndicator(size: 44),
                     ),
                   )
                 else if (state is MyReportingErrorState)

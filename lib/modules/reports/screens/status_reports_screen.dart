@@ -10,6 +10,7 @@ import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/dialogs/new_status_report_dialog.dart';
 import '../../../shared_widgets/dialogs/status_report_view_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
+import '../../../shared_widgets/animations/app_animations.dart';
 import '../../../shared_widgets/status_report_pdf_service.dart';
 import '../bloc/status_reports_bloc.dart';
 import '../bloc/status_reports_event.dart';
@@ -143,7 +144,7 @@ class _StatusReportsScreenState extends State<StatusReportsScreen> {
                       if (state is StatusReportsLoadingState)
                         const Padding(
                           padding: EdgeInsets.all(60),
-                          child: Center(child: CircularProgressIndicator()),
+                          child: Center(child: AnimatedCircleProgressIndicator(size: 44)),
                         )
                       else if (state is StatusReportsErrorState)
                         Center(
@@ -398,7 +399,7 @@ class _StatusReportsScreenState extends State<StatusReportsScreen> {
                       ? const SizedBox(
                           width: 14,
                           height: 14,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: AnimatedCircleProgressIndicator(size: 14, strokeWidth: 2),
                         )
                       : Row(
                           children: [
