@@ -242,7 +242,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         ClipOval(
                           child: Image.asset(
-                            'assets/images/circle-logo.png',
+                            'assets/images/app_icon.png',
                             height: 32,
                             width: 32,
                             fit: BoxFit.cover,
@@ -278,7 +278,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           padding: const EdgeInsets.all(4),
                           child: ClipOval(
                             child: Image.asset(
-                              'assets/images/circle-logo.png',
+                              'assets/images/app_icon.png',
                               fit: BoxFit.contain,
                               errorBuilder: (context, error, stackTrace) =>
                                   const Icon(Icons.school, color: AppColors.primaryRed, size: 48),
@@ -413,7 +413,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         ClipOval(
                           child: Image.asset(
-                            'assets/images/circle-logo.png',
+                            'assets/images/app_icon.png',
                             height: 28,
                             width: 28,
                             fit: BoxFit.cover,
@@ -445,7 +445,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           padding: const EdgeInsets.all(2),
                           child: ClipOval(
                             child: Image.asset(
-                              'assets/images/circle-logo.png',
+                              'assets/images/app_icon.png',
                               fit: BoxFit.contain,
                               errorBuilder: (context, error, stackTrace) =>
                                   const Icon(Icons.school, color: AppColors.primaryRed, size: 32),

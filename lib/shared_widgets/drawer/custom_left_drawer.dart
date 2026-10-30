@@ -142,7 +142,7 @@ class CustomLeftDrawer extends StatelessWidget {
                 children: [
                   ClipOval(
                     child: Image.asset(
-                      'assets/images/circle-logo.png',
+                      'assets/images/app_icon.png',
                       width: 32,
                       height: 32,
                       errorBuilder: (context, error, stackTrace) => Container(

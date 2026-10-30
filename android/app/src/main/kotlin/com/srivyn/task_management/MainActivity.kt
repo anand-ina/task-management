@@ -1,4 +1,4 @@
-package com.srivyn_platforms.task_management.samskar_taskmanager
+package com.srivyn.task_management
 
 import io.flutter.embedding.android.FlutterActivity
 import android.content.Intent

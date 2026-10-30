@@ -89,11 +89,11 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.srivyn_platforms.task_management" "\0"
+            VALUE "CompanyName", "com.srivyn.task_management" "\0"
             VALUE "FileDescription", "samskar_taskmanager" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "samskar_taskmanager" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.srivyn_platforms.task_management. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 com.srivyn.task_management. All rights reserved." "\0"
             VALUE "OriginalFilename", "samskar_taskmanager.exe" "\0"
             VALUE "ProductName", "samskar_taskmanager" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
