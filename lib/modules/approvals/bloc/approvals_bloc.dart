@@ -7,6 +7,7 @@ import 'approvals_state.dart';
 
 class ApprovalsBloc extends Bloc<ApprovalsEvent, ApprovalsState> {
   final ApprovalsRepository repository;
+  bool _lastIndentCanViewAll = false;
 
   ApprovalsBloc({ApprovalsRepository? repository})
       : repository = repository ?? ApprovalsRepository(),
@@ -18,7 +19,6 @@ class ApprovalsBloc extends Bloc<ApprovalsEvent, ApprovalsState> {
     on<FetchBudgetApprovalsDataEvent>(_onFetchBudgetApprovalsData);
     on<FetchIndentDetailEvent>(_onFetchIndentDetail);
     on<DecideApprovalEvent>(_onDecideApproval);
-    on<DecideBudgetEvent>(_onDecideBudget);
     on<CreateIndentEvent>(_onCreateIndent);
     on<DecideEscalationEvent>(_onDecideEscalation);
     on<DecideMeetingCompletionEvent>(_onDecideMeetingCompletion);
@@ -37,8 +37,6 @@ class ApprovalsBloc extends Bloc<ApprovalsEvent, ApprovalsState> {
       final escalations = await repository.getEscalations();
       final meetings = await repository.getMeetings();
       final meetingCompletionRequests = await repository.getMeetingCompletionRequests();
-      final budgetReceived = await repository.getBudgetReceived();
-      final budgetInitiated = await repository.getBudgetInitiated();
 
       emit(ApprovalsLoadedState(
         taskApprovalsReceived: taskApprovalsReceived,
@@ -47,8 +45,6 @@ class ApprovalsBloc extends Bloc<ApprovalsEvent, ApprovalsState> {
         escalations: escalations,
         meetings: meetings,
         meetingCompletionRequests: meetingCompletionRequests,
-        budgetReceived: budgetReceived,
-        budgetInitiated: budgetInitiated,
       ));
     } catch (e) {
       emit(ApprovalsErrorState(formatErrorMessage(e)));
@@ -105,16 +101,18 @@ class ApprovalsBloc extends Bloc<ApprovalsEvent, ApprovalsState> {
   ) async {
     emit(ApprovalsLoadingState());
     try {
-      final budgetReceived = await repository.getBudgetReceived();
-      final budgetInitiated = await repository.getBudgetInitiated();
-      final indentsInbox = await repository.getIndentsInbox();
-      final indentsAll = await repository.getIndentsAll();
+      final canViewAll = event.canViewAll ?? _lastIndentCanViewAll;
+      _lastIndentCanViewAll = canViewAll;
+      final results = await Future.wait([
+        repository.getIndentsInbox(),
+        canViewAll ? repository.getIndentsAll() : repository.getIndentsMine(),
+        repository.getIndentsMine(),
+      ]);
 
       emit(ApprovalsLoadedState(
-        budgetReceived: budgetReceived,
-        budgetInitiated: budgetInitiated,
-        indentsInbox: indentsInbox,
-        indentsAll: indentsAll,
+        indentsInbox: results[0],
+        indentsAll: results[1],
+        indentsMine: results[2],
       ));
     } catch (e) {
       emit(ApprovalsErrorState(formatErrorMessage(e)));
@@ -143,21 +141,13 @@ class ApprovalsBloc extends Bloc<ApprovalsEvent, ApprovalsState> {
     add(FetchTaskApprovalsDataEvent());
   }
 
-  Future<void> _onDecideBudget(
-    DecideBudgetEvent event,
-    Emitter<ApprovalsState> emit,
-  ) async {
-    await repository.decideBudget(event.id, event.decision);
-    add(FetchBudgetApprovalsDataEvent());
-  }
-
   Future<void> _onCreateIndent(
     CreateIndentEvent event,
     Emitter<ApprovalsState> emit,
   ) async {
     try {
       await repository.createIndent(event.payload);
-      add(FetchBudgetApprovalsDataEvent());
+      add(const FetchBudgetApprovalsDataEvent());
     } catch (e) {
       debugPrint('[ApprovalsBloc] _onCreateIndent error: $e');
       rethrow;

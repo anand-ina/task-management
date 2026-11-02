@@ -102,6 +102,59 @@ class TaskRepository {
     return TaskDetailModel.fromJson(response.data);
   }
 
+  /// GET /tasks/{id}/comments
+  Future<List<TaskCommentModel>> getTaskComments(int taskId) async {
+    final url = ApiConstants.taskComments(taskId);
+    debugPrint('==================== API REQUEST ====================');
+    debugPrint('URL: [GET] $url');
+    debugPrint('=====================================================');
+    final response = await _dioClient.dio.get(url);
+    debugPrint('==================== API RESPONSE ====================');
+    debugPrint('URL: [GET] $url');
+    debugPrint('Response Data: ${response.data}');
+    debugPrint('======================================================');
+    final data = response.data;
+    if (data is List) {
+      return data.whereType<Map>().map((e) => TaskCommentModel.fromJson(Map<String, dynamic>.from(e))).toList();
+    }
+    return [];
+  }
+
+  /// POST /tasks/{id}/comments {body, mentionIds} → returns the full comment list
+  Future<List<TaskCommentModel>> addTaskComment(int taskId, String body, {List<int> mentionIds = const []}) async {
+    final url = ApiConstants.taskComments(taskId);
+    final payload = {'body': body, 'mentionIds': mentionIds};
+    debugPrint('==================== API REQUEST ====================');
+    debugPrint('URL: [POST] $url');
+    debugPrint('Payload: $payload');
+    debugPrint('=====================================================');
+    final response = await _dioClient.dio.post(url, data: payload);
+    debugPrint('==================== API RESPONSE ====================');
+    debugPrint('URL: [POST] $url');
+    debugPrint('Response Data: ${response.data}');
+    debugPrint('======================================================');
+    final data = response.data;
+    if (data is List) {
+      return data.whereType<Map>().map((e) => TaskCommentModel.fromJson(Map<String, dynamic>.from(e))).toList();
+    }
+    return getTaskComments(taskId);
+  }
+
+  /// PATCH /tasks/checklist/{itemId} {done}
+  Future<void> toggleChecklistItem(int itemId, bool done) async {
+    final url = ApiConstants.taskChecklistItem(itemId);
+    final payload = {'done': done};
+    debugPrint('==================== API REQUEST ====================');
+    debugPrint('URL: [PATCH] $url');
+    debugPrint('Payload: $payload');
+    debugPrint('=====================================================');
+    final response = await _dioClient.dio.patch(url, data: payload);
+    debugPrint('==================== API RESPONSE ====================');
+    debugPrint('URL: [PATCH] $url');
+    debugPrint('Response Data: ${response.data}');
+    debugPrint('======================================================');
+  }
+
   Future<List<AssigneeModel>> getAssigneesLookup() async {
     const url = ApiConstants.assignees;
     debugPrint('==================== API REQUEST ====================');
@@ -430,10 +483,13 @@ class TaskRepository {
     return response.statusCode == 200 || response.statusCode == 204;
   }
 
-  Future<String?> getNextTaskId({int? branchId}) async {
+  Future<String?> getNextTaskId({int? branchId, bool isEvent = false}) async {
     final Map<String, dynamic> queryParams = {};
     if (branchId != null) {
       queryParams['branchId'] = branchId;
+    }
+    if (isEvent) {
+      queryParams['isEvent'] = 'true';
     }
     final uri = Uri.parse(ApiConstants.tasksNextId).replace(
       queryParameters: queryParams.isEmpty ? null : queryParams.map((k, v) => MapEntry(k, v.toString())),

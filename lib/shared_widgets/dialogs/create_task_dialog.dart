@@ -15,6 +15,7 @@ import '../../modules/tasks/bloc/create_task_bloc.dart';
 import '../../modules/tasks/models/task_draft_model.dart';
 import '../../modules/tasks/repository/task_repository.dart';
 import '../animations/app_animations.dart';
+import '../dropdowns/searchable_filter_dropdown.dart';
 
 class CreateTaskDialog extends StatefulWidget {
   final TaskDraftModel? initialDraft;
@@ -67,6 +68,41 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
   DateTime _targetDate = DateTime.now().add(const Duration(days: 7));
 
   final List<int> _selectedAssigneeIds = [];
+  final List<int> _selectedWatcherIds = [];
+  bool _splitPerAssignee = true;
+
+  // Linked event (web: "Linked Event (optional)")
+  List<dynamic> _events = [];
+  int? _selectedEventId;
+
+  // Recurrence (web: shown when "Make this a recurring task" is ticked)
+  String _frequency = 'daily';
+  String _recurTime = '18:00';
+  int _weekday = 1;
+  int _monthday = 1;
+  String _specificDate = '';
+  static const List<String> _weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  static const Map<String, String> _frequencies = {
+    'daily': 'Daily',
+    'weekly': 'Weekly',
+    'monthly': 'Monthly',
+    'bi_monthly': 'Bi-Monthly',
+    'quarterly': 'Quarterly',
+    'half_yearly': 'Half-Yearly',
+    'yearly': 'Yearly',
+    'one_time': 'Others / One-time',
+  };
+  final TextEditingController _searchWatcherController = TextEditingController();
+  String _watcherQuery = '';
+
+  /// Same defaults as the web form: priority drives the target date (editable afterwards).
+  static const Map<String, int> _priorityDueDays = {
+    'emergency': 0,
+    'top_most': 0,
+    'high': 7,
+    'medium': 14,
+    'low': 30,
+  };
   final List<Map<String, dynamic>> _checklistItems = [];
   final List<Map<String, dynamic>> _attachments = [];
 
@@ -93,6 +129,7 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
     _descController.dispose();
     _remarksController.dispose();
     _searchAssigneeController.dispose();
+    _searchWatcherController.dispose();
     _checklistController.dispose();
     super.dispose();
   }
@@ -127,7 +164,11 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
           if (branchesData is List && branchesData.isNotEmpty) {
             _branches = branchesData;
             if (_selectedBranchId == null) {
-              _selectedBranchId = int.tryParse(_branches.first['id']?.toString() ?? '1') ?? 1;
+              final authState = context.read<AuthBloc>().state;
+              final myBranchId = authState is AuthenticatedState ? authState.userProfile.branch?.id : null;
+              final hasMine = myBranchId != null &&
+                  _branches.any((b) => int.tryParse(b['id']?.toString() ?? '') == myBranchId);
+              _selectedBranchId = hasMine ? myBranchId : int.tryParse(_branches.first['id']?.toString() ?? '');
               _fetchNextTaskId(branchId: _selectedBranchId);
             }
           }
@@ -139,7 +180,11 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
             _filteredAssignees = List.from(assigneesData);
           }
         }).catchError((_) => null),
-        _dioClient.dio.get(ApiConstants.enums).catchError((_) => null),
+        _dioClient.dio.get(ApiConstants.enums).then((_) => null).catchError((_) => null),
+        _dioClient.dio.get(ApiConstants.events).then((res) {
+          final data = _safeParse(res.data);
+          if (data is List) _events = data;
+        }).catchError((_) => null),
       ]);
     } catch (_) {}
     if (mounted) {
@@ -149,7 +194,10 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
 
   Future<void> _fetchNextTaskId({int? branchId}) async {
     try {
-      final taskNo = await _taskRepository.getNextTaskId(branchId: branchId);
+      final taskNo = await _taskRepository.getNextTaskId(
+        branchId: branchId ?? _selectedBranchId,
+        isEvent: _selectedEventId != null,
+      );
       if (mounted && taskNo != null) {
         setState(() {
           _nextTaskId = taskNo;
@@ -190,15 +238,17 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
       'dueDate': DateFormat('yyyy-MM-dd').format(_targetDate),
       'remarks': _remarksController.text.trim(),
       'isRecurring': _isRecurring,
-      'frequency': 'daily',
-      'recurTime': '18:00',
-      'weekday': 1,
-      'monthday': 1,
-      'specificDate': '',
-      'splitPerAssignee': true,
+      'frequency': _frequency,
+      'recurTime': _recurTime,
+      'weekday': _weekday,
+      'monthday': _monthday,
+      'specificDate': _specificDate,
+      if (_selectedEventId != null) 'eventId': _selectedEventId,
+      'splitPerAssignee': _splitPerAssignee,
       'assignedById': _assignedOnBehalfOfId != null ? _assignedOnBehalfOfId.toString() : '',
       'assigneeIds': _selectedAssigneeIds,
       'assigneeNames': assigneeNames,
+      'watcherIds': _selectedWatcherIds,
       'checklist': _checklistItems,
       'attachments': _attachments,
     };
@@ -253,6 +303,15 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
       _assignedOnBehalfOfId = int.tryParse(p.assignedById);
       _selectedAssigneeIds.clear();
       _selectedAssigneeIds.addAll(p.assigneeIds);
+      _selectedWatcherIds
+        ..clear()
+        ..addAll(p.watcherIds);
+      _splitPerAssignee = p.splitPerAssignee;
+      _frequency = _frequencies.containsKey(p.frequency) ? p.frequency : 'daily';
+      _recurTime = p.recurTime.isNotEmpty ? p.recurTime : '18:00';
+      _weekday = p.weekday;
+      _monthday = p.monthday;
+      _specificDate = p.specificDate;
       _checklistItems.clear();
       _checklistItems.addAll(p.checklist);
       _attachments.clear();
@@ -282,15 +341,17 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
       'dueDate': DateFormat('yyyy-MM-dd').format(_targetDate),
       'remarks': _remarksController.text.trim(),
       'isRecurring': _isRecurring,
-      'frequency': 'daily',
-      'recurTime': '18:00',
-      'weekday': 1,
-      'monthday': 1,
-      'specificDate': '',
-      'splitPerAssignee': true,
+      'frequency': _frequency,
+      'recurTime': _recurTime,
+      'weekday': _weekday,
+      'monthday': _monthday,
+      'specificDate': _specificDate,
+      if (_selectedEventId != null) 'eventId': _selectedEventId,
+      'splitPerAssignee': _splitPerAssignee,
       'assignedById': _assignedOnBehalfOfId != null ? _assignedOnBehalfOfId.toString() : '',
       'assigneeIds': _selectedAssigneeIds,
       'assigneeNames': assigneeNames,
+      'watcherIds': _selectedWatcherIds,
       'checklist': _checklistItems,
       'attachments': _attachments,
     };
@@ -329,25 +390,41 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
     final title = _titleController.text.trim();
     final desc = _descController.text.trim();
 
-    if (title.isEmpty || desc.isEmpty) {
+    if (title.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in Task Title and Description')),
+        const SnackBar(content: Text('Task title is required')),
       );
       return;
     }
 
-    final payload = {
+    final payload = <String, dynamic>{
       'title': title,
       'description': desc,
-      'branchId': _selectedBranchId ?? 1,
+      if (_selectedBranchId != null) 'branchId': _selectedBranchId,
       'priority': _selectedPriority,
       'category': _selectedCategory,
       'dueDate': DateFormat('yyyy-MM-dd').format(_targetDate),
-      'remarks': _remarksController.text.isNotEmpty ? _remarksController.text.trim() : 'no',
-      'assigneeIds': _selectedAssigneeIds.isNotEmpty ? _selectedAssigneeIds : [20],
-      'checklist': _checklistItems,
+      'remarks': _remarksController.text.trim(),
+      'assigneeIds': List<int>.from(_selectedAssigneeIds),
+      'watcherIds': _selectedWatcherIds.where((id) => !_selectedAssigneeIds.contains(id)).toList(),
+      // web sends checklist entries as plain strings
+      'checklist': _checklistItems
+          .map((e) => (e['text'] ?? e['item'] ?? '').toString().trim())
+          .where((t) => t.isNotEmpty)
+          .toList(),
       'attachments': _attachments,
       'isRecurring': _isRecurring,
+      if (_isRecurring) ...{
+        'frequency': _frequency,
+        'recurTime': _recurTime,
+        'weekday': _weekday,
+        'monthday': _monthday,
+        if (_specificDate.isNotEmpty) 'specificDate': _specificDate,
+      },
+      if (_selectedEventId != null) 'eventId': _selectedEventId,
+      'isEvent': _selectedEventId != null,
+      'splitPerAssignee': _selectedAssigneeIds.length > 1 && _splitPerAssignee,
+      if (_assignedOnBehalfOfId != null) 'assignedByUserId': _assignedOnBehalfOfId,
     };
 
     context.read<CreateTaskBloc>().add(CreateTaskSubmitEvent(payload));
@@ -504,11 +581,14 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
         return Dialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          insetPadding: EdgeInsets.symmetric(
+            horizontal: MediaQuery.of(context).size.width < 600 ? 10 : 16,
+            vertical: 24,
+          ),
           child: Container(
             width: 700,
             constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.90),
-            padding: const EdgeInsets.all(22),
+            padding: EdgeInsets.all(MediaQuery.of(context).size.width < 600 ? 16 : 22),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -542,17 +622,16 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
                 const Divider(),
                 const SizedBox(height: 10),
 
-                // Top Draft Resume Banner (when available, not dismissed, and not currently resuming)
-                if (_availableDrafts.isNotEmpty && !_isDismissedDraftBanner && _currentDraftId == null) ...[
-                  _buildSavedDraftBanner(context, _availableDrafts.first, isDark),
-                  const SizedBox(height: 10),
-                ],
-
                 Expanded(
                   child: SingleChildScrollView(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Draft resume banner scrolls with the form so it doesn't eat phone height
+                          if (_availableDrafts.isNotEmpty && !_isDismissedDraftBanner && _currentDraftId == null) ...[
+                            _buildSavedDraftBanner(context, _availableDrafts.first, isDark),
+                            const SizedBox(height: 12),
+                          ],
                           // Task ID & Date Row
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -665,11 +744,51 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
                           ),
                           const SizedBox(height: 14),
 
+                          // Linked Event (optional) — gives the task an -E series ID
+                          Text('Linked Event (optional)',
+                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textPrimary(context))),
+                          const SizedBox(height: 4),
+                          SearchableFilterDropdown<int?>(
+                            value: _selectedEventId,
+                            hint: 'None (Regular task)',
+                            searchHint: 'Search events…',
+                            isExpanded: true,
+                            triggerHeight: 44,
+                            maxVisibleCount: 6,
+                            items: [
+                              const SearchableDropdownItem<int?>(value: null, label: 'None (Regular task)'),
+                              ..._events.map((e) {
+                                final id = int.tryParse(e['id']?.toString() ?? '');
+                                final dt = DateTime.tryParse(e['event_date']?.toString() ?? '');
+                                final branch = e['branch_name']?.toString() ?? '';
+                                return SearchableDropdownItem<int?>(
+                                  value: id,
+                                  label: '★ ${e['title'] ?? ''}',
+                                  subtitle: [
+                                    if (dt != null) DateFormat('dd/MM/yyyy').format(dt.toLocal()),
+                                    if (branch.isNotEmpty) branch,
+                                  ].join(' · '),
+                                );
+                              }),
+                            ],
+                            onChanged: (val) {
+                              setState(() => _selectedEventId = val);
+                              _fetchNextTaskId();
+                              _onFieldChanged();
+                            },
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Assigning to an event gives this task an -E series ID (e.g. SS01-E0001) and tracks it under Event Tasks.',
+                            style: TextStyle(fontSize: 10, color: AppColors.textSecondary(context)),
+                          ),
+                          const SizedBox(height: 14),
+
                           // Assigned By & Subtext
                           Builder(
                             builder: (context) {
                               final authState = context.watch<AuthBloc>().state;
-                              final userName = authState is AuthenticatedState ? authState.userProfile.name : 'Test_TL';
+                              final userName = authState is AuthenticatedState ? authState.userProfile.name : '';
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -705,56 +824,34 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
                           const SizedBox(height: 14),
 
                           // Assigning on Behalf of & School Branch
-                          Row(
+                          Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
+                              Padding(
+                                padding: EdgeInsets.zero,
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     const Text('Assigning on Behalf of (optional)',
                                         style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                                     const SizedBox(height: 4),
-                                    DropdownButtonFormField<int?>(
+                                    SearchableFilterDropdown<int?>(
                                       value: _assignedOnBehalfOfId,
-                                      isDense: true,
+                                      hint: s.selectUserOptional,
+                                      searchHint: 'Search users…',
                                       isExpanded: true,
-                                      decoration: InputDecoration(
-                                        isDense: true,
-                                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                                        filled: true,
-                                        fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                                      ),
-                                      hint: Text(
-                                        s.selectUserOptional,
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
-                                        ),
-                                      ),
+                                      triggerHeight: 44,
+                                      maxVisibleCount: 6,
                                       items: [
-                                        DropdownMenuItem<int?>(
-                                          value: null,
-                                          child: Text(
-                                            s.selectUserOptional,
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
-                                            ),
-                                          ),
-                                        ),
+                                        SearchableDropdownItem<int?>(value: null, label: s.selectUserOptional),
                                         ..._assignees.map((a) {
-                                          final id = a['id'] as int? ?? 0;
-                                          final name = a['name']?.toString() ?? 'User';
-                                          final role = a['role']?.toString() ?? '';
-                                          return DropdownMenuItem<int?>(
+                                          final id = int.tryParse(a['id']?.toString() ?? '');
+                                          final name = a['name']?.toString() ?? '';
+                                          final dept = a['department']?.toString() ?? '';
+                                          return SearchableDropdownItem<int?>(
                                             value: id,
-                                            child: Text(
-                                              role.isNotEmpty ? '$name ($role)' : name,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(fontSize: 11),
-                                            ),
+                                            label: name,
+                                            subtitle: dept.isNotEmpty ? dept : null,
                                           );
                                         }),
                                       ],
@@ -774,44 +871,27 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
                                   ],
                                 ),
                               ),
-                              const SizedBox(width: 14),
-                              Expanded(
+                              const SizedBox(height: 12),
+                              Padding(
+                                padding: EdgeInsets.zero,
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     const Text('School Branch',
                                         style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                                     const SizedBox(height: 4),
-                                    DropdownButtonFormField<int>(
+                                    SearchableFilterDropdown<int?>(
                                       value: _selectedBranchId,
-                                      isDense: true,
+                                      hint: 'Select branch',
+                                      searchHint: 'Search branches…',
                                       isExpanded: true,
-                                      decoration: InputDecoration(
-                                        isDense: true,
-                                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                                        filled: true,
-                                        fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                                      ),
-                                      items: _branches.isEmpty
-                                          ? [
-                                              DropdownMenuItem<int>(
-                                                value: _selectedBranchId ?? 1,
-                                                child: const Text('Head Office', style: TextStyle(fontSize: 11)),
-                                              ),
-                                            ]
-                                          : _branches.map((b) {
-                                              final id = int.tryParse(b['id']?.toString() ?? '1') ?? 1;
-                                              final name = b['name']?.toString() ?? 'Head Office';
-                                              return DropdownMenuItem<int>(
-                                                value: id,
-                                                child: Text(
-                                                  name,
-                                                  overflow: TextOverflow.ellipsis,
-                                                  style: const TextStyle(fontSize: 11),
-                                                ),
-                                              );
-                                            }).toList(),
+                                      triggerHeight: 44,
+                                      maxVisibleCount: 6,
+                                      items: _branches.map((b) {
+                                        final id = int.tryParse(b['id']?.toString() ?? '');
+                                        final name = b['name']?.toString() ?? b['code']?.toString() ?? '';
+                                        return SearchableDropdownItem<int?>(value: id, label: name);
+                                      }).toList(),
                                       onChanged: (val) {
                                         setState(() => _selectedBranchId = val);
                                         _fetchNextTaskId(branchId: val);
@@ -869,7 +949,7 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
                                   final picked = await showDatePicker(
                                     context: context,
                                     initialDate: _targetDate,
-                                    firstDate: DateTime.now(),
+                                    firstDate: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day),
                                     lastDate: DateTime.now().add(const Duration(days: 365)),
                                   );
                                   if (picked != null) setState(() => _targetDate = picked);
@@ -977,6 +1057,10 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
                               const Text('Make this a recurring task', style: TextStyle(fontSize: 11)),
                             ],
                           ),
+                          if (_isRecurring) ...[
+                            const SizedBox(height: 10),
+                            _buildRecurrencePanel(context),
+                          ],
                           const SizedBox(height: 12),
 
                           // Assigned To Section (with Search & Light Grey Placeholders)
@@ -1036,117 +1120,130 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
                           ),
                           const SizedBox(height: 8),
 
-                          // Split Columns for Pick Users & Selected Users
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Left User Picker List
-                              Expanded(
-                                child: Container(
-                                  height: 160,
-                                  decoration: BoxDecoration(
-                                    color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-                                  ),
-                                  child: ListView.builder(
+                          // Assignee picker — full-width list + selected chips (mobile friendly)
+                          Container(
+                            // shrink when search narrows the list, max ~4 rows
+                            height: _filteredAssignees.isEmpty
+                                ? 64
+                                : (_filteredAssignees.length * 58.0).clamp(58.0, 232.0),
+                            decoration: BoxDecoration(
+                              color: AppColors.subtleBg(context),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: AppColors.border(context)),
+                            ),
+                            child: _filteredAssignees.isEmpty
+                                ? Center(
+                                    child: Text(
+                                      _isLoadingLookups ? 'Loading…' : 'No users found',
+                                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary(context)),
+                                    ),
+                                  )
+                                : ListView.separated(
                                     itemCount: _filteredAssignees.length,
+                                    separatorBuilder: (_, __) => Divider(height: 1, color: AppColors.border(context)),
                                     itemBuilder: (context, index) {
                                       final user = _filteredAssignees[index];
-                                      final id = user['id'] as int? ?? 0;
-                                      final name = user['name']?.toString() ?? 'User';
-                                      final initials = user['initials']?.toString() ?? 'US';
+                                      final id = int.tryParse(user['id']?.toString() ?? '') ?? 0;
+                                      final name = user['name']?.toString() ?? '';
+                                      final dept = user['department']?.toString() ?? '';
+                                      final initials = user['initials']?.toString() ?? '';
                                       final isSelected = _selectedAssigneeIds.contains(id);
-
-                                      return Material(
-                                        color: Colors.transparent,
-                                        child: ListTile(
-                                          dense: true,
-                                          visualDensity: VisualDensity.compact,
-                                          contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-                                          leading: CircleAvatar(
-                                            radius: 12,
-                                            backgroundColor: _parseAvatarColor(user['avatar_color']?.toString()),
-                                            child: Text(
-                                              initials,
-                                              style: const TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.bold),
-                                            ),
+                                      return InkWell(
+                                        onTap: () => setState(() {
+                                          if (isSelected) {
+                                            _selectedAssigneeIds.remove(id);
+                                          } else {
+                                            _selectedAssigneeIds.add(id);
+                                            _selectedWatcherIds.remove(id); // an assignee can't also be CC
+                                          }
+                                        }),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                          child: Row(
+                                            children: [
+                                              CircleAvatar(
+                                                radius: 14,
+                                                backgroundColor: _parseAvatarColor(user['avatar_color']?.toString()),
+                                                child: Text(
+                                                  initials,
+                                                  style: const TextStyle(
+                                                      fontSize: 10, color: AppColors.white, fontWeight: FontWeight.bold),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 10),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(name,
+                                                        style: TextStyle(
+                                                            fontSize: 13,
+                                                            fontWeight: FontWeight.w600,
+                                                            color: AppColors.textPrimary(context))),
+                                                    if (dept.isNotEmpty)
+                                                      Text(dept,
+                                                          style: TextStyle(
+                                                              fontSize: 11, color: AppColors.textSecondary(context))),
+                                                  ],
+                                                ),
+                                              ),
+                                              Icon(
+                                                isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked,
+                                                size: 20,
+                                                color: isSelected
+                                                    ? AppColors.green600
+                                                    : AppColors.textFaint(context),
+                                              ),
+                                            ],
                                           ),
-                                          title: Text(name, style: const TextStyle(fontSize: 11)),
-                                          selected: isSelected,
-                                          onTap: () {
-                                            setState(() {
-                                              if (isSelected) {
-                                                _selectedAssigneeIds.remove(id);
-                                              } else {
-                                                _selectedAssigneeIds.add(id);
-                                              }
-                                            });
-                                          },
                                         ),
                                       );
                                     },
                                   ),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-
-                              // Right Selected Card with Scrolling
-                              Expanded(
-                                child: Container(
-                                  height: 160,
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'SELECTED (${_selectedAssigneeIds.length})',
-                                        style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.grey),
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Expanded(
-                                        child: _selectedAssigneeIds.isEmpty
-                                            ? Center(
-                                                child: Text(
-                                                  s.pickUsersFromLeft,
-                                                  style: TextStyle(
-                                                    fontSize: 10,
-                                                    color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
-                                                  ),
-                                                ),
-                                              )
-                                            : SingleChildScrollView(
-                                                physics: const AlwaysScrollableScrollPhysics(),
-                                                child: Wrap(
-                                                  spacing: 4,
-                                                  runSpacing: 4,
-                                                  children: _selectedAssigneeIds.map((id) {
-                                                    final match = _assignees.firstWhere((a) => a['id'] == id, orElse: () => {'name': 'User #$id'});
-                                                    return Chip(
-                                                      visualDensity: VisualDensity.compact,
-                                                      padding: const EdgeInsets.all(2),
-                                                      label: Text(match['name']?.toString() ?? '$id', style: const TextStyle(fontSize: 9)),
-                                                      deleteIcon: const Icon(Icons.close, size: 10),
-                                                      onDeleted: () {
-                                                        setState(() => _selectedAssigneeIds.remove(id));
-                                                      },
-                                                    );
-                                                  }).toList(),
-                                                ),
-                                              ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Selected (${_selectedAssigneeIds.length})',
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textSecondary(context)),
+                          ),
+                          const SizedBox(height: 6),
+                          if (_selectedAssigneeIds.isEmpty)
+                            Text(s.pickUsersFromLeft,
+                                style: TextStyle(fontSize: 11, color: AppColors.textFaint(context)))
+                          else
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 6,
+                              children: _selectedAssigneeIds.map((id) {
+                                final match = _assignees.firstWhere(
+                                  (a) => int.tryParse(a['id']?.toString() ?? '') == id,
+                                  orElse: () => {'name': '#$id'},
+                                );
+                                return InputChip(
+                                  visualDensity: VisualDensity.compact,
+                                  label: Text(match['name']?.toString() ?? '#$id', style: const TextStyle(fontSize: 11.5)),
+                                  onDeleted: () => setState(() => _selectedAssigneeIds.remove(id)),
+                                );
+                              }).toList(),
+                            ),
+                          if (_selectedAssigneeIds.length > 1) ...[
+                            const SizedBox(height: 6),
+                            SwitchListTile.adaptive(
+                              contentPadding: EdgeInsets.zero,
+                              dense: true,
+                              value: _splitPerAssignee,
+                              onChanged: (v) => setState(() => _splitPerAssignee = v),
+                              title: Text('Give each person their own sub-task',
+                                  style: TextStyle(fontSize: 12.5, color: AppColors.textPrimary(context))),
+                              subtitle: Text('Each assignee tracks their own progress',
+                                  style: TextStyle(fontSize: 11, color: AppColors.textSecondary(context))),
+                            ),
+                          ],
+                          const SizedBox(height: 14),
+
+                          // CC / Task Watchers (watcherIds) — web layout: picker list + "In CC" panel
+                          _buildCcSection(context),
+                          const SizedBox(height: 14),
 
                           // Attachments Section
                           const Text('Attachments (image, video, document — any file)', style: TextStyle(fontSize: 10, color: Colors.grey)),
@@ -1473,6 +1570,372 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
     );
   }
 
+  Widget _buildRecurrencePanel(BuildContext context) {
+    Widget label(String t) => Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: Text(t, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textPrimary(context))),
+        );
+
+    Widget pickerTile({required String text, required IconData icon, required VoidCallback onTap}) => InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            height: 44,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: AppColors.surface(context),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.border(context)),
+            ),
+            child: Row(
+              children: [
+                Expanded(child: Text(text, style: TextStyle(fontSize: 12.5, color: AppColors.textPrimary(context)))),
+                Icon(icon, size: 18, color: AppColors.textSecondary(context)),
+              ],
+            ),
+          ),
+        );
+
+    Widget timeField() => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            label('Time'),
+            pickerTile(
+              text: _recurTime,
+              icon: Icons.schedule_rounded,
+              onTap: () async {
+                final parts = _recurTime.split(':');
+                final picked = await showTimePicker(
+                  context: context,
+                  initialTime: TimeOfDay(
+                    hour: int.tryParse(parts.first) ?? 18,
+                    minute: parts.length > 1 ? int.tryParse(parts[1]) ?? 0 : 0,
+                  ),
+                );
+                if (picked != null) {
+                  setState(() => _recurTime =
+                      '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}');
+                  _onFieldChanged();
+                }
+              },
+            ),
+          ],
+        );
+
+    Widget dateField() => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            label('Specific date'),
+            pickerTile(
+              text: _specificDate.isEmpty
+                  ? 'Select date'
+                  : DateFormat('dd/MM/yyyy').format(DateTime.tryParse(_specificDate) ?? DateTime.now()),
+              icon: Icons.calendar_month_rounded,
+              onTap: () async {
+                final now = DateTime.now();
+                final today = DateTime(now.year, now.month, now.day);
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.tryParse(_specificDate) ?? today,
+                  firstDate: today,
+                  lastDate: today.add(const Duration(days: 730)),
+                );
+                if (picked != null) {
+                  setState(() => _specificDate = DateFormat('yyyy-MM-dd').format(picked));
+                  _onFieldChanged();
+                }
+              },
+            ),
+          ],
+        );
+
+    final children = <Widget>[
+      label('Frequency'),
+      SearchableFilterDropdown<String>(
+        value: _frequency,
+        hint: 'Frequency',
+        isExpanded: true,
+        triggerHeight: 44,
+        maxVisibleCount: 6,
+        items: _frequencies.entries.map((e) => SearchableDropdownItem<String>(value: e.key, label: e.value)).toList(),
+        onChanged: (v) {
+          if (v == null) return;
+          setState(() => _frequency = v);
+          _onFieldChanged();
+        },
+      ),
+      const SizedBox(height: 10),
+    ];
+
+    switch (_frequency) {
+      case 'daily':
+        children.add(timeField());
+        break;
+      case 'weekly':
+        children.addAll([
+          label('Day'),
+          SearchableFilterDropdown<int>(
+            value: _weekday,
+            hint: 'Day',
+            isExpanded: true,
+            triggerHeight: 44,
+            maxVisibleCount: 7,
+            items: List.generate(7, (i) => SearchableDropdownItem<int>(value: i, label: _weekdays[i])),
+            onChanged: (v) {
+              if (v == null) return;
+              setState(() => _weekday = v);
+              _onFieldChanged();
+            },
+          ),
+          const SizedBox(height: 10),
+          timeField(),
+        ]);
+        break;
+      case 'monthly':
+      case 'bi_monthly':
+        children.addAll([
+          label('Day of month'),
+          SearchableFilterDropdown<int>(
+            value: _monthday,
+            hint: 'Day of month',
+            isExpanded: true,
+            triggerHeight: 44,
+            maxVisibleCount: 6,
+            items: List.generate(31, (i) => SearchableDropdownItem<int>(value: i + 1, label: '${i + 1}')),
+            onChanged: (v) {
+              if (v == null) return;
+              setState(() => _monthday = v);
+              _onFieldChanged();
+            },
+          ),
+        ]);
+        break;
+      case 'quarterly':
+        children.addAll([dateField(), const SizedBox(height: 10), timeField()]);
+        break;
+      case 'half_yearly':
+      case 'yearly':
+        children.add(dateField());
+        break;
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.subtleBg(context),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.border(context)),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: children),
+    );
+  }
+
+  Widget _buildCcSection(BuildContext context) {
+    final authState = context.read<AuthBloc>().state;
+    final myId = authState is AuthenticatedState ? authState.userProfile.id : null;
+    final options = _assignees.where((a) {
+      final id = int.tryParse(a['id']?.toString() ?? '') ?? 0;
+      if (id == myId || _selectedAssigneeIds.contains(id) || _selectedWatcherIds.contains(id)) return false;
+      if (_watcherQuery.isEmpty) return true;
+      final name = a['name']?.toString().toLowerCase() ?? '';
+      final dept = a['department']?.toString().toLowerCase() ?? '';
+      return name.contains(_watcherQuery) || dept.contains(_watcherQuery);
+    }).toList();
+
+    Map<String, dynamic> userById(int id) => Map<String, dynamic>.from(_assignees.firstWhere(
+          (a) => int.tryParse(a['id']?.toString() ?? '') == id,
+          orElse: () => {'id': id, 'name': '#$id'},
+        ) as Map);
+
+    Widget avatar(Map u) => CircleAvatar(
+          radius: 13,
+          backgroundColor: _parseAvatarColor(u['avatar_color']?.toString()),
+          child: Text(
+            u['initials']?.toString() ?? '',
+            style: const TextStyle(fontSize: 9, color: AppColors.white, fontWeight: FontWeight.bold),
+          ),
+        );
+
+    Widget personRow(Map u, {required IconData icon, required VoidCallback onTap, Color? iconColor}) => InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            child: Row(
+              children: [
+                avatar(u),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(u['name']?.toString() ?? '',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context))),
+                      if ((u['department']?.toString() ?? '').isNotEmpty)
+                        Text(u['department'].toString(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontSize: 10.5, color: AppColors.textSecondary(context))),
+                    ],
+                  ),
+                ),
+                Icon(icon, size: 18, color: iconColor ?? AppColors.textPrimary(context)),
+              ],
+            ),
+          ),
+        );
+
+    final picker = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          height: 44,
+          child: TextField(
+            controller: _searchWatcherController,
+            onChanged: (v) => setState(() => _watcherQuery = v.trim().toLowerCase()),
+            style: TextStyle(fontSize: 13, color: AppColors.textPrimary(context)),
+            decoration: InputDecoration(
+              hintText: 'Search people for CC...',
+              hintStyle: TextStyle(fontSize: 12.5, color: AppColors.textFaint(context)),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+              filled: true,
+              fillColor: AppColors.surface(context),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: AppColors.border(context)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: AppColors.border(context)),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          height: 140,
+          decoration: BoxDecoration(
+            color: AppColors.surface(context),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppColors.border(context)),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: options.isEmpty
+              ? Center(
+                  child: Text(_isLoadingLookups ? 'Loading…' : 'No people found',
+                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary(context))),
+                )
+              : ListView.separated(
+                  itemCount: options.length,
+                  separatorBuilder: (_, __) => Divider(height: 1, color: AppColors.border(context)),
+                  itemBuilder: (context, i) {
+                    final u = options[i] as Map;
+                    final id = int.tryParse(u['id']?.toString() ?? '') ?? 0;
+                    return personRow(u, icon: Icons.add_rounded, onTap: () {
+                      setState(() => _selectedWatcherIds.add(id));
+                      _onFieldChanged();
+                    });
+                  },
+                ),
+        ),
+      ],
+    );
+
+    Widget inCc(bool wide) => Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          height: wide ? 44 : 24,
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'IN CC (${_selectedWatcherIds.length})',
+              style: TextStyle(
+                fontSize: 11,
+                letterSpacing: 1,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textSecondary(context),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          height: 140,
+          decoration: BoxDecoration(
+            color: AppColors.subtleBg(context),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppColors.border(context)),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: _selectedWatcherIds.isEmpty
+              ? Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    'No watchers added yet. Pick team members to add them in CC.',
+                    style: TextStyle(fontSize: 12, height: 1.4, color: AppColors.textFaint(context)),
+                  ),
+                )
+              : ListView.separated(
+                  itemCount: _selectedWatcherIds.length,
+                  separatorBuilder: (_, __) => Divider(height: 1, color: AppColors.border(context)),
+                  itemBuilder: (context, i) {
+                    final id = _selectedWatcherIds[i];
+                    return personRow(userById(id),
+                        icon: Icons.close_rounded,
+                        iconColor: AppColors.badgeRedFg(context), onTap: () {
+                      setState(() => _selectedWatcherIds.remove(id));
+                      _onFieldChanged();
+                    });
+                  },
+                ),
+        ),
+      ],
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 6,
+          children: [
+            Icon(Icons.visibility_outlined, size: 16, color: AppColors.textPrimary(context)),
+            Text('CC / Task Watchers',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary(context))),
+            Text('(optional · observer updates only)',
+                style: TextStyle(fontSize: 11, color: AppColors.textSecondary(context))),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'People in CC can view the entire task details and receive all notifications & updates, but cannot make edits or change the status.',
+          style: TextStyle(fontSize: 11, height: 1.4, color: AppColors.textSecondary(context)),
+        ),
+        const SizedBox(height: 10),
+        LayoutBuilder(
+          builder: (context, c) => c.maxWidth >= 520
+              // Tablet: side by side, like the web
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: picker),
+                    const SizedBox(width: 12),
+                    Expanded(child: inCc(true)),
+                  ],
+                )
+              // Phone: stacked
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [picker, const SizedBox(height: 12), inCc(false)],
+                ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildPriorityChip(String key, String label, Color chipColor) {
     final isSelected = _selectedPriority == key;
     return ChoiceChip(
@@ -1486,7 +1949,14 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
       selectedColor: chipColor,
       backgroundColor: chipColor.withValues(alpha: 0.12),
       onSelected: (val) {
-        setState(() => _selectedPriority = key);
+        setState(() {
+          _selectedPriority = key;
+          final days = _priorityDueDays[key];
+          if (days != null) {
+            final now = DateTime.now();
+            _targetDate = DateTime(now.year, now.month, now.day).add(Duration(days: days));
+          }
+        });
         _onFieldChanged();
       },
     );

@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../core/network/dio_client.dart';
 import '../../../core/utils/network_connectivity_service.dart';
-import '../../modules/approvals/bloc/approvals_bloc.dart';
-import '../../modules/approvals/bloc/approvals_event.dart';
+import '../../modules/approvals/utils/indent_flow_helper.dart';
 import '../../modules/approvals/models/indent_model.dart';
 import '../../modules/approvals/repository/approvals_repository.dart';
 import '../../core/utils/app_toast.dart';
@@ -153,11 +151,8 @@ class _RaiseIndentDialogState extends State<RaiseIndentDialog> {
         setState(() => _isSubmitting = false);
         Navigator.of(context).pop();
 
+        // The Budget Indents screen refreshes its tabs through onCreated.
         widget.onCreated?.call();
-
-        try {
-          context.read<ApprovalsBloc>().add(FetchBudgetApprovalsDataEvent());
-        } catch (_) {}
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -198,7 +193,7 @@ class _RaiseIndentDialogState extends State<RaiseIndentDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       backgroundColor: bgColor,
       elevation: 8,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 620),
         child: ClipRRect(
@@ -244,7 +239,7 @@ class _RaiseIndentDialogState extends State<RaiseIndentDialog> {
               // Form Body
               Flexible(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                   child: Form(
                     key: _formKey,
                     child: Column(
@@ -345,201 +340,118 @@ class _RaiseIndentDialogState extends State<RaiseIndentDialog> {
                         ),
                         const SizedBox(height: 8),
 
-                        // Line items table header
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                flex: 5,
-                                child: Text(
-                                  s.descriptionColumn,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: isDark ? Colors.white70 : const Color(0xFF64748B),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              SizedBox(
-                                width: 55,
-                                child: Text(
-                                  s.qtyColumn,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: isDark ? Colors.white70 : const Color(0xFF64748B),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              SizedBox(
-                                width: 80,
-                                child: Text(
-                                  s.unitPriceColumn,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: isDark ? Colors.white70 : const Color(0xFF64748B),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              SizedBox(
-                                width: 75,
-                                child: Text(
-                                  s.amountColumn,
-                                  textAlign: TextAlign.right,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: isDark ? Colors.white70 : const Color(0xFF64748B),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 32),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-
-                        // Line items list
+                        // Line items — one stacked card per item (mobile friendly, no wide table)
                         ListView.separated(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: _items.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 8),
+                          separatorBuilder: (_, __) => const SizedBox(height: 10),
                           itemBuilder: (context, index) {
                             final item = _items[index];
                             final qty = int.tryParse(item.qtyController.text.trim()) ?? 0;
                             final unit = double.tryParse(item.unitPriceController.text.trim()) ?? 0.0;
                             final amount = qty * unit;
 
-                            return Row(
-                              children: [
-                                // Description
-                                Expanded(
-                                  flex: 5,
-                                  child: TextFormField(
+                            InputDecoration deco({String? hint, String? label}) => InputDecoration(
+                                  hintText: hint,
+                                  labelText: label,
+                                  isDense: true,
+                                  labelStyle: TextStyle(fontSize: 12, color: AppColors.textSecondary(context)),
+                                  hintStyle: TextStyle(fontSize: 13, color: AppColors.textFaint(context)),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(color: borderColor),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: BorderSide(color: borderColor),
+                                  ),
+                                );
+
+                            return Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: AppColors.subtleBg(context),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: borderColor),
+                              ),
+                              child: Column(
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        '${s.descriptionColumn} ${index + 1}',
+                                        style: TextStyle(
+                                          fontSize: 11.5,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.textSecondary(context),
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      if (_items.length > 1)
+                                        InkWell(
+                                          onTap: () => _removeItem(index),
+                                          child: Icon(Icons.close_rounded, size: 18, color: AppColors.textSecondary(context)),
+                                        ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  TextFormField(
                                     controller: item.descriptionController,
-                                    decoration: InputDecoration(
-                                      hintText: s.itemHint,
-                                      hintStyle: TextStyle(
-                                        fontSize: 13,
-                                        color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
-                                      ),
-                                      contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 10,
-                                      ),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(6),
-                                        borderSide: BorderSide(color: borderColor),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(6),
-                                        borderSide: BorderSide(color: borderColor),
-                                      ),
-                                    ),
-                                    validator: (val) {
-                                      if (val == null || val.trim().isEmpty) {
-                                        return 'Required';
-                                      }
-                                      return null;
-                                    },
+                                    style: TextStyle(fontSize: 13, color: headerTextColor),
+                                    decoration: deco(hint: s.itemHint),
+                                    validator: (val) => (val == null || val.trim().isEmpty) ? 'Required' : null,
                                   ),
-                                ),
-                                const SizedBox(width: 8),
-
-                                // Qty
-                                SizedBox(
-                                  width: 55,
-                                  child: TextFormField(
-                                    controller: item.qtyController,
-                                    textAlign: TextAlign.center,
-                                    keyboardType: TextInputType.number,
-                                    decoration: InputDecoration(
-                                      contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 10,
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        flex: 2,
+                                        child: TextFormField(
+                                          controller: item.qtyController,
+                                          textAlign: TextAlign.center,
+                                          keyboardType: TextInputType.number,
+                                          style: TextStyle(fontSize: 13, color: headerTextColor),
+                                          decoration: deco(label: s.qtyColumn),
+                                        ),
                                       ),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(6),
-                                        borderSide: BorderSide(color: borderColor),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        flex: 3,
+                                        child: TextFormField(
+                                          controller: item.unitPriceController,
+                                          textAlign: TextAlign.center,
+                                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                          style: TextStyle(fontSize: 13, color: headerTextColor),
+                                          decoration: deco(label: s.unitPriceColumn),
+                                        ),
                                       ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(6),
-                                        borderSide: BorderSide(color: borderColor),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        flex: 3,
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.end,
+                                          children: [
+                                            Text(
+                                              s.amountColumn,
+                                              style: TextStyle(fontSize: 11, color: AppColors.textSecondary(context)),
+                                            ),
+                                            Text(
+                                              '₹${amount.toStringAsFixed(0)}',
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.bold,
+                                                color: headerTextColor,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
+                                    ],
                                   ),
-                                ),
-                                const SizedBox(width: 8),
-
-                                // Unit Price
-                                SizedBox(
-                                  width: 80,
-                                  child: TextFormField(
-                                    controller: item.unitPriceController,
-                                    textAlign: TextAlign.center,
-                                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                    decoration: InputDecoration(
-                                      contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 10,
-                                      ),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(6),
-                                        borderSide: BorderSide(color: borderColor),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(6),
-                                        borderSide: BorderSide(color: borderColor),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-
-                                // Amount
-                                SizedBox(
-                                  width: 75,
-                                  child: Text(
-                                    '₹${amount.toStringAsFixed(0)}',
-                                    textAlign: TextAlign.right,
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
-                                      color: headerTextColor,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-
-                                // Delete Button
-                                SizedBox(
-                                  width: 28,
-                                  child: IconButton(
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(),
-                                    icon: Icon(
-                                      Icons.close,
-                                      size: 16,
-                                      color: _items.length > 1
-                                          ? (isDark ? Colors.white60 : Colors.black45)
-                                          : Colors.transparent,
-                                    ),
-                                    onPressed: _items.length > 1 ? () => _removeItem(index) : null,
-                                  ),
-                                ),
-                              ],
+                                ],
+                              ),
                             );
                           },
                         ),
@@ -645,28 +557,27 @@ class _RaiseIndentDialogState extends State<RaiseIndentDialog> {
                                 ],
                               ),
                               const SizedBox(height: 6),
-                              RichText(
-                                text: TextSpan(
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: isDark ? Colors.white70 : const Color(0xFF475569),
-                                  ),
+                              // Approval chain for this amount (same tiers as the web portal)
+                              Text.rich(
+                                TextSpan(
                                   children: [
-                                    const TextSpan(
-                                      text: "You're at or above the required level — this indent will be ",
-                                    ),
-                                    const TextSpan(
-                                      text: "auto-approved",
-                                      style: TextStyle(
-                                        color: Color(0xFF16A34A),
-                                        fontWeight: FontWeight.bold,
+                                    TextSpan(text: 'Approval chain for ₹${_totalAmount.toStringAsFixed(0)}: '),
+                                    for (final entry in IndentFlowHelper.chainFor(_totalAmount).asMap().entries) ...[
+                                      TextSpan(
+                                        text: entry.value.label,
+                                        style: TextStyle(fontWeight: FontWeight.w700, color: headerTextColor),
                                       ),
-                                    ),
-                                    const TextSpan(
-                                      text: " and a voucher issued immediately.",
-                                    ),
+                                      if (entry.key < IndentFlowHelper.chainFor(_totalAmount).length - 1)
+                                        const TextSpan(text: ' → '),
+                                    ],
                                   ],
                                 ),
+                                style: TextStyle(fontSize: 12, height: 1.4, color: AppColors.textSecondary(context)),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                IndentFlowHelper.chainNote(_totalAmount),
+                                style: TextStyle(fontSize: 11, color: AppColors.textFaint(context)),
                               ),
                             ],
                           ),
@@ -681,7 +592,7 @@ class _RaiseIndentDialogState extends State<RaiseIndentDialog> {
 
               // Bottom Actions: Cancel & Submit indent
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [

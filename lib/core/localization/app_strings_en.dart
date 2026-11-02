@@ -2375,7 +2375,7 @@ class AppStringsEn extends AppStrings {
   @override
   String get selectedLabel => 'SELECTED';
   @override
-  String get pickUsersFromLeft => 'Pick users or a group from the left';
+  String get pickUsersFromLeft => 'Pick users above or tap a group';
 
   @override
   String get addChecklistItemHint => 'Add a checklist item...';
