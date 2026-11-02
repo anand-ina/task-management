@@ -2,7 +2,6 @@ import 'package:equatable/equatable.dart';
 import '../models/task_approval_model.dart';
 import '../models/escalation_model.dart';
 import '../models/meeting_approval_model.dart';
-import '../models/budget_approval_model.dart';
 import '../models/indent_model.dart';
 import '../models/organisation_approval_model.dart';
 
@@ -24,10 +23,10 @@ class ApprovalsLoadedState extends ApprovalsState {
   final List<EscalationModel> escalations;
   final List<MeetingApprovalModel> meetings;
   final List<MeetingApprovalModel> meetingCompletionRequests;
-  final List<BudgetApprovalModel> budgetReceived;
-  final List<BudgetApprovalModel> budgetInitiated;
   final List<IndentItemModel> indentsInbox;
+  /// /indents/all for approvers (director / center head / finance / manager), else /indents/mine
   final List<IndentItemModel> indentsAll;
+  final List<IndentItemModel> indentsMine;
   final IndentItemModel? selectedIndentDetail;
   final List<OrganisationApprovalModel> organisationApprovals;
 
@@ -38,10 +37,9 @@ class ApprovalsLoadedState extends ApprovalsState {
     this.escalations = const [],
     this.meetings = const [],
     this.meetingCompletionRequests = const [],
-    this.budgetReceived = const [],
-    this.budgetInitiated = const [],
     this.indentsInbox = const [],
     this.indentsAll = const [],
+    this.indentsMine = const [],
     this.selectedIndentDetail,
     this.organisationApprovals = const [],
   });
@@ -53,10 +51,9 @@ class ApprovalsLoadedState extends ApprovalsState {
     List<EscalationModel>? escalations,
     List<MeetingApprovalModel>? meetings,
     List<MeetingApprovalModel>? meetingCompletionRequests,
-    List<BudgetApprovalModel>? budgetReceived,
-    List<BudgetApprovalModel>? budgetInitiated,
     List<IndentItemModel>? indentsInbox,
     List<IndentItemModel>? indentsAll,
+    List<IndentItemModel>? indentsMine,
     IndentItemModel? selectedIndentDetail,
     List<OrganisationApprovalModel>? organisationApprovals,
   }) {
@@ -67,10 +64,9 @@ class ApprovalsLoadedState extends ApprovalsState {
       escalations: escalations ?? this.escalations,
       meetings: meetings ?? this.meetings,
       meetingCompletionRequests: meetingCompletionRequests ?? this.meetingCompletionRequests,
-      budgetReceived: budgetReceived ?? this.budgetReceived,
-      budgetInitiated: budgetInitiated ?? this.budgetInitiated,
       indentsInbox: indentsInbox ?? this.indentsInbox,
       indentsAll: indentsAll ?? this.indentsAll,
+      indentsMine: indentsMine ?? this.indentsMine,
       selectedIndentDetail: selectedIndentDetail ?? this.selectedIndentDetail,
       organisationApprovals: organisationApprovals ?? this.organisationApprovals,
     );
@@ -84,10 +80,9 @@ class ApprovalsLoadedState extends ApprovalsState {
         escalations,
         meetings,
         meetingCompletionRequests,
-        budgetReceived,
-        budgetInitiated,
         indentsInbox,
         indentsAll,
+        indentsMine,
         selectedIndentDetail,
         organisationApprovals,
       ];

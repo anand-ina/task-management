@@ -266,6 +266,21 @@ class AppColors {
     return scaffoldBg(context);
   }
 
+  static const Color violet500 = Color(0xFF8B5CF6);
+
+  static Color badgeVioletBg(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark ? slate800 : const Color(0xFFEDE9FE);
+  }
+
+  static Color badgeVioletFg(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark ? const Color(0xFFA78BFA) : const Color(0xFF6D28D9);
+  }
+
+  /// Muted "faint" text used for meta lines and inactive steps
+  static Color textFaint(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark ? slate500 : slate400;
+  }
+
   static Color badgeRedFg(BuildContext context) {
     return Theme.of(context).brightness == Brightness.dark ? const Color(0xFFF87171) : red700;
   }

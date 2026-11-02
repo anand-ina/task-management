@@ -67,12 +67,70 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
   bool _isLoading = true;
   bool _hasReviewed = false;
   TaskDetailModel? _detail;
-  final List<Map<String, dynamic>> _postedComments = [];
+  List<TaskCommentModel> _comments = [];
+  bool _sendingComment = false;
+  final Set<int> _togglingChecklist = {};
 
   @override
   void initState() {
     super.initState();
     _fetchDetail();
+    _fetchComments();
+  }
+
+  Future<void> _fetchComments() async {
+    try {
+      final list = await _repository.getTaskComments(widget.taskId);
+      if (mounted) setState(() => _comments = list);
+    } catch (e) {
+      debugPrint('TaskDetailDialog error fetching comments: $e');
+    }
+  }
+
+  Future<void> _sendComment() async {
+    final txt = _commentController.text.trim();
+    if (txt.isEmpty || _sendingComment) return;
+    setState(() => _sendingComment = true);
+    try {
+      final list = await _repository.addTaskComment(widget.taskId, txt);
+      if (!mounted) return;
+      setState(() {
+        _comments = list;
+        _commentController.clear();
+      });
+      _fetchDetail();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$e'), backgroundColor: AppColors.red600),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _sendingComment = false);
+    }
+  }
+
+  Future<void> _toggleChecklist(TaskChecklistItemModel item, bool isWatcher) async {
+    if (isWatcher) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Watchers have read-only access and cannot toggle checklist items')),
+      );
+      return;
+    }
+    if (_togglingChecklist.contains(item.id)) return;
+    setState(() => _togglingChecklist.add(item.id));
+    try {
+      await _repository.toggleChecklistItem(item.id, !item.done);
+      await _fetchDetail();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$e'), backgroundColor: AppColors.red600),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _togglingChecklist.remove(item.id));
+    }
   }
 
   @override
@@ -176,23 +234,6 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final authState = context.watch<AuthBloc>().state;
-    bool isTeamLead = false;
-    bool isAcademicExecutive = false;
-    bool isDirector = false;
-    if (authState is AuthenticatedState) {
-      final role = authState.userProfile.role.toLowerCase();
-      final roleLabel = authState.userProfile.roleLabel.toLowerCase();
-      if (role.contains('director') || roleLabel.contains('director')) {
-        isDirector = true;
-      }
-      if (roleLabel.contains('team lead') || roleLabel.contains('tl') || role.contains('team_lead') || role.contains('tl')) {
-        isTeamLead = true;
-      }
-      if (role.contains('executive') || role.contains('ae') || roleLabel.contains('executive') || roleLabel.contains('ae')) {
-        isAcademicExecutive = true;
-      }
-    }
-
     final taskNo = _detail?.taskNo ?? widget.initialTask?.taskNo ?? 'Task';
     final title = _detail?.title ?? widget.initialTask?.title ?? '';
     final description = _detail?.description ?? widget.initialTask?.description ?? '';
@@ -216,12 +257,9 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
     final priority = _detail?.priority ?? widget.initialTask?.priority ?? 'high';
     final status = _detail?.status ?? widget.initialTask?.status ?? 'to_be_started';
     final statusLower = status.toLowerCase();
-    final isDone = statusLower == 'done' || statusLower.contains('review');
-    final isCompleted = statusLower == 'completed';
-    final isDoneOrCompleted = isDone || isCompleted;
     final progress = _detail?.progress ?? widget.initialTask?.progress ?? 0;
-    final branchName = _detail?.branchName ?? widget.initialTask?.branchName ?? 'Head Office';
-    final assignedBy = _detail?.assignedByName ?? widget.initialTask?.assignedByName ?? 'Test_Manager';
+    final branchName = _detail?.branchName ?? widget.initialTask?.branchName ?? '—';
+    final assignedBy = _detail?.assignedByName ?? widget.initialTask?.assignedByName ?? '—';
     final rawDueDate = _detail?.dueDate ?? widget.initialTask?.dueDate;
     final entryDate = _formatDateStr(_detail?.entryDate ?? widget.initialTask?.entryDate);
     final dueDate = _formatDateStr(rawDueDate);
@@ -251,6 +289,37 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
     final reviewNote = _detail?.reviewComment ?? widget.initialTask?.reviewComment;
     final attachments = _detail?.attachments ?? [];
     final timeline = _detail?.timeline ?? [];
+
+    // ---------- Permissions: same rules as the web task detail ----------
+    final me = authState is AuthenticatedState ? authState.userProfile : null;
+    final perms = me?.permissions ?? const <String>[];
+    bool can(String p) => perms.contains(p);
+    final assignedByUserId = _detail?.assignedByUserId ?? widget.initialTask?.assignedByUserId;
+    final createdByUserId = _detail?.createdByUserId;
+    final isAssigner = me != null && assignedByUserId == me.id;
+    final isOwner = me != null && (assignedByUserId == me.id || createdByUserId == me.id);
+    final isAssignee = me != null && assignees.any((a) => a.id == me.id);
+    final watchers = _detail?.watchers ?? const <TaskAssigneeModel>[];
+    final isWatcher = me != null &&
+        !isOwner &&
+        !isAssignee &&
+        !can('task.manage') &&
+        (watchers.any((w) => w.id == me.id) || (_detail?.isWatcherFlag ?? false));
+    final checklistItems = _detail?.checklistItems ?? const <TaskChecklistItemModel>[];
+    final pendingChecklist = checklistItems.where((c) => !c.done).length;
+    final checklistComplete = pendingChecklist == 0;
+    final subtaskList = _detail?.subtasks ?? const <TaskItemModel>[];
+    final canAddSubtask = !isWatcher &&
+        can('task.create') &&
+        !isSubtask &&
+        (isOwner || isAssignee) &&
+        !['completed', 'scrapped'].contains(statusLower) &&
+        !widget.isReadOnly &&
+        !widget.showOnlyCloneAndCancel;
+    final canReassign = !isWatcher &&
+        (can('staff.view') || can('staff.manage') || isAssigner) &&
+        !widget.isReadOnly &&
+        !widget.showOnlyCloneAndCancel;
 
     Color priorityColor = Colors.amber.shade800;
     if (priority.toLowerCase().contains('emergency') || priority.toLowerCase().contains('high')) {
@@ -369,13 +438,47 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 580),
-        padding: const EdgeInsets.all(14),
+        constraints: BoxConstraints(maxWidth: 580, maxHeight: MediaQuery.of(context).size.height * 0.92),
+        padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (isWatcher) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.badgeBlueBg(context),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.accentBlue(context)),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.visibility_outlined, size: 16, color: AppColors.accentBlue(context)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text.rich(
+                          TextSpan(children: [
+                            const TextSpan(text: 'Task Watcher (In CC)', style: TextStyle(fontWeight: FontWeight.w800)),
+                            const TextSpan(
+                                text:
+                                    ' — You have observer access to view task details and track updates. Watchers cannot edit details or change the status.'),
+                          ]),
+                          style: TextStyle(fontSize: 12, color: AppColors.textPrimary(context)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
               // 1. Header Row with Close Icon
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -699,7 +802,7 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                               ),
                             ),
                           ),
-                        if (!widget.isReadOnly && !isAcademicExecutive && !(isDirector && isDoneOrCompleted) && !widget.showOnlyCloneAndCancel)
+                        if (canReassign)
                           ScaleTap(
                             child: ElevatedButton.icon(
                               onPressed: () async {
@@ -735,7 +838,7 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
               const SizedBox(height: 16),
 
               // Sub-tasks Section (ONLY FOR PARENT TASKS - hidden when viewing a sub-task)
-              if (!isSubtask) ...[
+              if (!isSubtask && (subtaskList.isNotEmpty || canAddSubtask)) ...[
                 StaggeredSlideFade(
                   delay: const Duration(milliseconds: 160),
                   child: Column(
@@ -771,7 +874,7 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                               ],
                             ],
                           ),
-                          if (!widget.isReadOnly && !widget.showOnlyCloneAndCancel && !isDateExpired)
+                          if (canAddSubtask && !isDateExpired)
                             ScaleTap(
                               child: ElevatedButton.icon(
                                 onPressed: () async {
@@ -947,6 +1050,90 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                 const SizedBox(height: 16),
               ],
 
+              // 5b. Watchers / CC
+              if (watchers.isNotEmpty) ...[
+                Text('Watchers / CC (${watchers.length})',
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.textSecondary(context))),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: watchers
+                      .map((w) => Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.chipBg(context),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.visibility_outlined, size: 12, color: AppColors.accentBlue(context)),
+                                const SizedBox(width: 4),
+                                Text(w.name, style: TextStyle(fontSize: 11, color: AppColors.textPrimary(context))),
+                              ],
+                            ),
+                          ))
+                      .toList(),
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              // 5c. Checklist
+              if (checklistItems.isNotEmpty) ...[
+                Wrap(
+                  spacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text(
+                      'Checklist (${checklistItems.length - pendingChecklist}/${checklistItems.length})',
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.textSecondary(context)),
+                    ),
+                    if (!checklistComplete)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.badgeYellowBg(context),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text('all must be ticked to mark done',
+                            style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, color: AppColors.badgeYellowFg(context))),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                ...checklistItems.map((c) => InkWell(
+                      onTap: () => _toggleChecklist(c, isWatcher || widget.isReadOnly),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+                        child: Row(
+                          children: [
+                            _togglingChecklist.contains(c.id)
+                                ? const SizedBox(width: 20, height: 20, child: AnimatedCircleProgressIndicator(size: 18))
+                                : Icon(
+                                    c.done ? Icons.check_box_rounded : Icons.check_box_outline_blank_rounded,
+                                    size: 20,
+                                    color: c.done ? AppColors.green600 : AppColors.textSecondary(context),
+                                  ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                c.text,
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  color: c.done ? AppColors.textSecondary(context) : AppColors.textPrimary(context),
+                                  decoration: c.done ? TextDecoration.lineThrough : null,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )),
+                const SizedBox(height: 16),
+              ],
+
               // 6. Attachments Section (Dynamic)
               if (attachments.isNotEmpty) ...[
                 StaggeredSlideFade(
@@ -1118,499 +1305,292 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
 
               const SizedBox(height: 16),
 
-              // 9. Comments Section
-              if (!(isDirector && isDoneOrCompleted)) ...[
-                StaggeredSlideFade(
-                  delay: const Duration(milliseconds: 300),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Comments${_postedComments.isNotEmpty ? " (${_postedComments.length})" : ""}',
-                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey),
-                      ),
-                      const SizedBox(height: 6),
-
-                      if (_postedComments.isNotEmpty)
-                        Column(
-                          children: _postedComments.map((c) {
-                            final initials = c['initials']?.toString() ?? 'SA';
-                            final name = c['name']?.toString() ?? 'Test_AE';
-                            final body = c['body']?.toString() ?? '';
-                            final colorHex = c['avatar_color']?.toString() ?? '#8b5cf6';
-                            final dateStr = DateFormat('d MMM, HH:mm').format(DateTime.now());
-
-                            return Container(
-                              width: double.infinity,
-                              margin: const EdgeInsets.only(bottom: 8),
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: isDark ? Colors.white12 : Colors.grey.shade300),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      CircleAvatar(
-                                        radius: 10,
-                                        backgroundColor: _hexToColor(colorHex),
-                                        child: Text(
-                                          initials,
-                                          style: const TextStyle(fontSize: 8, color: Colors.white, fontWeight: FontWeight.bold),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(name, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                                      const SizedBox(width: 8),
-                                      Text(dateStr, style: const TextStyle(fontSize: 9.5, color: Colors.grey)),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(body, style: TextStyle(fontSize: 11.5, color: isDark ? Colors.white70 : const Color(0xFF334155))),
-                                ],
-                              ),
-                            );
-                          }).toList(),
-                        )
-                      else
-                        Text(
-                          'No comments yet — start the conversation.',
-                          style: TextStyle(fontSize: 10, color: isDark ? Colors.grey[400] : const Color(0xFF64748B)),
-                        ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Type @ then a name to mention anyone — they get notified.',
-                        style: TextStyle(fontSize: 9.5, color: isDark ? Colors.grey[500] : Colors.grey.shade500),
-                      ),
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _commentController,
-                              style: const TextStyle(fontSize: 11),
-                              decoration: InputDecoration(
-                                hintText: 'Write a comment... type @ to mention someone',
-                                hintStyle: const TextStyle(fontSize: 11, color: Colors.grey),
-                                isDense: true,
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                filled: true,
-                                fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-                              ),
-                            ),
-                          ),
-                          if (!widget.isReadOnly && !widget.showOnlyCloneAndCancel) ...[
-                            const SizedBox(width: 8),
-                            ScaleTap(
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.button(context),
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                  visualDensity: VisualDensity.compact,
-                                ),
-                                onPressed: () {
-                                  final txt = _commentController.text.trim();
-                                  if (txt.isNotEmpty) {
-                                    setState(() {
-                                      _postedComments.add({
-                                        'initials': 'SA',
-                                        'name': 'Test_AE',
-                                        'body': txt,
-                                        'avatar_color': '#8b5cf6',
-                                      });
-                                      _commentController.clear();
-                                    });
-                                  }
-                                },
-                                child: const Text('Send', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-
-              // 10. Footer Action Buttons Bar
+              // 9. Comments & discussion (GET/POST /tasks/{id}/comments)
               StaggeredSlideFade(
-                delay: const Duration(milliseconds: 330),
-                child: Column(
-                  children: [
-                    if (widget.showOnlyCloneAndCancel) ...[
-                      const SizedBox(height: 20),
-                      const Divider(),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          ScaleTap(
-                            child: OutlinedButton.icon(
-                              onPressed: () {
-                                CloneTaskDialog.show(
-                                  context,
-                                  sourceTask: _detail,
-                                  sourceItem: widget.initialTask,
-                                );
-                              },
-                              icon: const Icon(Icons.content_copy_outlined, size: 14),
-                              label: Text(s.cloneTaskTitle, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                side: BorderSide(color: isDark ? Colors.white24 : Colors.black26),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          ScaleTap(
-                            child: OutlinedButton(
-                              onPressed: () => Navigator.of(context).pop(_hasReviewed),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                side: BorderSide(color: isDark ? Colors.white24 : Colors.black26),
-                              ),
-                              child: Text(s.closeButton, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ] else if (isDirector && isCompleted) ...[
-                      // Director viewing a completed task — show Clone Task + Close
-                      const SizedBox(height: 20),
-                      const Divider(),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          ScaleTap(
-                            child: OutlinedButton.icon(
-                              onPressed: () {
-                                CloneTaskDialog.show(
-                                  context,
-                                  sourceTask: _detail,
-                                  sourceItem: widget.initialTask,
-                                );
-                              },
-                              icon: const Icon(Icons.content_copy_outlined, size: 14),
-                              label: Text(s.cloneTaskTitle, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                side: BorderSide(color: isDark ? Colors.white24 : Colors.black26),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          ScaleTap(
-                            child: OutlinedButton(
-                              onPressed: () => Navigator.of(context).pop(_hasReviewed),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                side: BorderSide(color: isDark ? Colors.white24 : Colors.black26),
-                              ),
-                              child: Text(s.closeButton, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ] else if (isDirector && isDone) ...[
-                      const SizedBox(height: 20),
-                      const Divider(),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          ScaleTap(
-                            child: OutlinedButton.icon(
-                              onPressed: () {
-                                CloneTaskDialog.show(
-                                  context,
-                                  sourceTask: _detail,
-                                  sourceItem: widget.initialTask,
-                                );
-                              },
-                              icon: const Icon(Icons.content_copy_outlined, size: 14),
-                              label: Text(s.cloneTaskTitle, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                side: BorderSide(color: isDark ? Colors.white24 : Colors.black26),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          ScaleTap(
-                            child: ElevatedButton(
-                              onPressed: () async {
-                                final updated = await ReviewTaskDialog.show(
-                                  context,
-                                  taskId: widget.taskId,
-                                  taskNo: taskNo,
-                                  title: title,
-                                  assigneeNote: reviewNote,
-                                );
-                                if (updated != null && mounted) {
-                                  setState(() {
-                                    _detail = updated;
-                                    _hasReviewed = true;
-                                  });
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.button(context),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                              ),
-                              child: const Text('Review →', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ] else if (widget.isReadOnly) ...[
-                      const SizedBox(height: 20),
-                      const Divider(),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          ScaleTap(
-                            child: OutlinedButton.icon(
-                              onPressed: () {
-                                CloneTaskDialog.show(
-                                  context,
-                                  sourceTask: _detail,
-                                  sourceItem: widget.initialTask,
-                                );
-                              },
-                              icon: const Icon(Icons.content_copy_outlined, size: 14),
-                              label: Text(s.cloneTaskTitle, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                side: BorderSide(color: isDark ? Colors.white24 : Colors.black26),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          ScaleTap(
-                            child: OutlinedButton(
-                              onPressed: () => Navigator.of(context).pop(_hasReviewed),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                side: BorderSide(color: isDark ? Colors.white24 : Colors.black26),
-                              ),
-                              child: Text(s.closeButton, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ] else ...[
-                      const SizedBox(height: 20),
-                      const Divider(),
-                      const SizedBox(height: 12),
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            if (!widget.isReadOnly && !widget.showOnlyCloneAndCancel) ...[
-                              ScaleTap(
-                                child: OutlinedButton.icon(
-                                  onPressed: () async {
-                                    final taskItem = _detail ??
-                                        TaskDetailModel(
-                                          id: widget.taskId,
-                                          taskNo: taskNo,
-                                          fy: '2025-26',
-                                          title: title,
-                                          description: description,
-                                          category: category,
-                                          priority: priority,
-                                          status: status,
-                                          progress: progress,
-                                          entryDate: entryDate,
-                                          dueDate: dueDate,
-                                          isConfidential: false,
-                                          assignedByText: assignedBy,
-                                          assignedByUserId: 1,
-                                          assignedByName: assignedBy,
-                                          branchId: 1,
-                                          branchCode: 'SS00',
-                                          branchName: branchName,
-                                          assignees: assignees,
-                                          timeline: [],
-                                          attachments: [],
-                                          checklist: [],
-                                        );
-                                    final updated = await EditTaskDialog.show(
-                                      context,
-                                      task: taskItem,
-                                    );
-                                    if (updated == true) {
-                                      _fetchDetail();
-                                    }
-                                  },
-                                  icon: const Icon(Icons.edit_outlined, size: 14),
-                                  label: Text(s.editButton, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                                  style: OutlinedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                            ],
-                            ScaleTap(
-                              child: OutlinedButton.icon(
-                                onPressed: () async {
-                                  final taskItem = _detail ??
-                                      widget.initialTask ??
-                                      TaskItemModel(
-                                        id: widget.taskId,
-                                        taskNo: taskNo,
-                                        fy: '2026-27',
-                                        title: title,
-                                        description: description,
-                                        category: category,
-                                        priority: priority,
-                                        status: status,
-                                        progress: progress,
-                                        entryDate: entryDate,
-                                        dueDate: dueDate,
-                                        isConfidential: false,
-                                        assignedByText: assignedBy,
-                                        assignedByUserId: 1,
-                                        assignedByName: assignedBy,
-                                        branchId: 1,
-                                        branchCode: 'SS00',
-                                        branchName: branchName,
-                                        assignees: assignees,
-                                      );
-                                  final moved = await MoveTaskDialog.show(context, task: taskItem);
-                                  if (moved == true && mounted) {
-                                    _fetchDetail();
-                                  }
-                                },
-                                icon: const Icon(Icons.trending_up_rounded, size: 14, color: Colors.blue),
-                                label: const Text('📈 Update / Move', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                                style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            ScaleTap(
-                              child: OutlinedButton.icon(
-                                onPressed: () async {
-                                  await RaiseEscalationDialog.show(context);
-                                },
-                                icon: const Icon(Icons.flag_outlined, size: 14, color: Colors.amber),
-                                label: const Text('⚑ Raise Request', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                                style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            if (!isTeamLead) ...[
-                              ScaleTap(
-                                child: ElevatedButton.icon(
-                                  onPressed: () async {
-                                    final taskItem = _detail ??
-                                        widget.initialTask ??
-                                        TaskItemModel(
-                                          id: widget.taskId,
-                                          taskNo: taskNo,
-                                          fy: '2026-27',
-                                          title: title,
-                                          description: description,
-                                          category: category,
-                                          priority: priority,
-                                          status: status,
-                                          progress: progress,
-                                          entryDate: entryDate,
-                                          dueDate: dueDate,
-                                          isConfidential: false,
-                                          assignedByText: assignedBy,
-                                          assignedByUserId: 1,
-                                          assignedByName: assignedBy,
-                                          branchId: 1,
-                                          branchCode: 'SS00',
-                                          branchName: branchName,
-                                          assignees: assignees,
-                                        );
-                                    await MarkDoneDialog.show(context, task: taskItem);
-                                  },
-                                  label: const Text('✓ Mark Done', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF16A34A),
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                            ],
-                            if (widget.canCloneTask) ...[
-                              ScaleTap(
-                                child: OutlinedButton.icon(
-                                  onPressed: () {
-                                    CloneTaskDialog.show(
-                                      context,
-                                      sourceTask: _detail,
-                                      sourceItem: widget.initialTask,
-                                    );
-                                  },
-                                  icon: const Icon(Icons.content_copy_outlined, size: 14),
-                                  label: Text(s.cloneTaskTitle, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-                                  style: OutlinedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                    side: BorderSide(color: isDark ? Colors.white24 : Colors.black26),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                            ],
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Center(
-                        child: ScaleTap(
-                          child: OutlinedButton(
-                            onPressed: () => Navigator.of(context).pop(_hasReviewed),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 8),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                              side: BorderSide(color: isDark ? Colors.white24 : Colors.black26),
-                            ),
-                            child: Text(s.closeButton, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
+                delay: const Duration(milliseconds: 300),
+                child: _buildCommentsSection(context, readOnly: widget.isReadOnly || widget.showOnlyCloneAndCancel),
               ),
             ],
           ),
         ),
+            ),
+            _buildFooter(
+              context,
+              taskNo: taskNo,
+              title: title,
+              reviewNote: reviewNote,
+              statusLower: statusLower,
+              isOwner: isOwner,
+              isAssigner: isAssigner,
+              isWatcher: isWatcher,
+              canClone: can('task.create') && widget.canCloneTask,
+              checklistComplete: checklistComplete,
+              pendingChecklist: pendingChecklist,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCommentsSection(BuildContext context, {required bool readOnly}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text('Comments & discussion',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary(context))),
+            if (_comments.isNotEmpty) ...[
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1),
+                decoration: BoxDecoration(color: AppColors.chipBg(context), borderRadius: BorderRadius.circular(10)),
+                child: Text('${_comments.length}',
+                    style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: AppColors.textSecondary(context))),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 8),
+        if (_comments.isEmpty)
+          Text('No comments yet — start the conversation.',
+              style: TextStyle(fontSize: 11.5, fontStyle: FontStyle.italic, color: AppColors.textSecondary(context)))
+        else
+          ..._comments.map((c) => Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.subtleBg(context),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CircleAvatar(
+                      radius: 13,
+                      backgroundColor: _hexToColor(c.avatarColor),
+                      child: Text(c.initials,
+                          style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: AppColors.white)),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Wrap(
+                            spacing: 6,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Text(c.name,
+                                  style: TextStyle(
+                                      fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textPrimary(context))),
+                              Text(_formatCommentDate(c.createdAt),
+                                  style: TextStyle(fontSize: 10, color: AppColors.textFaint(context))),
+                            ],
+                          ),
+                          const SizedBox(height: 3),
+                          Text(c.body, style: TextStyle(fontSize: 12.5, color: AppColors.textPrimary(context))),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              )),
+        if (!readOnly) ...[
+          const SizedBox(height: 6),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _commentController,
+                  minLines: 1,
+                  maxLines: 4,
+                  textInputAction: TextInputAction.newline,
+                  style: TextStyle(fontSize: 13, color: AppColors.textPrimary(context)),
+                  decoration: InputDecoration(
+                    hintText: 'Write a comment…',
+                    hintStyle: TextStyle(fontSize: 12.5, color: AppColors.textFaint(context)),
+                    isDense: true,
+                    filled: true,
+                    fillColor: AppColors.subtleBg(context),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              SizedBox(
+                height: 42,
+                child: ElevatedButton(
+                  onPressed: _sendingComment ? null : _sendComment,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary(context),
+                    foregroundColor: AppColors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  child: _sendingComment
+                      ? const SizedBox(width: 16, height: 16, child: AnimatedCircleProgressIndicator(size: 16))
+                      : const Icon(Icons.send_rounded, size: 18),
+                ),
+              ),
+            ],
+          ),
+        ],
+        const SizedBox(height: 8),
+      ],
+    );
+  }
+
+  String _formatCommentDate(String raw) {
+    final dt = DateTime.tryParse(raw);
+    if (dt == null) return raw;
+    return DateFormat('d MMM, HH:mm').format(dt.toLocal());
+  }
+
+  TaskItemModel _taskForDialogs() {
+    return _detail ?? widget.initialTask!;
+  }
+
+  /// Footer — mirrors the web task detail footer:
+  /// Edit (creator / assigner) · Clone (task.create) · Change Status · Request Help / Change ·
+  /// ✓ Submit as Done (until done; needs checklist complete) · Review → (assigner, status done) · Close.
+  /// Watchers only get Close. Stays pinned under the scrollable body on mobile.
+  Widget _buildFooter(
+    BuildContext context, {
+    required String taskNo,
+    required String title,
+    required String? reviewNote,
+    required String statusLower,
+    required bool isOwner,
+    required bool isAssigner,
+    required bool isWatcher,
+    required bool canClone,
+    required bool checklistComplete,
+    required int pendingChecklist,
+  }) {
+    final s = AppStrings.of(context);
+    final hasTask = _detail != null || widget.initialTask != null;
+
+    Widget outlined(String label, IconData icon, VoidCallback? onTap, {Color? iconColor}) => OutlinedButton.icon(
+          onPressed: onTap,
+          icon: Icon(icon, size: 15, color: iconColor),
+          label: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.textPrimary(context),
+            side: BorderSide(color: AppColors.border(context)),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
+
+    final closeBtn = OutlinedButton(
+      onPressed: () => Navigator.of(context).pop(_hasReviewed),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: AppColors.textPrimary(context),
+        side: BorderSide(color: AppColors.border(context)),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      child: Text(s.closeButton, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+    );
+
+    final cloneBtn = outlined(s.cloneTaskTitle, Icons.content_copy_outlined, () {
+      CloneTaskDialog.show(context, sourceTask: _detail, sourceItem: widget.initialTask);
+    });
+
+    final List<Widget> buttons = [];
+    Widget? note;
+
+    if (widget.showOnlyCloneAndCancel || widget.isReadOnly) {
+      if (canClone || widget.showOnlyCloneAndCancel) buttons.add(cloneBtn);
+    } else if (isWatcher) {
+      note = Text(
+        'Task Watcher mode — you can post comments, but status updates and edits are disabled.',
+        style: TextStyle(fontSize: 11.5, fontStyle: FontStyle.italic, color: AppColors.textSecondary(context)),
+      );
+    } else if (hasTask) {
+      if (isOwner && _detail != null) {
+        buttons.add(outlined(s.editButton, Icons.edit_outlined, () async {
+          final updated = await EditTaskDialog.show(context, task: _detail!);
+          if (updated == true) _fetchDetail();
+        }));
+      }
+      if (canClone) buttons.add(cloneBtn);
+      buttons.add(outlined('Change Status', Icons.trending_up_rounded, () async {
+        final moved = await MoveTaskDialog.show(context, task: _taskForDialogs());
+        if (moved == true && mounted) _fetchDetail();
+      }, iconColor: AppColors.accentBlue(context)));
+      buttons.add(outlined('Request Help / Change', Icons.flag_outlined, () async {
+        final done = await RaiseEscalationDialog.show(context, initialTask: _taskForDialogs());
+        if (done == true && mounted) _fetchDetail();
+      }, iconColor: AppColors.badgeYellowFg(context)));
+      if (!['completed', 'done'].contains(statusLower)) {
+        buttons.add(Tooltip(
+          message: checklistComplete ? '' : 'Finish all $pendingChecklist checklist item(s) first',
+          child: ElevatedButton.icon(
+            onPressed: !checklistComplete
+                ? null
+                : () async {
+                    final done = await MarkDoneDialog.show(context, task: _taskForDialogs());
+                    if (done == true && mounted) _fetchDetail();
+                  },
+            icon: const Icon(Icons.check_circle_outline, size: 15),
+            label: const Text('Submit as Done', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.green600,
+              foregroundColor: AppColors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+          ),
+        ));
+      }
+      if (statusLower == 'done' && isAssigner) {
+        buttons.add(ElevatedButton(
+          onPressed: () async {
+            final updated = await ReviewTaskDialog.show(
+              context,
+              taskId: widget.taskId,
+              taskNo: taskNo,
+              title: title,
+              assigneeNote: reviewNote,
+            );
+            if (updated != null && mounted) {
+              setState(() {
+                _detail = updated;
+                _hasReviewed = true;
+              });
+            }
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary(context),
+            foregroundColor: AppColors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          child: const Text('Review →', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+        ));
+      }
+    }
+
+    return Container(
+      padding: const EdgeInsets.only(top: 10),
+      decoration: BoxDecoration(border: Border(top: BorderSide(color: AppColors.border(context)))),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (note != null) ...[note, const SizedBox(height: 8)],
+          Wrap(
+            alignment: WrapAlignment.end,
+            spacing: 8,
+            runSpacing: 8,
+            children: [...buttons, closeBtn],
+          ),
+        ],
       ),
     );
   }

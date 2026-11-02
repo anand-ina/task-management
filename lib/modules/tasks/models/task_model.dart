@@ -311,12 +311,77 @@ class TaskItemModel {
       };
 }
 
+/// GET /tasks/{id}/comments item
+class TaskCommentModel {
+  final int id;
+  final String body;
+  final String createdAt;
+  final int? userId;
+  final String name;
+  final String initials;
+  final String avatarColor;
+
+  TaskCommentModel({
+    required this.id,
+    required this.body,
+    required this.createdAt,
+    this.userId,
+    required this.name,
+    required this.initials,
+    required this.avatarColor,
+  });
+
+  factory TaskCommentModel.fromJson(Map<String, dynamic> json) {
+    int? toInt(dynamic v) => v is num ? v.toInt() : int.tryParse(v?.toString() ?? '');
+    final name = json['name']?.toString() ?? json['user_name']?.toString() ?? '';
+    return TaskCommentModel(
+      id: toInt(json['id']) ?? 0,
+      body: json['body']?.toString() ?? '',
+      createdAt: json['created_at']?.toString() ?? json['createdAt']?.toString() ?? '',
+      userId: toInt(json['user_id'] ?? json['userId']),
+      name: name,
+      initials: json['initials']?.toString() ??
+          (name.isNotEmpty ? name.trim().substring(0, name.trim().length >= 2 ? 2 : 1).toUpperCase() : ''),
+      avatarColor: json['avatar_color']?.toString() ?? '',
+    );
+  }
+}
+
+/// A checklist entry on a task (id / text / done)
+class TaskChecklistItemModel {
+  final int id;
+  final String text;
+  final bool done;
+
+  TaskChecklistItemModel({required this.id, required this.text, required this.done});
+
+  factory TaskChecklistItemModel.fromJson(dynamic raw) {
+    if (raw is! Map) return TaskChecklistItemModel(id: 0, text: raw?.toString() ?? '', done: false);
+    final json = Map<String, dynamic>.from(raw);
+    final id = json['id'];
+    return TaskChecklistItemModel(
+      id: id is num ? id.toInt() : int.tryParse(id?.toString() ?? '') ?? 0,
+      text: json['text']?.toString() ?? json['title']?.toString() ?? '',
+      done: json['done'] == true || json['done'] == 1 || json['is_done'] == true,
+    );
+  }
+}
+
 class TaskDetailModel extends TaskItemModel {
   final List<TaskTimelineItem> timeline;
   final List<dynamic> attachments;
   final List<dynamic> checklist;
   final List<TaskItemModel> subtasks;
   final String? ticketType;
+  final int? createdByUserId;
+  final List<TaskAssigneeModel> watchers;
+  final bool isWatcherFlag;
+  final int? eventId;
+  final String? eventTitle;
+  final String? createdAt;
+
+  List<TaskChecklistItemModel> get checklistItems =>
+      checklist.map((e) => TaskChecklistItemModel.fromJson(e)).toList();
 
   TaskDetailModel({
     required super.id,
@@ -356,6 +421,12 @@ class TaskDetailModel extends TaskItemModel {
     required this.attachments,
     required this.checklist,
     this.subtasks = const [],
+    this.createdByUserId,
+    this.watchers = const [],
+    this.isWatcherFlag = false,
+    this.eventId,
+    this.eventTitle,
+    this.createdAt,
   });
 
   factory TaskDetailModel.fromJson(dynamic rawData) {
@@ -432,6 +503,19 @@ class TaskDetailModel extends TaskItemModel {
               .whereType<TaskItemModel>()
               .toList()
           : [],
+      createdByUserId: json['created_by_user_id'] is num
+          ? (json['created_by_user_id'] as num).toInt()
+          : int.tryParse(json['created_by_user_id']?.toString() ?? ''),
+      watchers: json['watchers'] is List
+          ? (json['watchers'] as List)
+              .whereType<Map>()
+              .map((e) => TaskAssigneeModel.fromJson(Map<String, dynamic>.from(e)))
+              .toList()
+          : const [],
+      isWatcherFlag: json['is_watcher'] == true,
+      eventId: json['event_id'] is num ? (json['event_id'] as num).toInt() : null,
+      eventTitle: json['event_title']?.toString(),
+      createdAt: json['created_at']?.toString(),
     );
   }
 
@@ -474,6 +558,12 @@ class TaskDetailModel extends TaskItemModel {
       attachments: attachments,
       checklist: checklist,
       subtasks: newSubtasks,
+      createdByUserId: createdByUserId,
+      watchers: watchers,
+      isWatcherFlag: isWatcherFlag,
+      eventId: eventId,
+      eventTitle: eventTitle,
+      createdAt: createdAt,
     );
   }
 }

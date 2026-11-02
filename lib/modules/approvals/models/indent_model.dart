@@ -46,19 +46,39 @@ class IndentLineItem {
 class IndentStepModel {
   final int stepNo;
   final int approverLevel;
+  final String approverRole;
+  final String? roleLabel;
+  final bool isOptional;
   final String decision;
   final String? comment;
   final String? decidedAt;
   final String? decidedBy;
+  final int? decidedByUserId;
 
   IndentStepModel({
     required this.stepNo,
     required this.approverLevel,
+    this.approverRole = '',
+    this.roleLabel,
+    this.isOptional = false,
     required this.decision,
     this.comment,
     this.decidedAt,
     this.decidedBy,
+    this.decidedByUserId,
   });
+
+  bool get isPrincipalStep => approverRole == 'principal' || approverRole == 'center_head';
+  bool get isDirectorStep => approverRole == 'director';
+  bool get isFinanceStep => approverRole == 'finance_manager';
+
+  /// Same label logic as the web portal (role_label first, then role / level).
+  String get displayLabel {
+    if (roleLabel != null && roleLabel!.isNotEmpty) return roleLabel!;
+    if (isDirectorStep || approverLevel >= 5) return 'Director';
+    if (isPrincipalStep || approverLevel == 4) return 'Center Head';
+    return 'Finance Manager';
+  }
 
   factory IndentStepModel.fromJson(Map<String, dynamic> json) {
     int parseInt(dynamic val) {
@@ -68,13 +88,61 @@ class IndentStepModel {
       return 0;
     }
 
+    final rawUserId = json['decided_by_user_id'] ?? json['decidedByUserId'];
     return IndentStepModel(
       stepNo: parseInt(json['step_no'] ?? json['stepNo']),
       approverLevel: parseInt(json['approver_level'] ?? json['approverLevel']),
+      approverRole: json['approver_role']?.toString() ?? json['approverRole']?.toString() ?? '',
+      roleLabel: json['role_label']?.toString() ?? json['roleLabel']?.toString(),
+      isOptional: json['is_optional'] == true || json['isOptional'] == true,
       decision: json['decision']?.toString() ?? '',
       comment: json['comment']?.toString(),
       decidedAt: json['decided_at']?.toString() ?? json['decidedAt']?.toString(),
       decidedBy: json['decided_by']?.toString() ?? json['decidedBy']?.toString(),
+      decidedByUserId: rawUserId == null ? null : parseInt(rawUserId),
+    );
+  }
+}
+
+class IndentAuditModel {
+  final int id;
+  final String action;
+  final String? actorName;
+  final String? comment;
+  final String? createdAt;
+
+  IndentAuditModel({
+    required this.id,
+    required this.action,
+    this.actorName,
+    this.comment,
+    this.createdAt,
+  });
+
+  factory IndentAuditModel.fromJson(Map<String, dynamic> json) {
+    return IndentAuditModel(
+      id: json['id'] is num ? (json['id'] as num).toInt() : int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      action: json['action']?.toString() ?? '',
+      actorName: json['actor_name']?.toString() ?? json['actorName']?.toString(),
+      comment: json['comment']?.toString(),
+      createdAt: json['created_at']?.toString() ?? json['createdAt']?.toString(),
+    );
+  }
+}
+
+/// Response of POST /indents/{id}/decide
+class IndentDecisionResponseModel {
+  final String status;
+  final String? voucherNo;
+  final String? nextLevel;
+
+  IndentDecisionResponseModel({required this.status, this.voucherNo, this.nextLevel});
+
+  factory IndentDecisionResponseModel.fromJson(Map<String, dynamic> json) {
+    return IndentDecisionResponseModel(
+      status: json['status']?.toString() ?? '',
+      voucherNo: json['voucherNo']?.toString() ?? json['voucher_no']?.toString(),
+      nextLevel: json['nextLevel']?.toString() ?? json['next_level']?.toString(),
     );
   }
 }
@@ -101,6 +169,12 @@ class IndentItemModel {
   final String? branchName;
   final String? departmentName;
   final List<IndentStepModel> steps;
+  final List<IndentAuditModel> audits;
+  final bool isOverridden;
+  final String? overrideDecision;
+  final String? overrideComment;
+  final String? overriddenAt;
+  final String? overrideByName;
 
   IndentItemModel({
     required this.id,
@@ -124,6 +198,12 @@ class IndentItemModel {
     this.branchName,
     this.departmentName,
     this.steps = const [],
+    this.audits = const [],
+    this.isOverridden = false,
+    this.overrideDecision,
+    this.overrideComment,
+    this.overriddenAt,
+    this.overrideByName,
   });
 
   factory IndentItemModel.fromJson(Map<String, dynamic> json) {
@@ -176,6 +256,16 @@ class IndentItemModel {
       branchName: json['branch_name']?.toString() ?? json['branchName']?.toString(),
       departmentName: json['department_name']?.toString() ?? json['departmentName']?.toString(),
       steps: parseSteps(json['steps']),
+      audits: json['audits'] is List
+          ? (json['audits'] as List)
+              .map((e) => IndentAuditModel.fromJson(e is Map<String, dynamic> ? e : {}))
+              .toList()
+          : const [],
+      isOverridden: json['is_overridden'] == true || json['isOverridden'] == true,
+      overrideDecision: json['override_decision']?.toString(),
+      overrideComment: json['override_comment']?.toString(),
+      overriddenAt: json['overridden_at']?.toString(),
+      overrideByName: json['override_by_name']?.toString(),
     );
   }
 }

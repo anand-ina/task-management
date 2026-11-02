@@ -82,6 +82,7 @@ class TaskDraftPayload {
   final String assignedById;
   final List<int> assigneeIds;
   final List<String> assigneeNames;
+  final List<int> watcherIds;
   final List<Map<String, dynamic>> checklist;
   final List<Map<String, dynamic>> attachments;
 
@@ -103,6 +104,7 @@ class TaskDraftPayload {
     this.assignedById = '',
     this.assigneeIds = const [],
     this.assigneeNames = const [],
+    this.watcherIds = const [],
     this.checklist = const [],
     this.attachments = const [],
   });
@@ -161,9 +163,18 @@ class TaskDraftPayload {
                   .where((name) => name.isNotEmpty)
                   .toList()
               : const []),
+      watcherIds: (json['watcherIds'] is List)
+          ? (json['watcherIds'] as List)
+              .map((e) => e is int ? e : (int.tryParse(e?.toString() ?? '') ?? 0))
+              .where((e) => e > 0)
+              .toList()
+          : const [],
       checklist: (json['checklist'] is List)
           ? (json['checklist'] as List)
-              .map((e) => e is Map ? Map<String, dynamic>.from(e) : <String, dynamic>{'item': e.toString()})
+              // The web portal stores checklist entries as plain strings.
+              .map((e) => e is Map
+                  ? Map<String, dynamic>.from(e)
+                  : <String, dynamic>{'text': e.toString(), 'done': false})
               .toList()
           : const [],
       attachments: (json['attachments'] is List)
@@ -193,6 +204,7 @@ class TaskDraftPayload {
       'assignedById': assignedById,
       'assigneeIds': assigneeIds,
       'assigneeNames': assigneeNames,
+      'watcherIds': watcherIds,
       'checklist': checklist,
       'attachments': attachments,
     };

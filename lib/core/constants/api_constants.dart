@@ -48,12 +48,14 @@ class ApiConstants {
   static const String escalationsToReview = '$baseUrl/escalations/to-review';
   static const String escalations = '$baseUrl/escalations';
   static const String meetingCompletionRequests = '$baseUrl/meetings/completion-requests';
-  static const String budgetReceived = '$baseUrl/budget/received';
-  static const String budgetInitiated = '$baseUrl/budget/initiated';
   static const String indents = '$baseUrl/indents';
   static const String indentsInbox = '$baseUrl/indents/inbox';
   static const String indentsAll = '$baseUrl/indents/all';
+  static const String indentsMine = '$baseUrl/indents/mine';
   static String indentDetail(int id) => '$baseUrl/indents/$id';
+  static String indentDecide(int id) => '$baseUrl/indents/$id/decide';
+  static String indentOverride(int id) => '$baseUrl/indents/$id/override';
+  static String indentCancel(int id) => '$baseUrl/indents/$id/cancel';
 
   // Events & Reports Endpoints
   static const String events = '$baseUrl/events';
@@ -93,6 +95,8 @@ class ApiConstants {
   static const String adminTaskCounter = '$baseUrl/admin/task-counter';
   static const String adminTaskCounterReset = '$baseUrl/v1/admin/task-counter/reset';
   static String taskReview(int taskId) => '$baseUrl/tasks/$taskId/review';
+  static String taskComments(int taskId) => '$baseUrl/tasks/$taskId/comments';
+  static String taskChecklistItem(int itemId) => '$baseUrl/tasks/checklist/$itemId';
 
   // Complaints & Tickets Endpoints
   static const String tickets = '$baseUrl/tickets';

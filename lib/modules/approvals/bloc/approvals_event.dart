@@ -15,23 +15,23 @@ class FetchEscalationsDataEvent extends ApprovalsEvent {}
 
 class FetchMeetingApprovalsDataEvent extends ApprovalsEvent {}
 
-class FetchBudgetApprovalsDataEvent extends ApprovalsEvent {}
+class FetchBudgetApprovalsDataEvent extends ApprovalsEvent {
+  /// Director / Center Head / Finance Manager / Manager (level >= 3) see every indent (/indents/all);
+  /// everyone else gets /indents/mine for the "All" bucket — same as the web portal.
+  /// When null the bloc re-uses the value from the previous fetch.
+  final bool? canViewAll;
+
+  const FetchBudgetApprovalsDataEvent({this.canViewAll});
+
+  @override
+  List<Object?> get props => [canViewAll];
+}
 
 class DecideApprovalEvent extends ApprovalsEvent {
   final int id;
   final String decision; // 'approve' or 'reject'
 
   const DecideApprovalEvent({required this.id, required this.decision});
-
-  @override
-  List<Object?> get props => [id, decision];
-}
-
-class DecideBudgetEvent extends ApprovalsEvent {
-  final int id;
-  final String decision; // 'approve' or 'reject'
-
-  const DecideBudgetEvent({required this.id, required this.decision});
 
   @override
   List<Object?> get props => [id, decision];

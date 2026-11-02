@@ -1,13 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
-import 'package:printing/printing.dart';
-import '../../../core/localization/app_strings.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/constants/app_colors.dart';
+import '../../modules/approvals/constants/approvals_const_strings.dart';
 import '../../modules/approvals/models/indent_model.dart';
 import '../../modules/approvals/repository/approvals_repository.dart';
+import '../../modules/approvals/utils/indent_flow_helper.dart';
+import '../../modules/approvals/utils/indent_ui.dart';
+import '../../modules/approvals/utils/indent_voucher_pdf.dart';
+import '../../modules/auth/bloc/auth_bloc.dart';
+import '../../modules/auth/bloc/auth_state.dart';
+import '../../modules/auth/models/user_profile.dart';
+import '../animations/app_animations.dart';
 
+/// Indent detail — same rules as the web portal:
+///  * approver (Center Head / Director / Finance Manager) sees "Your decision" when their step is actionable
+///  * Director always gets the "Executive Oversight & Override" card
+///  * the raiser can cancel while pending
+/// Pops `true` when something changed so the list can refresh.
 class IndentDetailDialog extends StatefulWidget {
   final int indentId;
   final IndentItemModel? initialIndent;
@@ -18,12 +27,12 @@ class IndentDetailDialog extends StatefulWidget {
     this.initialIndent,
   });
 
-  static Future<void> show(
+  static Future<bool?> show(
     BuildContext context, {
     required int indentId,
     IndentItemModel? initialIndent,
   }) {
-    return showDialog(
+    return showSmoothDialog<bool>(
       context: context,
       barrierDismissible: true,
       builder: (context) => IndentDetailDialog(
@@ -39,7 +48,10 @@ class IndentDetailDialog extends StatefulWidget {
 
 class _IndentDetailDialogState extends State<IndentDetailDialog> {
   final ApprovalsRepository _repository = ApprovalsRepository();
+  final TextEditingController _commentController = TextEditingController();
   bool _isLoading = true;
+  bool _busy = false;
+  bool _changed = false;
   IndentItemModel? _indent;
 
   @override
@@ -47,6 +59,12 @@ class _IndentDetailDialogState extends State<IndentDetailDialog> {
     super.initState();
     _indent = widget.initialIndent;
     _fetchDetail();
+  }
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchDetail() async {
@@ -61,831 +79,733 @@ class _IndentDetailDialogState extends State<IndentDetailDialog> {
     }
   }
 
-  String _formatDate(String? dateStr) {
-    if (dateStr == null || dateStr.isEmpty) return '';
-    try {
-      final dt = DateTime.parse(dateStr).toLocal();
-      return DateFormat('d MMM yyyy').format(dt);
-    } catch (_) {
-      return dateStr;
-    }
+  UserProfile? get _me {
+    final st = context.read<AuthBloc>().state;
+    return st is AuthenticatedState ? st.userProfile : null;
   }
 
-  String _formatDateTime(String? dateStr) {
-    if (dateStr == null || dateStr.isEmpty) return '';
-    try {
-      final dt = DateTime.parse(dateStr).toLocal();
-      return DateFormat('d MMM, HH:mm').format(dt);
-    } catch (_) {
-      return dateStr;
-    }
-  }
-
-  Future<void> _printVoucherPdf(IndentItemModel indent) async {
-    final pdf = pw.Document();
-
-    // Load Samskar banner image
-    Uint8List? bannerImageBytes;
-    try {
-      final byteData = await rootBundle.load('assets/images/banner.png');
-      bannerImageBytes = byteData.buffer.asUint8List();
-    } catch (e) {
-      debugPrint('Failed to load banner.png for PDF: $e');
-    }
-
-    final currencySymbol = indent.currency == 'INR' ? 'Rs.' : indent.currency;
-    final totalAmountStr = indent.amount.toStringAsFixed(2);
-    final voucherNoStr = indent.voucherNo ?? 'VCH-2026-0001';
-    final indentNoStr = indent.indentNo.isNotEmpty ? indent.indentNo : 'IND-2026-0001';
-
-    pdf.addPage(
-      pw.Page(
-        pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(32),
-        build: (pw.Context context) {
-          return pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              // Top Header Card with banner and voucher numbers
-              pw.Container(
-                decoration: pw.BoxDecoration(
-                  color: PdfColors.white,
-                  borderRadius: pw.BorderRadius.circular(6),
-                  border: pw.Border.all(color: PdfColors.grey300, width: 1),
-                ),
-                padding: const pw.EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                child: pw.Row(
-                  crossAxisAlignment: pw.CrossAxisAlignment.center,
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                  children: [
-                    if (bannerImageBytes != null)
-                      pw.Image(
-                        pw.MemoryImage(bannerImageBytes),
-                        width: 170,
-                        height: 50,
-                        fit: pw.BoxFit.contain,
-                      )
-                    else
-                      pw.Column(
-                        crossAxisAlignment: pw.CrossAxisAlignment.start,
-                        children: [
-                          pw.Text(
-                            'SAMSKAR',
-                            style: pw.TextStyle(
-                              color: PdfColor.fromHex('#0F1E36'),
-                              fontSize: 16,
-                              fontWeight: pw.FontWeight.bold,
-                            ),
-                          ),
-                          pw.Text(
-                            'THE LIFE SCHOOL',
-                            style: const pw.TextStyle(
-                              color: PdfColors.grey700,
-                              fontSize: 9,
-                            ),
-                          ),
-                        ],
-                      ),
-                    pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.end,
-                      children: [
-                        pw.Container(
-                          padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: pw.BoxDecoration(
-                            color: PdfColor.fromHex('#0E7490'),
-                            borderRadius: pw.BorderRadius.circular(4),
-                          ),
-                          child: pw.Text(
-                            'PURCHASE INDENT VOUCHER',
-                            style: pw.TextStyle(
-                              color: PdfColors.white,
-                              fontSize: 9,
-                              fontWeight: pw.FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        pw.SizedBox(height: 6),
-                        pw.Text(
-                          'VOUCHER NO: $voucherNoStr',
-                          style: pw.TextStyle(
-                            color: PdfColor.fromHex('#0F1E36'),
-                            fontSize: 10,
-                            fontWeight: pw.FontWeight.bold,
-                          ),
-                        ),
-                        pw.SizedBox(height: 2),
-                        pw.Text(
-                          'INDENT NO: $indentNoStr',
-                          style: const pw.TextStyle(
-                            color: PdfColors.grey700,
-                            fontSize: 9,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              pw.SizedBox(height: 8),
-              pw.Container(height: 3, color: PdfColor.fromHex('#D97706')),
-              pw.SizedBox(height: 16),
-
-              // VOUCHER DETAILS HEADER
-              pw.Text(
-                'VOUCHER DETAILS',
-                style: pw.TextStyle(
-                  fontSize: 11,
-                  fontWeight: pw.FontWeight.bold,
-                  color: PdfColor.fromHex('#0E7490'),
-                ),
-              ),
-              pw.SizedBox(height: 4),
-              pw.Divider(thickness: 0.5, color: PdfColors.grey400),
-              pw.SizedBox(height: 8),
-
-              // Title
-              pw.Text(
-                'TITLE',
-                style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700),
-              ),
-              pw.Text(
-                indent.title,
-                style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
-              ),
-              pw.SizedBox(height: 10),
-
-              // 2-column info grid
-              pw.Row(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  pw.Expanded(
-                    child: pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.start,
-                      children: [
-                        pw.Text('RAISED BY', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700)),
-                        pw.Text(indent.raisedBy ?? 'Swapnika', style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
-                        pw.SizedBox(height: 8),
-                        pw.Text('BRANCH', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700)),
-                        pw.Text(indent.branchName ?? 'Moti Nagar & Sanath Nagar', style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
-                        pw.SizedBox(height: 8),
-                        pw.Text('NEEDED BY', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700)),
-                        pw.Text(_formatDate(indent.neededBy), style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
-                      ],
-                    ),
-                  ),
-                  pw.Expanded(
-                    child: pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.start,
-                      children: [
-                        pw.Text('DEPARTMENT', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700)),
-                        pw.Text(indent.departmentName ?? 'Admission Counselling', style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
-                        pw.SizedBox(height: 8),
-                        pw.Text('RAISED ON', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700)),
-                        pw.Text(_formatDate(indent.createdAt), style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              pw.SizedBox(height: 10),
-
-              // Purpose
-              if (indent.purpose != null && indent.purpose!.isNotEmpty) ...[
-                pw.Text('PURPOSE', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700)),
-                pw.Text(indent.purpose!, style: const pw.TextStyle(fontSize: 9.5)),
-                pw.SizedBox(height: 14),
-              ],
-
-              // ITEMS TABLE
-              pw.Text(
-                'ITEMS',
-                style: pw.TextStyle(
-                  fontSize: 11,
-                  fontWeight: pw.FontWeight.bold,
-                  color: PdfColor.fromHex('#0E7490'),
-                ),
-              ),
-              pw.SizedBox(height: 4),
-              pw.Divider(thickness: 0.5, color: PdfColors.grey400),
-              pw.SizedBox(height: 6),
-
-              pw.Table(
-                columnWidths: {
-                  0: const pw.FlexColumnWidth(1),
-                  1: const pw.FlexColumnWidth(6),
-                  2: const pw.FlexColumnWidth(1.5),
-                  3: const pw.FlexColumnWidth(2.5),
-                  4: const pw.FlexColumnWidth(2.5),
-                },
-                children: [
-                  pw.TableRow(
-                    decoration: const pw.BoxDecoration(color: PdfColors.grey100),
-                    children: [
-                      pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('#', style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold))),
-                      pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('DESCRIPTION', style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold))),
-                      pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('QTY', style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold), textAlign: pw.TextAlign.center)),
-                      pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('UNIT PRICE', style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold), textAlign: pw.TextAlign.right)),
-                      pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('AMOUNT', style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold), textAlign: pw.TextAlign.right)),
-                    ],
-                  ),
-                  for (int i = 0; i < indent.items.length; i++)
-                    pw.TableRow(
-                      children: [
-                        pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('${i + 1}', style: const pw.TextStyle(fontSize: 9))),
-                        pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text(indent.items[i].description, style: const pw.TextStyle(fontSize: 9))),
-                        pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('${indent.items[i].qty}', style: const pw.TextStyle(fontSize: 9), textAlign: pw.TextAlign.center)),
-                        pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('$currencySymbol ${indent.items[i].unitPrice.toStringAsFixed(2)}', style: const pw.TextStyle(fontSize: 9), textAlign: pw.TextAlign.right)),
-                        pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('$currencySymbol ${indent.items[i].amount.toStringAsFixed(2)}', style: const pw.TextStyle(fontSize: 9), textAlign: pw.TextAlign.right)),
-                      ],
-                    ),
-                  pw.TableRow(
-                    decoration: const pw.BoxDecoration(color: PdfColors.grey100),
-                    children: [
-                      pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('')),
-                      pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('Grand Total', style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold))),
-                      pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('')),
-                      pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('')),
-                      pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('$currencySymbol $totalAmountStr', style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold, color: PdfColor.fromHex('#15803D')), textAlign: pw.TextAlign.right)),
-                    ],
-                  ),
-                ],
-              ),
-              pw.SizedBox(height: 16),
-
-              // APPROVALS SECTION
-              pw.Text(
-                'APPROVALS',
-                style: pw.TextStyle(
-                  fontSize: 11,
-                  fontWeight: pw.FontWeight.bold,
-                  color: PdfColor.fromHex('#0E7490'),
-                ),
-              ),
-              pw.SizedBox(height: 4),
-              pw.Divider(thickness: 0.5, color: PdfColors.grey400),
-              pw.SizedBox(height: 8),
-
-              pw.Row(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  for (final step in indent.steps)
-                    pw.Expanded(
-                      child: pw.Padding(
-                        padding: const pw.EdgeInsets.only(right: 12),
-                        child: pw.Column(
-                          crossAxisAlignment: pw.CrossAxisAlignment.start,
-                          children: [
-                            pw.Text(
-                              step.approverLevel == 4 ? 'CENTRE HEAD' : (step.approverLevel == 5 ? 'DIRECTOR' : 'APPROVER (L${step.approverLevel})'),
-                              style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold, color: PdfColors.grey700),
-                            ),
-                            pw.Text(
-                              step.decidedBy ?? 'Approver',
-                              style: pw.TextStyle(fontSize: 9.5, fontWeight: pw.FontWeight.bold),
-                            ),
-                            pw.Text(
-                              _formatDateTime(step.decidedAt),
-                              style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
-                            ),
-                            if (step.comment != null && step.comment!.isNotEmpty) ...[
-                              pw.SizedBox(height: 3),
-                              pw.Text(
-                                '"${step.comment}"',
-                                style: pw.TextStyle(fontSize: 8.5, fontStyle: pw.FontStyle.italic),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              pw.SizedBox(height: 12),
-
-              // Approved Badge
-              pw.Container(
-                padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: pw.BoxDecoration(
-                  border: pw.Border.all(color: PdfColor.fromHex('#16A34A')),
-                  borderRadius: pw.BorderRadius.circular(4),
-                ),
-                child: pw.Text(
-                  '✓ APPROVED',
-                  style: pw.TextStyle(
-                    fontSize: 9,
-                    fontWeight: pw.FontWeight.bold,
-                    color: PdfColor.fromHex('#16A34A'),
-                  ),
-                ),
-              ),
-
-              pw.Spacer(),
-
-              // FOOTER DISCLAIMER & SIGNATORY BOX
-              pw.Divider(thickness: 0.5, color: PdfColors.grey300),
-              pw.SizedBox(height: 8),
-              pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: pw.CrossAxisAlignment.end,
-                children: [
-                  pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      pw.Text(
-                        'This is a computer-generated voucher · no physical signature is required.',
-                        style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
-                      ),
-                      pw.Text(
-                        'Samskar Educational Society · $indentNoStr · printed ${_formatDateTime(DateTime.now().toIso8601String())}',
-                        style: const pw.TextStyle(fontSize: 7.5, color: PdfColors.grey500),
-                      ),
-                    ],
-                  ),
-                  pw.Container(
-                    width: 140,
-                    height: 50,
-                    decoration: pw.BoxDecoration(
-                      border: pw.Border.all(color: PdfColors.grey400, width: 0.8),
-                      borderRadius: pw.BorderRadius.circular(4),
-                    ),
-                    padding: const pw.EdgeInsets.all(4),
-                    child: pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.center,
-                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                      children: [
-                        pw.Text(
-                          'FOR OFFICE USE ONLY',
-                          style: const pw.TextStyle(fontSize: 6.5, color: PdfColors.grey600),
-                        ),
-                        pw.Text(
-                          'Authorised Signatory',
-                          style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          );
-        },
+  void _toast(String msg, {bool error = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: error ? AppColors.red600 : AppColors.green600,
       ),
     );
+  }
 
-    await Printing.layoutPdf(
-      onLayout: (PdfPageFormat format) async => pdf.save(),
-      name: 'Voucher_${indent.voucherNo ?? indent.indentNo}.pdf',
+  Future<void> _decide(String decision) async {
+    final indent = _indent;
+    if (indent == null) return;
+    final comment = _commentController.text.trim();
+    if (decision == 'reject' && comment.isEmpty) {
+      _toast(ApprovalsConstStrings.rejectReasonRequired, error: true);
+      return;
+    }
+    setState(() => _busy = true);
+    try {
+      final r = await _repository.decideIndent(indent.id, decision, comment: comment);
+      _changed = true;
+      _commentController.clear();
+      if (r.status == 'approved') {
+        _toast('${ApprovalsConstStrings.fullyApprovedPrefix} ${r.voucherNo ?? ''}');
+      } else if (r.status == 'rejected') {
+        _toast(ApprovalsConstStrings.indentRejected);
+      } else {
+        _toast('${ApprovalsConstStrings.approvedNowWith} ${r.nextLevel ?? ''}');
+      }
+      await _fetchDetail();
+    } catch (e) {
+      _toast(e.toString().replaceFirst('Exception: ', ''), error: true);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _openOverride(String decision) async {
+    final indent = _indent;
+    if (indent == null) return;
+    final comment = await showDialog<String>(
+      context: context,
+      builder: (_) => _OverrideDialog(indent: indent, decision: decision),
     );
+    if (comment == null || comment.trim().isEmpty) return;
+    setState(() => _busy = true);
+    try {
+      await _repository.overrideIndent(indent.id, decision, comment);
+      _changed = true;
+      _toast(decision == 'approve'
+          ? ApprovalsConstStrings.overrideApprovedToast
+          : ApprovalsConstStrings.overrideRejectedToast);
+      await _fetchDetail();
+    } catch (e) {
+      _toast(e.toString().replaceFirst('Exception: ', ''), error: true);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _cancelIndent() async {
+    final indent = _indent;
+    if (indent == null) return;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        content: const Text(ApprovalsConstStrings.cancelIndentConfirm),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text(ApprovalsConstStrings.keep)),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(ApprovalsConstStrings.yesCancel, style: TextStyle(color: AppColors.badgeRedFg(ctx))),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    setState(() => _busy = true);
+    try {
+      await _repository.cancelIndent(indent.id);
+      _changed = true;
+      _toast(ApprovalsConstStrings.indentCancelled);
+      await _fetchDetail();
+    } catch (e) {
+      _toast(e.toString().replaceFirst('Exception: ', ''), error: true);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  bool _pdfBusy = false;
+
+  Future<void> _voucher(IndentItemModel indent, {required bool download}) async {
+    if (_pdfBusy) return;
+    setState(() => _pdfBusy = true);
+    try {
+      // always print from the latest server copy (GET /indents/{id})
+      final fresh = await _repository.getIndentDetail(indent.id) ?? indent;
+      if (download) {
+        await IndentVoucherPdf.downloadVoucher(fresh);
+      } else {
+        await IndentVoucherPdf.printVoucher(fresh);
+      }
+    } catch (e) {
+      _toast('Could not generate voucher: $e', error: true);
+    } finally {
+      if (mounted) setState(() => _pdfBusy = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final s = AppStrings.of(context);
     final indent = _indent;
+    final media = MediaQuery.of(context);
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) Navigator.of(context).pop(_changed);
+      },
+      child: Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
+        backgroundColor: AppColors.surface(context),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: 560, maxHeight: media.size.height * 0.9),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildHeader(context, indent),
+              Divider(height: 1, color: AppColors.border(context)),
+              Flexible(
+                child: indent == null
+                    ? _isLoading
+                        ? const Padding(
+                            padding: EdgeInsets.all(40),
+                            child: Center(child: AnimatedCircleProgressIndicator(size: 40)),
+                          )
+                        : Padding(
+                            padding: const EdgeInsets.all(32),
+                            child: Text(ApprovalsConstStrings.loadFailed,
+                                style: TextStyle(color: AppColors.textSecondary(context))),
+                          )
+                    : SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
+                        child: _buildBody(context, indent),
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-    return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 580),
-        padding: const EdgeInsets.all(20),
-        child: _isLoading && indent == null
-            ? const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(40),
-                  child: CircularProgressIndicator(),
+  Widget _buildHeader(BuildContext context, IndentItemModel? indent) {
+    final tone = IndentUi.toneForStatus(indent?.status ?? '');
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 6, 10),
+      child: Row(
+        children: [
+          Expanded(
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Text(
+                  indent?.indentNo ?? 'Indent',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.textPrimary(context)),
                 ),
-              )
-            : indent == null
-                ? const Center(child: Text('Indent not found'))
-                : SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
+                if (indent != null)
+                  IndentUi.pill(context, IndentUi.capitalize(indent.status),
+                      fg: IndentUi.fg(context, tone), bg: IndentUi.bg(context, tone)),
+                if (indent?.isOverridden == true)
+                  IndentUi.pill(context, ApprovalsConstStrings.overriddenBadge,
+                      fg: AppColors.badgeVioletFg(context), bg: AppColors.badgeVioletBg(context)),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.close_rounded, color: AppColors.textSecondary(context)),
+            onPressed: () => Navigator.of(context).pop(_changed),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sectionLabel(BuildContext context, String text) => Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(color: AppColors.chipBg(context), borderRadius: BorderRadius.circular(6)),
+          child: Text(text,
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textSecondary(context))),
+        ),
+      );
+
+  Widget _card(BuildContext context, {required Widget child, Color? accent, Color? background}) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 14),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: background ?? AppColors.subtleBg(context),
+        borderRadius: BorderRadius.circular(10),
+        border: accent != null
+            ? Border(left: BorderSide(color: accent, width: 4))
+            : Border.all(color: AppColors.border(context)),
+      ),
+      child: child,
+    );
+  }
+
+  Widget _buildBody(BuildContext context, IndentItemModel indent) {
+    final me = _me;
+    final isDirector = IndentFlowHelper.isDirector(me);
+    final isFinance = IndentFlowHelper.isFinanceManager(me);
+    final isRaiser = IndentFlowHelper.isRaiser(indent, me);
+    final signed = IndentFlowHelper.mySignedStep(indent, me);
+    final actionable = IndentFlowHelper.actionableStep(indent, me);
+    final faint = AppColors.textFaint(context);
+
+    final meta = <InlineSpan>[
+      TextSpan(text: '${ApprovalsConstStrings.raisedBy} '),
+      TextSpan(
+          text: indent.raisedBy ?? '—',
+          style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.textPrimary(context))),
+    ];
+    final extra = <String>[
+      if ((indent.departmentName ?? '').isNotEmpty) '${ApprovalsConstStrings.deptPrefix}: ${indent.departmentName}',
+      if ((indent.branchName ?? '').isNotEmpty) '${ApprovalsConstStrings.branchPrefix}: ${indent.branchName}',
+      if ((indent.neededBy ?? '').isNotEmpty) '${ApprovalsConstStrings.neededBy} ${IndentUi.date(indent.neededBy)}',
+      IndentUi.dateTime(indent.createdAt),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(indent.title,
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary(context))),
+            ),
+            const SizedBox(width: 8),
+            Text(IndentUi.money(indent.amount),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textPrimary(context))),
+          ],
+        ),
+        if ((indent.purpose ?? '').isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(indent.purpose!, style: TextStyle(fontSize: 13, color: AppColors.textSecondary(context))),
+        ],
+        const SizedBox(height: 8),
+        Text.rich(TextSpan(children: meta), style: TextStyle(fontSize: 12, color: faint)),
+        const SizedBox(height: 2),
+        Text(extra.join('  ·  '), style: TextStyle(fontSize: 12, color: faint)),
+
+        // Line items (cards instead of a table on mobile)
+        if (indent.items.isNotEmpty) ...[
+          const SizedBox(height: 14),
+          _sectionLabel(context, ApprovalsConstStrings.lineItems),
+          ...indent.items.map((it) => Container(
+                margin: const EdgeInsets.only(bottom: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppColors.subtleBg(context),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(it.description,
+                              style: TextStyle(
+                                  fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary(context))),
+                          const SizedBox(height: 2),
+                          Text('${ApprovalsConstStrings.qty} ${it.qty} × ${IndentUi.money(it.unitPrice)}',
+                              style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary(context))),
+                        ],
+                      ),
+                    ),
+                    Text(IndentUi.money(it.amount),
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textPrimary(context))),
+                  ],
+                ),
+              )),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Text('${ApprovalsConstStrings.total}  ${IndentUi.money(indent.amount)}',
+                style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: AppColors.textPrimary(context))),
+          ),
+        ],
+
+        if (indent.isOverridden) _buildOverrideSummary(context, indent),
+
+        // Approval chain
+        const SizedBox(height: 16),
+        _sectionLabel(context, ApprovalsConstStrings.sequentialChain),
+        if (indent.steps.isEmpty)
+          Text(ApprovalsConstStrings.noStepsConfigured, style: TextStyle(fontSize: 12, color: faint))
+        else
+          ...indent.steps.map((st) => _buildStep(context, indent, st)),
+
+        if (signed != null && indent.status == 'pending')
+          _card(
+            context,
+            background: AppColors.badgeGreenBg(context),
+            child: Text(
+              '✓ ${ApprovalsConstStrings.youSignedOff} ${ApprovalsConstStrings.step} ${signed.stepNo}: ${signed.displayLabel}.',
+              style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: AppColors.badgeGreenFg(context)),
+            ),
+          ),
+
+        if (indent.status == 'pending' && isFinance && actionable == null && signed == null)
+          _card(
+            context,
+            child: Text(
+              'ℹ ${indent.amount <= IndentFlowHelper.tierTwoLimit ? ApprovalsConstStrings.awaitingChOnly : ApprovalsConstStrings.awaitingChAndDirector}',
+              style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary(context)),
+            ),
+          ),
+
+        if (indent.audits.isNotEmpty) ...[
+          const SizedBox(height: 18),
+          _sectionLabel(context, ApprovalsConstStrings.auditHistory),
+          ...indent.audits.map((a) => Container(
+                margin: const EdgeInsets.only(bottom: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.border(context)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        // 1. Header with Indent No, Status Badge and Close button
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  indent.indentNo,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: isDark ? Colors.white : const Color(0xFF0F172A),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFDCFCE7),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    indent.status.capitalize(),
-                                    style: const TextStyle(
-                                      fontSize: 10.5,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0xFF15803D),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.close_rounded, size: 20),
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                              onPressed: () => Navigator.of(context).pop(),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-
-                        // Title
-                        Text(
-                          indent.title,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : const Color(0xFF0F172A),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-
-                        // Purpose
-                        if (indent.purpose != null && indent.purpose!.isNotEmpty) ...[
-                          Text(
-                            indent.purpose!,
+                        Text(a.actorName ?? ApprovalsConstStrings.system,
                             style: TextStyle(
-                              fontSize: 12,
-                              color: isDark ? Colors.grey[400] : const Color(0xFF475569),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                        ],
-
-                        // Metadata: Raised by Swapnika  Dept: Admission Counselling  Branch: Moti Nagar
-                        Wrap(
-                          spacing: 12,
-                          runSpacing: 4,
-                          children: [
-                            RichText(
-                              text: TextSpan(
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: isDark ? Colors.grey[400] : const Color(0xFF64748B),
-                                ),
-                                children: [
-                                  const TextSpan(text: 'Raised by '),
-                                  TextSpan(
-                                    text: indent.raisedBy ?? 'Swapnika',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: isDark ? Colors.white : const Color(0xFF0F172A),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            if (indent.departmentName != null)
-                              Text(
-                                'Dept: ${indent.departmentName}',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: isDark ? Colors.grey[400] : const Color(0xFF64748B),
-                                ),
-                              ),
-                            if (indent.branchName != null)
-                              Text(
-                                'Branch: ${indent.branchName}',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: isDark ? Colors.grey[400] : const Color(0xFF64748B),
-                                ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-
-                        // Needed by date and Created date
-                        Row(
-                          children: [
-                            Text(
-                              '${s.neededBy} ${_formatDate(indent.neededBy)}',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: isDark ? Colors.grey[400] : const Color(0xFF64748B),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              _formatDateTime(indent.createdAt),
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: isDark ? Colors.grey[400] : const Color(0xFF64748B),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Items Table Container
-                        Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Column(
-                            children: [
-                              // Table Header
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                                  borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      flex: 5,
-                                      child: Text(
-                                        s.itemHeader,
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          color: isDark ? Colors.grey[400] : const Color(0xFF64748B),
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Text(
-                                        s.qtyHeader,
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          color: isDark ? Colors.grey[400] : const Color(0xFF64748B),
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Text(
-                                        'UNIT',
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          color: isDark ? Colors.grey[400] : const Color(0xFF64748B),
-                                        ),
-                                        textAlign: TextAlign.right,
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 3,
-                                      child: Text(
-                                        s.amountHeader,
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          color: isDark ? Colors.grey[400] : const Color(0xFF64748B),
-                                        ),
-                                        textAlign: TextAlign.right,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const Divider(height: 1),
-
-                              // Line Items
-                              for (final line in indent.items) ...[
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        flex: 5,
-                                        child: Text(
-                                          line.description,
-                                          style: const TextStyle(fontSize: 11.5),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        flex: 2,
-                                        child: Text(
-                                          '${line.qty}',
-                                          style: const TextStyle(fontSize: 11.5),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ),
-                                      Expanded(
-                                        flex: 2,
-                                        child: Text(
-                                          '₹${line.unitPrice.toStringAsFixed(0)}',
-                                          style: const TextStyle(fontSize: 11.5),
-                                          textAlign: TextAlign.right,
-                                        ),
-                                      ),
-                                      Expanded(
-                                        flex: 3,
-                                        child: Text(
-                                          '₹${line.amount.toStringAsFixed(0)}',
-                                          style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
-                                          textAlign: TextAlign.right,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const Divider(height: 1),
-                              ],
-
-                              // Total Row
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                decoration: BoxDecoration(
-                                  color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8)),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Spacer(flex: 7),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Text(
-                                        'Total',
-                                        style: TextStyle(
-                                          fontSize: 11.5,
-                                          fontWeight: FontWeight.bold,
-                                          color: isDark ? Colors.white : const Color(0xFF0F172A),
-                                        ),
-                                        textAlign: TextAlign.right,
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 3,
-                                      child: Text(
-                                        '₹${indent.amount.toStringAsFixed(0)}',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                          color: isDark ? Colors.white : const Color(0xFF0F172A),
-                                        ),
-                                        textAlign: TextAlign.right,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Approval chain section
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            s.approvalChain,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white70 : const Color(0xFF475569),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-
-                        // Approval chain steps
-                        for (final step in indent.steps) ...[
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('🟢 ', style: TextStyle(fontSize: 10)),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      RichText(
-                                        text: TextSpan(
-                                          style: TextStyle(
-                                            fontSize: 11.5,
-                                            color: isDark ? Colors.white : const Color(0xFF0F172A),
-                                          ),
-                                          children: [
-                                            TextSpan(
-                                              text: step.approverLevel == 4
-                                                  ? 'Centre Head · '
-                                                  : (step.approverLevel == 5 ? 'Director · ' : 'Approver (L${step.approverLevel}) · '),
-                                              style: const TextStyle(fontWeight: FontWeight.bold),
-                                            ),
-                                            TextSpan(
-                                              text: step.decision.capitalize(),
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: Color(0xFF16A34A),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        '${step.decidedBy ?? "Approver"} · ${_formatDateTime(step.decidedAt)}',
-                                        style: TextStyle(
-                                          fontSize: 10.5,
-                                          color: isDark ? Colors.grey[400] : const Color(0xFF64748B),
-                                        ),
-                                      ),
-                                      if (step.comment != null && step.comment!.isNotEmpty) ...[
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          '"${step.comment}"',
-                                          style: TextStyle(
-                                            fontSize: 10.5,
-                                            fontStyle: FontStyle.italic,
-                                            color: isDark ? Colors.grey[300] : const Color(0xFF334155),
-                                          ),
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                        ],
-                        const SizedBox(height: 14),
-
-                        // Fully approved voucher banner and Print voucher (PDF) button
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF064E3B).withValues(alpha: 0.3) : const Color(0xFFDCFCE7).withValues(alpha: 0.5),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: const Color(0xFF86EFAC),
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Fully approved — voucher ${indent.voucherNo ?? "VCH-2026-0001"}',
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF15803D),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              ElevatedButton.icon(
-                                onPressed: () => _printVoucherPdf(indent),
-                                icon: const Icon(Icons.print_rounded, size: 16),
-                                label: Text(
-                                  s.printVoucherPdf,
-                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF0F172A),
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                                fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textPrimary(context))),
+                        IndentUi.pill(context, a.action.replaceAll('_', ' '),
+                            fg: AppColors.textSecondary(context), bg: AppColors.chipBg(context)),
+                        Text(IndentUi.dateTime(a.createdAt), style: TextStyle(fontSize: 10.5, color: faint)),
                       ],
                     ),
+                    if ((a.comment ?? '').isNotEmpty) ...[
+                      const SizedBox(height: 3),
+                      Text('“${a.comment}”',
+                          style: TextStyle(
+                              fontSize: 11.5, fontStyle: FontStyle.italic, color: AppColors.textSecondary(context))),
+                    ],
+                  ],
+                ),
+              )),
+        ],
+
+        if (indent.status == 'approved' && (indent.voucherNo ?? '').isNotEmpty)
+          _card(
+            context,
+            accent: AppColors.badgeGreenFg(context),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text.rich(
+                  TextSpan(children: [
+                    TextSpan(text: '${ApprovalsConstStrings.fullyApprovedVoucher} '),
+                    TextSpan(
+                        text: indent.voucherNo,
+                        style: TextStyle(
+                            fontFamily: 'monospace', fontWeight: FontWeight.w800, color: AppColors.textPrimary(context))),
+                  ]),
+                  style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary(context)),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: _pdfBusy ? null : () => _voucher(indent, download: false),
+                      icon: const Icon(Icons.print_rounded, size: 16),
+                      label: const Text('Print voucher (PDF)'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary(context),
+                        foregroundColor: AppColors.white,
+                      ),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: _pdfBusy ? null : () => _voucher(indent, download: true),
+                      icon: _pdfBusy
+                          ? const SizedBox(width: 14, height: 14, child: AnimatedCircleProgressIndicator(size: 14))
+                          : const Icon(Icons.download_rounded, size: 16),
+                      label: const Text('Download PDF'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+        if (actionable != null) _buildDecisionCard(context, actionable),
+
+        if (isDirector) _buildDirectorOverride(context, indent),
+
+        if (indent.status == 'pending' && isRaiser)
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: TextButton(
+              onPressed: _busy ? null : _cancelIndent,
+              child: Text(ApprovalsConstStrings.cancelIndent,
+                  style: TextStyle(color: AppColors.badgeRedFg(context), fontWeight: FontWeight.w700)),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildOverrideSummary(BuildContext context, IndentItemModel indent) {
+    final ok = indent.overrideDecision == 'approved';
+    final c = ok ? AppColors.badgeGreenFg(context) : AppColors.badgeRedFg(context);
+    return _card(
+      context,
+      accent: c,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text('${ApprovalsConstStrings.directorOverridePrefix} ${ok ? 'Approved' : 'Rejected'}',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: c)),
+              ),
+              Text(IndentUi.dateTime(indent.overriddenAt),
+                  style: TextStyle(fontSize: 11, color: AppColors.textSecondary(context))),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text('${ApprovalsConstStrings.actionTakenBy} ${indent.overrideByName ?? 'Director'}',
+              style: TextStyle(fontSize: 12, color: AppColors.textPrimary(context))),
+          if ((indent.overrideComment ?? '').isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text('“${indent.overrideComment}”',
+                style: TextStyle(fontSize: 12.5, fontStyle: FontStyle.italic, color: AppColors.textPrimary(context))),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStep(BuildContext context, IndentItemModel indent, IndentStepModel st) {
+    final status = IndentFlowHelper.stepStatus(indent, st);
+    final color = IndentUi.fg(context, status.tone);
+    final kind = IndentFlowHelper.stepKind(st);
+    final kindTone = st.isFinanceStep
+        ? (AppColors.badgeGreenFg(context), AppColors.badgeGreenBg(context))
+        : st.isOptional
+            ? (AppColors.badgeBlueFg(context), AppColors.badgeBlueBg(context))
+            : (AppColors.badgeYellowFg(context), AppColors.badgeYellowBg(context));
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(color: AppColors.subtleBg(context), borderRadius: BorderRadius.circular(8)),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            margin: const EdgeInsets.only(top: 4),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text('${ApprovalsConstStrings.step} ${st.stepNo}: ${st.displayLabel}',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textPrimary(context))),
+                    IndentUi.pill(context, kind, fg: kindTone.$1, bg: kindTone.$2),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(status.text, style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: color)),
+                if ((status.actor ?? '').isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text('${status.actor} · ${IndentUi.dateTime(status.at)}',
+                      style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary(context))),
+                ],
+                if ((status.comment ?? '').isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text('“${status.comment}”',
+                      style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: AppColors.textSecondary(context))),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDecisionCard(BuildContext context, IndentStepModel step) {
+    final kind = step.isFinanceStep
+        ? 'Final Approval'
+        : step.isOptional
+            ? 'Optional Review'
+            : ApprovalsConstStrings.mandatoryApproval;
+    return _card(
+      context,
+      background: AppColors.surface(context),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionLabel(context, '${ApprovalsConstStrings.yourDecision} (${step.displayLabel} · $kind)'),
+          TextField(
+            controller: _commentController,
+            minLines: 2,
+            maxLines: 4,
+            style: TextStyle(fontSize: 13, color: AppColors.textPrimary(context)),
+            decoration: InputDecoration(
+              hintText: ApprovalsConstStrings.commentHint,
+              hintStyle: TextStyle(fontSize: 12.5, color: AppColors.textFaint(context)),
+              isDense: true,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _busy ? null : () => _decide('approve'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.green600,
+                    foregroundColor: AppColors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
+                  child: Text(
+                    '✓ ${step.isFinanceStep ? ApprovalsConstStrings.approveAndIssueVoucher : ApprovalsConstStrings.approveAction}',
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: _busy ? null : () => _decide('reject'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.badgeRedFg(context),
+                    side: BorderSide(color: AppColors.badgeRedFg(context)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: const Text(ApprovalsConstStrings.rejectAction, style: TextStyle(fontWeight: FontWeight.w700)),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDirectorOverride(BuildContext context, IndentItemModel indent) {
+    final violet = AppColors.badgeVioletFg(context);
+    final info = indent.status == 'rejected'
+        ? ApprovalsConstStrings.overrideRejectedInfo
+        : indent.status == 'approved'
+            ? ApprovalsConstStrings.overrideApprovedInfo
+            : ApprovalsConstStrings.overridePendingInfo;
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 14),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.badgeVioletBg(context),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: violet.withValues(alpha: 0.5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(ApprovalsConstStrings.directorOversight,
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: violet)),
+          const SizedBox(height: 2),
+          Text('(${ApprovalsConstStrings.directorOversightSub})',
+              style: TextStyle(fontSize: 11, color: AppColors.textSecondary(context))),
+          const SizedBox(height: 6),
+          Text(info, style: TextStyle(fontSize: 12, color: AppColors.textSecondary(context))),
+          const SizedBox(height: 10),
+          if (indent.status != 'approved')
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _busy ? null : () => _openOverride('approve'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.green600,
+                  foregroundColor: AppColors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                child: Text(
+                  indent.status == 'rejected'
+                      ? ApprovalsConstStrings.overrideRejectionApprove
+                      : ApprovalsConstStrings.directorOverrideApprove,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
+          if (indent.status != 'approved' && indent.status != 'rejected') const SizedBox(height: 8),
+          if (indent.status != 'rejected')
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: _busy ? null : () => _openOverride('reject'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.badgeRedFg(context),
+                  side: BorderSide(color: AppColors.badgeRedFg(context)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                child: Text(
+                  indent.status == 'approved'
+                      ? ApprovalsConstStrings.revokeAndReject
+                      : ApprovalsConstStrings.directorRejectNotNecessary,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
 }
 
-extension StringExtension on String {
-  String capitalize() {
-    if (isEmpty) return this;
-    return '${this[0].toUpperCase()}${substring(1)}';
+/// Director override justification sheet. Pops the comment (or null when cancelled).
+class _OverrideDialog extends StatefulWidget {
+  final IndentItemModel indent;
+  final String decision;
+
+  const _OverrideDialog({required this.indent, required this.decision});
+
+  @override
+  State<_OverrideDialog> createState() => _OverrideDialogState();
+}
+
+class _OverrideDialogState extends State<_OverrideDialog> {
+  final TextEditingController _c = TextEditingController();
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final approve = widget.decision == 'approve';
+    return AlertDialog(
+      backgroundColor: AppColors.surface(context),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      title: Text(
+        approve ? ApprovalsConstStrings.overrideApproveTitle : ApprovalsConstStrings.overrideRejectTitle,
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w800,
+          color: approve ? AppColors.badgeGreenFg(context) : AppColors.badgeRedFg(context),
+        ),
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              approve
+                  ? 'You are overriding earlier rejection(s) to approve ${widget.indent.indentNo} under Director authority. A purchase voucher will be generated.'
+                  : 'You are rejecting ${widget.indent.indentNo} as not necessary. Any previous approvals/vouchers will be revoked.',
+              style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary(context)),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              approve ? ApprovalsConstStrings.overrideApproveLabel : ApprovalsConstStrings.overrideRejectLabel,
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textPrimary(context)),
+            ),
+            const SizedBox(height: 6),
+            TextField(
+              controller: _c,
+              minLines: 3,
+              maxLines: 5,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(
+                hintText: approve ? ApprovalsConstStrings.overrideApproveHint : ApprovalsConstStrings.overrideRejectHint,
+                hintStyle: TextStyle(fontSize: 12, color: AppColors.textFaint(context)),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text(ApprovalsConstStrings.cancel)),
+        ElevatedButton(
+          onPressed: _c.text.trim().isEmpty ? null : () => Navigator.pop(context, _c.text.trim()),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: approve ? AppColors.green600 : AppColors.red600,
+            foregroundColor: AppColors.white,
+          ),
+          child: Text(approve ? ApprovalsConstStrings.confirmOverrideApprove : ApprovalsConstStrings.confirmRejection),
+        ),
+      ],
+    );
   }
 }
