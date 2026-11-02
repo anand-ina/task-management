@@ -976,7 +976,7 @@ class _TaskDetailDialogState extends State<TaskDetailDialog> {
                           return ScaleTap(
                             onTap: () {
                               if (fileUrl.isNotEmpty) {
-                                final fullUrl = fileUrl.startsWith('http') ? fileUrl : 'https://div-task-api.srivyn.in$fileUrl';
+                                final fullUrl = fileUrl.startsWith('http') ? fileUrl : 'https://dev-task-api.srivyn.in$fileUrl';
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(content: Text('Opening attachment: $fullUrl')),
                                 );

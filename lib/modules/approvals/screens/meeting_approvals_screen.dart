@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
+import '../../../core/utils/error_utils.dart';
 import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/schedule_meeting_dialog.dart';
@@ -186,7 +187,7 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 40),
                           child: Column(
                             children: [
-                              Text(state.message),
+                              Text(formatErrorMessage(state.message)),
                               const SizedBox(height: 12),
                               ElevatedButton(
                                 onPressed: () => context

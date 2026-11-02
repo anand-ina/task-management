@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/utils/error_utils.dart';
 import '../models/google_calendar_status_model.dart';
 import '../models/meeting_model.dart';
 import '../repository/meetings_repository.dart';
@@ -48,8 +49,8 @@ class MeetingsBloc extends Bloc<MeetingsEvent, MeetingsState> {
       }
     }
     final str = e.toString();
-    if (str.startsWith('Exception: ')) return str.substring(11);
-    return str;
+    if (str.startsWith('Exception: ')) return formatErrorMessage(str.substring(11));
+    return formatErrorMessage(e);
   }
 
   Future<void> _onFetchOneOnOnePending(

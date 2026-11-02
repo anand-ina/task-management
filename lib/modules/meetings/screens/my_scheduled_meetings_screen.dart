@@ -9,6 +9,7 @@ import '../../../core/constants/api_constants.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../core/network/dio_client.dart';
+import '../../../core/utils/error_utils.dart';
 import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../dashboard/screens/dashboard_screen.dart';
@@ -123,12 +124,12 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
         }
       }
       if (error.message != null && error.message!.trim().isNotEmpty) {
-        return error.message!;
+        return formatErrorMessage(error.message!);
       }
     }
     final str = error.toString();
-    if (str.startsWith('Exception: ')) return str.substring(11);
-    return str;
+    if (str.startsWith('Exception: ')) return formatErrorMessage(str.substring(11));
+    return formatErrorMessage(error);
   }
 
   void _showErrorToast(BuildContext context, dynamic error) {

@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/dio_client.dart';
+import '../../../core/utils/error_utils.dart';
 import '../../dashboard/models/branch_model.dart';
 import '../models/clone_task_models.dart' hide BranchModel;
 import '../models/subtask_models.dart';
@@ -204,7 +205,7 @@ class TaskRepository {
       if (e.response?.data is Map) {
         errorMessage = e.response?.data['message']?.toString();
       }
-      errorMessage ??= e.message ?? 'An error occurred';
+      errorMessage ??= formatErrorMessage(e);
 
       debugPrint('==================== API ERROR ====================');
       debugPrint('URL: [POST] $url');

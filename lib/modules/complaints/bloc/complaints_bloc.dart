@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/utils/error_utils.dart';
 import '../models/lookup_models.dart';
 import '../models/ticket_insights_model.dart';
 import '../models/ticket_meta_model.dart';
@@ -380,7 +381,7 @@ class ComplaintsBloc extends Bloc<ComplaintsEvent, ComplaintsState> {
         selectedYear: year,
         selectedBranchId: branchId,
         isLoading: false,
-        errorMessage: e.toString().replaceFirst('Exception: ', ''),
+        errorMessage: formatErrorMessage(e),
       ));
     }
   }
@@ -480,7 +481,7 @@ class ComplaintsBloc extends Bloc<ComplaintsEvent, ComplaintsState> {
         categoryFilter: event.category ?? 'All categories',
         mineFilter: event.mine ?? '',
         isLoading: false,
-        errorMessage: e.toString().replaceFirst('Exception: ', ''),
+        errorMessage: formatErrorMessage(e),
       ));
     }
   }
@@ -493,7 +494,7 @@ class ComplaintsBloc extends Bloc<ComplaintsEvent, ComplaintsState> {
       final ticket = await _repository.getTicketById(event.ticketId);
       emit(TicketDetailsLoadedState(ticket: ticket, isLoading: false));
     } catch (e) {
-      emit(ComplaintsErrorState(e.toString().replaceFirst('Exception: ', '')));
+      emit(ComplaintsErrorState(formatErrorMessage(e)));
     }
   }
 
@@ -513,7 +514,7 @@ class ComplaintsBloc extends Bloc<ComplaintsEvent, ComplaintsState> {
         message: 'Ticket assigned successfully',
       ));
     } catch (e) {
-      emit(ComplaintsErrorState(e.toString().replaceFirst('Exception: ', '')));
+      emit(ComplaintsErrorState(formatErrorMessage(e)));
     }
   }
 
@@ -533,7 +534,7 @@ class ComplaintsBloc extends Bloc<ComplaintsEvent, ComplaintsState> {
         message: 'Ticket marked as resolved',
       ));
     } catch (e) {
-      emit(ComplaintsErrorState(e.toString().replaceFirst('Exception: ', '')));
+      emit(ComplaintsErrorState(formatErrorMessage(e)));
     }
   }
 
@@ -552,7 +553,7 @@ class ComplaintsBloc extends Bloc<ComplaintsEvent, ComplaintsState> {
         message: 'Ticket closed as not valid',
       ));
     } catch (e) {
-      emit(ComplaintsErrorState(e.toString().replaceFirst('Exception: ', '')));
+      emit(ComplaintsErrorState(formatErrorMessage(e)));
     }
   }
 
@@ -571,7 +572,7 @@ class ComplaintsBloc extends Bloc<ComplaintsEvent, ComplaintsState> {
         message: 'Ticket updated successfully',
       ));
     } catch (e) {
-      emit(ComplaintsErrorState(e.toString().replaceFirst('Exception: ', '')));
+      emit(ComplaintsErrorState(formatErrorMessage(e)));
     }
   }
 
@@ -652,10 +653,10 @@ class ComplaintsBloc extends Bloc<ComplaintsEvent, ComplaintsState> {
       if (current != null) {
         emit(current.copyWith(
           isLoading: false,
-          errorMessage: e.toString().replaceFirst('Exception: ', ''),
+          errorMessage: formatErrorMessage(e),
         ));
       } else {
-        emit(ComplaintsErrorState(e.toString().replaceFirst('Exception: ', '')));
+        emit(ComplaintsErrorState(formatErrorMessage(e)));
       }
     }
   }

@@ -40,10 +40,9 @@ class NetworkConnectivityService {
     }
   }
 
-  /// Ultra-fast and 100% accurate check:
+  /// Reliable check:
   /// 1. Instant check of network interface (< 5ms)
-  /// 2. Direct TCP socket probe to backend server dev-task-api.srivyn.in:443 (max 1000ms)
-  /// If the backend server cannot be reached, the login API cannot be called and is considered offline.
+  /// 2. Check reachability to dev-task-api.srivyn.in (or DNS lookup)
   Future<bool> checkConnection() async {
     try {
       final results = await Connectivity().checkConnectivity();
@@ -55,15 +54,22 @@ class NetworkConnectivityService {
       if (kIsWeb) return true;
 
       try {
-        final socket = await Socket.connect(
-          'div-task-api.srivyn.in',
-          443,
-          timeout: const Duration(milliseconds: 1000),
-        );
-        socket.destroy();
-        return true;
+        final lookupResults = await InternetAddress.lookup('dev-task-api.srivyn.in')
+            .timeout(const Duration(milliseconds: 2500));
+        return lookupResults.isNotEmpty && lookupResults[0].rawAddress.isNotEmpty;
       } catch (_) {
-        return false;
+        // Fallback socket connection to verify if general internet works
+        try {
+          final socket = await Socket.connect(
+            '8.8.8.8',
+            53,
+            timeout: const Duration(milliseconds: 2000),
+          );
+          socket.destroy();
+          return true;
+        } catch (_) {
+          return false;
+        }
       }
     } catch (_) {
       return false;

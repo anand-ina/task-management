@@ -1,10 +1,22 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import '../utils/app_navigator.dart';
+import '../utils/app_toast.dart';
 import '../utils/network_connectivity_service.dart';
 import '../utils/preferences_service.dart';
-import '../../shared_widgets/dialogs/no_internet_dialog.dart';
+
+class FriendlyDioException extends DioException {
+  FriendlyDioException({
+    required super.requestOptions,
+    super.response,
+    super.type = DioExceptionType.connectionError,
+    super.error,
+    String super.message = 'Internet not available',
+  });
+
+  @override
+  String toString() => 'Internet not available';
+}
 
 class DioClient {
   static final DioClient _instance = DioClient._internal();
@@ -43,36 +55,17 @@ class DioClient {
 
             final isConnected = await NetworkConnectivityService().checkConnection();
             if (!isConnected) {
-              final currentContext = AppNavigator.navigatorKey.currentContext;
-              if (currentContext != null && currentContext.mounted) {
-                NoInternetDialog.show(currentContext);
-              }
+              AppToast.showInternetToast(message: 'Internet not available');
               return handler.reject(
-                DioException(
+                FriendlyDioException(
                   requestOptions: options,
                   type: DioExceptionType.connectionError,
-                  error: const SocketException('No internet connection'),
-                  message: 'No internet connection',
+                  error: const SocketException('Internet not available'),
+                  message: 'Internet not available',
                 ),
               );
             }
           } else if (isAuthenticated) {
-            // For authenticated requests inside the app, check internet connectivity
-            final isConnected = await NetworkConnectivityService().checkConnection();
-            if (!isConnected) {
-              final currentContext = AppNavigator.navigatorKey.currentContext;
-              if (currentContext != null && currentContext.mounted) {
-                NoInternetDialog.showForceLogout(currentContext);
-              }
-              return handler.reject(
-                DioException(
-                  requestOptions: options,
-                  type: DioExceptionType.connectionError,
-                  error: const SocketException('No internet connection'),
-                  message: 'No internet connection',
-                ),
-              );
-            }
             options.headers['Authorization'] = 'Bearer $token';
           }
 
@@ -112,30 +105,22 @@ class DioClient {
               error.type == DioExceptionType.connectionTimeout ||
               error.type == DioExceptionType.sendTimeout ||
               error.type == DioExceptionType.receiveTimeout ||
-              error.error is SocketException;
+              error.error is SocketException ||
+              error.message?.toLowerCase().contains('connection') == true;
 
           final isLoginApi = error.requestOptions.uri.toString().contains('/auth/login') ||
               error.requestOptions.path.contains('/auth/login');
 
           if (isNetworkError) {
-            if (isLoginApi) {
-              final currentContext = AppNavigator.navigatorKey.currentContext;
-              if (currentContext != null && currentContext.mounted) {
-                NoInternetDialog.show(currentContext);
-              }
-            } else {
-              final token = await PreferencesService().getToken();
-              final isAuthenticated = token != null && token.isNotEmpty;
-              if (isAuthenticated) {
-                final isConnected = await NetworkConnectivityService().checkConnection();
-                if (!isConnected) {
-                  final currentContext = AppNavigator.navigatorKey.currentContext;
-                  if (currentContext != null && currentContext.mounted) {
-                    NoInternetDialog.showForceLogout(currentContext);
-                  }
-                }
-              }
-            }
+            AppToast.showInternetToast(message: 'Internet not available');
+            final friendlyError = FriendlyDioException(
+              requestOptions: error.requestOptions,
+              response: error.response,
+              type: error.type,
+              error: const SocketException('Internet not available'),
+              message: 'Internet not available',
+            );
+            return handler.next(friendlyError);
           }
 
           return handler.next(error);

@@ -7,7 +7,7 @@ import '../../../core/localization/app_strings.dart';
 import '../../../core/utils/network_connectivity_service.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
-import '../../../shared_widgets/dialogs/no_internet_dialog.dart';
+import '../../../core/utils/app_toast.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
 import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../../shared_widgets/dropdowns/searchable_filter_dropdown.dart';
@@ -59,7 +59,7 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
   Future<void> _fetchTickets() async {
     final hasNet = await NetworkConnectivityService().checkConnection();
     if (!hasNet && mounted) {
-      NoInternetDialog.showForceLogout(context);
+      AppToast.showInternetToast(message: 'Internet not available');
       return;
     }
 

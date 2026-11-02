@@ -19,7 +19,7 @@ import 'modules/hourly_log/bloc/hourly_log_bloc.dart';
 import 'modules/hourly_log/repository/hourly_log_repository.dart';
 import 'modules/hourly_log/widgets/hourly_log_prompt_overlay.dart';
 import 'modules/settings/bloc/language_cubit.dart';
-import 'shared_widgets/dialogs/no_internet_dialog.dart';
+import 'core/utils/app_toast.dart';
 import 'shared_widgets/radial_menu/draggable_radial_menu_overlay.dart';
 
 import 'core/utils/app_navigator.dart';
@@ -40,6 +40,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   StreamSubscription<bool>? _networkSubscription;
+  bool _wasDisconnected = false;
 
   @override
   void initState() {
@@ -49,19 +50,17 @@ class _MyAppState extends State<MyApp> {
       if (!mounted) return;
       NetworkConnectivityService().initialize();
 
-      _networkSubscription = NetworkConnectivityService().onConnectionChanged.listen((isConnected) async {
-        if (!isConnected && mounted) {
-          final token = await PreferencesService().getToken();
-          if (!mounted) return;
-          final currentContext = AppNavigator.navigatorKey.currentContext;
-          if (currentContext != null && currentContext.mounted) {
-            final authState = currentContext.read<AuthBloc>().state;
-            final isAuthenticated = authState is AuthenticatedState || (token != null && token.isNotEmpty);
-            if (isAuthenticated) {
-              // User is logged in inside the app: show 5-second countdown force-logout dialog
-              NoInternetDialog.showForceLogout(currentContext);
-            }
-          }
+      _networkSubscription = NetworkConnectivityService().onConnectionChanged.listen((isConnected) {
+        if (!mounted) return;
+        if (!isConnected) {
+          _wasDisconnected = true;
+          AppToast.showInternetToast(message: 'Internet not available');
+        } else if (_wasDisconnected) {
+          _wasDisconnected = false;
+          AppToast.showInternetToast(
+            message: 'Internet connection restored',
+            isConnected: true,
+          );
         }
       });
     });
@@ -96,6 +95,7 @@ class _MyAppState extends State<MyApp> {
             builder: (context, locale) {
               return MaterialApp(
                 navigatorKey: AppNavigator.navigatorKey,
+                scaffoldMessengerKey: AppNavigator.scaffoldMessengerKey,
                 title: 'Samskar Task Manager',
                 debugShowCheckedModeBanner: false,
                 themeMode: themeMode,

@@ -6,7 +6,8 @@ import '../../../core/utils/network_connectivity_service.dart';
 import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
-import '../../../shared_widgets/dialogs/no_internet_dialog.dart';
+import '../../../core/utils/app_toast.dart';
+import '../../../core/utils/error_utils.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
 import '../../../shared_widgets/floating_action_button/todo_floating_action_button.dart';
 import '../../complaints/dialogs/ticket_details_dialog.dart';
@@ -61,7 +62,7 @@ class _AppreciationApprovalsScreenState extends State<AppreciationApprovalsScree
     final isOnline = await NetworkConnectivityService().checkConnection();
     if (!isOnline && mounted) {
       setState(() => _isLoading = false);
-      NoInternetDialog.showForceLogout(context);
+      AppToast.showInternetToast(message: 'Internet not available');
       return;
     }
 
@@ -99,7 +100,7 @@ class _AppreciationApprovalsScreenState extends State<AppreciationApprovalsScree
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMessage = e.toString();
+          _errorMessage = formatErrorMessage(e);
         });
       }
     }
@@ -299,7 +300,7 @@ class _AppreciationApprovalsScreenState extends State<AppreciationApprovalsScree
 
     final isOnline = await NetworkConnectivityService().checkConnection();
     if (!isOnline && mounted) {
-      NoInternetDialog.show(context);
+      AppToast.showInternetToast(message: 'Internet not available');
       return;
     }
 
@@ -336,7 +337,7 @@ class _AppreciationApprovalsScreenState extends State<AppreciationApprovalsScree
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to award points: $e'),
+            content: Text('Failed to award points: ${formatErrorMessage(e)}'),
             backgroundColor: Colors.red,
           ),
         );

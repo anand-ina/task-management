@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../core/utils/network_connectivity_service.dart';
-import '../../../shared_widgets/dialogs/no_internet_dialog.dart';
+import '../../../core/utils/app_toast.dart';
+import '../../../core/utils/error_utils.dart';
 import '../../../shared_widgets/dropdowns/searchable_filter_dropdown.dart';
 import '../models/lookup_models.dart';
 import '../models/ticket_meta_model.dart';
@@ -185,7 +186,7 @@ class _EditTicketDialogState extends State<EditTicketDialog> {
   Future<void> _handleSave() async {
     final hasNet = await NetworkConnectivityService().checkConnection();
     if (!hasNet && mounted) {
-      NoInternetDialog.showForceLogout(context);
+      AppToast.showInternetToast(message: 'Internet not available');
       return;
     }
 
@@ -236,7 +237,7 @@ class _EditTicketDialogState extends State<EditTicketDialog> {
           _isSaving = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+          SnackBar(content: Text(formatErrorMessage(e))),
         );
       }
     }

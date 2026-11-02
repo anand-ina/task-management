@@ -10,7 +10,7 @@ import '../../modules/approvals/bloc/approvals_bloc.dart';
 import '../../modules/approvals/bloc/approvals_event.dart';
 import '../../modules/approvals/models/indent_model.dart';
 import '../../modules/approvals/repository/approvals_repository.dart';
-import 'no_internet_dialog.dart';
+import '../../core/utils/app_toast.dart';
 
 class _LineItemRow {
   final TextEditingController descriptionController = TextEditingController();
@@ -113,7 +113,7 @@ class _RaiseIndentDialogState extends State<RaiseIndentDialog> {
 
     final isOnline = await NetworkConnectivityService().checkConnection();
     if (!isOnline && mounted) {
-      NoInternetDialog.show(context);
+      AppToast.showInternetToast(message: 'Internet not available');
       return;
     }
 

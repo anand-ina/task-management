@@ -5,7 +5,8 @@ import '../../../core/network/dio_client.dart';
 import '../../../core/utils/app_navigator.dart';
 import '../../../core/utils/network_connectivity_service.dart';
 import '../../../core/utils/preferences_service.dart';
-import '../../../shared_widgets/dialogs/no_internet_dialog.dart';
+import '../../../core/utils/app_toast.dart';
+import '../../../core/utils/error_utils.dart';
 import '../models/login_response.dart';
 import '../models/user_profile.dart';
 
@@ -33,11 +34,8 @@ class AuthRepository {
     // Check internet connection before calling login API
     final isConnected = await NetworkConnectivityService().checkConnection();
     if (!isConnected) {
-      final context = AppNavigator.navigatorKey.currentContext;
-      if (context != null && context.mounted) {
-        NoInternetDialog.show(context);
-      }
-      throw Exception('No internet connection. Please connect to the internet.');
+      AppToast.showInternetToast(message: 'Internet not available');
+      throw Exception('Internet not available');
     }
 
     try {
@@ -90,15 +88,12 @@ class AuthRepository {
           e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.sendTimeout ||
           e.type == DioExceptionType.receiveTimeout) {
-        final context = AppNavigator.navigatorKey.currentContext;
-        if (context != null && context.mounted) {
-          NoInternetDialog.show(context);
-        }
-        throw Exception('No internet connection. Please connect to the internet.');
+        AppToast.showInternetToast(message: 'Internet not available');
+        throw Exception('Internet not available');
       }
-      throw Exception(e.message ?? 'Login failed. Please try again.');
+      throw Exception(formatErrorMessage(e.message ?? 'Login failed. Please try again.'));
     } catch (e) {
-      throw Exception(e.toString().replaceAll('Exception: ', ''));
+      throw Exception(formatErrorMessage(e));
     }
   }
 

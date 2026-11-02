@@ -5,7 +5,8 @@ import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../core/utils/network_connectivity_service.dart';
-import '../../../shared_widgets/dialogs/no_internet_dialog.dart';
+import '../../../core/utils/app_toast.dart';
+import '../../../core/utils/error_utils.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/bloc/auth_state.dart';
 import '../../tasks/screens/all_tasks_screen.dart';
@@ -111,7 +112,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMessage = e.toString().replaceFirst('Exception: ', '');
+          _errorMessage = formatErrorMessage(e);
         });
       }
     }
@@ -152,7 +153,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
   Future<void> _handleAssign() async {
     final hasNet = await NetworkConnectivityService().checkConnection();
     if (!hasNet && mounted) {
-      NoInternetDialog.showForceLogout(context);
+      AppToast.showInternetToast(message: 'Internet not available');
       return;
     }
 
@@ -200,7 +201,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
           _isSubmittingAssign = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+          SnackBar(content: Text(formatErrorMessage(e))),
         );
       }
     }
@@ -209,7 +210,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
   Future<void> _handleResolve() async {
     final hasNet = await NetworkConnectivityService().checkConnection();
     if (!hasNet && mounted) {
-      NoInternetDialog.showForceLogout(context);
+      AppToast.showInternetToast(message: 'Internet not available');
       return;
     }
 
@@ -248,7 +249,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
           _isSubmittingCloseLoop = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+          SnackBar(content: Text(formatErrorMessage(e))),
         );
       }
     }
@@ -257,7 +258,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
   Future<void> _handleReject() async {
     final hasNet = await NetworkConnectivityService().checkConnection();
     if (!hasNet && mounted) {
-      NoInternetDialog.showForceLogout(context);
+      AppToast.showInternetToast(message: 'Internet not available');
       return;
     }
 
@@ -295,7 +296,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
           _isSubmittingCloseLoop = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+          SnackBar(content: Text(formatErrorMessage(e))),
         );
       }
     }
@@ -304,7 +305,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
   Future<void> _handleAwardPoints(AppStrings s) async {
     final hasNet = await NetworkConnectivityService().checkConnection();
     if (!hasNet && mounted) {
-      NoInternetDialog.showForceLogout(context);
+      AppToast.showInternetToast(message: 'Internet not available');
       return;
     }
 
@@ -360,7 +361,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
           _isSubmittingAward = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+          SnackBar(content: Text(formatErrorMessage(e))),
         );
       }
     }

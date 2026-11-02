@@ -4,7 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/localization/app_strings.dart';
 import '../../../core/utils/network_connectivity_service.dart';
-import '../../../shared_widgets/dialogs/no_internet_dialog.dart';
+import '../../../core/utils/app_toast.dart';
+import '../../../core/utils/error_utils.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -76,8 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (!isConnected) {
-      debugPrint('[_submitLogin] Offline detected. Showing NoInternetDialog...');
-      NoInternetDialog.show(context);
+      AppToast.showInternetToast(message: 'Internet not available');
       return;
     }
 
@@ -110,10 +110,9 @@ class _LoginScreenState extends State<LoginScreen> {
     final isConnected = await NetworkConnectivityService().checkConnection();
     if (!mounted) return;
     if (!isConnected) {
-      NoInternetDialog.show(context);
+      AppToast.showInternetToast(message: 'Internet not available');
       return;
     }
-
     final identifier = _forgotIdentifierController.text.trim();
     if (identifier.isEmpty) return;
 
@@ -135,7 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(e.toString().replaceAll('Exception: ', '')),
+          content: Text(formatErrorMessage(e)),
           backgroundColor: Colors.red,
         ),
       );
@@ -146,10 +145,9 @@ class _LoginScreenState extends State<LoginScreen> {
     final isConnected = await NetworkConnectivityService().checkConnection();
     if (!mounted) return;
     if (!isConnected) {
-      NoInternetDialog.show(context);
+      AppToast.showInternetToast(message: 'Internet not available');
       return;
     }
-
     final identifier = _forgotIdentifierController.text.trim();
     final code = _resetCodeController.text.trim();
     final newPass = _newPasswordController.text.trim();
@@ -195,7 +193,7 @@ class _LoginScreenState extends State<LoginScreen> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(e.toString().replaceAll('Exception: ', '')),
+          content: Text(formatErrorMessage(e)),
           backgroundColor: Colors.red,
         ),
       );
@@ -820,11 +818,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   msg.contains('failed host lookup') ||
                   msg.contains('host lookup');
               if (isNetworkError) {
-                NoInternetDialog.show(context);
+                AppToast.showInternetToast(message: 'Internet not available');
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(state.message.replaceAll('Exception: ', '')),
+                    content: Text(formatErrorMessage(state.message)),
                     backgroundColor: Colors.red,
                   ),
                 );

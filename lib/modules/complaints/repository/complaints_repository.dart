@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/dio_client.dart';
+import '../../../core/utils/error_utils.dart';
 import '../models/batch_ticket_request.dart';
 import '../models/batch_ticket_response.dart';
 import '../models/create_ticket_request.dart';
@@ -137,7 +138,7 @@ class ComplaintsRepository {
       return const BatchTicketResponse(created: []);
     } on DioException catch (e) {
       final errorData = e.response?.data;
-      String errorMsg = e.message ?? 'Server error occurred';
+      String errorMsg = formatErrorMessage(e);
       if (errorData is Map<String, dynamic> && errorData['message'] != null) {
         errorMsg = errorData['message'].toString();
       }
@@ -343,7 +344,7 @@ class ComplaintsRepository {
       return const TicketInsightsResponse();
     } on DioException catch (e) {
       final errorData = e.response?.data;
-      String errorMsg = e.message ?? 'Server error occurred';
+      String errorMsg = formatErrorMessage(e);
       if (errorData is Map<String, dynamic> && errorData['message'] != null) {
         errorMsg = errorData['message'].toString();
       }

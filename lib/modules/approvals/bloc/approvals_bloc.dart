@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/utils/error_utils.dart';
 import '../repository/approvals_repository.dart';
 import 'approvals_event.dart';
 import 'approvals_state.dart';
@@ -50,7 +51,7 @@ class ApprovalsBloc extends Bloc<ApprovalsEvent, ApprovalsState> {
         budgetInitiated: budgetInitiated,
       ));
     } catch (e) {
-      emit(ApprovalsErrorState(e.toString()));
+      emit(ApprovalsErrorState(formatErrorMessage(e)));
     }
   }
 
@@ -72,7 +73,7 @@ class ApprovalsBloc extends Bloc<ApprovalsEvent, ApprovalsState> {
         meetings: meetings,
       ));
     } catch (e) {
-      emit(ApprovalsErrorState(e.toString()));
+      emit(ApprovalsErrorState(formatErrorMessage(e)));
     }
   }
 
@@ -94,7 +95,7 @@ class ApprovalsBloc extends Bloc<ApprovalsEvent, ApprovalsState> {
         meetingCompletionRequests: meetingCompletionRequests,
       ));
     } catch (e) {
-      emit(ApprovalsErrorState(e.toString()));
+      emit(ApprovalsErrorState(formatErrorMessage(e)));
     }
   }
 
@@ -116,7 +117,7 @@ class ApprovalsBloc extends Bloc<ApprovalsEvent, ApprovalsState> {
         indentsAll: indentsAll,
       ));
     } catch (e) {
-      emit(ApprovalsErrorState(e.toString()));
+      emit(ApprovalsErrorState(formatErrorMessage(e)));
     }
   }
 
@@ -200,7 +201,7 @@ class ApprovalsBloc extends Bloc<ApprovalsEvent, ApprovalsState> {
         emit(ApprovalsLoadedState(organisationApprovals: list));
       }
     } catch (e) {
-      emit(ApprovalsErrorState(e.toString()));
+      emit(ApprovalsErrorState(formatErrorMessage(e)));
     }
   }
 }
