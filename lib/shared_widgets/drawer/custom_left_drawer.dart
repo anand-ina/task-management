@@ -223,7 +223,7 @@ class CustomLeftDrawer extends StatelessWidget {
                         isSelected: currentRoute == '/org-overview',
                         onTap: () => _navigate(context, '/org-overview'),
                       ),
-                      if (!isAcademicExecutive)
+                      if (!isAcademicExecutive && !isDirector)
                         _buildNavItem(
                           context,
                           icon: Icons.campaign_rounded,

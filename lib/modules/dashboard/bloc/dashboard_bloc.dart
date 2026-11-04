@@ -14,6 +14,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     on<SelectBranchEvent>(_onSelectBranch);
     on<AddTodoEvent>(_onAddTodo);
     on<ToggleTodoEvent>(_onToggleTodo);
+    on<RefreshTodosEvent>(_onRefreshTodos);
   }
 
   Future<void> _onFetchDashboardData(
@@ -133,24 +134,71 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       final created = await _repository.addTodo(event.text);
       final newItem = created ?? TodoItem(text: event.text);
       final updatedTodos = List<TodoItem>.from(currentState.todos)..add(newItem);
-      emit(currentState.copyWith(todos: updatedTodos));
+      emit(currentState.copyWith(
+        todos: updatedTodos,
+        branchChangeTimestamp: DateTime.now().millisecondsSinceEpoch,
+      ));
     }
   }
 
   Future<void> _onToggleTodo(ToggleTodoEvent event, Emitter<DashboardState> emit) async {
     if (state is DashboardLoadedState) {
       final currentState = state as DashboardLoadedState;
-      final updatedTodos = List<TodoItem>.from(currentState.todos);
-      if (event.index >= 0 && event.index < updatedTodos.length) {
-        final item = updatedTodos[event.index];
-        final newDoneState = !item.isCompleted;
-        item.isCompleted = newDoneState;
-        emit(currentState.copyWith(todos: updatedTodos));
+      final todos = currentState.todos;
 
-        if (item.id != null) {
-          await _repository.patchTodo(item.id!, newDoneState);
+      int targetIndex = -1;
+      if (event.id != null) {
+        targetIndex = todos.indexWhere((t) => t.id == event.id);
+      }
+      if (targetIndex == -1 && event.index >= 0 && event.index < todos.length) {
+        targetIndex = event.index;
+      }
+
+      if (targetIndex >= 0 && targetIndex < todos.length) {
+        final item = todos[targetIndex];
+        final newDoneState = event.done ?? !item.isCompleted;
+
+        // 1. Instant optimistic update so UI changes immediately at click time
+        final updatedTodos = List<TodoItem>.from(todos);
+        updatedTodos[targetIndex] = item.copyWith(isCompleted: newDoneState);
+        emit(currentState.copyWith(
+          todos: updatedTodos,
+          branchChangeTimestamp: DateTime.now().millisecondsSinceEpoch,
+        ));
+
+        // 2. Call PATCH API: https://dev-task-api.srivyn.in/api/todos/:id
+        final targetId = item.id ?? event.id;
+        if (targetId != null) {
+          final updatedItem = await _repository.patchTodo(targetId, newDoneState);
+          if (updatedItem != null && state is DashboardLoadedState) {
+            final latestState = state as DashboardLoadedState;
+            final idx = latestState.todos.indexWhere((t) => t.id == targetId);
+            if (idx != -1) {
+              final confirmedTodos = List<TodoItem>.from(latestState.todos);
+              confirmedTodos[idx] = updatedItem;
+              emit(latestState.copyWith(
+                todos: confirmedTodos,
+                branchChangeTimestamp: DateTime.now().millisecondsSinceEpoch,
+              ));
+            }
+          }
         }
       }
+    }
+  }
+
+  Future<void> _onRefreshTodos(RefreshTodosEvent event, Emitter<DashboardState> emit) async {
+    if (state is DashboardLoadedState) {
+      final currentState = state as DashboardLoadedState;
+      try {
+        final todos = await _repository.getTodos();
+        emit(currentState.copyWith(
+          todos: todos,
+          branchChangeTimestamp: DateTime.now().millisecondsSinceEpoch,
+        ));
+      } catch (_) {}
+    } else {
+      add(const FetchDashboardDataEvent());
     }
   }
 }

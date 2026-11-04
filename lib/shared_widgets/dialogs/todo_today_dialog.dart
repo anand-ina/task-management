@@ -32,6 +32,16 @@ class _TodoTodayDialogState extends State<TodoTodayDialog> {
   final TextEditingController _controller = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<DashboardBloc>().add(RefreshTodosEvent());
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
@@ -97,6 +107,19 @@ class _TodoTodayDialogState extends State<TodoTodayDialog> {
             // Scrollable List of To-Dos
             BlocBuilder<DashboardBloc, DashboardState>(
               builder: (context, state) {
+                if (state is DashboardLoadingState) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: Center(
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                  );
+                }
+
                 if (state is DashboardLoadedState) {
                   final todos = state.todos;
                   if (todos.isEmpty) {
@@ -118,37 +141,58 @@ class _TodoTodayDialogState extends State<TodoTodayDialog> {
                       itemCount: todos.length,
                       itemBuilder: (context, index) {
                         final item = todos[index];
+                        final isDone = item.isCompleted;
+
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: Row(
-                            children: [
-                              Transform.scale(
-                                scale: 0.9,
-                                child: Checkbox(
-                                  value: item.isCompleted,
-                                  activeColor: const Color(0xFF16A34A),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(4),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(6),
+                            onTap: () {
+                              context.read<DashboardBloc>().add(
+                                    ToggleTodoEvent(
+                                      index,
+                                      id: item.id,
+                                      done: !isDone,
+                                    ),
+                                  );
+                            },
+                            child: Row(
+                              children: [
+                                Transform.scale(
+                                  scale: 0.9,
+                                  child: Checkbox(
+                                    value: isDone,
+                                    activeColor: const Color(0xFF16A34A),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    onChanged: (val) {
+                                      final nextDone = val ?? !isDone;
+                                      context.read<DashboardBloc>().add(
+                                            ToggleTodoEvent(
+                                              index,
+                                              id: item.id,
+                                              done: nextDone,
+                                            ),
+                                          );
+                                    },
                                   ),
-                                  onChanged: (val) {
-                                    context.read<DashboardBloc>().add(ToggleTodoEvent(index));
-                                  },
                                 ),
-                              ),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  item.text,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    decoration: item.isCompleted ? TextDecoration.lineThrough : null,
-                                    color: item.isCompleted
-                                        ? Colors.grey
-                                        : (isDark ? Colors.white : const Color(0xFF0F172A)),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    item.text,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      decoration: isDone ? TextDecoration.lineThrough : null,
+                                      color: isDone
+                                          ? Colors.grey
+                                          : (isDark ? Colors.white : const Color(0xFF0F172A)),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         );
                       },

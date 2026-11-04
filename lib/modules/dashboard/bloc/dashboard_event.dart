@@ -32,7 +32,23 @@ class AddTodoEvent extends DashboardEvent {
 
 class ToggleTodoEvent extends DashboardEvent {
   final int index;
-  const ToggleTodoEvent(this.index);
+  final int? id;
+  final bool? done;
+  final int timestamp;
+
+  ToggleTodoEvent(this.index, {this.id, this.done, int? timestamp})
+      : timestamp = timestamp ?? DateTime.now().microsecondsSinceEpoch;
+
   @override
-  List<Object?> get props => [index];
+  List<Object?> get props => [index, id, done, timestamp];
+}
+
+class RefreshTodosEvent extends DashboardEvent {
+  final int timestamp;
+
+  RefreshTodosEvent({int? timestamp})
+      : timestamp = timestamp ?? DateTime.now().microsecondsSinceEpoch;
+
+  @override
+  List<Object?> get props => [timestamp];
 }

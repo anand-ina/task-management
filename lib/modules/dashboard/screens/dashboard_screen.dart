@@ -86,9 +86,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     bool isExecutive = false;
     bool isTeamLead = false;
+    bool isDirector = false;
     if (authState is AuthenticatedState) {
       currentUserId = authState.userProfile.id;
       final user = authState.userProfile;
+      isDirector = user.isDirector;
       userName = user.name.isNotEmpty ? user.name : (user.email.split('@').first);
       roleName = user.roleLabel.isNotEmpty ? user.roleLabel.toUpperCase() : user.role.toUpperCase();
       branchName = user.branch?.name ?? 'HEAD OFFICE';
@@ -234,6 +236,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           currentDateStr: currentDateStr,
                           stats: stats,
                           actionCenter: actionCenter,
+                          myPriority: myPriority,
+                          myStatus: state.dashboardData.myStatus,
+                          isDirector: isDirector || actionCenter.isDirector,
                           isTeamLead: isTeamLead,
                         ),
                       ),
@@ -363,26 +368,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required String currentDateStr,
     required DashboardStats stats,
     required DashboardActionCenter actionCenter,
+    required DashboardMyPriority myPriority,
+    required DashboardMyStatus myStatus,
+    bool isDirector = false,
     bool isTeamLead = false,
   }) {
     final nowTimeStr = DateFormat('HH:mm:ss').format(DateTime.now());
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(10),
+      padding: EdgeInsets.all(isDirector ? 16 : 10),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
+          colors: isDirector
+              ? const [
             Color(0xFF0F172A),
             Color(0xFF1E40AF),
-          ],
+                ]
+              : const [
+                  Color(0xFF0F172A),
+                  Color(0xFF1E40AF),
+                ],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: const [
           BoxShadow(
-            color: Colors.black12,
+            color: Colors.black26,
             blurRadius: 10,
             offset: Offset(0, 4),
           ),
@@ -391,173 +404,548 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '$roleName · $branchName',
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
-            ),
-            overflow: TextOverflow.ellipsis,
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-
-            const Spacer(),
-            Wrap(
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 6,
+          if (isDirector) ...[
+            // Director Top Row: Role/Branch, Name, Subtitle on left; Active now, Date, Time on right
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                PulsingBadge(
-                  duration: const Duration(milliseconds: 2400),
-                  maxScale: 1.25,
-                  minScale: 0.85,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF22C55E),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Color(0xFF22C55E),
-                          blurRadius: 6,
-                          spreadRadius: 1,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '$roleName · $branchName'.toUpperCase(),
+                        style: const TextStyle(
+                          color: Color(0xFF94A3B8),
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
                         ),
-                      ],
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Namaste, $userName',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          PulsingBadge(
+                            duration: const Duration(milliseconds: 2400),
+                            maxScale: 1.3,
+                            minScale: 0.85,
+                            child: Container(
+                              width: 7,
+                              height: 7,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF22C55E),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Color(0xFF22C55E),
+                                    blurRadius: 5,
+                                    spreadRadius: 1,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          const Text(
+                            'Active now',
+                            style: TextStyle(
+                              color: Color(0xFF94A3B8),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ),
-                Text(
-                  currentDateStr,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  nowTimeStr,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 11,
-                  ),
+                    const SizedBox(height: 6),
+                    Text(
+                      currentDateStr,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      nowTimeStr,
+                      style: const TextStyle(
+                        color: Color(0xFF94A3B8),
+                        fontSize: 12.5,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Namaste, $userName 🙏',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    s.dashboardSubtitle,
-                    style: const TextStyle(color: Colors.white70, fontSize: 13),
-                  ),
-                ],
+            const SizedBox(height: 20),
+            const SizedBox(height: 4),
+            const Text(
+              'Full organization overview across every campus & department.',
+              style: TextStyle(
+                color: Color(0xFF94A3B8),
+                fontSize: 13,
               ),
             ),
-            if (stats.completionRate >= 0 && !isTeamLead) ...[
-              const SizedBox(width: 12),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  AnimatedCircleProgressIndicator(
-                    progress: stats.completionRate,
-                    size: 46,
-                    strokeWidth: 4.0,
-                    gradientColors: const [
-                      Color(0xFF38BDF8),
-                      Color(0xFF34D399),
-                    ],
-                    showPercentage: true,
-                    percentageStyle: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 10.5,
-                    ),
+            // Section 1: MY TASKS
+            _buildDirectorSection(
+              context,
+              label: 'MY TASKS',
+              pills: [
+                _DirectorPillData(
+                  icon: Icons.check_rounded,
+                  text: '${actionCenter.approvalsForYou > 0 ? actionCenter.approvalsForYou : actionCenter.approvals} approvals',
+                  type: _PillType.neutral,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const TaskApprovalsScreen()),
                   ),
-                  const SizedBox(height: 3),
-                  Text(
-                    s.completionRateStat,
-                    style: const TextStyle(
-                      fontSize: 9,
-                      color: Colors.white70,
-                      fontWeight: FontWeight.w600,
+                ),
+                _DirectorPillData(
+                  icon: Icons.warning_amber_rounded,
+                  text: '${myPriority.emergency} emergency',
+                  type: myPriority.emergency > 0 ? _PillType.danger : _PillType.neutral,
+                  onTap: () => TasksDueTodayDialog.show(
+                    context,
+                    scope: 'mine',
+                    priority: 'emergency',
+                    customTitle: 'My Emergency Tasks',
+                    badgeColor: Colors.red,
+                  ),
+                ),
+                _DirectorPillData(
+                  icon: Icons.outlined_flag_rounded,
+                  text: '${myPriority.topMost} top most',
+                  type: myPriority.topMost > 0 ? _PillType.warning : _PillType.neutral,
+                  onTap: () => TasksDueTodayDialog.show(
+                    context,
+                    scope: 'mine',
+                    priority: 'top_most',
+                    customTitle: 'My Top Most Tasks',
+                    badgeColor: Colors.amber,
+                  ),
+                ),
+                _DirectorPillData(
+                  icon: Icons.wb_sunny_outlined,
+                  text: '${myStatus.toBeStarted} to start',
+                  type: _PillType.neutral,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const AllTasksScreen()),
+                  ),
+                ),
+                _DirectorPillData(
+                  icon: Icons.outlined_flag_rounded,
+                  text: '${myStatus.overdue} overdue',
+                  type: myStatus.overdue > 0 ? _PillType.danger : _PillType.neutral,
+                  onTap: () => TasksDueTodayDialog.show(
+                    context,
+                    scope: 'mine',
+                    overdue: true,
+                    customTitle: 'My Overdue Tasks',
+                    badgeColor: Colors.red,
+                  ),
+                ),
+                _DirectorPillData(
+                  icon: Icons.track_changes_rounded,
+                  text: '${myStatus.weeklyCompletionRate}% weekly completion',
+                  type: _PillType.neutral,
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+
+            // Section 2: ORGANIZATION
+            _buildDirectorSection(
+              context,
+              label: 'ORGANIZATION',
+              pills: [
+                _DirectorPillData(
+                  icon: Icons.check_rounded,
+                  text: '${actionCenter.orgApprovals > 0 ? actionCenter.orgApprovals : (actionCenter.scopeApprovals > 0 ? actionCenter.scopeApprovals : actionCenter.approvals)} approvals',
+                  type: _PillType.neutral,
+                  onTap: () => OrganisationApprovalsDialog.show(context),
+                ),
+                _DirectorPillData(
+                  icon: Icons.warning_amber_rounded,
+                  text: '${stats.orgEmergency > 0 ? stats.orgEmergency : stats.emergency} emergency',
+                  type: (stats.orgEmergency > 0 || stats.emergency > 0) ? _PillType.danger : _PillType.neutral,
+                  onTap: () => TasksDueTodayDialog.show(
+                    context,
+                    scope: 'all',
+                    priority: 'emergency',
+                    customTitle: 'Organization Emergency Tasks',
+                    badgeColor: Colors.red,
+                  ),
+                ),
+                _DirectorPillData(
+                  icon: Icons.outlined_flag_rounded,
+                  text: '${stats.orgTopMost > 0 ? stats.orgTopMost : stats.topMost} top most',
+                  type: (stats.orgTopMost > 0 || stats.topMost > 0) ? _PillType.warning : _PillType.neutral,
+                  onTap: () => TasksDueTodayDialog.show(
+                    context,
+                    scope: 'all',
+                    priority: 'top_most',
+                    customTitle: 'Organization Top Most Tasks',
+                    badgeColor: Colors.amber,
+                  ),
+                ),
+                _DirectorPillData(
+                  icon: Icons.wb_sunny_outlined,
+                  text: '${stats.toBeStarted} to start',
+                  type: _PillType.neutral,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const AllTasksScreen()),
+                  ),
+                ),
+                _DirectorPillData(
+                  icon: Icons.outlined_flag_rounded,
+                  text: '${stats.overdue} overdue',
+                  type: stats.overdue > 0 ? _PillType.danger : _PillType.neutral,
+                  onTap: () => TasksDueTodayDialog.show(
+                    context,
+                    scope: 'all',
+                    overdue: true,
+                    customTitle: 'Organization Overdue Tasks',
+                    badgeColor: Colors.red,
+                  ),
+                ),
+                _DirectorPillData(
+                  icon: Icons.track_changes_rounded,
+                  text: '${stats.weeklyCompletionRate > 0 ? stats.weeklyCompletionRate : stats.completionRate}% weekly completion',
+                  type: _PillType.neutral,
+                ),
+              ],
+            ),
+          ] else ...[
+            // Non-Director Layout
+            Text(
+              '$roleName · $branchName',
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Spacer(),
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 6,
+                  children: [
+                    PulsingBadge(
+                      duration: const Duration(milliseconds: 2400),
+                      maxScale: 1.25,
+                      minScale: 0.85,
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF22C55E),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(0xFF22C55E),
+                              blurRadius: 6,
+                              spreadRadius: 1,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
+                    Text(
+                      currentDateStr,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      nowTimeStr,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Namaste, $userName 🙏',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        s.dashboardSubtitle,
+                        style: const TextStyle(color: Colors.white70, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+                if (stats.completionRate >= 0 && !isTeamLead) ...[
+                  const SizedBox(width: 12),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AnimatedCircleProgressIndicator(
+                        progress: stats.completionRate,
+                        size: 46,
+                        strokeWidth: 4.0,
+                        gradientColors: const [
+                          Color(0xFF38BDF8),
+                          Color(0xFF34D399),
+                        ],
+                        showPercentage: true,
+                        percentageStyle: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10.5,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        s.completionRateStat,
+                        style: const TextStyle(
+                          fontSize: 9,
+                          color: Colors.white70,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
-              ),
-            ],
-          ],
-        ),
-        const SizedBox(height: 18),
+              ],
+            ),
+            const SizedBox(height: 18),
 
-        // Dynamic Stat Badges
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            if (!isTeamLead)
-              _buildHeaderBadge(
-                '✅ ${s.approvalsBadge(actionCenter.approvals)}',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const TaskApprovalsScreen()),
+            // Dynamic Stat Badges
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                if (!isTeamLead)
+                  _buildHeaderBadge(
+                    '✅ ${s.approvalsBadge(actionCenter.approvals)}',
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const TaskApprovalsScreen()),
+                    ),
+                  ),
+                if (!isTeamLead)
+                  _buildHeaderBadge(
+                    '🏢 ${s.approvalsFromOrganisationBadge(actionCenter.orgApprovals)}',
+                    onTap: () => OrganisationApprovalsDialog.show(context),
+                  ),
+                _buildHeaderBadge(
+                  '☀️ ${s.toStartBadge(stats.toBeStarted)}',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const AllTasksScreen()),
+                  ),
+                ),
+                _buildHeaderBadge('⏳ ${s.inProgressBadge(stats.inProgress)}'),
+                _buildHeaderBadge(
+                  '⚑ ${s.overdueBadge(stats.overdue)}',
+                  isPulsing: stats.overdue > 0,
+                  accentColor: stats.overdue > 0 ? const Color(0xFFFCA5A5) : null,
+                  onTap: () => TasksDueTodayDialog.show(
+                    context,
+                    scope: 'all',
+                    customTitle: 'Overdue Tasks',
+                    overdue: true,
+                    badgeColor: Colors.red,
+                  ),
+                ),
+                if (!isTeamLead)
+                  _buildHeaderBadge('🎯 ${s.completionBadge(stats.completionRate)}'),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDirectorSection(
+    BuildContext context, {
+    required String label,
+    required List<_DirectorPillData> pills,
+  }) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isSmall = constraints.maxWidth < 420;
+
+        if (isSmall) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Color(0xFF64748B),
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.1,
                 ),
               ),
-            if (!isTeamLead)
-              _buildHeaderBadge(
-                '🏢 ${s.approvalsFromOrganisationBadge(actionCenter.orgApprovals)}',
-                onTap: () => OrganisationApprovalsDialog.show(context),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: pills.map((p) => _buildDirectorPill(p)).toList(),
               ),
-            _buildHeaderBadge(
-              '☀️ ${s.toStartBadge(stats.toBeStarted)}',
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AllTasksScreen()),
-              ),
-            ),
-            _buildHeaderBadge('⏳ ${s.inProgressBadge(stats.inProgress)}'),
-            _buildHeaderBadge(
-              '⚑ ${s.overdueBadge(stats.overdue)}',
-              isPulsing: stats.overdue > 0,
-              accentColor: stats.overdue > 0 ? const Color(0xFFFCA5A5) : null,
-              onTap: () => TasksDueTodayDialog.show(
-                context,
-                scope: 'all',
-                customTitle: 'Overdue Tasks',
-                overdue: true,
-                badgeColor: Colors.red,
-              ),
-            ),
-            if (!isTeamLead)
-              _buildHeaderBadge('🎯 ${s.completionBadge(stats.completionRate)}'),
-          ],
-        ),
-      ],
-    ),
-  );
-}
+            ],
+          );
+        }
 
-Widget _buildHeaderBadge(String label, {VoidCallback? onTap, bool isPulsing = false, Color? accentColor}) {
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 120,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    color: Color(0xFF64748B),
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.1,
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: pills.map((p) => _buildDirectorPill(p)).toList(),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildDirectorPill(_DirectorPillData data) {
+    Color textColor;
+    Color borderColor;
+    Color backgroundColor;
+
+    switch (data.type) {
+      case _PillType.danger:
+        textColor = const Color(0xFFF87171);
+        borderColor = const Color(0xFFEF4444);
+        backgroundColor = const Color(0xFFEF4444).withValues(alpha: 0.12);
+        break;
+      case _PillType.warning:
+        textColor = const Color(0xFFFBBF24);
+        borderColor = const Color(0xFFF59E0B);
+        backgroundColor = const Color(0xFFF59E0B).withValues(alpha: 0.12);
+        break;
+      case _PillType.neutral:
+      default:
+        textColor = const Color(0xFFE2E8F0);
+        borderColor = Colors.white.withValues(alpha: 0.16);
+        backgroundColor = Colors.white.withValues(alpha: 0.08);
+        break;
+    }
+
+    Widget pill = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: borderColor, width: 1.0),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            data.icon,
+            size: 13,
+            color: textColor,
+          ),
+          const SizedBox(width: 5),
+          Text(
+            data.text,
+            style: TextStyle(
+              color: textColor,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (data.type == _PillType.danger) {
+      pill = PulsingBadge(
+        duration: const Duration(milliseconds: 2400),
+        maxScale: 1.05,
+        minScale: 0.97,
+        child: pill,
+      );
+    }
+
+    if (data.onTap != null) {
+      return ScaleTap(
+        onTap: data.onTap,
+        child: pill,
+      );
+    }
+    return pill;
+  }
+
+  Widget _buildHeaderBadge(String label, {VoidCallback? onTap, bool isPulsing = false, Color? accentColor}) {
   final badge = Container(
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
     decoration: BoxDecoration(
@@ -2142,4 +2530,20 @@ Widget _buildHeaderBadge(String label, {VoidCallback? onTap, bool isPulsing = fa
       return const Color(0xFF3B82F6);
     }
   }
+}
+
+enum _PillType { neutral, danger, warning }
+
+class _DirectorPillData {
+  final IconData icon;
+  final String text;
+  final _PillType type;
+  final VoidCallback? onTap;
+
+  const _DirectorPillData({
+    required this.icon,
+    required this.text,
+    this.type = _PillType.neutral,
+    this.onTap,
+  });
 }

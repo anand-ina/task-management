@@ -127,8 +127,20 @@ class DashboardRepository {
     try {
       final response = await _dioClient.dio.get(ApiConstants.todos);
       final data = _safeParse(response.data);
+      List? rawList;
       if (data is List) {
-        return data.map((e) => TodoItem.fromJson(e is Map<String, dynamic> ? e : {})).toList();
+        rawList = data;
+      } else if (data is Map<String, dynamic>) {
+        if (data['data'] is List) {
+          rawList = data['data'] as List;
+        } else if (data['items'] is List) {
+          rawList = data['items'] as List;
+        } else if (data['todos'] is List) {
+          rawList = data['todos'] as List;
+        }
+      }
+      if (rawList != null) {
+        return rawList.map((e) => TodoItem.fromJson(e is Map<String, dynamic> ? e : {})).toList();
       }
     } catch (_) {}
     return [];

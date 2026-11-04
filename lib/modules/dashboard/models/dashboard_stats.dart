@@ -16,6 +16,15 @@ class DashboardStats {
   final int low;
   final int emergencyHighOpen;
   final int completionRate;
+  final int weeklyCompletionRate;
+  final int yearlyCompletionRate;
+  final int orgEmergency;
+  final int orgTopMost;
+  final int weekDue;
+  final int weekCompletedDue;
+  final int weekCompleted;
+  final int weekProgress;
+  final int needsReview;
 
   DashboardStats({
     required this.total,
@@ -35,6 +44,15 @@ class DashboardStats {
     required this.low,
     required this.emergencyHighOpen,
     required this.completionRate,
+    this.weeklyCompletionRate = 0,
+    this.yearlyCompletionRate = 0,
+    this.orgEmergency = 0,
+    this.orgTopMost = 0,
+    this.weekDue = 0,
+    this.weekCompletedDue = 0,
+    this.weekCompleted = 0,
+    this.weekProgress = 0,
+    this.needsReview = 0,
   });
 
   factory DashboardStats.fromJson(Map<String, dynamic> json) {
@@ -62,6 +80,68 @@ class DashboardStats {
       low: (lowVal != null && lowVal > 0) ? lowVal : 0,
       emergencyHighOpen: json['emergency_high_open'] as int? ?? 0,
       completionRate: json['completionRate'] as int? ?? 0,
+      weeklyCompletionRate: json['weeklyCompletionRate'] as int? ?? json['completionRate'] as int? ?? 0,
+      yearlyCompletionRate: json['yearlyCompletionRate'] as int? ?? 0,
+      orgEmergency: json['orgEmergency'] as int? ?? (emergencyVal != null && emergencyVal > 0 ? emergencyVal : 0),
+      orgTopMost: json['orgTopMost'] as int? ?? (topMostVal != null && topMostVal > 0 ? topMostVal : 0),
+      weekDue: json['week_due'] as int? ?? 0,
+      weekCompletedDue: json['week_completed_due'] as int? ?? 0,
+      weekCompleted: json['week_completed'] as int? ?? 0,
+      weekProgress: json['week_progress'] as int? ?? 0,
+      needsReview: json['needs_review'] as int? ?? 0,
+    );
+  }
+}
+
+class DashboardMyStatus {
+  final int total;
+  final int completed;
+  final int inProgress;
+  final int toBeStarted;
+  final int needsReview;
+  final int dropped;
+  final int hold;
+  final int postponed;
+  final int scrapped;
+  final int overdue;
+  final int dueToday;
+  final int completionRate;
+  final int weeklyCompletionRate;
+  final int yearlyCompletionRate;
+
+  DashboardMyStatus({
+    this.total = 0,
+    this.completed = 0,
+    this.inProgress = 0,
+    this.toBeStarted = 0,
+    this.needsReview = 0,
+    this.dropped = 0,
+    this.hold = 0,
+    this.postponed = 0,
+    this.scrapped = 0,
+    this.overdue = 0,
+    this.dueToday = 0,
+    this.completionRate = 0,
+    this.weeklyCompletionRate = 0,
+    this.yearlyCompletionRate = 0,
+  });
+
+  factory DashboardMyStatus.fromJson(Map<String, dynamic> json) {
+    return DashboardMyStatus(
+      total: json['total'] as int? ?? 0,
+      completed: json['completed'] as int? ?? 0,
+      inProgress: json['in_progress'] as int? ?? 0,
+      toBeStarted: json['to_be_started'] as int? ?? 0,
+      needsReview: json['needs_review'] as int? ?? 0,
+      dropped: json['dropped'] as int? ?? 0,
+      hold: json['hold'] as int? ?? 0,
+      postponed: json['postponed'] as int? ?? 0,
+      scrapped: json['scrapped'] as int? ?? 0,
+      overdue: json['overdue'] as int? ?? 0,
+      dueToday: json['due_today'] as int? ?? 0,
+      completionRate: json['completionRate'] as int? ?? 0,
+      weeklyCompletionRate: json['weeklyCompletionRate'] as int? ?? 0,
+      yearlyCompletionRate: json['yearlyCompletionRate'] as int? ?? 0,
     );
   }
 }
@@ -93,6 +173,7 @@ class DashboardActionCenter {
   final int approvals;
   final int approvalsForYou;
   final int orgApprovals;
+  final int scopeApprovals;
   final List<DashboardOrgApprovalBranch> orgApprovalsByBranch;
   final bool isDirector;
   final int reviews;
@@ -104,6 +185,7 @@ class DashboardActionCenter {
     required this.approvals,
     this.approvalsForYou = 0,
     this.orgApprovals = 0,
+    this.scopeApprovals = 0,
     this.orgApprovalsByBranch = const [],
     this.isDirector = false,
     required this.reviews,
@@ -122,6 +204,7 @@ class DashboardActionCenter {
       approvals: json['approvals'] as int? ?? 0,
       approvalsForYou: json['approvalsForYou'] as int? ?? 0,
       orgApprovals: json['orgApprovals'] as int? ?? 0,
+      scopeApprovals: json['scopeApprovals'] as int? ?? json['orgApprovals'] as int? ?? 0,
       orgApprovalsByBranch: branches,
       isDirector: json['isDirector'] as bool? ?? false,
       reviews: json['reviews'] as int? ?? 0,
@@ -305,6 +388,7 @@ class DashboardTimelineItem {
 
 class DashboardData {
   final DashboardStats stats;
+  final DashboardMyStatus myStatus;
   final DashboardMyPriority myPriority;
   final DashboardPerformance performance;
   final DashboardActionCenter actionCenter;
@@ -315,6 +399,7 @@ class DashboardData {
 
   DashboardData({
     required this.stats,
+    DashboardMyStatus? myStatus,
     required this.myPriority,
     required this.performance,
     required this.actionCenter,
@@ -322,7 +407,7 @@ class DashboardData {
     required this.overdueByAge,
     required this.myLogin,
     this.timeline = const [],
-  });
+  }) : myStatus = myStatus ?? DashboardMyStatus();
 
   factory DashboardData.fromJson(Map<String, dynamic> json) {
     Map<String, dynamic> root = json;
@@ -339,8 +424,13 @@ class DashboardData {
         ? root['myPriority'] as Map<String, dynamic>
         : (root['stats'] is Map<String, dynamic> ? root['stats'] as Map<String, dynamic> : root);
 
+    final myStatusMap = root['myStatus'] is Map<String, dynamic>
+        ? root['myStatus'] as Map<String, dynamic>
+        : <String, dynamic>{};
+
     return DashboardData(
       stats: DashboardStats.fromJson(root['stats'] is Map<String, dynamic> ? root['stats'] : root),
+      myStatus: DashboardMyStatus.fromJson(myStatusMap),
       myPriority: DashboardMyPriority.fromJson(myPriorityMap),
       performance: DashboardPerformance.fromJson(root['performance'] is Map<String, dynamic> ? root['performance'] : {}),
       actionCenter: DashboardActionCenter.fromJson(root['actionCenter'] is Map<String, dynamic> ? root['actionCenter'] : {}),
