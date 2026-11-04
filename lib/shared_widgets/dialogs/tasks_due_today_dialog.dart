@@ -284,53 +284,48 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
             children: [
               // Header Row
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ConstrainedBox(
-                        constraints: const BoxConstraints(
-                          maxWidth: 250,
-                        ),
-                        child: Text(
-                          dialogTitle,
-                          maxLines: 5,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: isDark
-                                ? Colors.white
-                                : const Color(0xFF0F172A),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            dialogTitle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF0F172A),
+                            ),
                           ),
                         ),
-                      ),
-
-                      const SizedBox(width: 10),
-
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorBadge.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          '$totalToShow',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: colorBadge,
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colorBadge.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '$totalToShow',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: colorBadge,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-
+                  const SizedBox(width: 8),
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(
@@ -345,22 +340,27 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
               const SizedBox(height: 16),
 
               // Controls Row (Showing count, Sort Controls & Export)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   Text(
                     'Showing 1–${_items.isNotEmpty ? _items.length : (totalToShow > 50 ? 50 : totalToShow)} of $totalToShow',
-                    style: const TextStyle(fontSize: 9, color: Colors.grey),
+                    style: const TextStyle(fontSize: 10, color: Colors.grey),
                   ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 6,
+                    runSpacing: 6,
                     children: [
                       // Sort by label
                       Text(
                         s.sortByLabel,
                         style: const TextStyle(fontSize: 11, color: Colors.grey),
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 2),
 
                       // Sort Field Dropdown
                       PopupMenuButton<String>(
@@ -417,7 +417,7 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 4),
 
                       // Asc / Desc Button
                       InkWell(
@@ -452,7 +452,7 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 4),
 
                       // Export Dropdown
                       PopupMenuButton<String>(
@@ -662,7 +662,10 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               // Top Badges Row
-                              Row(
+                              Wrap(
+                                spacing: 4,
+                                runSpacing: 4,
+                                crossAxisAlignment: WrapCrossAlignment.center,
                                 children: [
                                   Text(
                                     item.taskNo,
@@ -672,9 +675,8 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
                                       color: isDark ? Colors.white : const Color(0xFF0F172A),
                                     ),
                                   ),
-                                  const SizedBox(width: 3),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                                     decoration: BoxDecoration(
                                       color: isDark ? Colors.white12 : const Color(0xFFF1F5F9),
                                       borderRadius: BorderRadius.circular(5),
@@ -682,15 +684,14 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
                                     child: Text(
                                       item.branchCode.isNotEmpty ? item.branchCode : 'SS01',
                                       style: const TextStyle(
-                                        fontSize: 7,
+                                        fontSize: 7.5,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.grey,
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(width: 2),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                                     decoration: BoxDecoration(
                                       color: priorityColor.withValues(alpha: 0.15),
                                       borderRadius: BorderRadius.circular(8),
@@ -700,15 +701,14 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
                                           ? (item.priority[0].toUpperCase() + item.priority.substring(1))
                                           : 'High',
                                       style: TextStyle(
-                                        fontSize: 7,
+                                        fontSize: 7.5,
                                         fontWeight: FontWeight.bold,
                                         color: priorityColor,
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(width: 3),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                                     decoration: BoxDecoration(
                                       color: isCompleted
                                           ? Colors.green.withValues(alpha: 0.12)
@@ -716,6 +716,7 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Row(
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Container(
                                           width: 5,
@@ -725,7 +726,7 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
                                             shape: BoxShape.circle,
                                           ),
                                         ),
-                                        const SizedBox(width: 2),
+                                        const SizedBox(width: 3),
                                         Text(
                                           isCompleted
                                               ? 'Completed'
@@ -733,7 +734,7 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
                                                   ? item.status.replaceAll('_', ' ').split(' ').map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '').join(' ')
                                                   : 'To be Started'),
                                           style: TextStyle(
-                                            fontSize: 7,
+                                            fontSize: 7.5,
                                             fontWeight: FontWeight.bold,
                                             color: isCompleted ? Colors.green : Colors.grey,
                                           ),
@@ -741,10 +742,10 @@ class _TasksDueTodayDialogState extends State<TasksDueTodayDialog> {
                                       ],
                                     ),
                                   ),
-                                  // const Spacer(),
                                   Row(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      const Icon(Icons.calendar_today_rounded, size: 7, color: Colors.red),
+                                      const Icon(Icons.calendar_today_rounded, size: 8, color: Colors.red),
                                       const SizedBox(width: 3),
                                       Text(
                                         _formatDate(item.dueDate),
