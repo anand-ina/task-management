@@ -12,6 +12,7 @@ import '../bloc/task_id_settings_bloc.dart';
 import '../bloc/task_id_settings_event.dart';
 import '../bloc/task_id_settings_state.dart';
 import '../models/task_id_settings_model.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 class TaskIdSettingsScreen extends StatelessWidget {
   const TaskIdSettingsScreen({super.key});
@@ -124,7 +125,7 @@ class _TaskIdSettingsView extends StatelessWidget {
       onPopInvokedWithResult: (didPop, _) async {
         if (!didPop) await ExitConfirmationDialog.show(context);
       },
-      child: Scaffold(
+      child: AppScaffold(
         floatingActionButton: const TodoFloatingActionButton(),
         drawer: const CustomLeftDrawer(currentRoute: '/admin/task-ids'),
         appBar: const CustomAppBar(),

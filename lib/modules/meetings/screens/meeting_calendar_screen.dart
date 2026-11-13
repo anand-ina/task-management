@@ -14,6 +14,7 @@ import '../bloc/meetings_state.dart';
 import '../models/meeting_model.dart';
 
 import '../../../shared_widgets/dialogs/schedule_meeting_dialog.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 class MeetingCalendarScreen extends StatefulWidget {
   const MeetingCalendarScreen({super.key});
@@ -49,7 +50,7 @@ class _MeetingCalendarScreenState extends State<MeetingCalendarScreen> {
             (route) => false,
           );
         },
-        child: Scaffold(
+        child: AppScaffold(
           floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/meetings-calendar'),
           appBar: const CustomAppBar(),
@@ -213,14 +214,22 @@ class _MeetingCalendarScreenState extends State<MeetingCalendarScreen> {
                               )
                             else if (state is MeetingCalendarLoadedState)
                               // Horizontal Scrollable Container for Mobile Responsiveness
-                              SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: ConstrainedBox(
-                                  constraints: BoxConstraints(
-                                    minWidth: _getGridMinWidth(),
-                                  ),
-                                  child: _buildCalendarGrid(context, s, state.meetings),
-                                ),
+                              // (fills the full width on tablets)
+                              LayoutBuilder(
+                                builder: (context, gridConstraints) {
+                                  final minGridWidth = _getGridMinWidth();
+                                  return SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: ConstrainedBox(
+                                      constraints: BoxConstraints(
+                                        minWidth: gridConstraints.maxWidth > minGridWidth
+                                            ? gridConstraints.maxWidth
+                                            : minGridWidth,
+                                      ),
+                                      child: _buildCalendarGrid(context, s, state.meetings),
+                                    ),
+                                  );
+                                },
                               )
                             else
                               const SizedBox.shrink(),

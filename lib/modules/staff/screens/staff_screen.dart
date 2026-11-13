@@ -19,6 +19,7 @@ import '../bloc/staff_state.dart';
 import '../models/staff_model.dart';
 import '../repository/staff_repository.dart';
 import '../../../shared_widgets/dropdowns/searchable_filter_dropdown.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 class StaffScreen extends StatefulWidget {
   const StaffScreen({super.key});
@@ -55,7 +56,7 @@ class _StaffScreenState extends State<StaffScreen> {
             // Handled inside exit dialog
           }
         },
-        child: Scaffold(
+        child: AppScaffold(
           floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/staff'),
           appBar: const CustomAppBar(),

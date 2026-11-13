@@ -20,6 +20,9 @@ import '../models/ticket_meta_model.dart';
 import '../models/ticket_model.dart';
 import 'complaints_history_insights_screen.dart';
 import 'suggestion_box_entry_screen.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
+import '../../../core/utils/responsive.dart';
+import '../../../shared_widgets/layout/responsive_list_view.dart';
 
 class SourceComplaintsScreen extends StatefulWidget {
   final String source; // 'parent' or 'student'
@@ -108,8 +111,8 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
           await ExitConfirmationDialog.show(context);
         }
       },
-      child: Scaffold(
-        key: _scaffoldKey,
+      child: AppScaffold(
+        scaffoldKey: _scaffoldKey,
         appBar: const CustomAppBar(),
         drawer: CustomLeftDrawer(currentRoute: currentRoute),
         backgroundColor: AppColors.background(context),
@@ -716,6 +719,25 @@ class _SourceComplaintsScreenState extends State<SourceComplaintsScreen> {
               ),
             ),
           ],
+        ),
+      );
+    }
+
+    // Tablets: individual ticket cards in a 2-column grid instead of a table.
+    if (Responsive.isTablet(context)) {
+      return ResponsiveListView.separated(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: items.length,
+        separatorBuilder: (context, index) => const SizedBox(height: 12),
+        itemBuilder: (context, index) => Container(
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: AppColors.card(context),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.border(context)),
+          ),
+          child: _buildMobileTicketContainerCard(items[index], s, isDark),
         ),
       );
     }

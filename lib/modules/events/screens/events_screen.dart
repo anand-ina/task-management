@@ -15,6 +15,7 @@ import '../bloc/events_bloc.dart';
 import '../bloc/events_event.dart';
 import '../bloc/events_state.dart';
 import '../models/event_model.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 class EventsScreen extends StatefulWidget {
   const EventsScreen({super.key});
@@ -116,7 +117,7 @@ class _EventsScreenState extends State<EventsScreen> {
             // Handled inside exit dialog
           }
         },
-        child: Scaffold(
+        child: AppScaffold(
           floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/events'),
           appBar: const CustomAppBar(),

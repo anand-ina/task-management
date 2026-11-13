@@ -23,6 +23,7 @@ import 'core/utils/app_toast.dart';
 import 'shared_widgets/radial_menu/draggable_radial_menu_overlay.dart';
 
 import 'core/utils/app_navigator.dart';
+import 'core/utils/responsive.dart';
 import 'core/utils/preferences_service.dart';
 import 'modules/auth/screens/splash_screen.dart';
 
@@ -116,10 +117,14 @@ class _MyAppState extends State<MyApp> {
                   ModalCheckObserver.instance,
                 ],
                 builder: (context, child) {
-                  return DraggableRadialMenuOverlay(
+                  // Font size adapts to small phones / phones / tablets.
+                  return Responsive.scaleText(
+                    context,
+                    DraggableRadialMenuOverlay(
                     child: HourlyLogPromptOverlay(
                       child: child ?? const SizedBox.shrink(),
                     ),
+                  ),
                   );
                 },
                 onGenerateRoute: (settings) => null,

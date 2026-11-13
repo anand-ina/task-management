@@ -13,6 +13,8 @@ import '../../../shared_widgets/drawer/custom_left_drawer.dart';
 import '../../dashboard/models/branch_model.dart';
 import '../models/task_draft_model.dart';
 import '../repository/task_repository.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
+import '../../../shared_widgets/layout/responsive_list_view.dart';
 
 class DraftTasksScreen extends StatefulWidget {
   const DraftTasksScreen({super.key});
@@ -287,7 +289,7 @@ class _DraftTasksScreenState extends State<DraftTasksScreen> {
     final s = AppStrings.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
       drawer: const CustomLeftDrawer(currentRoute: '/drafts'),
       appBar: const CustomAppBar(),
@@ -569,7 +571,7 @@ class _DraftTasksScreenState extends State<DraftTasksScreen> {
                               ),
                             )
                           else
-                            ListView.separated(
+                            ResponsiveListView.separated(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
                               itemCount: _filteredDrafts.length,
@@ -637,6 +639,7 @@ class _DraftTasksScreenState extends State<DraftTasksScreen> {
           // Top Badges Row: Draft status, Category, and Priority
           Row(
             children: [
+ Expanded(child: Wrap(spacing: 0, runSpacing: 6, crossAxisAlignment: WrapCrossAlignment.center, children: [
               // Badge 1: Draft - No Task ID Assigned
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
@@ -693,10 +696,10 @@ class _DraftTasksScreenState extends State<DraftTasksScreen> {
                   ),
                 ),
               ],
-
-              const Spacer(),
+ ])),
+ const SizedBox(width: 6),
               _buildPriorityBadge(p.priority),
-            ],
+],
           ),
           const SizedBox(height: 10),
 
@@ -814,7 +817,10 @@ class _DraftTasksScreenState extends State<DraftTasksScreen> {
           const SizedBox(height: 12),
 
           // Footer Row: Saved timestamp & Action buttons
-          Row(
+          Wrap(
+            spacing: 0,
+            runSpacing: 6,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               // Saved Time
               if (savedTimeStr.isNotEmpty) ...[

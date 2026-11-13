@@ -27,6 +27,7 @@ import '../../announcements/bloc/announcements_event.dart';
 import '../../announcements/bloc/announcements_state.dart';
 import '../../announcements/widgets/announcement_ticker_bar.dart';
 import '../../../shared_widgets/animations/app_animations.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -138,7 +139,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           // Exit handled inside dialog
         }
       },
-      child: Scaffold(
+      child: AppScaffold(
         drawer: const CustomLeftDrawer(currentRoute: '/dashboard'),
         appBar: const CustomAppBar(),
         body: BlocBuilder<DashboardBloc, DashboardState>(
@@ -415,7 +416,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       '$roleName · $branchName'.toUpperCase(),
                       style: const TextStyle(
                         color: Color(0xFF94A3B8),
-                        fontSize: 11,
+                        fontSize: 10,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.2,
                       ),
@@ -426,7 +427,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       'Namaste, $userName',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 24,
+                        fontSize: 19,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -435,7 +436,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       s.dashboardSubtitle,
                       style: const TextStyle(
                         color: Color(0xFF94A3B8),
-                        fontSize: 13,
+                        fontSize: 11.5,
                       ),
                     ),
                   ],
@@ -480,7 +481,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           'Active now',
                           style: TextStyle(
                             color: Color(0xFF94A3B8),
-                            fontSize: 11,
+                            fontSize: 10,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -492,7 +493,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     currentDateStr,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 13,
+                      fontSize: 11.5,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -501,7 +502,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     nowTimeStr,
                     style: const TextStyle(
                       color: Color(0xFF94A3B8),
-                      fontSize: 12,
+                      fontSize: 10.5,
                     ),
                   ),
                 ],
@@ -688,7 +689,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 label,
                 style: const TextStyle(
                   color: Color(0xFF64748B),
-                  fontSize: 11,
+                  fontSize: 10,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.1,
                 ),
@@ -714,7 +715,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   label,
                   style: const TextStyle(
                     color: Color(0xFF64748B),
-                    fontSize: 11,
+                    fontSize: 10,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 1.1,
                   ),
@@ -759,7 +760,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     Widget pill = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(20),
@@ -770,7 +771,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           Icon(
             data.icon,
-            size: 13,
+            size: 12,
             color: textColor,
           ),
           const SizedBox(width: 5),
@@ -778,7 +779,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             data.text,
             style: TextStyle(
               color: textColor,
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: FontWeight.w500,
             ),
           ),

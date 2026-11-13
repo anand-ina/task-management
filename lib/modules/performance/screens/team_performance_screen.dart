@@ -12,6 +12,8 @@ import '../bloc/performance_event.dart';
 import '../bloc/performance_state.dart';
 import '../models/team_performance_model.dart';
 import '../services/team_performance_export_service.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
+import '../../../shared_widgets/layout/responsive_list_view.dart';
 
 class TeamPerformanceScreen extends StatefulWidget {
   const TeamPerformanceScreen({super.key});
@@ -38,7 +40,7 @@ class _TeamPerformanceScreenState extends State<TeamPerformanceScreen> {
             // Handled inside exit dialog
           }
         },
-        child: Scaffold(
+        child: AppScaffold(
           floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/team-performance'),
           appBar: const CustomAppBar(),
@@ -730,7 +732,7 @@ class _TeamPerformanceScreenState extends State<TeamPerformanceScreen> {
   Widget _buildWorkloadContainerList(BuildContext context, AppStrings s, List<TeamMemberModel> members) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return ListView.separated(
+    return ResponsiveListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: members.length,

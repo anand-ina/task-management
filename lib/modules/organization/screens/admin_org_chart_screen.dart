@@ -13,6 +13,7 @@ import '../bloc/org_chart_bloc.dart';
 import '../bloc/org_chart_event.dart';
 import '../bloc/org_chart_state.dart';
 import '../models/org_chart_model.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 class AdminOrgChartScreen extends StatelessWidget {
   const AdminOrgChartScreen({super.key});
@@ -26,7 +27,7 @@ class AdminOrgChartScreen extends StatelessWidget {
         onPopInvokedWithResult: (didPop, _) async {
           if (!didPop) await ExitConfirmationDialog.show(context);
         },
-        child: const Scaffold(
+        child: const AppScaffold(
           floatingActionButton: TodoFloatingActionButton(),
           drawer: CustomLeftDrawer(currentRoute: '/org-chart'),
           appBar: CustomAppBar(),

@@ -12,6 +12,7 @@ import '../bloc/recurring_tasks_bloc.dart';
 import '../bloc/recurring_tasks_event.dart';
 import '../bloc/recurring_tasks_state.dart';
 import '../models/recurring_task_model.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 class RecurringTasksScreen extends StatefulWidget {
   const RecurringTasksScreen({super.key});
@@ -51,7 +52,7 @@ class _RecurringTasksScreenState extends State<RecurringTasksScreen> {
             // Handled inside exit dialog
           }
         },
-        child: Scaffold(
+        child: AppScaffold(
           floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/recurring'),
           appBar: const CustomAppBar(),

@@ -1402,8 +1402,12 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
                 const SizedBox(height: 8),
 
                 // Bottom Action Buttons: Cancel, Save Draft, and Save Task
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                Wrap(
+                  spacing: 0,
+                  // Buttons wrap to a 2nd line on small phones.
+                  runSpacing: 6,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  alignment: WrapAlignment.end,
                   children: [
                     OutlinedButton(
                       style: OutlinedButton.styleFrom(

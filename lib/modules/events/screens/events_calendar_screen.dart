@@ -12,6 +12,7 @@ import '../bloc/events_bloc.dart';
 import '../bloc/events_event.dart';
 import '../bloc/events_state.dart';
 import '../models/event_model.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 class EventsCalendarScreen extends StatefulWidget {
   const EventsCalendarScreen({super.key});
@@ -43,7 +44,7 @@ class _EventsCalendarScreenState extends State<EventsCalendarScreen> {
             // Handled inside exit dialog
           }
         },
-        child: Scaffold(
+        child: AppScaffold(
           floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/events-calendar'),
           appBar: const CustomAppBar(),
@@ -216,10 +217,13 @@ class _EventsCalendarScreenState extends State<EventsCalendarScreen> {
     final numRows = ((startingWeekday + daysInMonth) / 7).ceil();
     final now = DateTime.now();
 
+    return LayoutBuilder(builder: (context, gridConstraints) {
+    // Fill the available width on tablets; keep min 700 (scrollable) on phones.
+    final minGridWidth = gridConstraints.maxWidth > 700 ? gridConstraints.maxWidth : 700.0;
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(minWidth: 700),
+        constraints: BoxConstraints(minWidth: minGridWidth),
         child: Table(
           border: TableBorder.all(color: AppColors.border(context)),
           children: [
@@ -302,5 +306,6 @@ class _EventsCalendarScreenState extends State<EventsCalendarScreen> {
         ),
       ),
     );
+    });
   }
 }

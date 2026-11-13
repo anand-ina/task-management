@@ -12,6 +12,7 @@ import '../bloc/my_reporting_bloc.dart';
 import '../bloc/my_reporting_event.dart';
 import '../bloc/my_reporting_state.dart';
 import '../models/my_reporting_model.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 class MyReportingStructureScreen extends StatelessWidget {
   const MyReportingStructureScreen({super.key});
@@ -25,7 +26,7 @@ class MyReportingStructureScreen extends StatelessWidget {
         onPopInvokedWithResult: (didPop, _) async {
           if (!didPop) await ExitConfirmationDialog.show(context);
         },
-        child: const Scaffold(
+        child: const AppScaffold(
           floatingActionButton: TodoFloatingActionButton(),
           drawer: CustomLeftDrawer(currentRoute: '/my-reporting'),
           appBar: CustomAppBar(),

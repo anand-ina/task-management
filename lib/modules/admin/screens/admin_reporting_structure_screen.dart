@@ -11,6 +11,8 @@ import '../bloc/admin_reporting_event.dart';
 import '../bloc/admin_reporting_state.dart';
 import '../models/reporting_person_model.dart';
 import '../../../shared_widgets/dropdowns/searchable_filter_dropdown.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
+import '../../../shared_widgets/layout/responsive_list_view.dart';
 
 class AdminReportingStructureScreen extends StatelessWidget {
   const AdminReportingStructureScreen({super.key});
@@ -24,7 +26,7 @@ class AdminReportingStructureScreen extends StatelessWidget {
         onPopInvokedWithResult: (didPop, _) async {
           if (!didPop) await ExitConfirmationDialog.show(context);
         },
-        child: const Scaffold(
+        child: const AppScaffold(
           drawer: CustomLeftDrawer(currentRoute: '/admin/reporting'),
           appBar: CustomAppBar(),
           body: AnnouncementBannerWrapper(child: _ReportingBody()),
@@ -248,7 +250,7 @@ class _ReportingBodyState extends State<_ReportingBody> {
         ),
 
         // Container List of Person Cards
-        ListView.builder(
+        ResponsiveListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: filtered.length,

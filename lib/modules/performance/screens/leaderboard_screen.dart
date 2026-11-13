@@ -13,6 +13,7 @@ import '../models/leaderboard_model.dart';
 import '../models/ledger_model.dart';
 import '../repository/performance_repository.dart';
 import '../../../shared_widgets/animations/app_animations.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 class LeaderboardScreen extends StatelessWidget {
   const LeaderboardScreen({super.key});
@@ -32,7 +33,7 @@ class LeaderboardScreen extends StatelessWidget {
             // Handled inside exit dialog
           }
         },
-        child: Scaffold(
+        child: AppScaffold(
           floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/leaderboard'),
           appBar: const CustomAppBar(),

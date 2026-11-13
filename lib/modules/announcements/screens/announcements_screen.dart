@@ -13,6 +13,8 @@ import '../dialogs/create_announcement_dialog.dart';
 import '../dialogs/delete_announcement_dialog.dart';
 import '../models/announcement_model.dart';
 import '../widgets/announcement_ticker_bar.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
+import '../../../shared_widgets/layout/responsive_list_view.dart';
 
 class AnnouncementsScreen extends StatefulWidget {
   const AnnouncementsScreen({super.key});
@@ -102,7 +104,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
           // Handled inside ExitConfirmationDialog
         }
       },
-      child: Scaffold(
+      child: AppScaffold(
         drawer: const CustomLeftDrawer(currentRoute: '/announcements'),
         appBar: const CustomAppBar(),
         body: BlocConsumer<AnnouncementsBloc, AnnouncementsState>(
@@ -296,7 +298,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                                           );
                                         }).toList(),
                                       )
-                                    : ListView.separated(
+                                    : ResponsiveListView.separated(
                                         shrinkWrap: true,
                                         physics: const NeverScrollableScrollPhysics(),
                                         itemCount: announcements.length,

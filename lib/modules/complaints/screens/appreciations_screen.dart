@@ -19,6 +19,9 @@ import '../dialogs/ticket_details_dialog.dart';
 import '../models/ticket_meta_model.dart';
 import '../models/ticket_model.dart';
 import 'complaints_history_insights_screen.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
+import '../../../core/utils/responsive.dart';
+import '../../../shared_widgets/layout/responsive_list_view.dart';
 
 class AppreciationsScreen extends StatefulWidget {
   const AppreciationsScreen({super.key});
@@ -142,8 +145,8 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
           await ExitConfirmationDialog.show(context);
         }
       },
-      child: Scaffold(
-        key: _scaffoldKey,
+      child: AppScaffold(
+        scaffoldKey: _scaffoldKey,
         appBar: const CustomAppBar(),
         drawer: const CustomLeftDrawer(currentRoute: '/complaints/appreciations'),
         backgroundColor: AppColors.scaffoldBg(context),
@@ -204,7 +207,8 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
                             const SizedBox(height: 16),
 
                             // Content: Table on desktop, Cards on mobile
-                            if (isMobile)
+                            // Tablets use the card list (2 columns) instead of the table.
+                            if (isMobile || Responsive.isTablet(context))
                               _buildMobileCardsList(items, s, isDark)
                             else
                               _buildDesktopTable(items, s, isDark),
@@ -832,7 +836,8 @@ class _AppreciationsScreenState extends State<AppreciationsScreen> {
       );
     }
 
-    return Column(
+    return ResponsiveWrapColumns(
+      runSpacing: 0,
       children: items.map((ticket) {
         return Container(
           margin: const EdgeInsets.only(bottom: 12),

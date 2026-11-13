@@ -11,6 +11,7 @@ import '../bloc/admin_audit_bloc.dart';
 import '../bloc/admin_audit_event.dart';
 import '../bloc/admin_audit_state.dart';
 import '../models/admin_audit_log_model.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 class AdminAuditLogScreen extends StatelessWidget {
   const AdminAuditLogScreen({super.key});
@@ -24,7 +25,7 @@ class AdminAuditLogScreen extends StatelessWidget {
         onPopInvokedWithResult: (didPop, _) async {
           if (!didPop) await ExitConfirmationDialog.show(context);
         },
-        child: const Scaffold(
+        child: const AppScaffold(
           drawer: CustomLeftDrawer(currentRoute: '/admin/audit'),
           appBar: CustomAppBar(),
           body: AnnouncementBannerWrapper(child: _AuditLogBody()),

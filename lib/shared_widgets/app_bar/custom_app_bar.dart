@@ -18,6 +18,7 @@ import '../../modules/auth/screens/login_screen.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/preferences_service.dart';
 import '../dialogs/create_task_dialog.dart';
+import '../layout/app_scaffold.dart';
 import '../dialogs/create_todo_dialog.dart';
 import '../dialogs/schedule_meeting_dialog.dart';
 import '../dialogs/create_event_dialog.dart';
@@ -202,10 +203,14 @@ class _CustomAppBarState extends State<CustomAppBar> {
           }
         }
 
+        // With the pinned tablet sidebar there is no hamburger / back arrow.
+        final hasPinnedSidebar = PersistentSidebarScope.hasPinnedSidebar(context);
+
         return AppBar(
           backgroundColor: AppColors.appBarBg(context),
           elevation: 1,
-          titleSpacing: 0,
+          automaticallyImplyLeading: !hasPinnedSidebar,
+          titleSpacing: hasPinnedSidebar ? 16 : 0,
           title: Row(
             children: [
               // Expanded(

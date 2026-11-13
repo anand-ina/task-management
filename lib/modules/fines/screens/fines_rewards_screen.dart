@@ -16,6 +16,8 @@ import '../../auth/bloc/auth_state.dart';
 import '../bloc/fines_bloc.dart';
 import '../bloc/fines_event.dart';
 import '../bloc/fines_state.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
+import '../../../shared_widgets/layout/responsive_list_view.dart';
 
 class FinesRewardsScreen extends StatefulWidget {
   const FinesRewardsScreen({super.key});
@@ -62,7 +64,7 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
         onPopInvokedWithResult: (didPop, _) async {
           if (!didPop) await ExitConfirmationDialog.show(context);
         },
-        child: Scaffold(
+        child: AppScaffold(
           floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/fines-rewards'),
           appBar: const CustomAppBar(),
@@ -476,7 +478,7 @@ class _FinesRewardsScreenState extends State<FinesRewardsScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        ListView.separated(
+        ResponsiveListView.separated(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: fines.length,

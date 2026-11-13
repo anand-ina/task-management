@@ -12,6 +12,7 @@ import '../bloc/sutra_bloc.dart';
 import '../bloc/sutra_event.dart';
 import '../bloc/sutra_state.dart';
 import '../repository/sutra_repository.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 class SutraAiScreen extends StatefulWidget {
   const SutraAiScreen({super.key});
@@ -203,7 +204,8 @@ class _SutraAiScreenState extends State<SutraAiScreen> {
       },
       child: BlocProvider(
         create: (_) => SutraBloc()..add(LoadSutraDataEvent()),
-        child: Scaffold(
+        child: AppScaffold(
+          maxContentWidth: 900,
           floatingActionButton: const TodoFloatingActionButton(),
           appBar: const CustomAppBar(),
           drawer: const CustomLeftDrawer(currentRoute: '/sutra'),

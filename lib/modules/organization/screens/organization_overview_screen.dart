@@ -18,6 +18,9 @@ import '../../dashboard/bloc/dashboard_bloc.dart';
 import '../../dashboard/bloc/dashboard_state.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/bloc/auth_state.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
+import '../../../shared_widgets/layout/responsive_list_view.dart';
+import '../../../core/utils/responsive.dart';
 
 class OrganizationOverviewScreen extends StatefulWidget {
   const OrganizationOverviewScreen({super.key});
@@ -99,7 +102,7 @@ class _OrganizationOverviewScreenState extends State<OrganizationOverviewScreen>
               // Handled inside dialog
             }
           },
-          child: Scaffold(
+          child: AppScaffold(
             floatingActionButton: const TodoFloatingActionButton(),
             drawer: const CustomLeftDrawer(currentRoute: '/org-overview'),
             appBar: const CustomAppBar(),
@@ -445,17 +448,21 @@ class _OrganizationOverviewScreenState extends State<OrganizationOverviewScreen>
           children: [
             Row(
               children: [
-                Text(
-                  s.byBranchUnit,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                Expanded(
+                  child: Text(
+                    s.byBranchUnit,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    ),
                   ),
                 ),
-                const Spacer(),
+                const SizedBox(width: 8),
                 SizedBox(
-                  width: 180,
+                  // Narrower search on small (4") phones.
+                  width: Responsive.isSmallPhone(context) ? 130 : 180,
                   height: 32,
                   child: TextField(
                     onChanged: (val) => setState(() => _searchBranchQuery = val),
@@ -488,7 +495,7 @@ class _OrganizationOverviewScreenState extends State<OrganizationOverviewScreen>
                 ),
               )
             else
-              ListView.builder(
+              ResponsiveListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: filtered.length,
@@ -817,8 +824,11 @@ class _OrganizationOverviewScreenState extends State<OrganizationOverviewScreen>
               style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.8, color: Colors.grey),
             ),
             const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+            Wrap(
+              spacing: 0,
+              runSpacing: 6,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              alignment: WrapAlignment.spaceAround,
               children: [
                 _buildRingGauge(context, '$dayVal%', s.today, getColor(dayVal), (dayVal / 100.0).clamp(0.0, 1.0)),
                 _buildRingGauge(context, '$weekVal%', 'This Week', getColor(weekVal), (weekVal / 100.0).clamp(0.0, 1.0)),

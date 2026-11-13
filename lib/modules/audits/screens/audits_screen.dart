@@ -14,6 +14,8 @@ import '../bloc/audit_bloc.dart';
 import '../bloc/audit_event.dart';
 import '../bloc/audit_state.dart';
 import '../models/audit_model.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
+import '../../../shared_widgets/layout/responsive_list_view.dart';
 
 class AuditsScreen extends StatefulWidget {
   final bool isAuditee;
@@ -162,7 +164,7 @@ class _AuditsScreenState extends State<AuditsScreen> {
         onPopInvokedWithResult: (didPop, _) async {
           if (!didPop) await ExitConfirmationDialog.show(context);
         },
-        child: Scaffold(
+        child: AppScaffold(
           floatingActionButton: const TodoFloatingActionButton(),
           drawer: CustomLeftDrawer(currentRoute: currentRoute),
           appBar: const CustomAppBar(),
@@ -593,7 +595,7 @@ class _AuditsScreenState extends State<AuditsScreen> {
       );
     }
 
-    return ListView.separated(
+    return ResponsiveListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: audits.length,

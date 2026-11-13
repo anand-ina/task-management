@@ -14,6 +14,7 @@ import '../bloc/hourly_log_bloc.dart';
 import '../bloc/hourly_log_event.dart';
 import '../bloc/hourly_log_state.dart';
 import '../models/hourly_log_model.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 class HourlyLogScreen extends StatefulWidget {
   const HourlyLogScreen({super.key});
@@ -248,7 +249,8 @@ class _HourlyLogScreenState extends State<HourlyLogScreen> {
           Navigator.of(context).pop();
         }
       },
-      child: Scaffold(
+      child: AppScaffold(
+        maxContentWidth: 900,
         backgroundColor: AppColors.scaffoldBg(context),
         appBar: const CustomAppBar(),
         drawer: const CustomLeftDrawer(),

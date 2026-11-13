@@ -7,6 +7,7 @@ import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
 import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../bloc/language_cubit.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -16,7 +17,7 @@ class SettingsScreen extends StatelessWidget {
     final s = AppStrings.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
+    return AppScaffold(
       floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/preferences'),
       appBar: const CustomAppBar(),

@@ -9,6 +9,7 @@ import '../../../shared_widgets/announcement_banner_wrapper.dart';
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
 import '../bloc/profile_state.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 class MyProfileScreen extends StatelessWidget {
   const MyProfileScreen({super.key});
@@ -40,7 +41,7 @@ class MyProfileScreen extends StatelessWidget {
       },
       child: BlocProvider(
         create: (_) => ProfileBloc()..add(LoadProfileEvent()),
-        child: Scaffold(
+        child: AppScaffold(
           floatingActionButton: const TodoFloatingActionButton(),
           appBar: const CustomAppBar(),
           drawer: const CustomLeftDrawer(currentRoute: '/profile'),

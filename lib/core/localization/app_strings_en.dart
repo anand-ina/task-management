@@ -1298,7 +1298,7 @@ class AppStringsEn extends AppStrings {
   @override
   String get historyAndInsightsButton => 'History & insights';
   @override
-  String get raiseRequestButton => '+ Raise Request';
+  String get raiseRequestButton => ' Raise Request';
 
   @override
   String get statNewNotPickedUp => 'New — not picked up';

@@ -60,6 +60,13 @@ class AppTheme {
         backgroundColor: AppColors.buttonPrimary,
         foregroundColor: Colors.white,
       ),
+      // Keeps every dialog that doesn't size itself readable on tablets.
+      dialogTheme: const DialogThemeData(
+        constraints: BoxConstraints(minWidth: 280, maxWidth: 720),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        constraints: BoxConstraints(maxWidth: 720),
+      ),
       progressIndicatorTheme: const ProgressIndicatorThemeData(
         color: AppColors.buttonPrimary,
       ),
@@ -122,6 +129,13 @@ class AppTheme {
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: AppColors.buttonPrimaryDark,
         foregroundColor: Colors.white,
+      ),
+      // Keeps every dialog that doesn't size itself readable on tablets.
+      dialogTheme: const DialogThemeData(
+        constraints: BoxConstraints(minWidth: 280, maxWidth: 720),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        constraints: BoxConstraints(maxWidth: 720),
       ),
       progressIndicatorTheme: const ProgressIndicatorThemeData(
         color: AppColors.buttonPrimaryDark,

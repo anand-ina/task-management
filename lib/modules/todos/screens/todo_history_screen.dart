@@ -10,6 +10,7 @@ import '../bloc/todos_bloc.dart';
 import '../bloc/todos_event.dart';
 import '../bloc/todos_state.dart';
 import '../models/todo_history_model.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 class TodoHistoryScreen extends StatelessWidget {
   const TodoHistoryScreen({super.key});
@@ -30,7 +31,7 @@ class TodoHistoryScreen extends StatelessWidget {
             // Handled inside exit dialog
           }
         },
-        child: Scaffold(
+        child: AppScaffold(
           floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/todo-history'),
           appBar: const CustomAppBar(),

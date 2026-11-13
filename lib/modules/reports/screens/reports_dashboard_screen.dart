@@ -16,6 +16,7 @@ import 'package:intl/intl.dart';
 import '../models/report_compliance_model.dart';
 import '../models/report_stats_model.dart';
 import '../models/status_report_model.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 class ReportsDashboardScreen extends StatefulWidget {
   const ReportsDashboardScreen({super.key});
@@ -59,7 +60,7 @@ class _ReportsDashboardScreenState extends State<ReportsDashboardScreen> {
             // Handled inside exit dialog
           }
         },
-        child: Scaffold(
+        child: AppScaffold(
           floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/reports-dashboard'),
           appBar: const CustomAppBar(),

@@ -5,6 +5,7 @@ import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/announcement_banner_wrapper.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 class FaqScreen extends StatefulWidget {
   const FaqScreen({super.key});
@@ -38,7 +39,8 @@ class _FaqScreenState extends State<FaqScreen> {
           // Handled inside exit dialog
         }
       },
-      child: Scaffold(
+      child: AppScaffold(
+        maxContentWidth: 900,
         floatingActionButton: const TodoFloatingActionButton(),
           appBar: const CustomAppBar(),
         drawer: const CustomLeftDrawer(currentRoute: '/faq'),

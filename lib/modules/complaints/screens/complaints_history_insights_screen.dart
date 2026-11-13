@@ -20,6 +20,7 @@ import '../models/ticket_insights_model.dart';
 import 'appreciations_screen.dart';
 import 'complaints_screen.dart';
 import 'source_complaints_screen.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 class ComplaintsHistoryInsightsScreen extends StatefulWidget {
   const ComplaintsHistoryInsightsScreen({super.key});
@@ -136,8 +137,8 @@ class _ComplaintsHistoryInsightsScreenState extends State<ComplaintsHistoryInsig
           await ExitConfirmationDialog.show(context);
         }
       },
-      child: Scaffold(
-        key: _scaffoldKey,
+      child: AppScaffold(
+        scaffoldKey: _scaffoldKey,
         appBar: const CustomAppBar(),
         drawer: const CustomLeftDrawer(currentRoute: '/complaints/dashboard'),
         backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),

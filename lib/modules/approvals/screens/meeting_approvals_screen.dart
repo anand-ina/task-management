@@ -16,6 +16,7 @@ import '../bloc/approvals_event.dart';
 import '../bloc/approvals_state.dart';
 import '../constants/approvals_const_strings.dart';
 import '../models/meeting_approval_model.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 class MeetingApprovalsScreen extends StatefulWidget {
   const MeetingApprovalsScreen({super.key});
@@ -45,7 +46,7 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
       }
     }
 
-    return Scaffold(
+    return AppScaffold(
       floatingActionButton: const TodoFloatingActionButton(),
       drawer: const CustomLeftDrawer(currentRoute: '/approvals/meetings'),
       appBar: const CustomAppBar(),
@@ -61,8 +62,10 @@ class _MeetingApprovalsScreenState extends State<MeetingApprovalsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Header Title & Awaiting badge
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                Wrap(
+                  spacing: 0,
+                  runSpacing: 6,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     const Text(
                       ApprovalsConstStrings.approvalsHeader,

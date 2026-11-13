@@ -17,6 +17,9 @@ import '../bloc/approvals_event.dart';
 import '../bloc/approvals_state.dart';
 import '../constants/approvals_const_strings.dart';
 import '../models/task_approval_model.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
+import '../../../shared_widgets/layout/responsive_list_view.dart';
+import '../../../core/utils/responsive.dart';
 
 class TaskApprovalsScreen extends StatefulWidget {
   const TaskApprovalsScreen({super.key});
@@ -53,7 +56,7 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
     }
     bool isReadOnlyUser = isAcademicExecutive || isTeamLead;
 
-    return Scaffold(
+    return AppScaffold(
       floatingActionButton: const TodoFloatingActionButton(),
       drawer: const CustomLeftDrawer(currentRoute: '/approvals/tasks'),
       appBar: const CustomAppBar(),
@@ -72,15 +75,17 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const Text(
-                    ApprovalsConstStrings.approvalsHeader,
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
+                  const Flexible(
+                    child: Text(
+                      ApprovalsConstStrings.approvalsHeader,
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Column(
+                  AdaptiveHeaderActions(
                     children: [
                       BlocBuilder<ApprovalsBloc, ApprovalsState>(
                         builder: (context, state) {
@@ -109,7 +114,7 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
                       ),
                        ElevatedButton.icon(
                         onPressed: () => RequestTaskClosureDialog.show(context),
-                        label: const Text('+ Request task closure', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+                        label: Text('+ Request task closure', style: TextStyle(fontSize: Responsive.isTablet(context) ? 12 : 9, fontWeight: FontWeight.bold)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.button(context),
                           foregroundColor: Colors.white,
@@ -213,7 +218,7 @@ class _TaskApprovalsScreenState extends State<TaskApprovalsScreen> {
                       return _buildEmptyState();
                     }
 
-                    return ListView.separated(
+                    return ResponsiveListView.separated(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: items.length,

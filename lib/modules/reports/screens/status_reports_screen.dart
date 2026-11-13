@@ -17,6 +17,7 @@ import '../bloc/status_reports_event.dart';
 import '../bloc/status_reports_state.dart';
 import '../models/status_report_model.dart';
 import '../repository/reports_repository.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 class StatusReportsScreen extends StatefulWidget {
   const StatusReportsScreen({super.key});
@@ -60,7 +61,7 @@ class _StatusReportsScreenState extends State<StatusReportsScreen> {
             // Handled in exit dialog
           }
         },
-        child: Scaffold(
+        child: AppScaffold(
           floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/reports'),
           appBar: const CustomAppBar(),
@@ -259,7 +260,10 @@ class _StatusReportsScreenState extends State<StatusReportsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Top Header Row (DSR badge + Title + Status Pill + Locked Pill + Period Date)
-          Row(
+          Wrap(
+            spacing: 0,
+            runSpacing: 6,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               // Type Badge (DSR / WSR / MSR)
               Container(

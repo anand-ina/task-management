@@ -23,6 +23,9 @@ import '../../dashboard/bloc/dashboard_bloc.dart';
 import '../../dashboard/bloc/dashboard_state.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/bloc/auth_state.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
+import '../../../shared_widgets/layout/responsive_list_view.dart';
+import '../../../core/utils/responsive.dart';
 
 class DashedRectPainter extends CustomPainter {
   final Color color;
@@ -245,7 +248,7 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
               // handled
             }
           },
-          child: Scaffold(
+          child: AppScaffold(
             floatingActionButton: const TodoFloatingActionButton(),
             drawer: const CustomLeftDrawer(currentRoute: '/tasks'),
             appBar: const CustomAppBar(),
@@ -369,7 +372,7 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
                             ),
                           )
                         else ...[
-                          ListView.separated(
+                          ResponsiveListView.separated(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: items.length,
@@ -410,7 +413,19 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
 }
 
   // 7 Stat Cards Row
+  /// Width available to the stat-card row (set by a LayoutBuilder).
+  double _statRowWidth = 0;
+
   Widget _buildStatCardsRow(BuildContext context, AppStrings s, TasksResponseModel response) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        _statRowWidth = constraints.maxWidth;
+        return _buildStatCardsRowContent(context, s, response);
+      },
+    );
+  }
+
+  Widget _buildStatCardsRowContent(BuildContext context, AppStrings s, TasksResponseModel response) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -499,6 +514,12 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
     );
   }
 
+  /// Stat cards stretch to fill the row on tablets (min 125 on phones).
+  double _statCardWidth(BuildContext context) {
+    final width = (_statRowWidth - 6 * 8) / 7;
+    return width > 125 ? width : 125;
+  }
+
   Widget _buildStatCard({
     required String title,
     required String label,
@@ -511,7 +532,7 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final cardChild = Container(
-      width: 125,
+      width: _statCardWidth(context),
       height: 80,
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
@@ -936,7 +957,7 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
             children: [
               // Search Box
               SizedBox(
-                width: 120,
+                width: Responsive.isTablet(context) ? 220 : 120,
                 height: 38,
                 child: TextField(
                   onChanged: (val) {
@@ -988,7 +1009,7 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
                 hint: s.allStatuses,
                 searchHint: s.allStatuses,
                 items: statusOptions,
-                width: 100,
+                width: Responsive.isTablet(context) ? 150 : 100,
                 minPopupWidth: 200,
                 onChanged: (val) {
                   if (val != null) {
@@ -1005,7 +1026,7 @@ class _AllTasksScreenState extends State<AllTasksScreen> {
                 hint: s.allPriorities,
                 searchHint: s.allPriorities,
                 items: priorityOptions,
-                width: 100,
+                width: Responsive.isTablet(context) ? 150 : 100,
                 minPopupWidth: 180,
                 onChanged: (val) {
                   if (val != null) {

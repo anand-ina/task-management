@@ -27,6 +27,7 @@ import 'view_print_mom_screen.dart';
 import '../dialogs/minutes_of_meeting_dialog.dart';
 import '../../reports/screens/status_reports_screen.dart';
 import '../../../shared_widgets/animations/app_animations.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 class MyScheduledMeetingsScreen extends StatefulWidget {
   const MyScheduledMeetingsScreen({super.key});
@@ -852,7 +853,7 @@ class _MyScheduledMeetingsScreenState extends State<MyScheduledMeetingsScreen>
               (route) => false,
             );
           },
-          child: Scaffold(
+          child: AppScaffold(
             floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/my-meetings'),
             appBar: const CustomAppBar(),

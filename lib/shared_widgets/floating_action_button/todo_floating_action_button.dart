@@ -6,6 +6,7 @@ import '../../modules/auth/bloc/auth_state.dart';
 import '../../modules/dashboard/bloc/dashboard_bloc.dart';
 import '../../modules/dashboard/bloc/dashboard_state.dart';
 import '../dialogs/todo_today_dialog.dart';
+import '../../core/utils/responsive.dart';
 
 class TodoFloatingActionButton extends StatelessWidget {
   const TodoFloatingActionButton({super.key});
@@ -35,9 +36,12 @@ class TodoFloatingActionButton extends StatelessWidget {
       openTodosCount = dashState.todos.where((t) => !t.isCompleted).length;
     }
 
+    // Slightly smaller FAB on small (4") phones so it covers less content.
+    final fabSize = Responsive.isSmallPhone(context) ? 46.0 : 56.0;
+
     return SizedBox(
-      width: 56,
-      height: 56,
+      width: fabSize,
+      height: fabSize,
       child: Stack(
         clipBehavior: Clip.none,
         children: [

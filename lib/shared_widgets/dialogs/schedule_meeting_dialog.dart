@@ -440,9 +440,12 @@ class _ScheduleMeetingDialogState extends State<ScheduleMeetingDialog> {
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text(
-                                          _selectedTime.format(context),
-                                          style: const TextStyle(fontSize: 11),
+                                        Flexible(
+                                          child: Text(
+                                            _selectedTime.format(context),
+                                            style: const TextStyle(fontSize: 11),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
                                         ),
                                         const Icon(Icons.access_time_rounded, size: 16, color: Colors.grey),
                                       ],

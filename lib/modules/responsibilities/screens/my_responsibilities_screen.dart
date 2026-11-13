@@ -11,6 +11,7 @@ import '../bloc/responsibilities_bloc.dart';
 import '../bloc/responsibilities_event.dart';
 import '../bloc/responsibilities_state.dart';
 import '../models/responsibility_model.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 class MyResponsibilitiesScreen extends StatefulWidget {
   const MyResponsibilitiesScreen({super.key});
@@ -39,7 +40,7 @@ class _MyResponsibilitiesScreenState extends State<MyResponsibilitiesScreen> {
         onPopInvokedWithResult: (didPop, _) async {
           if (!didPop) await ExitConfirmationDialog.show(context);
         },
-        child: Scaffold(
+        child: AppScaffold(
           floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/responsibilities'),
           appBar: const CustomAppBar(),

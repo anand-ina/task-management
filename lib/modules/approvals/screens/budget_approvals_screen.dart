@@ -19,6 +19,7 @@ import '../constants/approvals_const_strings.dart';
 import '../models/indent_model.dart';
 import '../utils/indent_flow_helper.dart';
 import '../utils/indent_ui.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 enum _IndentTab { all, inbox, mine, approved, rejected }
 
@@ -140,7 +141,7 @@ class _BudgetApprovalsScreenState extends State<BudgetApprovalsScreen> {
           await ExitConfirmationDialog.show(context);
         }
       },
-      child: Scaffold(
+      child: AppScaffold(
         floatingActionButton: const TodoFloatingActionButton(),
         drawer: const CustomLeftDrawer(currentRoute: '/approvals/budget'),
         appBar: const CustomAppBar(),

@@ -12,6 +12,7 @@ import '../bloc/preferences_event.dart';
 import '../bloc/preferences_state.dart';
 import '../models/notification_preferences_model.dart';
 import '../repository/preferences_repository.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 class MyPreferencesScreen extends StatefulWidget {
   const MyPreferencesScreen({super.key});
@@ -41,7 +42,7 @@ class _MyPreferencesScreenState extends State<MyPreferencesScreen> {
       },
       child: BlocProvider(
         create: (_) => PreferencesBloc()..add(LoadPreferencesEvent()),
-        child: Scaffold(
+        child: AppScaffold(
           floatingActionButton: const TodoFloatingActionButton(),
           appBar: const CustomAppBar(),
           drawer: const CustomLeftDrawer(currentRoute: '/my-preferences'),

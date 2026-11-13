@@ -4,6 +4,7 @@ import '../../../shared_widgets/app_bar/custom_app_bar.dart';
 import '../../../shared_widgets/dialogs/exit_confirmation_dialog.dart';
 import '../../../shared_widgets/drawer/custom_left_drawer.dart';
 import '../../../shared_widgets/announcement_banner_wrapper.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 class AdminSectionScreen extends StatelessWidget {
   final String title;
@@ -30,7 +31,7 @@ class AdminSectionScreen extends StatelessWidget {
           // Handled in exit dialog
         }
       },
-      child: Scaffold(
+      child: AppScaffold(
         drawer: CustomLeftDrawer(currentRoute: route),
         appBar: const CustomAppBar(),
         body: AnnouncementBannerWrapper(

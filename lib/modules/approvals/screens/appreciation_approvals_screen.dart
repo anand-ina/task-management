@@ -14,6 +14,8 @@ import '../../complaints/dialogs/ticket_details_dialog.dart';
 import '../../complaints/models/lookup_models.dart';
 import '../../complaints/models/ticket_model.dart';
 import '../../complaints/repository/complaints_repository.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
+import '../../../shared_widgets/layout/responsive_list_view.dart';
 
 class AppreciationApprovalsScreen extends StatefulWidget {
   const AppreciationApprovalsScreen({super.key});
@@ -363,7 +365,7 @@ class _AppreciationApprovalsScreenState extends State<AppreciationApprovalsScree
           await ExitConfirmationDialog.show(context);
         }
       },
-      child: Scaffold(
+      child: AppScaffold(
         floatingActionButton: const TodoFloatingActionButton(),
         drawer: const CustomLeftDrawer(currentRoute: '/approvals/appreciations'),
         appBar: const CustomAppBar(),
@@ -458,7 +460,7 @@ class _AppreciationApprovalsScreenState extends State<AppreciationApprovalsScree
                       ),
                     )
                   else
-                    ListView.separated(
+                    ResponsiveListView.separated(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: _tickets.length,

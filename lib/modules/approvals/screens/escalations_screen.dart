@@ -16,6 +16,9 @@ import '../bloc/approvals_event.dart';
 import '../bloc/approvals_state.dart';
 import '../constants/approvals_const_strings.dart';
 import '../models/escalation_model.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
+import '../../../shared_widgets/layout/responsive_list_view.dart';
+import '../../../core/utils/responsive.dart';
 
 class EscalationsScreen extends StatefulWidget {
   const EscalationsScreen({super.key});
@@ -48,7 +51,7 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
     }
     bool isReadOnlyUser = isAcademicExecutive || isTeamLead;
 
-    return Scaffold(
+    return AppScaffold(
       floatingActionButton: const TodoFloatingActionButton(),
       drawer: const CustomLeftDrawer(currentRoute: '/approvals/escalations'),
       appBar: const CustomAppBar(),
@@ -67,15 +70,17 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const Text(
-                    ApprovalsConstStrings.approvalsHeader,
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
+                  const Flexible(
+                    child: Text(
+                      ApprovalsConstStrings.approvalsHeader,
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Column(
+                  AdaptiveHeaderActions(
                     children: [
                       BlocBuilder<ApprovalsBloc, ApprovalsState>(
                         builder: (context, state) {
@@ -108,7 +113,7 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                             context.read<ApprovalsBloc>().add(FetchEscalationsDataEvent());
                           }
                         },
-                        label: const Text('+ Raise escalation', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+                        label: Text('+ Raise escalation', style: TextStyle(fontSize: Responsive.isTablet(context) ? 12 : 9, fontWeight: FontWeight.bold)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.button(context),
                           foregroundColor: AppColors.white,
@@ -167,7 +172,7 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                       return _buildEmptyState();
                     }
 
-                    return ListView.separated(
+                    return ResponsiveListView.separated(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: items.length,
@@ -280,6 +285,7 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
+ Expanded(child: Wrap(spacing: 0, runSpacing: 6, crossAxisAlignment: WrapCrossAlignment.center, children: [
                           if (item.taskNo != null && item.taskNo!.isNotEmpty) ...[
                             Text(
                               item.taskNo!,
@@ -323,7 +329,8 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                               ),
                             ),
                           ),
-                          const Spacer(),
+ ])),
+ const SizedBox(width: 6),
                           if (item.taskId != null && item.taskId! > 0)
                             InkWell(
                               onTap: () async {
@@ -352,7 +359,7 @@ class _EscalationsScreenState extends State<EscalationsScreen> {
                                 ],
                               ),
                             ),
-                        ],
+],
                       ),
                       const SizedBox(height: 6),
 

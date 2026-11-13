@@ -11,6 +11,7 @@ import '../bloc/admin_access_event.dart';
 import '../bloc/admin_access_state.dart';
 import '../models/admin_branch_model.dart';
 import '../models/admin_department_model.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 class AdminBranchesDepartmentsScreen extends StatefulWidget {
   const AdminBranchesDepartmentsScreen({super.key});
@@ -93,7 +94,7 @@ class _AdminBranchesDepartmentsScreenState
           if (didPop) return;
           await ExitConfirmationDialog.show(context);
         },
-        child: Scaffold(
+        child: AppScaffold(
           drawer: const CustomLeftDrawer(currentRoute: '/admin/access'),
           appBar: const CustomAppBar(),
           body: AnnouncementBannerWrapper(

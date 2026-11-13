@@ -49,6 +49,7 @@ import '../../modules/tasks/screens/draft_tasks_screen.dart';
 import '../../modules/todos/screens/today_screen.dart';
 import '../../modules/todos/screens/todo_history_screen.dart';
 import '../../modules/hourly_log/screens/hourly_log_screen.dart';
+import '../layout/app_scaffold.dart';
 
 class CustomLeftDrawer extends StatelessWidget {
   final String currentRoute;
@@ -130,8 +131,13 @@ class CustomLeftDrawer extends StatelessWidget {
       }
     }
 
+    // On tablets the drawer is pinned next to the page (see AppScaffold).
+    final isPinned = PersistentSidebarScope.isPinnedSidebar(context);
+
     return Drawer(
       backgroundColor: isDark ? const Color(0xFF0D1424) : Colors.white,
+      elevation: isPinned ? 0 : null,
+      shape: isPinned ? const RoundedRectangleBorder() : null,
       child: SafeArea(
         child: Column(
           children: [
@@ -180,6 +186,7 @@ class CustomLeftDrawer extends StatelessWidget {
                     ],
                   ),
                   const Spacer(),
+                  if (!isPinned)
                   IconButton(
                     tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                     onPressed: () {
@@ -202,7 +209,7 @@ class CustomLeftDrawer extends StatelessWidget {
 
             // Navigation Items List
             Expanded(
-              child: ListView(
+              child: _RememberedScrollListView(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 children: [
                   // CARD 1: DASHBOARD
@@ -1414,6 +1421,56 @@ class _DrawerNavItem extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+
+/// Last scroll offset of the navigation list. The pinned tablet sidebar is
+/// rebuilt on every page push, so this keeps the menu where the user left it.
+double _drawerScrollOffset = 0;
+
+class _RememberedScrollListView extends StatefulWidget {
+  final EdgeInsetsGeometry padding;
+  final List<Widget> children;
+
+  const _RememberedScrollListView({
+    required this.padding,
+    required this.children,
+  });
+
+  @override
+  State<_RememberedScrollListView> createState() =>
+      _RememberedScrollListViewState();
+}
+
+class _RememberedScrollListViewState extends State<_RememberedScrollListView> {
+  late final ScrollController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = ScrollController(initialScrollOffset: _drawerScrollOffset);
+    _controller.addListener(_remember);
+  }
+
+  void _remember() {
+    if (_controller.hasClients) _drawerScrollOffset = _controller.offset;
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_remember);
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      controller: _controller,
+      padding: widget.padding,
+      children: widget.children,
     );
   }
 }

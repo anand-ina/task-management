@@ -17,6 +17,7 @@ import '../models/ticket_meta_model.dart';
 import '../models/ticket_model.dart';
 import '../repository/complaints_repository.dart';
 import 'complaints_screen.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 class _SlipFormData {
   String type; // 'complaint', 'feedback', 'appreciation'
@@ -363,8 +364,9 @@ class _SuggestionBoxEntryScreenState extends State<SuggestionBoxEntryScreen> {
           Navigator.of(context).pop();
         }
       },
-      child: Scaffold(
-        key: _scaffoldKey,
+      child: AppScaffold(
+        maxContentWidth: 900,
+        scaffoldKey: _scaffoldKey,
         backgroundColor: AppColors.scaffoldBg(context),
         drawer: const CustomLeftDrawer(currentRoute: '/complaints/suggestion-box'),
         appBar: const CustomAppBar(),

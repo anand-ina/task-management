@@ -12,6 +12,7 @@ import '../bloc/todos_bloc.dart';
 import '../bloc/todos_event.dart';
 import '../bloc/todos_state.dart';
 import '../models/today_todo_model.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 class TodayScreen extends StatefulWidget {
   const TodayScreen({super.key});
@@ -53,7 +54,7 @@ class _TodayScreenState extends State<TodayScreen> {
             // Handled inside exit dialog
           }
         },
-        child: Scaffold(
+        child: AppScaffold(
           floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/todo'),
           appBar: const CustomAppBar(),

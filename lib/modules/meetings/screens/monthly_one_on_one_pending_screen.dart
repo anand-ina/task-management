@@ -13,6 +13,7 @@ import '../bloc/meetings_bloc.dart';
 import '../bloc/meetings_event.dart';
 import '../bloc/meetings_state.dart';
 import '../models/one_on_one_pending_model.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 class MonthlyOneOnOnePendingScreen extends StatefulWidget {
   const MonthlyOneOnOnePendingScreen({super.key});
@@ -38,7 +39,7 @@ class _MonthlyOneOnOnePendingScreenState extends State<MonthlyOneOnOnePendingScr
             (route) => false,
           );
         },
-        child: Scaffold(
+        child: AppScaffold(
           floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/one-on-one-pending'),
           appBar: const CustomAppBar(),

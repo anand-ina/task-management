@@ -11,6 +11,7 @@ import '../bloc/fines_bloc.dart';
 import '../bloc/fines_event.dart';
 import '../bloc/fines_state.dart';
 import '../models/fine_type_model.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 class PerformanceSettingsScreen extends StatefulWidget {
   const PerformanceSettingsScreen({super.key});
@@ -326,7 +327,7 @@ class _PerformanceSettingsScreenState extends State<PerformanceSettingsScreen> {
             // Handled in dialog
           }
         },
-        child: Scaffold(
+        child: AppScaffold(
           floatingActionButton: const TodoFloatingActionButton(),
           drawer: const CustomLeftDrawer(currentRoute: '/performance-settings'),
           appBar: const CustomAppBar(),

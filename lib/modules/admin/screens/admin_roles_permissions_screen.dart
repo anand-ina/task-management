@@ -11,6 +11,7 @@ import '../bloc/admin_roles_event.dart';
 import '../bloc/admin_roles_state.dart';
 import '../models/admin_role_model.dart';
 import '../models/admin_permission_model.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
 
 class AdminRolesPermissionsScreen extends StatelessWidget {
   const AdminRolesPermissionsScreen({super.key});
@@ -24,7 +25,7 @@ class AdminRolesPermissionsScreen extends StatelessWidget {
         onPopInvokedWithResult: (didPop, _) async {
           if (!didPop) await ExitConfirmationDialog.show(context);
         },
-        child: const Scaffold(
+        child: const AppScaffold(
           drawer: CustomLeftDrawer(currentRoute: '/admin/roles'),
           appBar: CustomAppBar(),
           body: AnnouncementBannerWrapper(child: _RolesBody()),
@@ -423,11 +424,22 @@ class _RoleCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Permissions grid (3 columns)
-                  GridView.builder(
+                  LayoutBuilder(builder: (context, gridConstraints) {
+                  // Phone keeps the 3-column grid; tablets get fixed-height
+                  // tiles so they don't grow too tall.
+                  final gridWidth = gridConstraints.maxWidth;
+                  final isWideGrid = gridWidth >= 560;
+                  return GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate: isWideGrid
+                        ? SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: gridWidth >= 900 ? 4 : 3,
+                            mainAxisExtent: 44,
+                            crossAxisSpacing: 8,
+                            mainAxisSpacing: 8,
+                          )
+                        : const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 3,
                       childAspectRatio: 3.5,
                       crossAxisSpacing: 8,
@@ -488,7 +500,8 @@ class _RoleCard extends StatelessWidget {
                         ),
                       );
                     },
-                  ),
+                  );
+                  }),
                   const SizedBox(height: 16),
                   // Save / Cancel buttons
                   Row(

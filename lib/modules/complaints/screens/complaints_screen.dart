@@ -17,6 +17,9 @@ import '../models/ticket_model.dart';
 import 'complaints_history_insights_screen.dart';
 import 'suggestion_box_entry_screen.dart';
 import '../../../shared_widgets/animations/app_animations.dart';
+import '../../../shared_widgets/layout/app_scaffold.dart';
+import '../../../core/utils/responsive.dart';
+import '../../../shared_widgets/layout/responsive_list_view.dart';
 
 class ComplaintsScreen extends StatefulWidget {
   final int? initialTicketId;
@@ -178,7 +181,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
           await ExitConfirmationDialog.show(context);
         }
       },
-      child: Scaffold(
+      child: AppScaffold(
         appBar: const CustomAppBar(),
         drawer: const CustomLeftDrawer(currentRoute: '/complaints'),
         backgroundColor: isDark ? const Color(0xFF0D1424) : const Color(0xFFF8FAFC),
@@ -749,9 +752,10 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
           }
 
           final screenWidth = MediaQuery.of(context).size.width;
-          if (screenWidth < 750) {
-            // Mobile comfortable card view!
-            return Column(
+          if (screenWidth < 750 || Responsive.isTablet(context)) {
+            // Card view on phones; 2-column cards on tablets.
+            return ResponsiveWrapColumns(
+              runSpacing: 0,
               children: items.asMap().entries.map((entry) => StaggeredSlideFade(
                 delay: Duration(milliseconds: (entry.key.clamp(0, 8)) * 40),
                 child: _buildMobileTicketCard(entry.value, s, isDark),
